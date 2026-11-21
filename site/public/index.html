@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'"
+    />
+    <title>Heldly: stay in touch with the people you care about</title>
+    <meta
+      name="description"
+      content="Heldly is a ChatGPT plugin that remembers only what you approve, connects you with friends by invite code, and tells you who you haven’t seen in a while."
+    />
+    <meta property="og:title" content="Heldly" />
+    <meta
+      property="og:description"
+      content="A ChatGPT plugin for keeping up with the people you care about. It saves only what you approve."
+    />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#f4f5f3" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#101317" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="logo.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="demo.js" defer></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="top wrap">
+      <a class="brand" href="/">
+        <img src="logo.svg" alt="" width="28" height="28" />
+        <span>Heldly</span>
+      </a>
+      <nav aria-label="Page">
+        <a class="top__anchor" href="#ask">How it works</a>
+        <a class="top__anchor" href="#keeps">What it keeps</a>
+        <a href="https://github.com/eNipu/team_seoul">GitHub</a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero wrap">
+        <div class="hero__copy">
+          <h1>
+            You said you’d
+            <span class="marked"
+              >stay in touch.<svg viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                <path d="M3 9.5C46 4 88 11.5 131 7.5S214 3.5 250 8s34 1.5 47-1.5" />
+              </svg>
+            </span>
+          </h1>
+          <p class="lede">
+            Heldly is a ChatGPT plugin for keeping up with the people you care about. You tell it what matters, you
+            approve what it saves, and you can ask it who you haven’t seen in a while.
+          </p>
+          <p class="hero__actions">
+            <a class="btn btn--ink" href="https://github.com/eNipu/team_seoul">Get the code</a>
+            <a class="more" href="#keeps">See what it keeps</a>
+          </p>
+        </div>
+
+        <figure class="demo" aria-labelledby="demo-caption">
+          <figcaption id="demo-caption">
+            <strong>Example.</strong> Untick anything you wouldn’t want remembered, then save.
+          </figcaption>
+
+          <div class="said">
+            <span class="said__who">You, in ChatGPT</span>
+            <p class="bubble">
+              I’ve started bouldering twice a week. I keep telling Mina we’ll get coffee and then we don’t. And please,
+              no more loud bars.
+            </p>
+          </div>
+
+          <div class="card" id="demo">
+            <form id="review" novalidate aria-labelledby="review-title">
+              <h2 class="card__title" id="review-title">Review what Heldly learned</h2>
+              <p class="card__note">
+                <strong>Nothing is saved until you approve it.</strong> Choose who can see each memory.
+              </p>
+
+              <ul class="memories">
+                <li class="memory" data-title="Bouldering, twice a week">
+                  <div class="memory__head">
+                    <label class="check">
+                      <input type="checkbox" checked disabled aria-labelledby="keep-1 memory-1" />
+                      <span class="check__state" id="keep-1">Keep</span>
+                    </label>
+                    <span class="tag">Interest</span>
+                  </div>
+                  <p class="memory__title" id="memory-1">Bouldering, twice a week</p>
+                  <p class="memory__text">Started recently and goes twice a week.</p>
+                  <label class="field">
+                    <span>Who can see this</span>
+                    <select disabled aria-describedby="memory-1">
+                      <option selected>Private (only me)</option>
+                      <option>Shared with connections</option>
+                      <option>Public profile</option>
+                    </select>
+                  </label>
+                </li>
+
+                <li class="memory" data-title="Wants to see Mina more often">
+                  <div class="memory__head">
+                    <label class="check">
+                      <input type="checkbox" checked disabled aria-labelledby="keep-2 memory-2" />
+                      <span class="check__state" id="keep-2">Keep</span>
+                    </label>
+                    <span class="tag">Social goal</span>
+                  </div>
+                  <p class="memory__title" id="memory-2">Wants to see Mina more often</p>
+                  <p class="memory__text">Keeps planning coffee with Mina and not getting to it.</p>
+                  <label class="field">
+                    <span>Who can see this</span>
+                    <select disabled aria-describedby="memory-2">
+                      <option selected>Private (only me)</option>
+                      <option>Shared with connections</option>
+                      <option>Public profile</option>
+                    </select>
+                  </label>
+                </li>
+
+                <li class="memory" data-title="Not a fan of loud bars">
+                  <div class="memory__head">
+                    <label class="check">
+                      <input type="checkbox" checked disabled aria-labelledby="keep-3 memory-3" />
+                      <span class="check__state" id="keep-3">Keep</span>
+                    </label>
+                    <span class="tag">Dislike</span>
+                  </div>
+                  <p class="memory__title" id="memory-3">Not a fan of loud bars</p>
+                  <p class="memory__text">Would rather meet somewhere quiet.</p>
+                  <label class="field">
+                    <span>Who can see this</span>
+                    <select disabled aria-describedby="memory-3">
+                      <option selected>Private (only me)</option>
+                      <option>Shared with connections</option>
+                      <option>Public profile</option>
+                    </select>
+                  </label>
+                </li>
+              </ul>
+
+              <div class="card__actions">
+                <button type="button" class="btn btn--quiet" id="discard" disabled>Discard</button>
+                <button type="submit" class="btn btn--keep" id="save" disabled>Save selected (3)</button>
+              </div>
+              <noscript><p class="card__foot">This example needs JavaScript to respond.</p></noscript>
+            </form>
+
+            <div id="outcome" hidden>
+              <h2 class="card__title" id="outcome-title" tabindex="-1"></h2>
+              <ul class="saved" id="outcome-list"></ul>
+              <p class="card__foot" id="outcome-skipped"></p>
+              <p class="card__foot">This is an example. Nothing left this page.</p>
+              <div class="card__actions">
+                <button type="button" class="btn btn--quiet" id="restart">Start over</button>
+              </div>
+            </div>
+          </div>
+        </figure>
+      </section>
+
+      <section class="band wrap" aria-labelledby="cold-title">
+        <h2 id="cold-title">How a good conversation goes cold</h2>
+        <ol class="cooling">
+          <li>
+            <span class="cooling__when">That evening</span>
+            <p>You meet someone and the conversation is good. You say “let’s stay in touch” and you mean it.</p>
+          </li>
+          <li>
+            <span class="cooling__when">The next day</span>
+            <p>You swap contacts. LinkedIn, WhatsApp, maybe Instagram.</p>
+          </li>
+          <li>
+            <span class="cooling__when">A week later</span>
+            <p>Life moves. You don’t know what they’re working on, and they don’t know what you need.</p>
+          </li>
+          <li>
+            <span class="cooling__when">A month later</span>
+            <p>The connection has gone cold. You still care. Nothing reminded you.</p>
+          </li>
+          <li>
+            <span class="cooling__when">A year later</span>
+            <p>You meet new people and hope this time it sticks.</p>
+          </li>
+        </ol>
+        <p class="band__after">
+          Heldly works on the third step. It knows who you’re connected to, when you last logged time together, and
+          which interests you both chose to share, so it can tell you who to get back to and suggest what to do.
+        </p>
+      </section>
+
+      <section class="band wrap" id="ask" aria-labelledby="ask-title">
+        <div class="band__head">
+          <h2 id="ask-title">Ask in the chat you already have open</h2>
+          <p>
+            Heldly has no app and no feed. You talk to it in ChatGPT and it answers there, sometimes with a card you can
+            act on.
+          </p>
+        </div>
+
+        <dl class="asks">
+          <div>
+            <dt><span class="bubble">Remember that I’ve started bouldering.</span></dt>
+            <dd>
+              Heldly shows a review card with what it would save. You untick, edit the wording, and choose who can see
+              each memory. Nothing is saved until you approve it.
+            </dd>
+          </div>
+          <div>
+            <dt><span class="bubble">Create a Heldly invite code.</span></dt>
+            <dd>
+              You get a code like <code>K7QM-4XPD</code> to send to a friend yourself. It lasts 72 hours. They redeem
+              it in their own ChatGPT, you accept the request, and you’re connected.
+            </dd>
+          </div>
+          <div>
+            <dt><span class="bubble">Who should I reconnect with this week?</span></dt>
+            <dd>
+              A short list of connections you haven’t logged time with in three weeks or more, longest gap first.
+            </dd>
+          </div>
+          <div>
+            <dt><span class="bubble">What could Mina and I do this weekend?</span></dt>
+            <dd>Up to three ideas, drawn from interests you both chose to share.</dd>
+          </div>
+          <div>
+            <dt><span class="bubble">I had coffee with Mina yesterday.</span></dt>
+            <dd>Heldly logs it, and the count of days since you last met starts again.</dd>
+          </div>
+          <div>
+            <dt><span class="bubble">Show my Heldly dashboard.</span></dt>
+            <dd>
+              Your profile, memories and connections in one card. You can delete a memory or answer a connection
+              request from there.
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="band wrap" id="keeps" aria-labelledby="keeps-title">
+        <h2 id="keeps-title">What Heldly keeps, and what it doesn’t</h2>
+        <div class="ledger">
+          <div>
+            <h3>Kept</h3>
+            <ul class="ledger__list ledger__list--kept">
+              <li>Memories you approved, each with the visibility you chose. The default is private.</li>
+              <li>Your connections, and the dates you logged time together.</li>
+              <li>A display name, a short bio and your social goals, if you add them.</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Not kept, not done</h3>
+            <ul class="ledger__list ledger__list--not">
+              <li>
+                Heldly can’t read your ChatGPT conversations. It receives only the text ChatGPT passes to it when you
+                ask it to remember something.
+              </li>
+              <li>Suggestions you don’t approve are never added to your profile.</li>
+              <li>Private memories are never read on anyone else’s behalf, connected or not.</li>
+              <li>Heldly doesn’t message, email or invite anyone. You send the invite code yourself.</li>
+              <li>It refuses to store passwords, card numbers and API keys.</li>
+            </ul>
+          </div>
+        </div>
+        <p class="band__after">
+          To draft suggestions, the server may send the text you asked it to remember to OpenAI’s API. You can delete a
+          single memory at any time, or your whole account with everything attached to it.
+        </p>
+      </section>
+
+      <section class="band wrap" id="start" aria-labelledby="start-title">
+        <div class="start">
+          <div>
+            <h2 id="start-title">Where it stands</h2>
+            <p>
+              Heldly is an early build. It runs in ChatGPT as a custom plugin and isn’t in the plugin directory yet, so
+              for now you run the server yourself.
+            </p>
+            <p class="start__actions">
+              <a class="btn btn--ink" href="https://github.com/eNipu/team_seoul">Get the code</a>
+              <a class="more" href="https://github.com/eNipu/team_seoul#readme">Read the setup guide</a>
+            </p>
+          </div>
+          <ol class="steps">
+            <li>Clone the repository, then run <code>make setup</code> and <code>make dev</code>.</li>
+            <li>Put the server behind a public HTTPS address. A tunnel is enough for testing.</li>
+            <li>
+              In ChatGPT, open Settings, then Plugins in developer mode, and add a custom MCP server with your address
+              ending in <code>/mcp</code>.
+            </li>
+          </ol>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot wrap">
+      <p>
+        <a href="https://github.com/eNipu/team_seoul">Heldly on GitHub</a>
+      </p>
+      <p>This page sets no cookies and loads nothing from other sites.</p>
+    </footer>
+  </body>
+</html>
