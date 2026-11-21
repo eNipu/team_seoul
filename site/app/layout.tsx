@@ -4,14 +4,14 @@ import type { ReactNode } from "react";
 import "./venn-kit.css";
 import "./globals.css";
 
-const DESCRIPTION =
-  "You already know your next customer, friend or business partner. Venn shows where you overlap, from what each of you approves, right inside ChatGPT.";
+const TITLE = "Venn. Connect your AI memories.";
+const DESCRIPTION = "Build your inner circle.";
 
 export const metadata: Metadata = {
-  title: "Venn: Find the common ground.",
+  title: TITLE,
   description: DESCRIPTION,
   openGraph: {
-    title: "Venn: Find the common ground.",
+    title: TITLE,
     description: DESCRIPTION,
     type: "website",
     siteName: "Venn",

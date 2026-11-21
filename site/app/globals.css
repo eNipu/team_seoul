@@ -137,59 +137,6 @@ p {
   line-height: 1.4;
   text-wrap: balance;
 }
-/* The line under the headline: one sentence whose last word rolls upward to the next one
-   (NextWord.tsx). The slot holds the current word in the flow, so it is as wide as that
-   word and the sentence stays centered; the script animates its width between words. The
-   other words wait below the slot, and the one before leaves through the top. */
-.hero__next {
-  color: var(--text-2);
-  font-size: clamp(1.1875rem, 1rem + 0.9vw, 1.625rem);
-  font-weight: 500;
-  letter-spacing: var(--tracking-tight);
-  line-height: 1.3;
-}
-.hero__next-line {
-  display: block;
-  white-space: nowrap;
-}
-.hero__next-words {
-  position: relative;
-  display: inline-block;
-  color: var(--text);
-  font-weight: 600;
-  text-align: left;
-  /* Clips what is above and below the line, not beside it. Unlike overflow, this leaves
-     the slot on the text baseline. */
-  clip-path: inset(0 -100vmax);
-  transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-.hero__next-word {
-  position: absolute;
-  inset: 0 auto auto 0;
-  opacity: 0;
-  transform: translateY(100%);
-}
-.hero__next-word--on,
-.hero__next-word--out {
-  transition:
-    opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
-    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-.hero__next-word--on {
-  position: static;
-  display: inline-block;
-  opacity: 1;
-  transform: none;
-}
-.hero__next-word--out {
-  transform: translateY(-100%);
-}
-/* A phone is narrower than the sentence: the word takes the line below, centered. */
-@media (max-width: 599px) {
-  .hero__next-lead {
-    display: block;
-  }
-}
 /* A short screen has no room to spare under the waitlist: its tallest state, the confirmed
    circle, has to end above the fold at 360 x 640. */
 @media (max-height: 700px) {
@@ -216,54 +163,33 @@ p {
   overflow: hidden;
   container-type: size;
 }
-.venn-scene,
-.venn-fallback,
+.hero__circles,
 .hero__veil {
   position: absolute;
   inset: 0;
 }
-.venn-scene {
-  opacity: 0;
-  transition: opacity 1.2s ease;
-}
-.venn-scene canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-[data-scene="webgl"] .venn-scene {
-  opacity: 1;
-}
-
-/* CSS version of the scene: what paints first, and all that reduced-motion,
-   data-saving and no-WebGL visitors get. Sizes mirror VennScene's layout. */
-.venn-fallback {
+.hero__circles {
   --d: min(60cqw, 72cqh);
   --dx: 26%;
   --dy: 0%;
   display: grid;
   place-items: center;
-  transition: opacity 1.2s ease, visibility 0s linear 1.2s;
 }
 @container (max-aspect-ratio: 4 / 5) {
-  .venn-fallback {
+  .hero__circles {
     --d: min(92cqw, 52cqh);
     --dx: 0%;
     --dy: 26%;
   }
 }
-[data-scene="webgl"] .venn-fallback {
-  opacity: 0;
-  visibility: hidden;
-}
-.venn-fallback__circle {
+.hero__circle {
   grid-area: 1 / 1;
   width: var(--d);
   aspect-ratio: 1;
   border-radius: 50%;
   mix-blend-mode: multiply;
 }
-.venn-fallback__circle--a {
+.hero__circle--a {
   translate: var(--dx) calc(var(--dy) * -1);
   background: radial-gradient(
     closest-side,
@@ -273,7 +199,7 @@ p {
     transparent 100%
   );
 }
-.venn-fallback__circle--b {
+.hero__circle--b {
   translate: calc(var(--dx) * -1) var(--dy);
   background: radial-gradient(
     closest-side,
@@ -283,26 +209,6 @@ p {
     transparent 100%
   );
 }
-@media (prefers-reduced-motion: no-preference) {
-  .venn-fallback__circle {
-    animation: venn-breathe 14s ease-in-out infinite alternate;
-  }
-  .venn-fallback__circle--b {
-    animation-delay: -7s;
-  }
-  [data-scene="webgl"] .venn-fallback__circle {
-    animation-play-state: paused;
-  }
-}
-@keyframes venn-breathe {
-  from {
-    scale: 0.97;
-  }
-  to {
-    scale: 1.03;
-  }
-}
-
 /* The veil keeps the copy sharp: near-opaque behind the text, clear toward the edges,
    and a fade to the page color at the bottom edge. */
 .hero__veil {
@@ -319,6 +225,9 @@ p {
 /* ---------- Waitlist ---------- */
 .waitlist {
   width: min(100%, 30rem);
+}
+.waitlist__preview {
+  margin-top: 4px;
 }
 .waitlist__field {
   display: flex;
@@ -445,51 +354,13 @@ p {
   }
 }
 
-/* ---------- Optional hero collage: only where the hero has room ---------- */
-.collage {
-  display: none;
-}
-@media (min-width: 720px) and (min-height: 800px) {
-  .collage {
-    display: block;
-    margin-top: clamp(4px, 1.5vh, 20px);
-  }
-}
-.collage__row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-}
-.collage__side {
-  display: grid;
-  gap: 2px;
-  width: 11rem;
-  color: var(--text-2);
-  font-size: 0.875rem;
-  line-height: 1.3;
-}
-.collage__side strong {
-  color: var(--text);
-  font-size: 0.9375rem;
-}
-.collage__side--left {
-  text-align: right;
-}
-.collage__side--right {
-  text-align: left;
-}
-
-/* ---------- Inside ChatGPT ---------- */
+/* ---------- Onboarding ---------- */
 .showcase {
   background: var(--bg);
   padding-block: clamp(64px, 10vw, 128px);
 }
 .section-intro {
-  display: grid;
-  justify-items: center;
-  gap: 14px;
-  margin-bottom: clamp(32px, 5vw, 56px);
+  margin-bottom: clamp(28px, 4vw, 48px);
   text-align: center;
 }
 .section-intro h2,
@@ -497,164 +368,130 @@ p {
   font-size: clamp(2rem, 1.3rem + 3vw, 3.5rem);
   letter-spacing: -0.035em;
 }
-.section-intro p {
-  max-width: 34rem;
-  color: var(--text-2);
-  text-wrap: balance;
-}
-.eyebrow {
-  color: var(--text-2);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-
-.chat {
-  display: grid;
-  gap: 12px;
-  width: min(100%, 30rem);
+.onboarding {
+  width: min(100%, 32rem);
   margin-inline: auto;
-  padding: 12px;
+  padding: clamp(18px, 4vw, 32px);
   border: 1px solid var(--border);
   border-radius: 28px;
   background: var(--surface);
   box-shadow: var(--shadow);
-}
-.chat__bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding-left: 8px;
-}
-.chat__title {
   font-size: 0.9375rem;
-  font-weight: 600;
 }
-.chat__steps {
-  display: flex;
-  flex: 1 1 16rem;
-  gap: 3px;
-  padding: 3px;
-  border-radius: var(--pill);
-  background: var(--surface-2);
-}
-.chat__step {
-  appearance: none;
-  flex: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 44px;
-  padding: 0 10px;
-  border: 0;
-  border-radius: var(--pill);
-  background: transparent;
-  color: var(--muted);
-  font: inherit;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  touch-action: manipulation;
-  transition: background 0.15s, color 0.15s;
-}
-.chat__step[aria-pressed="true"] {
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: var(--shadow-sm);
-}
-.chat__step-number {
-  display: inline-grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--surface-3);
-  color: var(--text);
-  font-size: 0.8125rem;
-}
-.chat__step[aria-pressed="true"] .chat__step-number {
-  background: var(--primary);
-  color: var(--on-primary);
-}
-.chat__thread {
+.onboarding__header {
   display: grid;
+  grid-template-columns: 1fr auto;
   gap: 12px;
-  animation: rise 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  align-items: center;
+  color: var(--text-2);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
 }
-.chat__bubble {
-  justify-self: end;
-  max-width: 85%;
-  padding: 10px 16px;
-  border-radius: 20px;
-  background: var(--surface-2);
-  font-size: 0.9375rem;
-  line-height: 1.4;
+.onboarding__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-size: 1.0625rem;
+  font-weight: 600;
 }
-
-.preview-card {
+.onboarding__progress {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+}
+.onboarding__progress span {
+  height: 4px;
+  border-radius: var(--pill);
+  background: var(--surface-3);
+}
+.onboarding__progress [data-complete="true"] {
+  background: var(--text);
+}
+.onboarding__body {
   display: grid;
   gap: 14px;
-  font-size: 0.9375rem;
-  line-height: 1.45;
+  padding-block: 24px 18px;
+  animation: rise 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
-.preview-card h3 {
-  margin-bottom: 4px;
-  font-size: 1.1875rem;
-  line-height: 1.2;
+.onboarding__body h3 {
+  font-size: clamp(1.375rem, 1.1rem + 1vw, 1.75rem);
+  line-height: 1.16;
 }
-.preview-card__head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.onboarding__body h3:focus-visible {
+  outline: none;
 }
-.preview-card__brand {
-  margin-right: auto;
-  font-weight: 600;
-  letter-spacing: var(--tracking-tight);
-}
-.preview-card__list {
+.onboarding__choices {
   display: grid;
   gap: 6px;
-}
-.preview-card .badge svg {
-  flex: none;
-}
-.match {
-  display: grid;
-  justify-items: center;
-  padding-top: 4px;
-}
-.match__text {
-  display: grid;
-  gap: 6px;
-  text-align: center;
-}
-.match__text h3 {
+  min-inline-size: 0;
   margin: 0;
+  padding: 0;
+  border: 0;
 }
-.match__line {
-  font-size: 1.0625rem;
-  font-weight: 500;
-  line-height: 1.35;
-  text-wrap: balance;
+.onboarding__choices strong {
+  font-weight: 600;
 }
-.match__draft {
-  gap: 10px;
+.onboarding__circle {
+  display: block;
+  width: min(100%, 16.25rem);
+  margin-inline: auto;
 }
-.match__empty {
+.onboarding__circle text {
+  fill: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+.onboarding__member {
+  mix-blend-mode: multiply;
+}
+.onboarding__member--first {
+  fill: var(--venn-a);
+}
+.onboarding__member--second {
+  fill: var(--venn-b);
+}
+.onboarding__outline {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 5;
+}
+.onboarding__invite {
+  justify-items: start;
+}
+.onboarding__result {
   display: grid;
-  gap: 10px;
+  gap: 6px;
+  justify-items: center;
   text-align: center;
 }
-.showcase__note {
-  margin-top: 20px;
+.onboarding__interests {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+.onboarding__footer {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  border-top: 1px solid var(--border);
   color: var(--muted);
   font-size: 0.8125rem;
   text-align: center;
+}
+.onboarding__footer span {
+  grid-column: 2;
+}
+.onboarding__footer .btn {
+  font-size: inherit;
+  padding-inline: 8px;
 }
 
 /* ---------- Principles and closing ---------- */

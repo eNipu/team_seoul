@@ -27,7 +27,7 @@ type Props = {
 };
 
 const STORAGE_KEY = "venn.waitlist";
-const SHARE_TEXT = "Find the common ground. I saved you a place on the Venn waitlist.";
+const SHARE_TEXT = "I saved you a place on the Venn waitlist.";
 // Same shape the server accepts (lib/waitlist.ts); the server still has the last word.
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -179,14 +179,14 @@ export default function Waitlist({ version, invite }: Props) {
               Invite a connection to move up
             </button>
             <a className="btn" href="#inside">
-              See it inside ChatGPT
+              Try the onboarding
             </a>
           </div>
           <p className="waitlist__note" aria-live="polite">
             {shareNote ??
               (spot.referrals > 0
                 ? `${spot.referrals} ${spot.referrals === 1 ? "person has" : "people have"} joined with your link.`
-                : "Everyone who joins with your link moves you up the list.")}
+                : null)}
           </p>
         </div>
       </div>
@@ -221,7 +221,7 @@ export default function Waitlist({ version, invite }: Props) {
               Share my invite link
             </button>
             <a className="btn" href="#inside">
-              See it inside ChatGPT
+              Try the onboarding
             </a>
           </div>
           <p className="waitlist__note" aria-live="polite">
@@ -278,6 +278,7 @@ export default function Waitlist({ version, invite }: Props) {
           {state.error ?? formNote(version, invite)}
         </p>
       </form>
+      <a className="btn btn--ghost waitlist__preview" href="#inside">Try the onboarding</a>
     </div>
   );
 }
