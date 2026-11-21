@@ -5,7 +5,9 @@ import {
   hasId,
   humanize,
   parseProfile,
+  parseView,
   plural,
+  type Plan,
   type Connection,
   type DashboardViewData,
   type Memory,
@@ -19,6 +21,7 @@ import type { HostBridge } from "../mcp/client";
 import MemoriesTab from "./MemoriesTab";
 import FriendsTab from "./FriendsTab";
 import SetupCard from "./Setup";
+import { HomeTiles, Plans, SampleBanner } from "./DashboardHome";
 import { Icon, type IconName } from "./icons";
 
 export type DashboardTab = "profile" | "memories" | "friends";
@@ -38,6 +41,9 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
   const [people, setPeople] = useState<Person[]>(data.people);
   const [pending, setPending] = useState<PendingRequest[]>(data.pending_requests);
   const [setup, setSetup] = useState<SetupStep[]>(data.setup);
+  const [plans, setPlans] = useState<Plan[]>(data.plans);
+  const [pendingAnswers, setPendingAnswers] = useState(data.pending_answers);
+  const [sampleLoaded, setSampleLoaded] = useState(data.sample_loaded);
 
   const friendCount = connections.length + people.length;
 
@@ -54,6 +60,19 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
     setPeople(d.people);
     setPending(d.pending_requests);
     setSetup(d.setup);
+    setPlans(d.plans);
+    setPendingAnswers(d.pending_answers);
+    setSampleLoaded(d.sample_loaded);
+  }
+
+  /** Re-fetch the dashboard after something changed many parts of it at once. */
+  async function reload(): Promise<string | null> {
+    const res = await bridge.callTool("venn_show_dashboard", {});
+    if (!res.ok) return res.errorText;
+    const parsed = parseView(res.data);
+    if (!parsed || parsed.view !== "dashboard") return "Venn couldn't refresh the dashboard.";
+    applyDashboard(parsed);
+    return null;
   }
 
   // Every count shown in the UI is derived from the same arrays that are listed.
@@ -65,7 +84,17 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
 
   return (
     <>
+    {sampleLoaded && <SampleBanner bridge={bridge} onChanged={reload} />}
     <SetupCard steps={setup} bridge={bridge} nav={nav} />
+    <HomeTiles pendingAnswers={pendingAnswers} nav={nav} />
+    <Plans
+      plans={plans}
+      bridge={bridge}
+      onChanged={(next) => {
+        setPlans(next);
+        void reload();
+      }}
+    />
     <section className="panel panel--tabs">
       <div className="tabs" role="tablist" aria-label="Dashboard sections">
         {tabs.map((t) => (
@@ -116,6 +145,7 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
             onPeople={setPeople}
             onPending={setPending}
             onDashboard={applyDashboard}
+            sampleLoaded={sampleLoaded}
           />
         )}
       </div>

@@ -94,7 +94,8 @@ def test_help_card(alice):
         assert topic["title"] and topic["description"]
         assert 1 <= len(topic["examples"]) <= 4
     assert "Nothing is saved until you approve it." in view["privacy"]
-    assert "Venn never contacts anyone for you." in view["privacy"]
+    assert any(line.startswith("Venn never contacts anyone for you.") for line in view["privacy"])
+    assert any("not synced" in line for line in view["privacy"])
     assert steps(view) == {"about_you": False, "your_people": False, "connect": False}
 
 
@@ -124,7 +125,7 @@ def test_help_examples_are_requests_the_server_instructions_route(alice):
         {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "t", "version": "0"}},
     ).json()["result"]["instructions"]
     assert "venn_help" in instructions
-    assert "Start with set-up" in instructions
+    assert "start with set-up" in instructions
     for tool in (
         "venn_import_chatgpt_memory",
         "venn_propose_people_import",
@@ -134,3 +135,12 @@ def test_help_examples_are_requests_the_server_instructions_route(alice):
         "venn_find_people",
     ):
         assert tool in instructions
+
+
+def test_instructions_start_with_a_question_and_state_the_boundary(client):
+    instructions = client.app_state.mcp.instructions
+    assert instructions.index("Start with the user's question") < instructions.index("Otherwise start with set-up")
+    for tool in ("venn_find_people", "venn_this_week", "venn_compare", "venn_save_plan", "venn_create_question_link"):
+        assert tool in instructions, tool
+    assert "never sends anything" in instructions
+    assert "NOT synced" in instructions

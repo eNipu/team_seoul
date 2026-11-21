@@ -24,6 +24,18 @@ def get_or_create_user(db: Session, auth_subject: str, display_name_hint: str | 
     return user, True
 
 
+# Sample friends (see sample_service) are users nobody can sign in as. Their subject is
+# `sample|<owner id>|<slug>`, so each belongs to exactly one account.
+SAMPLE_SUBJECT_PREFIX = "sample|"
+
+# What the user has to type before their account is deleted (ChatGPT and the website).
+DELETE_ACCOUNT_CONFIRMATION = "DELETE MY VENN ACCOUNT"
+
+
+def is_sample_user(user: User | None) -> bool:
+    return user is not None and user.auth_subject.startswith(SAMPLE_SUBJECT_PREFIX)
+
+
 def display_name(user: User | None) -> str:
     if user is None:
         return "Someone"
@@ -70,6 +82,8 @@ def update_profile(db: Session, user: User, update: ProfileUpdate) -> ProfileOut
 
 
 def delete_account(db: Session, user: User) -> None:
-    """Delete the user and (via ON DELETE CASCADE) all owned data."""
+    """Delete the user and (via ON DELETE CASCADE) all owned data, including their sample friends."""
+    for friend in db.scalars(select(User).where(User.auth_subject.like(f"{SAMPLE_SUBJECT_PREFIX}{user.id}|%"))):
+        db.delete(friend)
     db.delete(user)
     db.flush()

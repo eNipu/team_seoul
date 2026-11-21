@@ -13,8 +13,8 @@ from datetime import timedelta
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.ai.extraction import contains_sensitive, extract_candidates, sanitize_candidates
-from app.models import Memory, MemoryProposal, User
+from app.ai.extraction import contains_sensitive, extract_candidates, mentioned_people, sanitize_candidates
+from app.models import Memory, MemoryProposal, Person, User
 from app.models._base import as_aware, utcnow
 from app.schemas.memory import (
     DeleteMemoryOut,
@@ -30,8 +30,9 @@ from app.schemas.memory import (
     MemoryVisibility,
     ProposedMemory,
     SaveMemoriesOut,
+    clean_names,
 )
-from app.services import analytics
+from app.services import analytics, people_service, social_service
 from app.services.errors import InvalidRequest, NotFound, PrivacyViolation
 
 PROPOSAL_TTL = timedelta(hours=24)
@@ -40,6 +41,8 @@ MAX_PROPOSED = 8
 # An import brings over what ChatGPT already remembered, so one card may hold more.
 MAX_IMPORT_ITEMS = 30
 CHATGPT_MEMORY = "chatgpt_memory"
+SAMPLE = "sample"
+_SOURCES = {CHATGPT_MEMORY, SAMPLE}
 
 # What the user can ask ChatGPT to look for. Sensitive areas are not offered at all.
 IMPORT_AREAS: tuple[tuple[str, str, str, bool], ...] = (
@@ -81,13 +84,52 @@ def to_out(m: Memory) -> MemoryOut:
         description=m.description,
         tags=list(m.tags or []),
         visibility=MemoryVisibility(m.visibility),
-        source=CHATGPT_MEMORY if m.source == CHATGPT_MEMORY else None,
+        source=m.source if m.source in _SOURCES else None,
+        people=list(m.people or []),
         created_at=as_aware(m.created_at),
     )
 
 
 def _title_key(title: str) -> str:
     return " ".join(title.lower().split())
+
+
+# ------------------------------------------------------------ people a memory is about
+def circle_names(db: Session, user: User) -> list[str]:
+    """Names of everyone in the caller's circle: their private notes and their connections."""
+    names = list(db.scalars(select(Person.name).where(Person.owner_user_id == user.id)))
+    names += [c.display_name for c in social_service.list_connections(db, user).connections]
+    return names
+
+
+def same_person(name: str, full: str) -> bool:
+    """ "Maya" and "Maya Chen" are taken to be the same person; "May" and "Maya" are not."""
+    a, b = " ".join(name.lower().split()), " ".join(full.lower().split())
+    if not a or not b:
+        return False
+    return a == b or a == b.split()[0] or b == a.split()[0]
+
+
+def unknown_people(names: list[str], circle: list[str]) -> list[str]:
+    return [n for n in names if not any(same_person(n, full) for full in circle)]
+
+
+def _safe_names(names: list[str] | None) -> list[str]:
+    return [n for n in clean_names(names) if not contains_sensitive(n)]
+
+
+def _add_unknown_people(db: Session, user: User, names: list[str]) -> list[dict]:
+    """Add a private note for each name that is not in the circle yet. Returns the notes created."""
+    circle = circle_names(db, user)
+    added: list[dict] = []
+    for name in unknown_people(names, circle):
+        try:
+            person = people_service.add_person(db, user, name=name)
+        except (InvalidRequest, PrivacyViolation):
+            continue  # at the limit, or not a storable name: keep the memory, skip the note
+        circle.append(person.name)
+        added.append(person.model_dump(mode="json"))
+    return added
 
 
 def import_view(db: Session, user: User) -> MemoryImportView:
@@ -138,16 +180,22 @@ def propose_memories(
             "No memory candidates found. Ask the user a question about their interests or goals first."
         )
     have = {_title_key(t) for t in db.scalars(select(Memory.title).where(Memory.user_id == user.id))}
+    circle = circle_names(db, user)
     expires_at = utcnow() + PROPOSAL_TTL
-    items = [
-        ProposedMemory(
-            index=i,
-            suggested_visibility=MemoryVisibility.PRIVATE,
-            already_saved=_title_key(c.title) in have,
-            **c.model_dump(),
+    items = []
+    for i, c in enumerate(candidates):
+        # The assistant names who a memory is about; when it did not, pick up the obvious cases
+        # ("Maya and I…"). Either way the review card shows who would be added.
+        people = _safe_names(c.people or mentioned_people(f"{c.title}. {c.description}"))
+        items.append(
+            ProposedMemory(
+                index=i,
+                suggested_visibility=MemoryVisibility.PRIVATE,
+                already_saved=_title_key(c.title) in have,
+                new_people=unknown_people(people, circle),
+                **{**c.model_dump(), "people": people},
+            )
         )
-        for i, c in enumerate(candidates)
-    ]
     proposal = MemoryProposal(
         user_id=user.id,
         items=[i.model_dump(mode="json") for i in items],
@@ -207,6 +255,7 @@ def save_memories(db: Session, user: User, proposal_id: str, approvals: list[Mem
             tags=list(item.get("tags") or []),
             visibility=a.visibility.value,
             source=source,
+            people=_safe_names(item.get("people")) or None,
             approved_at=now,
         )
         db.add(m)
@@ -214,8 +263,50 @@ def save_memories(db: Session, user: User, proposal_id: str, approvals: list[Mem
     proposal.consumed_at = now
     proposal.items = []  # whatever the user did not pick is dropped, not kept
     db.flush()
+    # The review card said which people an approved item also adds; unapproved items add nobody.
+    people_added = _add_unknown_people(db, user, [n for m in saved for n in (m.people or [])])
     analytics.track(db, "memory_approved", user.id, count=len(saved), source=source or "conversation")
-    return SaveMemoriesOut(saved=[to_out(m) for m in saved], count=len(saved))
+    return SaveMemoriesOut(saved=[to_out(m) for m in saved], count=len(saved), people_added=people_added)
+
+
+def create_memory(
+    db: Session,
+    user: User,
+    category: MemoryCategory,
+    title: str,
+    description: str,
+    tags: list[str] | None = None,
+    visibility: MemoryVisibility = MemoryVisibility.PRIVATE,
+    people: list[str] | None = None,
+) -> SaveMemoriesOut:
+    """Save one memory the user typed in themselves (the website's form).
+
+    There is no proposal step because nothing is inferred: the user wrote the text and pressed save.
+    The assistant has no tool for this; in ChatGPT a memory is always proposed and reviewed first.
+    """
+    candidate = MemoryCandidate(
+        category=category, title=title.strip(), description=description.strip(), tags=tags or [], people=people or []
+    )
+    if contains_sensitive(candidate.title) or contains_sensitive(candidate.description):
+        raise PrivacyViolation("Venn does not store credentials or financial/ID numbers.")
+    existing = db.scalar(select(func.count()).select_from(Memory).where(Memory.user_id == user.id)) or 0
+    if existing >= MAX_MEMORIES_PER_USER:
+        raise InvalidRequest(f"Memory limit reached ({MAX_MEMORIES_PER_USER}). Delete some memories first.")
+    m = Memory(
+        user_id=user.id,
+        category=candidate.category.value,
+        title=candidate.title,
+        description=candidate.description,
+        tags=candidate.tags,
+        visibility=visibility.value,
+        people=_safe_names(candidate.people) or None,
+        approved_at=utcnow(),
+    )
+    db.add(m)
+    db.flush()
+    people_added = _add_unknown_people(db, user, list(m.people or []))
+    analytics.track(db, "memory_approved", user.id, count=1, source="web")
+    return SaveMemoriesOut(saved=[to_out(m)], count=1, people_added=people_added)
 
 
 def discard_proposal(db: Session, user: User, proposal_id: str) -> None:
@@ -240,8 +331,8 @@ def list_memories(db: Session, user: User, category: MemoryCategory | None = Non
 def search_memories(db: Session, user: User, query: str, limit: int = 10) -> MemoryListOut:
     """Keyword search over the caller's own memories, best match first.
 
-    Every query word must appear somewhere in the memory (title, tags, category or
-    description). Scoring favours title and tag hits over description hits.
+    Every query word must appear somewhere in the memory (title, tags, category, description
+    or the people it is about). Scoring favours title and tag hits over description hits.
     """
     words = [w for w in " ".join(query.lower().split())[:200].split() if len(w) > 1][:8]
     if not words:
@@ -253,9 +344,10 @@ def search_memories(db: Session, user: User, query: str, limit: int = 10) -> Mem
         tags = " ".join(m.tags or []).lower()
         category = m.category.lower().replace("_", " ")
         description = m.description.lower()
+        people = " ".join(m.people or []).lower()
         score = 0
         for w in words:
-            hit = 3 * (w in title) + 2 * (w in tags) + 2 * (w in category) + (w in description)
+            hit = 3 * (w in title) + 2 * (w in tags) + 2 * (w in category) + (w in description) + 2 * (w in people)
             if not hit:
                 score = 0
                 break

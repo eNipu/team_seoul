@@ -77,6 +77,10 @@ export const LIMITS = {
   activity: 120,
   goals: 6,
   followUp: 200,
+  vennRegion: 8,
+  planTitle: 120,
+  planDetails: 500,
+  planMembers: 6,
   searchQuery: 120,
   groupMin: 2,
   groupMax: 6,
@@ -102,10 +106,12 @@ export interface Memory {
   created_at: string;
   /** Where the memory came from; null for memories learned in conversation. */
   source: MemorySource | null;
+  /** First names of the people this memory is about; empty for most memories. */
+  people: string[];
 }
 
 /** Sources a memory can be imported from. */
-export const MEMORY_SOURCES = ["chatgpt_memory"] as const;
+export const MEMORY_SOURCES = ["chatgpt_memory", "sample"] as const;
 export type MemorySource = (typeof MEMORY_SOURCES)[number];
 
 export const PROPOSAL_SOURCES = ["conversation", "chatgpt_memory"] as const;
@@ -120,6 +126,10 @@ export interface MemoryProposal {
   suggested_visibility: Visibility;
   /** True when Venn already holds this memory; it starts un-approved. */
   already_saved: boolean;
+  /** Names this memory is about. */
+  people: string[];
+  /** Names that approving this memory also adds as private notes. */
+  new_people: string[];
 }
 
 export interface Profile {
@@ -138,6 +148,8 @@ export interface Connection {
   display_name: string;
   since: string;
   last_interaction_at: string | null;
+  /** Made-up friend from the sample circle. */
+  is_sample: boolean;
 }
 
 export interface Person {
@@ -148,6 +160,8 @@ export interface Person {
   interests: string[];
   last_interaction_at: string | null;
   created_at: string;
+  /** Made-up person from the sample circle. */
+  is_sample: boolean;
 }
 
 export interface PendingRequest {
@@ -199,6 +213,28 @@ export interface DashboardViewData {
   pending_requests: PendingRequest[];
   /** Onboarding steps; empty when the server did not send any. */
   setup: SetupStep[];
+  /** Open plans, soonest first. */
+  plans: Plan[];
+  /** Answers from question links that wait for review. */
+  pending_answers: number;
+  /** True while the made-up sample circle is loaded. */
+  sample_loaded: boolean;
+}
+
+export interface PlanMember {
+  kind: FriendKind;
+  id: string;
+  display_name: string;
+}
+
+export interface Plan {
+  plan_id: string;
+  title: string;
+  details: string | null;
+  planned_for: string | null;
+  status: "planned" | "done";
+  members: PlanMember[];
+  created_at: string;
 }
 
 export interface InviteViewData {
@@ -297,6 +333,7 @@ export interface WelcomeViewData {
   display_name: string;
   goal_options: GoalOption[];
   setup: SetupStep[];
+  sample_loaded: boolean;
 }
 
 export interface HelpTopic {
@@ -346,6 +383,8 @@ export interface SearchResult {
   matched: string[];
   snippet: string | null;
   last_interaction_at: string | null;
+  /** One plain sentence saying why this person matched; "" when the server sent none. */
+  why: string;
 }
 
 export interface PeopleSearchViewData {
@@ -355,6 +394,8 @@ export interface PeopleSearchViewData {
   count: number;
   searched: number;
   note: string;
+  /** The user's own memories that match the query (at most 5). */
+  memories: Memory[];
 }
 
 export interface GroupMember {
@@ -433,7 +474,11 @@ export type ViewData =
   | GroupPlanViewData
   | BriefViewData
   | QuizViewData
-  | HelpViewData;
+  | HelpViewData
+  | VennViewData
+  | ThisWeekViewData
+  | AskLinkViewData
+  | AnswersViewData;
 
 export type ViewName = ViewData["view"];
 
@@ -441,6 +486,98 @@ export type ViewName = ViewData["view"];
 export interface SaveMemoriesResult {
   saved: Memory[];
   count: number;
+  /** Private notes created because approved memories named new people. */
+  people_added: Person[];
+}
+
+// --- Venn card, this week, question links, plans (contract v2) ---
+
+export interface VennViewData {
+  view: "venn";
+  kind: FriendKind;
+  id: string;
+  display_name: string;
+  on_venn: boolean;
+  you_only: string[];
+  shared: string[];
+  them_only: string[];
+  summary: string;
+  suggestions: ActivitySuggestion[];
+  note: string;
+}
+
+export const WEEK_ACTION_TYPES = ["reach_out", "follow_up", "plan"] as const;
+export type WeekActionType = (typeof WEEK_ACTION_TYPES)[number];
+
+export interface WeekAction {
+  type: WeekActionType;
+  kind: FriendKind;
+  id: string;
+  display_name: string;
+  title: string;
+  reason: string;
+  draft_message: string | null;
+  follow_up: FollowUp | null;
+  suggestion: ActivitySuggestion | null;
+}
+
+export interface ThisWeekViewData {
+  view: "this_week";
+  actions: WeekAction[];
+  empty_reason: string | null;
+  note: string;
+}
+
+export interface AskLinkViewData {
+  view: "ask_link";
+  link_id: string;
+  link: string;
+  qr: string[];
+  expires_at: string;
+  for_name: string | null;
+  share_text: string;
+  questions: string[];
+  max_responses: number;
+  note: string;
+}
+
+export interface AnswerItem {
+  key: string;
+  question: string;
+  answer: string;
+  saves_as: string;
+}
+
+export interface AnswerResponse {
+  response_id: string;
+  name: string;
+  received_at: string;
+  person_id: string | null;
+  person_name: string | null;
+  items: AnswerItem[];
+}
+
+export interface QuestionLink {
+  link_id: string;
+  for_name: string | null;
+  link: string;
+  expires_at: string;
+  responses: number;
+  active: boolean;
+}
+
+export interface AnswersViewData {
+  view: "answers";
+  responses: AnswerResponse[];
+  links: QuestionLink[];
+  note: string;
+}
+
+export interface SaveAnswersResult {
+  saved: boolean;
+  person: Person | null;
+  added_interests: string[];
+  follow_up: FollowUp | null;
 }
 export interface DeleteMemoryResult {
   deleted: boolean;
@@ -616,7 +753,57 @@ export function parseMemory(v: unknown): Memory {
     tags: strArr(o.tags),
     visibility: oneOf(o.visibility, VISIBILITIES, "PRIVATE"),
     created_at: str(o.created_at),
-    source: o.source === "chatgpt_memory" ? "chatgpt_memory" : null,
+    source: o.source === "chatgpt_memory" || o.source === "sample" ? o.source : null,
+    people: cleanNames(o.people),
+  };
+}
+
+/** Trimmed, non-empty, de-duplicated names. */
+function cleanNames(v: unknown): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of strArr(v)) {
+    const name = raw.trim();
+    if (!name || seen.has(name.toLowerCase())) continue;
+    seen.add(name.toLowerCase());
+    out.push(name);
+  }
+  return out;
+}
+
+export function parsePlan(v: unknown): Plan {
+  const o = isObj(v) ? v : {};
+  return {
+    plan_id: str(o.plan_id),
+    title: str(o.title),
+    details: strOrNull(o.details),
+    planned_for: strOrNull(o.planned_for),
+    status: o.status === "done" ? "done" : "planned",
+    members: objs(o.members)
+      .map((m) => ({
+        kind: oneOf(m.kind, FRIEND_KINDS, "connection"),
+        id: str(m.id),
+        display_name: str(m.display_name, "Friend") || "Friend",
+      }))
+      .filter((m) => m.id !== ""),
+    created_at: str(o.created_at),
+  };
+}
+
+function parsePlans(v: unknown): Plan[] {
+  return objs(v)
+    .map(parsePlan)
+    .filter((p) => p.plan_id !== "" && p.title.trim() !== "" && p.status === "planned");
+}
+
+function parseQuestionLink(l: Obj): QuestionLink {
+  return {
+    link_id: str(l.link_id),
+    for_name: strOrNull(l.for_name),
+    link: parseLink(l.link),
+    expires_at: str(l.expires_at),
+    responses: Math.max(0, Math.floor(num(l.responses))),
+    active: l.active === true,
   };
 }
 
@@ -640,6 +827,7 @@ function parseConnection(c: Obj): Connection {
     display_name: str(c.display_name, "Friend") || "Friend",
     since: str(c.since),
     last_interaction_at: strOrNull(c.last_interaction_at),
+    is_sample: c.is_sample === true,
   };
 }
 
@@ -653,6 +841,7 @@ export function parsePerson(v: unknown): Person {
     interests: strArr(o.interests),
     last_interaction_at: strOrNull(o.last_interaction_at),
     created_at: str(o.created_at),
+    is_sample: o.is_sample === true,
   };
 }
 
@@ -669,6 +858,9 @@ function parseDashboard(sc: Obj): DashboardViewData {
       created_at: str(r.created_at),
     })),
     setup: parseSetup(sc.setup),
+    plans: parsePlans(sc.plans),
+    pending_answers: Math.max(0, Math.floor(num(sc.pending_answers))),
+    sample_loaded: sc.sample_loaded === true,
   };
 }
 
@@ -690,6 +882,8 @@ export function parseView(sc: unknown): ViewData | null {
           tags: strArr(p.tags),
           suggested_visibility: oneOf(p.suggested_visibility, VISIBILITIES, "PRIVATE"),
           already_saved: p.already_saved === true,
+          people: cleanNames(p.people),
+          new_people: cleanNames(p.new_people),
         })),
       };
     case "memory_import": {
@@ -801,6 +995,7 @@ export function parseView(sc: unknown): ViewData | null {
             matched: strArr(r.matched),
             snippet: strOrNull(r.snippet),
             last_interaction_at: strOrNull(r.last_interaction_at),
+            why: str(r.why).trim(),
           };
         })
         .filter((r) => r.id !== "");
@@ -811,6 +1006,10 @@ export function parseView(sc: unknown): ViewData | null {
         count: Math.max(0, Math.floor(num(sc.count, results.length))),
         searched: Math.max(0, Math.floor(num(sc.searched))),
         note: str(sc.note),
+        memories: objs(sc.memories)
+          .map(parseMemory)
+          .filter((m) => m.title.trim() !== "")
+          .slice(0, 5),
       };
     }
     case "group_plan":
@@ -868,6 +1067,96 @@ export function parseView(sc: unknown): ViewData | null {
         note: str(sc.note),
       };
     }
+    case "venn": {
+      const id = str(sc.id);
+      if (!id) return null;
+      const kind = oneOf(sc.kind, FRIEND_KINDS, "connection");
+      const labels = (v: unknown) => cleanNames(v).slice(0, LIMITS.vennRegion);
+      return {
+        view: "venn",
+        kind,
+        id,
+        display_name: str(sc.display_name, "Friend") || "Friend",
+        on_venn: typeof sc.on_venn === "boolean" ? sc.on_venn : kind === "connection",
+        you_only: labels(sc.you_only),
+        shared: labels(sc.shared),
+        them_only: labels(sc.them_only),
+        summary: str(sc.summary).trim(),
+        suggestions: objs(sc.suggestions)
+          .map(parseSuggestion)
+          .filter((s) => s.title.trim() !== "")
+          .slice(0, 2),
+        note: str(sc.note),
+      };
+    }
+    case "this_week": {
+      const actions = objs(sc.actions)
+        .map((a): WeekAction => {
+          const followUp = isObj(a.follow_up) ? parseFollowUp(a.follow_up) : null;
+          const suggestion = isObj(a.suggestion) ? parseSuggestion(a.suggestion) : null;
+          const draft = strOrNull(a.draft_message);
+          return {
+            type: oneOf(a.type, WEEK_ACTION_TYPES, "reach_out"),
+            kind: oneOf(a.kind, FRIEND_KINDS, "connection"),
+            id: str(a.id),
+            display_name: str(a.display_name, "Friend") || "Friend",
+            title: str(a.title),
+            reason: str(a.reason),
+            draft_message: draft && draft.trim() !== "" ? draft : null,
+            follow_up: followUp && followUp.follow_up_id !== "" && followUp.text.trim() !== "" ? followUp : null,
+            suggestion: suggestion && suggestion.title.trim() !== "" ? suggestion : null,
+          };
+        })
+        .filter((a) => a.id !== "")
+        .slice(0, 3);
+      return { view: "this_week", actions, empty_reason: strOrNull(sc.empty_reason), note: str(sc.note) };
+    }
+    case "ask_link": {
+      const link = parseLink(sc.link);
+      const linkId = str(sc.link_id);
+      if (!link || !linkId) return null;
+      return {
+        view: "ask_link",
+        link_id: linkId,
+        link,
+        qr: parseQr(sc.qr),
+        expires_at: str(sc.expires_at),
+        for_name: strOrNull(sc.for_name),
+        share_text: str(sc.share_text),
+        questions: strArr(sc.questions).filter((q) => q.trim() !== ""),
+        max_responses: Math.max(0, Math.floor(num(sc.max_responses))),
+        note: str(sc.note),
+      };
+    }
+    case "answers":
+      return {
+        view: "answers",
+        responses: objs(sc.responses)
+          .map((r): AnswerResponse => {
+            const seen = new Set<string>();
+            const items: AnswerItem[] = [];
+            for (const it of objs(r.items)) {
+              const key = str(it.key);
+              const answer = str(it.answer);
+              if (!key || seen.has(key) || answer.trim() === "") continue;
+              seen.add(key);
+              items.push({ key, question: str(it.question), answer, saves_as: str(it.saves_as) });
+            }
+            return {
+              response_id: str(r.response_id),
+              name: str(r.name),
+              received_at: str(r.received_at),
+              person_id: strOrNull(r.person_id),
+              person_name: strOrNull(r.person_name),
+              items,
+            };
+          })
+          .filter((r) => r.response_id !== "" && r.items.length > 0),
+        links: objs(sc.links)
+          .map(parseQuestionLink)
+          .filter((l) => l.link_id !== ""),
+        note: str(sc.note),
+      };
     case "welcome":
       return {
         view: "welcome",
@@ -876,6 +1165,7 @@ export function parseView(sc: unknown): ViewData | null {
           .map((g) => ({ value: str(g.value), label: str(g.label) || humanize(str(g.value)) }))
           .filter((g) => g.value !== ""),
         setup: parseSetup(sc.setup),
+        sample_loaded: sc.sample_loaded === true,
       };
     case "help":
       return {
@@ -898,7 +1188,41 @@ function parseInteraction(i: Obj): Interaction {
 export function parseSaveMemories(v: unknown): SaveMemoriesResult {
   const o = isObj(v) ? v : {};
   const saved = objs(o.saved).map(parseMemory);
-  return { saved, count: num(o.count, saved.length) };
+  return {
+    saved,
+    count: num(o.count, saved.length),
+    people_added: objs(o.people_added)
+      .map(parsePerson)
+      .filter((p) => p.person_id !== ""),
+  };
+}
+
+export function parseSaveAnswers(v: unknown): SaveAnswersResult {
+  const o = isObj(v) ? v : {};
+  const person = hasId(o.person, "person_id") ? parsePerson(o.person) : null;
+  const followUp = isObj(o.follow_up) ? parseFollowUp(o.follow_up) : null;
+  return {
+    saved: o.saved === true,
+    person,
+    added_interests: strArr(o.added_interests),
+    follow_up: followUp && followUp.follow_up_id !== "" ? followUp : null,
+  };
+}
+
+/** First word of a name, for compact labels ("Maya Chen" → "Maya"). */
+export function firstName(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  // "Mrs. Choi" has no usable first name: keep the whole thing.
+  if (parts.length > 1 && /^(mr|mrs|ms|miss|mx|dr|prof|aunt|uncle|coach)\.?$/i.test(parts[0])) return name.trim();
+  return parts[0] || name;
+}
+
+/** "Sat, Nov 28, 11:00 AM" in the user's locale; "" when the timestamp is unusable. */
+export function formatDateTime(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString(undefined, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
 export function parseDeleteMemory(v: unknown): DeleteMemoryResult {

@@ -16,7 +16,7 @@ import {
   type Memory,
   type Visibility,
 } from "../types";
-import { EmptyNote, SectionTitle, type Action, type Nav } from "./common";
+import { EmptyNote, PeopleChips, SampleTag, SectionTitle, type Action, type Nav } from "./common";
 import { CategoryIcon, Icon } from "./icons";
 
 interface Props {
@@ -181,6 +181,7 @@ export default function MemoriesTab({ memories, bridge, nav, action, onChange }:
                           ))}
                         </div>
                       )}
+                      <PeopleChips people={m.people} />
                       {confirmDelete === m.memory_id ? (
                         <div className="confirm" role="group" aria-label="Confirm delete">
                           <span className="small">Delete this memory?</span>
@@ -211,6 +212,7 @@ export default function MemoriesTab({ memories, bridge, nav, action, onChange }:
                                 From ChatGPT
                               </span>
                             )}
+                            {m.source === "sample" && <SampleTag />}
                           </span>
                           <div className="card__foot-actions">
                             <button

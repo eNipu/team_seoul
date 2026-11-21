@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, String, Text, Uuid
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Index, String, Text, Uuid, false
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.database import Base, JSONType
@@ -27,6 +27,8 @@ class Person(Base):
     relationship: Mapped[str | None] = mapped_column(String(80))
     notes: Mapped[str | None] = mapped_column(Text)
     interests: Mapped[list] = mapped_column(JSONType, default=list, nullable=False)
+    # Part of the made-up sample circle; removed again with it.
+    is_sample: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false(), nullable=False)
     created_at: Mapped[datetime] = created_at_col()
     updated_at: Mapped[datetime] = updated_at_col()
 
