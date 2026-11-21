@@ -1,0 +1,622 @@
+{
+  "id": "ev_16c825a92d2b05252f33b36952a257848684be70bfd61b955801fded89ecf2b2",
+  "subject": {
+    "kind": "website",
+    "name": "https://www.boardy.ai/events"
+  },
+  "operation": "web_site_capture",
+  "params": {
+    "include_html": false,
+    "max_height": 12000,
+    "noise_pass": true,
+    "visitor_view": false,
+    "widths": [
+      1440,
+      768,
+      390
+    ]
+  },
+  "result": {
+    "counts": {
+      "forms": 2,
+      "headings": 11,
+      "images": 28,
+      "links": 7,
+      "outline": 127
+    },
+    "design": {
+      "backgrounds": [
+        {
+          "count": 7,
+          "value": "#ffffff"
+        },
+        {
+          "count": 6,
+          "value": "#006ee6"
+        },
+        {
+          "count": 6,
+          "value": "#f0f3e9"
+        },
+        {
+          "count": 5,
+          "value": "#ffffff2b"
+        },
+        {
+          "count": 5,
+          "value": "#ebf2fb"
+        },
+        {
+          "count": 3,
+          "value": "#f5f2eb"
+        },
+        {
+          "count": 3,
+          "value": "#fffdf8"
+        },
+        {
+          "count": 3,
+          "value": "#fffefaa6"
+        },
+        {
+          "count": 2,
+          "value": "#f3eadc"
+        },
+        {
+          "count": 2,
+          "value": "#a94c28"
+        },
+        {
+          "count": 2,
+          "value": "#fffdf8cc"
+        },
+        {
+          "count": 2,
+          "value": "#916b27"
+        },
+        {
+          "count": 2,
+          "value": "#4f6d38"
+        },
+        {
+          "count": 2,
+          "value": "#276b9f"
+        },
+        {
+          "count": 2,
+          "value": "#8b506f"
+        },
+        {
+          "count": 1,
+          "value": "#faf6ee"
+        }
+      ],
+      "css_variables": {
+        "--card": "#fffefb",
+        "--cream": "#fffefb",
+        "--ease-in-out": "cubic-bezier(.77, 0, .175, 1)",
+        "--ease-linear": "linear",
+        "--ease-out": "cubic-bezier(.23, 1, .32, 1)",
+        "--ease-standard": "ease",
+        "--font-display": "\"Raleway Variable\", var(--font-sans)",
+        "--font-sans": "\"Geist Variable\", ui-sans-serif, system-ui, sans-serif",
+        "--font-serif": "var(--font-display)",
+        "--green": "#006ee6",
+        "--green-deep": "#0066d6",
+        "--green-soft": "#e3eefc",
+        "--ink": "#172335",
+        "--ink-soft": "#4e5968",
+        "--line": "#d4dce5",
+        "--paper": "#f5f2eb",
+        "--paper-deep": "#e0e7ee"
+      },
+      "font_faces": [
+        {
+          "family": "Twemoji Country Flags",
+          "status": "unloaded",
+          "style": "normal",
+          "weight": "normal"
+        },
+        {
+          "family": "Geist Variable",
+          "status": "unloaded",
+          "style": "normal",
+          "weight": "100 900"
+        },
+        {
+          "family": "Geist Variable",
+          "status": "unloaded",
+          "style": "normal",
+          "weight": "100 900"
+        },
+        {
+          "family": "Geist Variable",
+          "status": "loaded",
+          "style": "normal",
+          "weight": "100 900"
+        },
+        {
+          "family": "Raleway Variable",
+          "status": "unloaded",
+          "style": "normal",
+          "weight": "100 900"
+        },
+        {
+          "family": "Raleway Variable",
+          "status": "unloaded",
+          "style": "normal",
+          "weight": "100 900"
+        },
+        {
+          "family": "Raleway Variable",
+          "status": "unloaded",
+          "style": "normal",
+          "weight": "100 900"
+        },
+        {
+          "family": "Raleway Variable",
+          "status": "unloaded",
+          "style": "normal",
+          "weight": "100 900"
+        },
+        {
+          "family": "Raleway Variable",
+          "status": "loaded",
+          "style": "normal",
+          "weight": "100 900"
+        }
+      ],
+      "font_sizes": [
+        {
+          "count": 19,
+          "value": "26px"
+        },
+        {
+          "count": 17,
+          "value": "13px"
+        },
+        {
+          "count": 14,
+          "value": "12px"
+        },
+        {
+          "count": 9,
+          "value": "14px"
+        },
+        {
+          "count": 7,
+          "value": "16px"
+        },
+        {
+          "count": 5,
+          "value": "15px"
+        },
+        {
+          "count": 5,
+          "value": "16.5px"
+        },
+        {
+          "count": 4,
+          "value": "19px"
+        },
+        {
+          "count": 4,
+          "value": "50px"
+        },
+        {
+          "count": 4,
+          "value": "18.5px"
+        },
+        {
+          "count": 4,
+          "value": "13.5px"
+        },
+        {
+          "count": 3,
+          "value": "17px"
+        },
+        {
+          "count": 3,
+          "value": "24px"
+        },
+        {
+          "count": 2,
+          "value": "22px"
+        },
+        {
+          "count": 2,
+          "value": "84px"
+        },
+        {
+          "count": 2,
+          "value": "11px"
+        }
+      ],
+      "font_weights": [
+        {
+          "count": 35,
+          "value": "600"
+        },
+        {
+          "count": 33,
+          "value": "400"
+        },
+        {
+          "count": 19,
+          "value": "500"
+        },
+        {
+          "count": 11,
+          "value": "480"
+        },
+        {
+          "count": 11,
+          "value": "550"
+        },
+        {
+          "count": 1,
+          "value": "650"
+        }
+      ],
+      "fonts": [
+        {
+          "count": 75,
+          "value": "\"Geist Variable\", system-ui, sans-serif"
+        },
+        {
+          "count": 18,
+          "value": "\"Raleway Variable\", sans-serif"
+        },
+        {
+          "count": 11,
+          "value": "\"Raleway Variable\", \"Geist Variable\", sans-serif"
+        },
+        {
+          "count": 5,
+          "value": "\"Geist Variable\", ui-sans-serif, system-ui, sans-serif"
+        },
+        {
+          "count": 1,
+          "value": "\"Geist Variable\", sans-serif"
+        }
+      ],
+      "max_widths": [
+        {
+          "count": 7,
+          "value": "1320px"
+        },
+        {
+          "count": 7,
+          "value": "540px"
+        },
+        {
+          "count": 5,
+          "value": "494px"
+        },
+        {
+          "count": 5,
+          "value": "532px"
+        },
+        {
+          "count": 4,
+          "value": "672px"
+        },
+        {
+          "count": 1,
+          "value": "420px"
+        },
+        {
+          "count": 1,
+          "value": "1600px"
+        },
+        {
+          "count": 1,
+          "value": "800px"
+        }
+      ],
+      "radii": [
+        {
+          "count": 23,
+          "value": "50%"
+        },
+        {
+          "count": 10,
+          "value": "999px"
+        },
+        {
+          "count": 5,
+          "value": "24px"
+        },
+        {
+          "count": 3,
+          "value": "14px"
+        },
+        {
+          "count": 3,
+          "value": "8px"
+        },
+        {
+          "count": 3,
+          "value": "13px"
+        },
+        {
+          "count": 2,
+          "value": "28px"
+        },
+        {
+          "count": 1,
+          "value": "26px"
+        },
+        {
+          "count": 1,
+          "value": "18px"
+        }
+      ],
+      "shadows": [
+        {
+          "count": 5,
+          "value": "rgba(255, 255, 255, 0.25) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.12) 0px -1px 0px 0px inset, rgba(0, 102, 214, 0.6) 0px 10px 24px -10px"
+        },
+        {
+          "count": 3,
+          "value": "rgba(18, 29, 44, 0.04) 0px 1px 2px 0px"
+        },
+        {
+          "count": 1,
+          "value": "rgba(83, 55, 29, 0.03) 0px 2px 4px 0px, rgba(83, 55, 29, 0.2) 0px 16px 32px -20px, rgba(83, 55, 29, 0.2) 0px 40px 64px -40px"
+        },
+        {
+          "count": 1,
+          "value": "color(srgb 0.831373 0.784314 0.717647 / 0.45) 0px 0px 0px 1px, rgba(18, 29, 44, 0.04) 0px 1px 1px 0px, rgba(18, 29, 44, 0.06) 0px 4px 10px -4px, rgba(18, 29, 44, 0.22) 0px 24px 48px -28px"
+        },
+        {
+          "count": 1,
+          "value": "color(srgb 0.831373 0.784314 0.717647 / 0.55) 0px 0px 0px 1px, rgba(18, 29, 44, 0.04) 0px 1px 1px 0px, rgba(18, 29, 44, 0.06) 0px 4px 10px -4px, rgba(18, 29, 44, 0.22) 0px 24px 48px -28px"
+        },
+        {
+          "count": 1,
+          "value": "rgba(65, 55, 44, 0.16) 0px 20px 56px 0px, rgba(65, 55, 44, 0.07) 0px 2px 8px 0px"
+        }
+      ],
+      "spacing": [
+        {
+          "count": 51,
+          "value": "28px"
+        },
+        {
+          "count": 33,
+          "value": "10px"
+        },
+        {
+          "count": 31,
+          "value": "24px"
+        },
+        {
+          "count": 31,
+          "value": "12px"
+        },
+        {
+          "count": 31,
+          "value": "22px"
+        },
+        {
+          "count": 21,
+          "value": "16px"
+        },
+        {
+          "count": 20,
+          "value": "14px"
+        },
+        {
+          "count": 20,
+          "value": "30px"
+        },
+        {
+          "count": 12,
+          "value": "48px"
+        },
+        {
+          "count": 11,
+          "value": "7px"
+        },
+        {
+          "count": 10,
+          "value": "20px"
+        },
+        {
+          "count": 9,
+          "value": "18px"
+        },
+        {
+          "count": 9,
+          "value": "8px"
+        },
+        {
+          "count": 7,
+          "value": "32px"
+        },
+        {
+          "count": 7,
+          "value": "88px"
+        },
+        {
+          "count": 6,
+          "value": "128px"
+        },
+        {
+          "count": 6,
+          "value": "6px"
+        },
+        {
+          "count": 6,
+          "value": "1px"
+        },
+        {
+          "count": 5,
+          "value": "80px"
+        },
+        {
+          "count": 4,
+          "value": "9px"
+        },
+        {
+          "count": 4,
+          "value": "96px"
+        },
+        {
+          "count": 4,
+          "value": "5px"
+        },
+        {
+          "count": 4,
+          "value": "58px"
+        },
+        {
+          "count": 4,
+          "value": "44px"
+        }
+      ],
+      "text_colors": [
+        {
+          "count": 34,
+          "value": "#282d32"
+        },
+        {
+          "count": 23,
+          "value": "#6c645b"
+        },
+        {
+          "count": 15,
+          "value": "#fffdf8"
+        },
+        {
+          "count": 14,
+          "value": "#514d46"
+        },
+        {
+          "count": 7,
+          "value": "#60574e"
+        },
+        {
+          "count": 3,
+          "value": "#6e4935"
+        },
+        {
+          "count": 3,
+          "value": "#172335"
+        },
+        {
+          "count": 2,
+          "value": "#a94c28"
+        },
+        {
+          "count": 2,
+          "value": "#8b506f"
+        },
+        {
+          "count": 1,
+          "value": "#8c583e"
+        },
+        {
+          "count": 1,
+          "value": "#0066d6"
+        },
+        {
+          "count": 1,
+          "value": "#916b27"
+        },
+        {
+          "count": 1,
+          "value": "#4f6d38"
+        },
+        {
+          "count": 1,
+          "value": "#276b9f"
+        },
+        {
+          "count": 1,
+          "value": "#4e5968"
+        },
+        {
+          "count": 1,
+          "value": "#ffffff"
+        }
+      ]
+    },
+    "files": [
+      "README.md",
+      "capture.json"
+    ],
+    "html_bytes": 0,
+    "output_directory": "/Users/lamda/Documents/GitHub/Hackathon/team_seoul/boardy-ai/capture/routes/events",
+    "screenshots": [
+      {
+        "css_width": 1440,
+        "cut": false,
+        "file": "screenshot-1440.png",
+        "height": 4707,
+        "noise_file": "noise-1440.png",
+        "noise_tiles": 2351,
+        "sha256": "06985b8a0a88bc9865aa3587f1762472f2a3d21bd79745e378f432c6510721e1",
+        "width": 1440
+      },
+      {
+        "css_width": 768,
+        "cut": false,
+        "file": "screenshot-768.png",
+        "height": 5920,
+        "noise_file": "noise-768.png",
+        "noise_tiles": 813,
+        "sha256": "bb32c68d34137e2044ce5390f14ab449d340d5c040d6c471020b5482e554c3fa",
+        "width": 768
+      },
+      {
+        "css_width": 390,
+        "cut": false,
+        "file": "screenshot-390.png",
+        "height": 6834,
+        "noise_file": "noise-390.png",
+        "noise_tiles": 749,
+        "sha256": "cad5ed875ad31425e6e435fc89ee213685802e115bc56b3b2bb9841fb97759a5",
+        "width": 390
+      }
+    ],
+    "title": "Invite Boardy to your event",
+    "url": "https://www.boardy.ai/events"
+  },
+  "summary": "Captured https://www.boardy.ai/events: 3 screenshot(s), 127 outline items, 11 headings, 28 images, 7 links, 2 forms → /Users/lamda/Documents/GitHub/Hackathon/team_seoul/boardy-ai/capture/routes/events.",
+  "confidence": "observed",
+  "authority": "our-run",
+  "environment": {
+    "clean_room": false,
+    "engine": "cdp",
+    "engine_version": "1.3",
+    "host": "macos-aarch64"
+  },
+  "limitations": [
+    {
+      "code": "one_state",
+      "message": "One state of the page: menus, dialogs and content behind interactions are not opened."
+    },
+    {
+      "code": "cross_origin_css",
+      "message": "CSS custom properties and breakpoints from cross-origin stylesheets can't be read."
+    }
+  ],
+  "coverage": {
+    "status": "complete",
+    "examined": 3,
+    "total": 3
+  },
+  "locations": [
+    {
+      "kind": "url",
+      "value": "https://www.boardy.ai/events"
+    },
+    {
+      "kind": "path",
+      "value": "/Users/lamda/Documents/GitHub/Hackathon/team_seoul/boardy-ai/capture/routes/events"
+    }
+  ],
+  "links": []
+}

@@ -1,0 +1,141 @@
+{
+  "id": "ev_ca1a25bdd21c2674d33702f98db21b4d9fc1d5768c61db5a7459b5ffc1f050df",
+  "subject": {
+    "kind": "web-capture",
+    "name": "https://www.boardy.ai/"
+  },
+  "operation": "web_scripts_save",
+  "params": {
+    "max_scripts": 5000,
+    "output_directory": "/Users/lamda/Documents/GitHub/Hackathon/team_seoul/boardy-ai/app/scripts_inspect"
+  },
+  "result": {
+    "bytes": 1246563,
+    "files_folder": "/Users/lamda/Documents/GitHub/Hackathon/team_seoul/boardy-ai/app/scripts_inspect/files",
+    "manifest": "/Users/lamda/Documents/GitHub/Hackathon/team_seoul/boardy-ai/app/scripts_inspect/manifest.json",
+    "output_directory": "/Users/lamda/Documents/GitHub/Hackathon/team_seoul/boardy-ai/app/scripts_inspect",
+    "scripts": [
+      {
+        "bytes": 797,
+        "path": "files/www.boardy.ai/assets/scroll-reveal-observer-h4pxLmi5.js",
+        "sha256": "d04edabe10c2adbfc9ee39852118ece9a3475d71903e62c00658dd3b739887e4",
+        "url": "https://www.boardy.ai/assets/scroll-reveal-observer-h4pxLmi5.js"
+      },
+      {
+        "bytes": 449,
+        "path": "files/www.boardy.ai/assets/home-stats-B8pLmeA_.js",
+        "sha256": "37d555d951fb7c6378039a549ad76b8c871bf3f6269c0c57d521724ecb4ff47d",
+        "url": "https://www.boardy.ai/assets/home-stats-B8pLmeA_.js"
+      },
+      {
+        "bytes": 79,
+        "path": "files/www.boardy.ai/assets/is-record-WdQbMeHT.js",
+        "sha256": "6d7d9e07aae784bfe54274843268d5e8b54208932895d170e0804e1f9fa9f5d0",
+        "url": "https://www.boardy.ai/assets/is-record-WdQbMeHT.js"
+      },
+      {
+        "bytes": 256,
+        "path": "files/www.boardy.ai/assets/lock-keyhole-D51r-cXl.js",
+        "sha256": "89e2fd63bc091419d367bf43f6911cb3d77dfbbb9b95f75fee8086bc91cd321d",
+        "url": "https://www.boardy.ai/assets/lock-keyhole-D51r-cXl.js"
+      },
+      {
+        "bytes": 16542,
+        "path": "files/www.boardy.ai/assets/landing-message-dialog-CIclDkIa.js",
+        "sha256": "ea499f8a0fb111109a191fd1cac5a7e44452f69e4196c1e39b216490483cde1a",
+        "url": "https://www.boardy.ai/assets/landing-message-dialog-CIclDkIa.js"
+      },
+      {
+        "bytes": 6617,
+        "path": "files/www.boardy.ai/assets/home-nav-bar-CMMaVtXX.js",
+        "sha256": "7159e98c867b25a54beba8a708275093d6b3cf7c83a1bd5e978b9303c0b689ad",
+        "url": "https://www.boardy.ai/assets/home-nav-bar-CMMaVtXX.js"
+      },
+      {
+        "bytes": 1482,
+        "path": "files/www.boardy.ai/assets/linktree-channel-dialog-BC4KBoT_.js",
+        "sha256": "4625a0f0c6eccb9a2e33c14d16be3e6bd05d250eefed0be4764eaa9b851a6a5b",
+        "url": "https://www.boardy.ai/assets/linktree-channel-dialog-BC4KBoT_.js"
+      },
+      {
+        "bytes": 97729,
+        "path": "files/www.boardy.ai/assets/index-B9RyudA8.js",
+        "sha256": "8c5bac9a9331a16ff4d2374c5d940b5a1770574e0ff4509e55b7613023f40bea",
+        "url": "https://www.boardy.ai/assets/index-B9RyudA8.js"
+      },
+      {
+        "bytes": 935992,
+        "path": "files/www.boardy.ai/assets/index-BjgH2D5g.js",
+        "sha256": "4a970b109a7358464adb13617624cd030cd680a39ae7cef160e6182b89309bfa",
+        "url": "https://www.boardy.ai/assets/index-BjgH2D5g.js"
+      },
+      {
+        "bytes": 527,
+        "path": "files/www.boardy.ai/assets/campaign-submission-Cvm2ovU4.js",
+        "sha256": "08ef5aba7256eb98b943fde87cb7d4b6931e50b0a4eaae74fa4ef7af348e7d37",
+        "url": "https://www.boardy.ai/assets/campaign-submission-Cvm2ovU4.js"
+      },
+      {
+        "bytes": 266,
+        "path": "files/www.boardy.ai/assets/search-CIraHuDM.js",
+        "sha256": "115b54385871e589ff40d13baa0592c6fcba2e35761a45f44d907ec3f5a03a6e",
+        "url": "https://www.boardy.ai/assets/search-CIraHuDM.js"
+      },
+      {
+        "bytes": 155,
+        "path": "files/www.boardy.ai/assets/x-BR0KwmdT.js",
+        "sha256": "ce3bd6bc4a3460158d77130ed6626bad681c181a56b7ef05dad4ddf46db925b6",
+        "url": "https://www.boardy.ai/assets/x-BR0KwmdT.js"
+      },
+      {
+        "bytes": 1168,
+        "path": "files/www.boardy.ai/assets/index-BvvxcsDW.js",
+        "sha256": "9d5b6c7f9e820bcac63f10ec371d048d14474c4e21970ab9564f85c61275b84a",
+        "url": "https://www.boardy.ai/assets/index-BvvxcsDW.js"
+      },
+      {
+        "bytes": 133581,
+        "path": "files/www.boardy.ai/assets/country-code-picker-BibYXFOp.js",
+        "sha256": "b5838d2971dfbd3abf82dc8b8682e1e2109b702507cb028155874d5deb1c63c8",
+        "url": "https://www.boardy.ai/assets/country-code-picker-BibYXFOp.js"
+      },
+      {
+        "bytes": 27027,
+        "path": "files/us-assets.i.posthog.com/static/1.438.12/web-vitals-with-attribution.js",
+        "sha256": "df8028288765a10318afacaff5a27f678394f74ce8354bab7ebbb318bc0463c8",
+        "url": "https://us-assets.i.posthog.com/static/1.438.12/web-vitals-with-attribution.js"
+      },
+      {
+        "bytes": 23896,
+        "path": "files/us-assets.i.posthog.com/static/1.438.12/dead-clicks-autocapture.js",
+        "sha256": "1d0b2faf5145fc6c24e30287e186741dee00d1fedc75c1d063e3cd874b5b0b03",
+        "url": "https://us-assets.i.posthog.com/static/1.438.12/dead-clicks-autocapture.js"
+      }
+    ],
+    "skipped": []
+  },
+  "summary": "Exported 16 script(s) (1246563 bytes) to /Users/lamda/Documents/GitHub/Hackathon/team_seoul/boardy-ai/app/scripts_inspect.",
+  "confidence": "derived",
+  "authority": "original-files",
+  "environment": {
+    "clean_room": false,
+    "engine": "builtin",
+    "engine_version": "0.6.1",
+    "host": "macos-aarch64"
+  },
+  "limitations": [],
+  "coverage": {
+    "status": "complete",
+    "examined": 16,
+    "total": 16
+  },
+  "locations": [
+    {
+      "kind": "path",
+      "value": "/Users/lamda/Documents/GitHub/Hackathon/team_seoul/boardy-ai/app/scripts_inspect"
+    }
+  ],
+  "links": [
+    "ev_1ae6b9c37c55cd8f1b1f09e15e705b80aef02157d7b4d40adbe64b2f4b4f00b9"
+  ]
+}

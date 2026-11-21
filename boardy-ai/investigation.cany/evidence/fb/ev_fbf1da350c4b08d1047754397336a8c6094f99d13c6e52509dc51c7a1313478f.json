@@ -1,0 +1,76 @@
+{
+  "id": "ev_fbf1da350c4b08d1047754397336a8c6094f99d13c6e52509dc51c7a1313478f",
+  "subject": {
+    "kind": "script",
+    "sha256": "8c5bac9a9331a16ff4d2374c5d940b5a1770574e0ff4509e55b7613023f40bea",
+    "name": "index-B9RyudA8.js"
+  },
+  "operation": "native_bytes_find",
+  "params": {
+    "encoding": "both",
+    "limit": 100,
+    "offset": 0,
+    "path": "/Users/lamda/Documents/GitHub/Hackathon/team_seoul/boardy-ai/app/scripts_inspect/files/www.boardy.ai/assets/index-B9RyudA8.js",
+    "pattern": null,
+    "text": "public-globe"
+  },
+  "result": {
+    "file_size": 97729,
+    "limit": 100,
+    "match_cap_reached": false,
+    "matches": [
+      {
+        "bytes": "7075626c69632d676c6f6265",
+        "file_offset": 59206,
+        "file_offset_hex": "0xe746",
+        "length": 12,
+        "matched": "utf8"
+      }
+    ],
+    "native_container": null,
+    "offset": 0,
+    "path": "/Users/lamda/Documents/GitHub/Hackathon/team_seoul/boardy-ai/app/scripts_inspect/files/www.boardy.ai/assets/index-B9RyudA8.js",
+    "searched_for": [
+      {
+        "kind": "utf8",
+        "length": 12
+      },
+      {
+        "kind": "utf16le",
+        "length": 24
+      }
+    ],
+    "total_matches": 1
+  },
+  "summary": "1 match(es) for utf8 + utf16le in index-B9RyudA8.js; showing 1 from #0.",
+  "confidence": "observed",
+  "authority": "original-files",
+  "environment": {
+    "clean_room": false,
+    "engine": "builtin",
+    "engine_version": "0.6.1",
+    "host": "macos-aarch64"
+  },
+  "limitations": [
+    {
+      "code": "file_bytes_only",
+      "message": "The file's bytes are searched as stored: compressed, encrypted or packed regions and data built at run time are not seen, so no match is not proof of absence."
+    },
+    {
+      "code": "no_addresses",
+      "message": "This file is not a readable ELF, PE or Mach-O program, so matches carry file offsets only."
+    }
+  ],
+  "coverage": {
+    "status": "complete",
+    "examined": 1,
+    "total": 1
+  },
+  "locations": [
+    {
+      "kind": "file_offset",
+      "value": "0xe746"
+    }
+  ],
+  "links": []
+}

@@ -1,0 +1,329 @@
+--- Craft Anything 0.6.1: a run started 2026-11-21 16:57:53 UTC ---
+16:57:53 stage Opening https://www.boardy.ai/ in a private browser…
+16:57:53 start web site open
+16:57:58 done  web site open (4 s)
+16:57:58 stage Photographing the page and reading its layout…
+16:57:58 start web site capture
+16:58:14 done  web site capture (16 s)
+16:58:14 stage Opening its menus, pop-ups and tabs…
+16:58:14 start web page states capture
+16:58:15 done  web page states capture
+16:58:15 start web page states capture
+16:58:15 done  web page states capture
+16:58:15 stage Photographing more pages (1 of 4): /events…
+16:58:15 start web site open
+16:58:18 done  web site open (2 s)
+16:58:18 start web site capture
+16:58:33 done  web site capture (15 s)
+16:58:33 stage Photographing more pages (2 of 4): /booking…
+16:58:33 start web site open
+16:58:36 done  web site open (3 s)
+16:58:36 start web site capture
+16:58:55 done  web site capture (18 s)
+16:58:55 stage Photographing more pages (3 of 4): /chatgpt…
+16:58:55 start web site open
+16:58:58 done  web site open (2 s)
+16:58:58 start web site capture
+16:59:16 done  web site capture (18 s)
+16:59:16 stage Photographing more pages (4 of 4): /articles…
+16:59:16 start web site open
+16:59:24 done  web site open (7 s)
+16:59:24 start web site capture
+16:59:39 done  web site capture (14 s)
+16:59:39 stage Reading its JavaScript and watching what it does…
+16:59:39 start web site open
+16:59:41 done  web site open (2 s)
+16:59:42 start web page js analyze
+16:59:43 done  web page js analyze (1 s)
+16:59:43 start web page watch
+16:59:53 done  web page watch (10 s)
+16:59:53 stage Getting the builder ready…
+16:59:53 stage Building the first version…
+16:59:53 note  Reading the investigation so far…
+17:00:08 start core brief writecore plan updatebuild checklist
+17:00:08 FAIL  core brief writecore plan updatebuild checklist: INVALID_JSON: the tool input wasn't valid JSON (it may have been cut off). Send the call again with complete input.
+17:00:12 start core brief write
+17:00:12 done  core brief write: {"brief":{"constraints":["Deep mode","Static build in app/ produces working static files","Clean-room placeholder assets for proprietary content"],"done_when":"
+17:00:18 start core plan updatebuild checklist
+17:00:18 FAIL  core plan updatebuild checklist: INVALID_JSON: the tool input wasn't valid JSON (it may have been cut off). Send the call again with complete input.
+17:00:25 start core plan updatebuild checklist
+17:00:25 FAIL  core plan updatebuild checklist: INVALID_JSON: the tool input wasn't valid JSON (it may have been cut off). Send the call again with complete input.
+17:00:29 start core plan update
+17:00:30 done  core plan update: {"brief":{"constraints":["Deep mode","Static build in app/ produces working static files","Clean-room placeholder assets for proprietary content"],"done_when":"
+17:00:35 note  Updated its checklist
+17:00:38 start build files list: capture
+17:00:38 done  build files list: capture: {"entries":[{"bytes":6795,"path":"capture/README.md"},{"bytes":144778,"path":"capture/capture.json"},{"bytes":30798,"path":"capture/how-it-works.md"},{"bytes":3
+17:00:41 start build file read: capture/how-it-works.md
+17:00:41 done  build file read: capture/how-it-works.md: {"lines":120,"more":true,"offset":0,"path":"capture/how-it-works.md","text":"# How it works\n\nDeep mode: what the site's JavaScript is made of and what its sta
+17:00:44 start build file read: capture/how-it-works.md
+17:00:44 done  build file read: capture/how-it-works.md: {"lines":120,"more":true,"offset":120,"path":"capture/how-it-works.md","text":" \"kind\": \"handled-by\",\n \"to\": \"fn:www.boardy.ai/assets/index-B9
+17:00:47 start build file read: capture/how-it-works.md
+17:00:47 done  build file read: capture/how-it-works.md: {"lines":120,"more":true,"offset":400,"path":"capture/how-it-works.md","text":" \"kind\": \"calls\",\n \"to\": \"fn:us-assets.i.posthog.com/static/1.4
+17:00:50 start build file read: capture/how-it-works.md
+17:00:51 done  build file read: capture/how-it-works.md: {"lines":150,"more":true,"offset":750,"path":"capture/how-it-works.md","text":" },\n {\n \"mime_type\": \"image/webp\",\n \"type\": \"Image\",\n
+17:00:54 start build file read: capture/how-it-works.md
+17:00:54 done  build file read: capture/how-it-works.md: {"lines":124,"more":false,"offset":850,"path":"capture/how-it-works.md","text":" },\n {\n \"mime_type\": \"image/svg+xml\",\n \"type\": \"Image\
+17:00:59 start build file read: capture/how-it-works.md
+17:00:59 done  build file read: capture/how-it-works.md: {"lines":150,"more":true,"offset":600,"path":"capture/how-it-works.md","text":" \"imagesizes\",\n \"lang\",\n \"name\",\n \"offset\",\n
+17:01:02 start build file read: capture/capture.json
+17:01:02 done  build file read: capture/capture.json: {"lines":100,"more":true,"offset":0,"path":"capture/capture.json","text":"{\n \"a11y\": {\n \"images_without_alt\": 0,\n \"landmarks\": {\n \"banner
+17:01:06 start build file read: capture/page.html
+17:01:06 done  build file read: capture/page.html: {"lines":37,"more":false,"offset":0,"path":"capture/page.html","text":"<html lang=\"en\" data-reveal-enabled=\"true\"><head><meta charset=\"utf-8\"><meta name=\
+17:01:13 start web pages list
+17:01:13 done  web pages list: 2 target(s) at http://127.0.0.1:51454 (1 page(s)); Chrome/158.0.8127.36 1.3.
+17:01:19 start web page show
+17:01:20 done  web page show: Inspected https://www.boardy.ai/: 16 script(s), 0 request outline(s), 1 frame origin(s).
+17:01:23 start list toolsets
+17:01:23 done  list toolsets: Listed toolsets
+17:01:27 start web page js analyze
+17:01:28 done  web page js analyze: Analysed 16 script(s) from https://www.boardy.ai/: 16 module(s), 42 endpoint(s), 42 route(s), bundled with vite.
+17:01:33 start core evidence browse
+17:01:33 FAIL  core evidence browse: invalid params at "/show/kind": unknown variant `list`, expected one of `summary`, `part`, `row`, `rows`, `function-part`
+17:01:36 start core evidence browse
+17:01:36 done  core evidence browse: Part of web_page_js_analyze evidence (page).
+17:01:45 start web page show
+17:01:46 done  web page show: Inspected https://www.boardy.ai/: 16 script(s), 0 request outline(s), 1 frame origin(s).
+17:01:51 start core evidence browse
+17:01:51 done  core evidence browse: Part of web_page_show evidence (page).
+17:01:59 start core evidence browse
+17:01:59 done  core evidence browse: Part of web_page_show evidence (page).
+17:02:03 start native bytes find: capture/page.html
+17:02:03 FAIL  native bytes find: capture/page.html: "capture/page.html" is not an absolute path
+17:02:09 start native bytes find: capture/capture.json
+17:02:09 done  native bytes find: capture/capture.json: 0 match(es) for utf8 + utf16le in capture.json.
+17:02:16 start web scripts save: checks/scripts
+17:02:17 FAIL  web scripts save: checks/scripts: /Users/lamda/Documents/GitHub/Hackathon/team_seoul/boardy-ai/checks does not exist
+17:02:20 start build files list
+17:02:20 done  build files list: {"entries":[{"path":"app/"}],"root":".","truncated":false}
+17:02:23 start build files list: app
+17:02:24 done  build files list: app: {"entries":[],"root":"app","truncated":false}
+17:02:28 start web scripts save: scripts_inspect
+17:02:29 done  web scripts save: scripts_inspect: Exported 16 script(s) (1246563 bytes) to /Users/lamda/Documents/GitHub/Hackathon/team_seoul/boardy-ai/app/scripts_inspect.
+17:02:33 start native bytes find: scripts_inspect/files/www.boardy.ai/assets/index-B9RyudA8.js
+17:02:33 done  native bytes find: scripts_inspect/files/www.boardy.ai/assets/index-B9RyudA8.js: 1 match(es) for utf8 + utf16le in index-B9RyudA8.js; showing 1 from #0.
+17:02:37 start build file read: app/scripts_inspect/files/www.boardy.ai/assets/index-B9RyudA8.js
+17:02:37 done  build file read: app/scripts_inspect/files/www.boardy.ai/assets/index-B9RyudA8.js: {"lines":10,"more":true,"offset":0,"path":"app/scripts_inspect/files/www.boardy.ai/assets/index-B9RyudA8.js","text":"const __vite__mapDeps=(i,m=__vite__mapDeps,
+17:02:42 start build command run
+17:02:42 note  Asking permission: Run a build command
+17:02:43 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst file = fs.readFileSync(\"scripts_inspect/files/www.boardy.ai/assets/index-B9RyudA8.js\", \"utf8\");\nc
+17:02:50 start build command run
+17:02:50 note  Asking permission: Run a build command
+17:02:51 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst file = fs.readFileSync(\"scripts_inspect/files/www.boardy.ai/assets/index-B9RyudA8.js\", \"utf8\");\nc
+17:02:55 start build command run
+17:02:55 note  Asking permission: Run a build command
+17:02:56 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst file = fs.readFileSync(\"scripts_inspect/files/www.boardy.ai/assets/index-B9RyudA8.js\", \"utf8\");\nc
+17:02:59 start build command run
+17:02:59 note  Asking permission: Run a build command
+17:02:59 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst file = fs.readFileSync(\"scripts_inspect/files/www.boardy.ai/assets/index-B9RyudA8.js\", \"utf8\");\nc
+17:03:03 start build command run
+17:03:03 note  Asking permission: Run a build command
+17:03:04 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst file = fs.readFileSync(\"scripts_inspect/files/www.boardy.ai/assets/index-B9RyudA8.js\", \"utf8\");\nc
+17:03:07 start build command run
+17:03:07 note  Asking permission: Run a build command
+17:03:08 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst file = fs.readFileSync(\"scripts_inspect/files/www.boardy.ai/assets/index-B9RyudA8.js\", \"utf8\");\nc
+17:03:15 start build command run
+17:03:15 note  Asking permission: Run a build command
+17:03:15 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst path = require(\"path\");\n\nfunction walk(dir) {\n let results = [];\n const list = fs.readdirSync(
+17:03:20 start build command run
+17:03:20 note  Asking permission: Run a build command
+17:03:21 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst path = require(\"path\");\n\nfunction walk(dir) {\n let results = [];\n const list = fs.readdirSync(
+17:03:25 start build file write: app/find_apis.js
+17:03:25 done  build file write: app/find_apis.js: {"bytes":695,"written":"app/find_apis.js"}
+17:03:28 start build command run
+17:03:28 note  Asking permission: Run a build command
+17:03:28 done  build command run: {"command":"node find_apis.js","exit_code":0,"ran_in":"app/","stderr":"","stdout":"API in scripts_inspect/files/www.boardy.ai/assets/index-B9RyudA8.js: /api/pub
+17:03:33 start build file write: app/inspect_booking.js
+17:03:33 done  build file write: app/inspect_booking.js: {"bytes":307,"written":"app/inspect_booking.js"}
+17:03:36 start build command run
+17:03:36 note  Asking permission: Run a build command
+17:03:36 done  build command run: {"command":"node inspect_booking.js","exit_code":0,"ran_in":"app/","stderr":"","stdout":"Found at 412220\nite`,url:Ot,name:\"Boardy\",description:hg,publisher:{
+17:03:41 start build file write: app/inspect_cal.js
+17:03:42 done  build file write: app/inspect_cal.js: {"bytes":315,"written":"app/inspect_cal.js"}
+17:03:44 start build command run
+17:03:44 note  Asking permission: Run a build command
+17:03:45 done  build command run: {"command":"node inspect_cal.js","exit_code":0,"ran_in":"app/","stderr":"","stdout":"cal.boardy.ai found at 412157\n:hg,publisher:{\"@id\":`${Ot}/#organization`
+17:03:49 start build file write: app/find_routes.js
+17:03:50 done  build file write: app/find_routes.js: {"bytes":378,"written":"app/find_routes.js"}
+17:03:52 start build command run
+17:03:52 note  Asking permission: Run a build command
+17:03:53 done  build command run: {"command":"node find_routes.js","exit_code":0,"ran_in":"app/","stderr":"","stdout":"Routes found with path: [\n 'M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9
+17:03:56 start build files list: capture/routes
+17:03:56 done  build files list: capture/routes: {"entries":[{"path":"capture/routes/articles/"},{"path":"capture/routes/booking/"},{"path":"capture/routes/chatgpt/"},{"path":"capture/routes/events/"},{"bytes"
+17:04:02 start build file write: app/inspect_endpoints.js
+17:04:02 done  build file write: app/inspect_endpoints.js: {"bytes":909,"written":"app/inspect_endpoints.js"}
+17:04:06 start build command run
+17:04:06 note  Asking permission: Run a build command
+17:04:06 done  build command run: {"command":"node inspect_endpoints.js","exit_code":0,"ran_in":"app/","stderr":"","stdout":"scripts_inspect/files/www.boardy.ai/assets/index-B9RyudA8.js [\n '/a
+17:04:11 start build file write: app/inspect_bvv.js
+17:04:12 done  build file write: app/inspect_bvv.js: {"bytes":166,"written":"app/inspect_bvv.js"}
+17:04:14 start build command run
+17:04:14 note  Asking permission: Run a build command
+17:04:15 done  build command run: {"command":"node inspect_bvv.js","exit_code":0,"ran_in":"app/","stderr":"","stdout":"import{i as r}from\"./is-record-WdQbMeHT.js\";import{p as a}from\"./country
+17:04:19 start build file write: app/inspect_bvv2.js
+17:04:19 done  build file write: app/inspect_bvv2.js: {"bytes":169,"written":"app/inspect_bvv2.js"}
+17:04:22 start build command run
+17:04:22 note  Asking permission: Run a build command
+17:04:22 done  build command run: {"command":"node inspect_bvv2.js","exit_code":0,"ran_in":"app/","stderr":"","stdout":"taUrl)?e.qrCodeDataUrl:null,...typeof e.smsBody==\"string\"&&e.smsBody.tri
+17:04:27 start build file write: app/inspect_campaign.js
+17:04:27 done  build file write: app/inspect_campaign.js: {"bytes":161,"written":"app/inspect_campaign.js"}
+17:04:29 start build command run
+17:04:29 note  Asking permission: Run a build command
+17:04:30 done  build command run: {"command":"node inspect_campaign.js","exit_code":0,"ran_in":"app/","stderr":"","stdout":"import{aq as r,ar as u}from\"./index-BjgH2D5g.js\";const f=[\"utm_sour
+17:04:35 start build file write: app/inspect_stats.js
+17:04:35 done  build file write: app/inspect_stats.js: {"bytes":152,"written":"app/inspect_stats.js"}
+17:04:37 start build command run
+17:04:37 note  Asking permission: Run a build command
+17:04:38 done  build command run: {"command":"node inspect_stats.js","exit_code":0,"ran_in":"app/","stderr":"","stdout":"function o(t){return new Intl.DateTimeFormat(\"en-US\",{timeZone:\"UTC\",
+17:04:41 start build file write: app/inspect_linktree.js
+17:04:42 done  build file write: app/inspect_linktree.js: {"bytes":183,"written":"app/inspect_linktree.js"}
+17:04:44 start build command run
+17:04:44 note  Asking permission: Run a build command
+17:04:44 done  build command run: {"command":"node inspect_linktree.js","exit_code":0,"ran_in":"app/","stderr":"","stdout":"import{r as t,j as e,C,a as w,b as y}from\"./index-BjgH2D5g.js\";impor
+17:04:49 start build file read: capture/routes/booking/README.md
+17:04:49 done  build file read: capture/routes/booking/README.md: {"lines":100,"more":true,"offset":0,"path":"capture/routes/booking/README.md","text":"# Capture of https://www.boardy.ai/booking\n\n- Title: Your calendar, auto
+17:04:51 start build file read: capture/routes/events/README.md
+17:04:51 done  build file read: capture/routes/events/README.md: {"lines":97,"more":false,"offset":0,"path":"capture/routes/events/README.md","text":"# Capture of https://www.boardy.ai/events\n\n- Title: Invite Boardy to your
+17:04:54 start build file read: capture/routes/chatgpt/README.md
+17:04:54 done  build file read: capture/routes/chatgpt/README.md: {"lines":70,"more":true,"offset":0,"path":"capture/routes/chatgpt/README.md","text":"# Capture of https://www.boardy.ai/chatgpt\n\n- Title: Connect your AI to B
+17:04:57 start build file read: capture/routes/articles/README.md
+17:04:57 done  build file read: capture/routes/articles/README.md: {"lines":70,"more":true,"offset":0,"path":"capture/routes/articles/README.md","text":"# Capture of https://www.boardy.ai/articles\n\n- Title: The Boardy Times\n
+17:05:07 start core investigation show
+17:05:07 done  core investigation show: {"brief":{"constraints":["Deep mode","Static build in app/ produces working static files","Clean-room placeholder assets for proprietary content"],"done_when":"
+17:05:15 start core finding record
+17:05:15 done  core finding record: {"finding_id":"fnd_1","revision":3}
+17:05:24 start core finding record
+17:05:24 done  core finding record: {"finding_id":"fnd_2","revision":4}
+17:05:28 start core finding record
+17:05:28 done  core finding record: {"finding_id":"fnd_3","revision":5}
+17:05:40 start build command run
+17:05:40 note  Asking permission: Run a build command
+17:05:40 done  build command run: {"command":"node -v && npm -v","exit_code":0,"ran_in":"app/","stderr":"","stdout":"v26.13.1\n11.20.0\n","succeeded":true}
+17:05:45 start build file read: capture/README.md
+17:05:45 done  build file read: capture/README.md: {"lines":120,"more":true,"offset":0,"path":"capture/README.md","text":"# Capture of https://www.boardy.ai/\n\n- Title: Boardy - Warm intros to investors, custom
+17:05:56 start build command run
+17:05:56 note  Asking permission: Run a build command
+17:05:56 done  build command run: {"command":"rm -rf find_apis.js inspect_booking.js inspect_cal.js inspect_endpoints.js inspect_bvv.js inspect_bvv2.js inspect_campaign.js inspect_stats.js inspe
+17:06:05 start build command run
+17:06:05 note  Asking permission: Run a build command
+17:06:06 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst data = JSON.parse(fs.readFileSync(\"../capture/routes/events/capture.json\", \"utf8\"));\nconsole.log(
+17:06:11 start build command run
+17:06:11 note  Asking permission: Run a build command
+17:06:11 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\n[\"events\", \"booking\", \"chatgpt\", \"articles\"].forEach(r => {\n const data = JSON.parse(fs.readFileSy
+17:06:16 start build command run
+17:06:16 note  Asking permission: Run a build command
+17:06:16 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst html = fs.readFileSync(\"../capture/page.html\", \"utf8\");\nconst links = html.match(/<link[^>]+style
+17:06:21 start build command run
+17:06:21 note  Asking permission: Run a build command
+17:06:22 done  build command run (1 s): {"command":"node -e '\nfetch(\"https://www.boardy.ai/assets/site-DUR2kEe6.css\")\n .then(r => {\n console.log(\"Status:\", r.status);\n return r.text();\
+17:06:31 start build command run
+17:06:31 note  Asking permission: Run a build command
+17:06:31 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst root = JSON.parse(fs.readFileSync(\"../capture/capture.json\", \"utf8\"));\nconsole.log(\"Root title:\
+17:06:36 start build command run
+17:06:36 note  Asking permission: Run a build command
+17:06:37 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst root = JSON.parse(fs.readFileSync(\"../capture/capture.json\", \"utf8\"));\nroot.layouts.forEach(l =>
+17:06:41 start build command run
+17:06:41 note  Asking permission: Run a build command
+17:06:42 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst root = JSON.parse(fs.readFileSync(\"../capture/capture.json\", \"utf8\"));\nconsole.log(Object.keys(ro
+17:06:45 start build command run
+17:06:45 note  Asking permission: Run a build command
+17:06:46 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst root = JSON.parse(fs.readFileSync(\"../capture/capture.json\", \"utf8\"));\nconsole.log(\"Blocks count
+17:06:50 start build command run
+17:06:50 note  Asking permission: Run a build command
+17:06:50 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst root = JSON.parse(fs.readFileSync(\"../capture/capture.json\", \"utf8\"));\nroot.layouts[0].blocks.for
+17:06:58 start build command run
+17:06:58 note  Asking permission: Run a build command
+17:07:02 done  build command run (4 s): {"command":"node -e '\nconst fs = require(\"fs\");\nconst cssFiles = [\n \"site-DUR2kEe6.css\",\n \"home-sections-BUMCjBEU.css\",\n \"calendar-flow-Bp6hH_5n.
+17:07:09 start build command run
+17:07:09 note  Asking permission: Run a build command
+17:07:09 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst files = fs.readdirSync(\"src/assets\").filter(f => f.endsWith(\".css\"));\nconst fonts = new Set();\nf
+17:07:15 start build command run
+17:07:15 note  Asking permission: Run a build command
+17:07:15 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst html = fs.readFileSync(\"../capture/page.html\", \"utf8\");\nconst preloads = html.match(/href=\"\\/[^
+17:07:22 start build command run
+17:07:22 note  Asking permission: Run a build command
+17:07:25 done  build command run (2 s): {"command":"node -e '\nconst fs = require(\"fs\");\nconst fonts = [\n \"assets/geist-cyrillic-wght-normal-CHSlOQsW.woff2\",\n \"assets/geist-latin-ext-wght-no
+17:07:32 start build command run
+17:07:32 note  Asking permission: Run a build command
+17:07:35 done  build command run (3 s): {"command":"node -e '\nconst fs = require(\"fs\");\nconst svgs = [\n \"channels/whatsapp.svg\",\n \"channels/text.svg\",\n \"channels/linkedin.svg\",\n \"ch
+17:07:42 start build command run
+17:07:42 note  Asking permission: Run a build command
+17:07:50 done  build command run (7 s): {"command":"node -e '\nconst fs = require(\"fs\");\nconst images = [\n \"boardy-landing-logo-mark.webp\",\n \"boardy-phone-pfp.webp\",\n \"andrew-profile.jpe
+17:07:55 start build command run
+17:07:55 note  Asking permission: Run a build command
+17:07:57 done  build command run (1 s): {"command":"node -e '\nconst fs = require(\"fs\");\nconst routes = [\"events\", \"booking\", \"chatgpt\", \"articles\"];\n\nasync function run() {\n for (const
+17:08:00 start build command run
+17:08:00 note  Asking permission: Run a build command
+17:08:01 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst routes = [\"events\", \"booking\", \"chatgpt\", \"articles\"];\nfor (const r of routes) {\n const tex
+17:08:05 start build command run
+17:08:05 note  Asking permission: Run a build command
+17:08:05 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst text = fs.readFileSync(\"src/articles.raw.html\", \"utf8\");\nconst links = text.match(/<link[^>]+>/g)
+17:08:10 start build command run
+17:08:10 note  Asking permission: Run a build command
+17:08:12 done  build command run (1 s): {"command":"node -e '\nconst fs = require(\"fs\");\nasync function run() {\n const f1 = await fetch(\"https://www.boardy.ai/assets/events-CP1ZOR0u.css\");\n i
+17:08:16 start build command run
+17:08:16 note  Asking permission: Run a build command
+17:08:16 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst css = fs.readFileSync(\"src/articles/styles.css\", \"utf8\");\nconsole.log(\"Articles CSS assets:\", c
+17:08:22 start build command run
+17:08:22 note  Asking permission: Run a build command
+17:08:23 done  build command run (1 s): {"command":"node -e '\nconst fs = require(\"fs\");\nconst fonts = [\"geist-latin-wght-normal.woff2\", \"raleway-latin-wght-normal.woff2\", \"Chomsky.woff2\"];\n
+17:08:27 start build command run
+17:08:27 note  Asking permission: Run a build command
+17:08:27 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst pages = [\"events.raw.html\", \"booking.raw.html\", \"chatgpt.raw.html\"];\nconst assets = new Set();\
+17:08:32 start build command run
+17:08:32 note  Asking permission: Run a build command
+17:08:38 done  build command run (5 s): {"command":"node -e '\nconst fs = require(\"fs\");\nconst path = require(\"path\");\nconst assets = [\n \"boardy-events-mascot.webp\",\n \"logos/events/jpmorg
+17:08:51 start build command run
+17:08:51 note  Asking permission: Run a build command
+17:08:51 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst html = fs.readFileSync(\"../capture/page.html\", \"utf8\");\nconst scripts = html.match(/<script[^>]*>
+17:08:58 start build command run
+17:08:58 note  Asking permission: Run a build command
+17:08:58 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst html = fs.readFileSync(\"../capture/page.html\", \"utf8\");\nconsole.log(\"Forms in page.html:\", html
+17:09:03 start build command run
+17:09:03 note  Asking permission: Run a build command
+17:09:03 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst html = fs.readFileSync(\"../capture/page.html\", \"utf8\");\nconst buttons = html.match(/<button[^>]*>
+17:09:06 start build command run
+17:09:06 note  Asking permission: Run a build command
+17:09:07 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst html = fs.readFileSync(\"../capture/page.html\", \"utf8\");\nconst buttons = html.match(/<button[^>]*>
+17:09:13 start build command run
+17:09:13 note  Asking permission: Run a build command
+17:09:14 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\n[\"events\", \"booking\", \"chatgpt\", \"articles\"].forEach(r => {\n const text = fs.readFileSync(`src/${r
+17:09:18 start build command run
+17:09:18 note  Asking permission: Run a build command
+17:09:19 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst html = fs.readFileSync(\"../capture/page.html\", \"utf8\");\nconst links = html.match(/<a[^>]+href=\"[
+17:09:23 start build command run
+17:09:23 note  Asking permission: Run a build command
+17:09:23 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst text = fs.readFileSync(\"src/articles.raw.html\", \"utf8\");\nconsole.log(\"Articles images:\", text.m
+17:09:28 start build command run
+17:09:28 note  Asking permission: Run a build command
+17:09:40 done  build command run (11 s): {"command":"node -e '\nconst fs = require(\"fs\");\nconst path = require(\"path\");\nconst text = fs.readFileSync(\"src/articles.raw.html\", \"utf8\");\nconst i
+17:09:43 start build command run
+17:09:43 note  Asking permission: Run a build command
+17:09:45 done  build command run (1 s): {"command":"node -e '\nconst fs = require(\"fs\");\nfetch(\"https://www.boardy.ai/assets/article-analytics.js\")\n .then(r => r.text())\n .then(t => {\n fs
+17:09:54 start build command run
+17:09:54 note  Asking permission: Run a build command
+17:09:58 done  build command run (4 s): {"command":"node -e '\nconst fs = require(\"fs\");\nconst scripts = [\n \"index-BjgH2D5g.js\",\n \"index-B9RyudA8.js\",\n \"landing-message-dialog-CIclDkIa.j
+17:10:07 start build command run
+17:10:07 note  Asking permission: Run a build command
+17:10:09 done  build command run (1 s): {"command":"node -e '\nfetch(\"https://www.boardy.ai/api/public-globe\")\n .then(r => r.json())\n .then(d => console.log(\"Live globe response:\", JSON.string
+17:10:09 note  Making room: summarising the earlier work…
+17:10:29 start build command run
+17:10:29 note  Asking permission: Run a build command
+17:10:31 done  build command run (1 s): {"command":"node -e '\nconst fs = require(\"fs\");\nfetch(\"https://www.boardy.ai/api/public-globe\")\n .then(r => r.text())\n .then(t => {\n fs.writeFileS
+17:10:48 start build command run
+17:10:48 note  Asking permission: Run a build command
+17:10:49 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\n[\"events\", \"booking\", \"chatgpt\"].forEach(r => {\n const text = fs.readFileSync(`src/${r}.raw.html`, \
+17:10:52 start build command run
+17:10:52 note  Asking permission: Run a build command
+17:10:52 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\n[\"events\", \"booking\", \"chatgpt\"].forEach(r => {\n const text = fs.readFileSync(`src/${r}.raw.html`, \
+17:10:55 start build command run
+17:10:55 note  Asking permission: Run a build command
+17:10:55 done  build command run: {"command":"node -e '\nconst fs = require(\"fs\");\nconst text = fs.readFileSync(\"src/articles.raw.html\", \"utf8\");\nconsole.log(\"Articles scripts:\", text.
+17:11:07 start build command run
+17:11:07 note  Asking permission: Run a build command
+17:11:07 FAIL  build command run: Auto mode never allows deleting anything outside the project or the temp folder without the person. Find another way, or leave it and say so in your summary. The person can choose to allow it, or to be asked, in this project's approvals ("delete_outside").
+17:11:39 start build file write: app/src/assets/api-mock.js
+17:11:39 done  build file write: app/src/assets/api-mock.js: {"bytes":2847,"written":"app/src/assets/api-mock.js"}
+17:11:52 start build file write: app/build.js
+17:11:52 done  build file write: app/build.js: {"bytes":3658,"written":"app/build.js"}
+17:11:54 start build file read: app/package.json
+17:11:54 FAIL  build file read: app/package.json: /Users/lamda/Documents/GitHub/Hackathon/team_seoul/boardy-ai/app/package.json: No such file or directory (os error 2)

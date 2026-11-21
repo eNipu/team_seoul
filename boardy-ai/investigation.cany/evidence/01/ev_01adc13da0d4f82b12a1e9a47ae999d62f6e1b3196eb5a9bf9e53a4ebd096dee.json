@@ -1,0 +1,54 @@
+{
+  "id": "ev_01adc13da0d4f82b12a1e9a47ae999d62f6e1b3196eb5a9bf9e53a4ebd096dee",
+  "subject": {
+    "kind": "browser",
+    "name": "http://127.0.0.1:51454"
+  },
+  "operation": "web_pages_list",
+  "params": {
+    "cdp_endpoint": null
+  },
+  "result": {
+    "endpoint": "http://127.0.0.1:51454",
+    "product": "Chrome/158.0.8127.36",
+    "protocol_version": "1.3",
+    "targets": [
+      {
+        "has_debugger": true,
+        "id": "1050825253973DF915EE0F0A4C8631B1",
+        "title": "Boardy - Warm intros to investors, customers, talent and jobs",
+        "type": "page",
+        "url": "https://www.boardy.ai/"
+      },
+      {
+        "has_debugger": true,
+        "id": "A442FA722C9AFF56DC73E2AE9F78440B",
+        "title": "Omnibox Popup",
+        "type": "browser_ui",
+        "url": "chrome://omnibox-popup.top-chrome/"
+      }
+    ]
+  },
+  "summary": "2 target(s) at http://127.0.0.1:51454 (1 page(s)); Chrome/158.0.8127.36 1.3.",
+  "confidence": "observed",
+  "authority": "outside-service",
+  "environment": {
+    "clean_room": false,
+    "engine": "cdp",
+    "engine_version": "1.3",
+    "host": "macos-aarch64"
+  },
+  "limitations": [],
+  "coverage": {
+    "status": "complete",
+    "examined": 2,
+    "total": 2
+  },
+  "locations": [
+    {
+      "kind": "url",
+      "value": "http://127.0.0.1:51454"
+    }
+  ],
+  "links": []
+}

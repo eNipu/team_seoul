@@ -1,0 +1,480 @@
+{
+  "id": "ev_5415a233adad71ca74020af34a4924ec6297382ef0b795e82fa6009227476004",
+  "subject": {
+    "kind": "website",
+    "name": "https://www.boardy.ai/"
+  },
+  "operation": "web_page_watch",
+  "params": {
+    "endpoint": "http://127.0.0.1:51454",
+    "sensitive_value_declarations": 0
+  },
+  "result": {
+    "accessibility": null,
+    "console": {
+      "count": 0,
+      "entries": [],
+      "has_text": false
+    },
+    "dom": {
+      "attribute_names": [
+        "alt",
+        "aria-atomic",
+        "aria-controls",
+        "aria-hidden",
+        "aria-label",
+        "aria-labelledby",
+        "aria-live",
+        "aria-pressed",
+        "as",
+        "async",
+        "charset",
+        "class",
+        "content",
+        "crossorigin",
+        "cx",
+        "cy",
+        "d",
+        "data-active",
+        "data-animating",
+        "data-channel-stage",
+        "data-complete",
+        "data-composer-key",
+        "data-composer-prefix",
+        "data-composer-send",
+        "data-composer-slot",
+        "data-dragging",
+        "data-feed-complete",
+        "data-feed-playing",
+        "data-homepage",
+        "data-homepage-redesign",
+        "data-inview",
+        "data-live",
+        "data-meeting-demo",
+        "data-mobile-active",
+        "data-mobile-hero",
+        "data-mobile-visible",
+        "data-motion",
+        "data-motion-active",
+        "data-nosnippet",
+        "data-opening",
+        "data-phase",
+        "data-playing",
+        "data-position",
+        "data-precedence",
+        "data-ready",
+        "data-reveal",
+        "data-reveal-enabled",
+        "data-stage-card",
+        "data-unfolded",
+        "data-viewport",
+        "data-visible",
+        "decoding",
+        "fill",
+        "gradientunits",
+        "height",
+        "href",
+        "id",
+        "imagesizes",
+        "lang",
+        "name",
+        "offset",
+        "property",
+        "r",
+        "rel",
+        "role",
+        "rx",
+        "ry",
+        "sizes",
+        "src",
+        "stop-color",
+        "stop-opacity",
+        "stroke",
+        "stroke-dasharray",
+        "stroke-linecap",
+        "stroke-linejoin",
+        "stroke-opacity",
+        "stroke-width",
+        "style",
+        "tabindex",
+        "target",
+        "type",
+        "viewbox",
+        "width",
+        "x",
+        "x1",
+        "x2",
+        "xmlns",
+        "y",
+        "y1",
+        "y2"
+      ],
+      "elements_by_name": {
+        "a": 34,
+        "b": 8,
+        "blockquote": 48,
+        "body": 1,
+        "br": 2,
+        "button": 33,
+        "circle": 2,
+        "dd": 2,
+        "defs": 2,
+        "div": 257,
+        "dl": 1,
+        "dt": 2,
+        "ellipse": 4,
+        "figcaption": 2,
+        "figure": 50,
+        "footer": 1,
+        "g": 1,
+        "h1": 2,
+        "h2": 7,
+        "h3": 9,
+        "head": 1,
+        "header": 2,
+        "html": 1,
+        "i": 9,
+        "img": 128,
+        "li": 30,
+        "lineargradient": 1,
+        "link": 68,
+        "main": 1,
+        "mark": 1,
+        "meta": 17,
+        "nav": 5,
+        "ol": 2,
+        "p": 62,
+        "path": 83,
+        "radialgradient": 1,
+        "rect": 7,
+        "script": 5,
+        "section": 9,
+        "small": 66,
+        "span": 449,
+        "stop": 5,
+        "strong": 58,
+        "svg": 80,
+        "title": 1,
+        "ul": 3
+      },
+      "text_nodes": 555,
+      "total_nodes": 2202,
+      "truncated": false
+    },
+    "dropped_events": 0,
+    "frame_origins": [
+      "https://www.boardy.ai"
+    ],
+    "network": {
+      "request_count": 0,
+      "requests": []
+    },
+    "origin": "https://www.boardy.ai/",
+    "resources": [
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/openai.webp"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/tweets/alon-michael.webp"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/anthropic.webp"
+      },
+      {
+        "mime_type": "font/woff2",
+        "type": "Font",
+        "url": "https://www.boardy.ai/assets/raleway-latin-wght-normal-CSF1BaNN.woff2"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/a16z.webp"
+      },
+      {
+        "mime_type": "image/svg+xml",
+        "type": "Image",
+        "url": "https://www.boardy.ai/channels/gmail.svg"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/yc.webp"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/nvidia.webp"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/tweets/shreyas-kulkarni.webp"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/tweets/josh-jackson.webp"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/channels/claude-colour.webp"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/tweets/prateek-sanjay.webp"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/tweets/stefan-mathys.webp"
+      },
+      {
+        "mime_type": "image/jpeg",
+        "type": "Image",
+        "url": "https://www.boardy.ai/andrew-profile.jpeg"
+      },
+      {
+        "mime_type": "image/svg+xml",
+        "type": "Image",
+        "url": "https://www.boardy.ai/channels/x.svg"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/sequoia.webp"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/tweets/sara-scarborough-graham.webp"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/tweets/lopsii-olagoke.webp"
+      },
+      {
+        "mime_type": "image/svg+xml",
+        "type": "Image",
+        "url": "https://www.boardy.ai/channels/whatsapp.svg"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/tweets/alison-kaizer.webp"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/boardy-phone-pfp.webp"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/hf0.webp"
+      },
+      {
+        "mime_type": "image/svg+xml",
+        "type": "Image",
+        "url": "https://www.boardy.ai/channels/google-calendar.svg"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/tweets/kevin.webp"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/tweets/scott-kelly.webp"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/tweets/jonny-price.webp"
+      },
+      {
+        "mime_type": "image/svg+xml",
+        "type": "Image",
+        "url": "https://www.boardy.ai/phone.svg"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/general-catalyst.webp"
+      },
+      {
+        "mime_type": "image/svg+xml",
+        "type": "Image",
+        "url": "https://www.boardy.ai/channels/googlemeet.svg"
+      },
+      {
+        "mime_type": "image/svg+xml",
+        "type": "Image",
+        "url": "https://www.boardy.ai/channels/linkedin.svg"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/tesla.webp"
+      },
+      {
+        "mime_type": "image/svg+xml",
+        "type": "Image",
+        "url": "https://www.boardy.ai/channels/text.svg"
+      },
+      {
+        "mime_type": "font/woff2",
+        "type": "Font",
+        "url": "https://www.boardy.ai/assets/geist-latin-wght-normal-Dm3htQBi.woff2"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/tweets/virgile-rietsch.webp"
+      },
+      {
+        "mime_type": "image/webp",
+        "type": "Image",
+        "url": "https://www.boardy.ai/boardy-landing-logo-mark.webp"
+      }
+    ],
+    "scripts": [
+      {
+        "length": 613,
+        "source_map_url": null,
+        "url": "https://www.boardy.ai/"
+      },
+      {
+        "length": 797,
+        "source_map_url": null,
+        "url": "https://www.boardy.ai/assets/scroll-reveal-observer-h4pxLmi5.js"
+      },
+      {
+        "length": 449,
+        "source_map_url": null,
+        "url": "https://www.boardy.ai/assets/home-stats-B8pLmeA_.js"
+      },
+      {
+        "length": 79,
+        "source_map_url": null,
+        "url": "https://www.boardy.ai/assets/is-record-WdQbMeHT.js"
+      },
+      {
+        "length": 256,
+        "source_map_url": null,
+        "url": "https://www.boardy.ai/assets/lock-keyhole-D51r-cXl.js"
+      },
+      {
+        "length": 16524,
+        "source_map_url": null,
+        "url": "https://www.boardy.ai/assets/landing-message-dialog-CIclDkIa.js"
+      },
+      {
+        "length": 6617,
+        "source_map_url": null,
+        "url": "https://www.boardy.ai/assets/home-nav-bar-CMMaVtXX.js"
+      },
+      {
+        "length": 1482,
+        "source_map_url": null,
+        "url": "https://www.boardy.ai/assets/linktree-channel-dialog-BC4KBoT_.js"
+      },
+      {
+        "length": 97595,
+        "source_map_url": null,
+        "url": "https://www.boardy.ai/assets/index-B9RyudA8.js"
+      },
+      {
+        "length": 935325,
+        "source_map_url": null,
+        "url": "https://www.boardy.ai/assets/index-BjgH2D5g.js"
+      },
+      {
+        "length": 527,
+        "source_map_url": null,
+        "url": "https://www.boardy.ai/assets/campaign-submission-Cvm2ovU4.js"
+      },
+      {
+        "length": 266,
+        "source_map_url": null,
+        "url": "https://www.boardy.ai/assets/search-CIraHuDM.js"
+      },
+      {
+        "length": 155,
+        "source_map_url": null,
+        "url": "https://www.boardy.ai/assets/x-BR0KwmdT.js"
+      },
+      {
+        "length": 1168,
+        "source_map_url": null,
+        "url": "https://www.boardy.ai/assets/index-BvvxcsDW.js"
+      },
+      {
+        "length": 133465,
+        "source_map_url": null,
+        "url": "https://www.boardy.ai/assets/country-code-picker-BibYXFOp.js"
+      },
+      {
+        "length": 1251,
+        "source_map_url": null,
+        "url": "https://us-assets.i.posthog.com/array/phc_aybzGDeUsNW2jlyrBdExPD9yG2If1qgP7LAZjcmXc7/config.js"
+      },
+      {
+        "length": 27027,
+        "source_map_url": "web-vitals-with-attribution.js.map",
+        "url": "https://us-assets.i.posthog.com/static/1.438.12/web-vitals-with-attribution.js"
+      },
+      {
+        "length": 23896,
+        "source_map_url": "dead-clicks-autocapture.js.map",
+        "url": "https://us-assets.i.posthog.com/static/1.438.12/dead-clicks-autocapture.js"
+      }
+    ],
+    "scripts_truncated": false,
+    "secret_redactions": 0,
+    "storage_keys": null,
+    "watch_ms": 10000,
+    "websockets": {
+      "connections": [],
+      "frames": []
+    }
+  },
+  "summary": "Watched https://www.boardy.ai/ for 10000ms: 0 request outline(s), 0 console entr(y/ies).",
+  "confidence": "observed",
+  "authority": "earlier-record",
+  "environment": {
+    "clean_room": false,
+    "engine": "cdp",
+    "engine_version": "1.3",
+    "host": "macos-aarch64"
+  },
+  "limitations": [
+    {
+      "code": "passive_snapshot",
+      "message": "A passive observation of one moment in a live page; it shows what happened during the window, not everything the page can do."
+    },
+    {
+      "code": "values_not_kept",
+      "message": "Cookies, authorization headers and storage values are never kept; JSON bodies are reduced to outlines and declared secrets are redacted."
+    }
+  ],
+  "coverage": {
+    "status": "partial"
+  },
+  "locations": [
+    {
+      "kind": "url",
+      "value": "https://www.boardy.ai/"
+    }
+  ],
+  "links": []
+}

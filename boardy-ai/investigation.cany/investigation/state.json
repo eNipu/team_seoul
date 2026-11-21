@@ -1,0 +1,75 @@
+{
+  "revision": 5,
+  "brief": {
+    "question": "How does boardy.ai make its API calls, and how is the frontend structured?",
+    "purpose": "Understand how boardy.ai performs its API calls and rebuild the site.",
+    "targets": [
+      "https://www.boardy.ai/"
+    ],
+    "constraints": [
+      "Deep mode",
+      "Static build in app/ produces working static files",
+      "Clean-room placeholder assets for proprietary content"
+    ],
+    "done_when": "API call architecture analyzed and explained in plain English, and website rebuilt cleanly in app/ matching capture pages."
+  },
+  "plan": [
+    {
+      "title": "Analyze capture data and inspect how boardy.ai performs API calls",
+      "status": "doing",
+      "why": "Understand endpoints, network requests, payload structures, and frontend architecture."
+    },
+    {
+      "title": "Examine application scripts and network traces to trace API endpoints and methods",
+      "status": "todo",
+      "why": "Extract exact endpoints, headers, payload formats, and background calls."
+    },
+    {
+      "title": "Setup frontend project in app/ and implement pages matching capture specifications",
+      "status": "todo",
+      "why": "Rebuild site structure including routes and design tokens."
+    },
+    {
+      "title": "Verify build and compile static output",
+      "status": "todo",
+      "why": "Ensure npm run build succeeds and produces working static files."
+    },
+    {
+      "title": "Synthesize findings and explain API mechanisms in plain English",
+      "status": "todo",
+      "why": "Deliver a clear explanation to the user answering their specific request."
+    }
+  ],
+  "hypotheses": [],
+  "findings": [
+    {
+      "id": "fnd_1",
+      "statement": "The primary onboarding API endpoint is POST /api/onboard/text, called when users submit their contact information to talk with Boardy. The request sends JSON containing email, phone, honeypot website field, UTM parameters, and intent, and returns a verified phone number, pre-filled SMS body text, and a QR code data URL.",
+      "evidence_ids": [
+        "ev_b2985baf12b74e94f6207c8e4ddffcd95a5d6b1940e8687b273a37690b363b78",
+        "ev_ca1a25bdd21c2674d33702f98db21b4d9fc1d5768c61db5a7459b5ffc1f050df"
+      ],
+      "confidence": "observed"
+    },
+    {
+      "id": "fnd_2",
+      "statement": "The homepage dynamically polls GET /api/public-globe using fetch with an AbortController (8-second timeout) and IntersectionObserver when the globe is visible. The response supplies recent introduction metrics and geographical coordinate routes used to animate the interactive globe.",
+      "evidence_ids": [
+        "ev_fbf1da350c4b08d1047754397336a8c6094f99d13c6e52509dc51c7a1313478f",
+        "ev_ca1a25bdd21c2674d33702f98db21b4d9fc1d5768c61db5a7459b5ffc1f050df"
+      ],
+      "confidence": "observed"
+    },
+    {
+      "id": "fnd_3",
+      "statement": "Third-party analytics and integration calls include PostHog (feature flags, surveys, product tours, experiment tokens), Sentry monitoring, and marketing attribution pixels. Scheduling interactions route to the dedicated cal.boardy.ai service for booking pages and calendar synchronization.",
+      "evidence_ids": [
+        "ev_b2985baf12b74e94f6207c8e4ddffcd95a5d6b1940e8687b273a37690b363b78",
+        "ev_b428382b62a4997914a0d48a14cd485d466a5ee1f4543b15c393134f2a4840c8"
+      ],
+      "confidence": "observed"
+    }
+  ],
+  "handoff": null,
+  "updated": "2026-11-21T17:05:28Z"
+}

@@ -1,0 +1,22 @@
+{
+  "version": 5,
+  "name": "boardy.ai",
+  "request": "I'm just trying to understand how it does its api calls.",
+  "target": {
+    "kind": "website",
+    "url": "https://www.boardy.ai/"
+  },
+  "stack": "Builder's choice",
+  "status": "building",
+  "note": "Building the first version…",
+  "created_ms": 1795280273605,
+  "updated_ms": 1795280393340,
+  "checks": [],
+  "agent_session": null,
+  "capture_deep": true,
+  "allowed_actions": [],
+  "last_reply": "",
+  "asset_budget_usd": 5.0,
+  "generate_assets": false,
+  "builder": "Gemini (Google AI Studio)"
+}
