@@ -17,8 +17,8 @@ export default function HowItWorks() {
   return (
     <section className="section section--paper" id="how-it-works" aria-labelledby="steps-title">
       <div className="wrap">
-        <h2 className="h-section" id="steps-title">How it works</h2>
-        <ol className="steps">
+        <h2 className="h-section" id="steps-title" data-reveal="up">How it works</h2>
+        <ol className="steps" data-reveal="group">
           {STEPS.map(({ title, text }, index) => (
             <li className="step" key={title}>
               <span className="step__num" aria-hidden="true">{index + 1}</span>

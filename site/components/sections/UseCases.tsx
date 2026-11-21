@@ -37,9 +37,9 @@ export default function UseCases() {
   return (
     <section className="section" id="use-cases" aria-labelledby="use-cases-title">
       <div className="wrap">
-        <p className="eyebrow">Share your AI memory with your inner circle</p>
-        <h2 className="h-section" id="use-cases-title">One Venn. Three kinds of people.</h2>
-        <div className="usecases">
+        <p className="eyebrow" data-reveal="up">Share your AI memory with your inner circle</p>
+        <h2 className="h-section" id="use-cases-title" data-reveal="up">One Venn. Three kinds of people.</h2>
+        <div className="usecases" data-reveal="group">
           {USE_CASES.map(({ audience, tag, title, line, photo, photoAlt, person, text }) => (
             <article className={`usecase usecase--${audience}`} key={audience}>
               <img

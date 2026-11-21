@@ -12,7 +12,9 @@ metrics page. A Next.js app (App Router) with its own small API and two tables i
 | `proxy.ts` | Password check in front of `/metrics` (Next.js 16 calls middleware "proxy") |
 | `app/globals.css` | The page's own styles |
 | `app/venn-kit.css` | Copy of `widget/src/venn-kit.css`: tokens and card primitives shared with the ChatGPT widget. Do not edit here |
-| `components/HeroBackdrop.tsx` | Two overlapping CSS circles behind the hero |
+| `components/HeroBackdrop.tsx` | What sits behind the join panel: still CSS circles first, then the 3D scene once the page is idle |
+| `components/VennScene.tsx` | The 3D scene: two glass spheres orbiting each other, built with three.js (MIT) |
+| `components/Motion.tsx` | Turns on the scroll reveals for elements marked `data-reveal` |
 | `components/Waitlist.tsx` | The email form and its states after joining |
 | `components/OnboardingPreview.tsx` | The interactive memory, invitation, and shared-interest preview |
 | `lib/db.ts`, `lib/waitlist.ts`, `lib/analytics.ts` | Postgres pool and schema, waitlist logic, events and metrics |
@@ -142,7 +144,17 @@ First-party only: no third-party scripts, no cookies, nothing stored on the devi
 
 ## Hero and onboarding
 
-The two overlapping circles are drawn in CSS and paint with the page. The onboarding preview uses
+The hero has the copy on the left and the join panel (the waitlist form) on the right, over two glass
+spheres in the brand yellow and red that orbit each other in 3D. On a phone the panel follows the copy and the
+scene reaches up behind the example card. A CSS version of the circles is in the HTML and paints first;
+three.js is a separate chunk loaded once the page is idle. The still version stays for reduced motion, data
+saving and no WebGL, and rendering stops when the scene is off screen or the tab is hidden.
+
+Motion (`app/globals.css` › Motion) always plays into the finished page, so nothing is hidden without script
+or with reduced motion: the hero arrives line by line, the underline is drawn and the highlight swept in, and
+sections fade up the first time they scroll into view (`data-reveal="up"`, or `"group"` for children in turn).
+
+The onboarding preview uses
 inline SVG for the invitation and the transition from two separate people to a circle.
 
 The preview starts with sample memories. The visitor chooses what to share, opens a sample invitation,

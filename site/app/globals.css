@@ -800,3 +800,154 @@ ul { padding: 0; list-style: none; }
 .manifesto .h-display { color: #fff; font-size: clamp(2.5rem, 9vw, 5.5rem); line-height: 1.02; }
 .manifesto__hit { color: #FFD400; }
 .manifesto .lead { color: #d2d2d7; margin-top: 1.5rem; max-width: 40ch; }
+
+/* ---------- Hero: copy on the left, the join panel over the 3D circles on the right ---------- */
+#hero {
+  --venn-a: var(--brand-yellow);
+  --venn-b: var(--brand-red);
+  --venn-shared: #ff7a00;
+  overflow-x: clip;
+}
+.hero__grid {
+  display: grid;
+  gap: clamp(1rem, 4vw, 2.5rem);
+  padding-block: clamp(1.75rem, 4.5vw, 4rem) clamp(3.5rem, 7vw, 7rem);
+}
+.hero__grid > * { min-width: 0; }
+.hero__copy {
+  /* Above the scene: on a phone the upper sphere rises from behind the example card. */
+  position: relative;
+  z-index: 1;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: clamp(0.875rem, 2vw, 1.375rem);
+}
+.hero__copy > * { min-width: 0; }
+.hero__copy .hero__chat { margin-bottom: 0; }
+
+/* The panel sits in the middle of the scene, where the two spheres overlap. */
+.hero__join {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  /* Little above, so the form stays on a phone's first screen; the scene makes up for it by
+     reaching up behind the copy (see .hero__backdrop). */
+  padding-block: 1.25rem clamp(4.5rem, 20vw, 6rem);
+}
+.hero__join-card {
+  width: min(100%, 26rem);
+  padding: clamp(1.125rem, 3vw, 1.75rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--white);
+  box-shadow: var(--shadow), 0 30px 60px -30px rgb(0 0 0 / 28%);
+}
+.hero__join-card .waitlist { width: 100%; }
+.hero__join-card .waitlist__field { flex-direction: column; align-items: stretch; border-radius: 1.5rem; }
+.hero__join-card .waitlist__input { flex-basis: auto; }
+.hero__join-card .waitlist__submit { width: 100%; white-space: normal; }
+.hero__join-card .hero__fine { margin-top: 0.75rem; }
+
+/* Behind the panel, edge to edge on a phone. Decorative; never takes the pointer. */
+.hero__join .hero__backdrop {
+  position: absolute;
+  z-index: -1;
+  inset-block: calc(1.25rem - clamp(4.5rem, 20vw, 6rem)) 0;
+  inset-inline: calc(-1 * var(--gutter));
+  background: none;
+  pointer-events: none;
+  container-type: size;
+}
+.venn-scene, .venn-fallback { position: absolute; inset: 0; }
+.venn-scene { opacity: 0; transition: opacity 1.2s ease; }
+.venn-scene canvas { display: block; width: 100%; height: 100%; }
+[data-scene="webgl"] .venn-scene { opacity: 1; }
+
+/* The still version: what paints first, and all that reduced-motion, data-saving and
+   no-WebGL visitors get. Two circles, one above the other, like the 3D pair. */
+.venn-fallback {
+  --d: min(88cqw, 52cqh);
+  display: grid;
+  place-items: center;
+  transition: opacity 1.2s ease, visibility 0s linear 1.2s;
+}
+[data-scene="webgl"] .venn-fallback { opacity: 0; visibility: hidden; }
+.venn-fallback__circle { grid-area: 1 / 1; width: var(--d); aspect-ratio: 1; border-radius: 50%; mix-blend-mode: multiply; }
+.venn-fallback__circle--a {
+  translate: 0 -30%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--venn-a) 10%, transparent) 0 55%, color-mix(in srgb, var(--venn-a) 62%, transparent) 96%, transparent);
+}
+.venn-fallback__circle--b {
+  translate: 0 30%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--venn-b) 6%, transparent) 0 55%, color-mix(in srgb, var(--venn-b) 42%, transparent) 96%, transparent);
+}
+
+@media (min-width: 52rem) {
+  .hero__grid {
+    grid-template-columns: minmax(0, 1.13fr) minmax(0, 0.87fr);
+    column-gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: stretch;
+  }
+  /* An older rule keeps every child of the hero in the first column; the panel takes the second. */
+  #hero .hero__grid > .hero__join { grid-column: 2; min-height: 36rem; padding-block: 2rem; }
+  .hero__join .hero__backdrop { inset-block: 0; inset-inline: -1.5rem calc(-1 * var(--gutter)); }
+}
+
+/* ---------- Motion ----------
+   Everything here starts from the finished page: an animation plays *into* the normal state,
+   so with no script, or with reduced motion (the block above switches animation and transition
+   off), nothing is hidden. */
+:root { --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1); --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+@keyframes rise { from { opacity: 0; translate: 0 14px; } }
+@keyframes pop { from { opacity: 0; translate: 0 12px; scale: 0.94; } }
+@keyframes draw { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+@keyframes sweep { from { background-size: 0% 100%; } to { background-size: 100% 100%; } }
+
+/* The hero arrives in order: copy line by line, the underline is drawn, the highlight is
+   swept in, the question is asked and the answer pops up; the panel rises beside it. */
+.hero__copy > * { animation: rise 0.7s var(--ease-out) both; animation-delay: calc(var(--i, 0) * 90ms); }
+.hero__copy > :nth-child(2) { --i: 1; }
+.hero__copy > :nth-child(3) { --i: 2; }
+.hero__copy > :nth-child(4) { --i: 3; }
+.hero__copy > :nth-child(5) { --i: 4; }
+#hero .h-display::after { animation: draw 0.7s var(--ease-out) 0.7s both; }
+.h-sub span { background-repeat: no-repeat; animation: sweep 0.6s var(--ease-out) 0.55s both; }
+.hero__chat .chat__user { animation: rise 0.5s var(--ease-out) 0.9s both; }
+.hero__chat .moment { transform-origin: 12% 100%; animation: pop 0.6s var(--ease-pop) 1.5s both; }
+.hero__join-card { animation: rise 0.8s var(--ease-out) 0.3s both; }
+
+/* Scroll reveals (components/Motion.tsx sets data-motion, then data-in as things come into view). */
+[data-reveal="up"], [data-reveal="group"] > * {
+  transition: opacity 0.7s var(--ease-out), translate 0.7s var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 90ms);
+}
+[data-reveal="group"] > :nth-child(2) { --i: 1; }
+[data-reveal="group"] > :nth-child(3) { --i: 2; }
+[data-reveal="group"] > :nth-child(4) { --i: 3; }
+[data-reveal="group"] > :nth-child(5) { --i: 4; }
+[data-reveal="group"] > :nth-child(n + 6) { --i: 5; }
+html[data-motion] [data-reveal="up"]:not([data-in]),
+html[data-motion] [data-reveal="group"]:not([data-in]) > * { opacity: 0; translate: 0 20px; }
+
+/* Inside a revealed group: the step numbers and the moment cards land a beat later. */
+.step__num, .usecase .moment {
+  transition: opacity 0.5s var(--ease-out), scale 0.6s var(--ease-pop), translate 0.6s var(--ease-pop);
+  transition-delay: calc(var(--i, 0) * 90ms + 0.25s);
+}
+html[data-motion] [data-reveal="group"]:not([data-in]) .step__num { opacity: 0; scale: 0.4; }
+html[data-motion] [data-reveal="group"]:not([data-in]) .usecase .moment { opacity: 0; scale: 0.94; translate: 0 14px; }
+
+/* Small responses to the pointer and to opening an answer. */
+.btn { transition: background-color 0.15s, border-color 0.15s, scale 0.15s var(--ease-out); }
+.btn:active:not(:disabled) { scale: 0.97; }
+.usecase__photo { transition: scale 1.4s var(--ease-out); }
+.usecase:hover .usecase__photo { scale: 1.05; }
+.faq__item summary::after { transition: rotate 0.25s var(--ease-out); }
+.faq__item[open] summary::after { rotate: 180deg; }
+.faq__item[open] p { animation: rise 0.35s var(--ease-out) both; }
+
+/* Focus moves to the confirmation only so that it is announced; it is not a control. */
+.waitlist__joined:focus-visible { outline: none; box-shadow: none; }

@@ -28,7 +28,7 @@ const QUESTIONS = [
 export default function Faq() {
   return (
     <section className="section section--paper faq" id="faq" aria-labelledby="faq-title">
-      <div className="wrap">
+      <div className="wrap" data-reveal="group">
         <h2 className="h-section" id="faq-title">Frequently asked questions</h2>
         {QUESTIONS.map(({ question, answer }) => (
           <details className="faq__item" key={question}>
