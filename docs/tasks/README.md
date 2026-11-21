@@ -62,20 +62,44 @@ Read `WAITLIST.md` before any task in this group.
 | [T24](T24-people-you-know-wording.md) | Say "people you know" where Venn describes itself | both | S | – | done |
 | [T25](T25-next-word.md) | The changing word under the headline | site | S | T21 | done |
 
+### E. Scheduling and messaging: connect a calendar once, book, reach the user
+
+Read `SCHEDULING.md` before any task in this group.
+
+| ID | Task | Area | Size | Depends on | Status |
+| --- | --- | --- | --- | --- | --- |
+| [T26](T26-scheduling-rules.md) | Rules for acting on the user's behalf | docs | S | – | done |
+| [T27](T27-availability.md) | Working hours, buffers and notice | backend | S | T26 | done |
+| [T28](T28-slot-finder.md) | Find free slots for two people | backend | S | T26 | done |
+| [T29](T29-calendar-connect.md) | Connect Google Calendar | backend | M | T26 | todo |
+| [T30](T30-find-meeting-times.md) | Tool `venn_find_meeting_times` | backend | M | T27, T28, T29 | todo |
+| [T31](T31-propose-and-respond.md) | Propose times, accept or decline, standing rules | backend | M | T30 | todo |
+| [T32](T32-book-and-cancel.md) | Book on the calendar, cancel | backend | M | T31 | todo |
+| [T33](T33-scheduler-card.md) | Scheduler card | widget | M | T30 (uses mock data) | todo |
+| [T34](T34-message-channels.md) | Link email, Telegram or WhatsApp | backend | M | T26 | todo |
+| [T35](T35-senders-and-outbox.md) | Senders and the outbox | backend | M | T34 | todo |
+| [T36](T36-meeting-notifications.md) | Tell people about their meetings | backend | S | T31, T35 | todo |
+| [T37](T37-reply-to-book.md) | Reply on Telegram or WhatsApp to pick a time | backend | M | T32, T36 | todo |
+| [T38](T38-schedule-skill-and-docs.md) | Teach the model to schedule; update the docs | docs | S | T32, T36 | todo |
+
 T04 and T12 can start right away, in parallel with the backend tasks, because the shapes they
 render are fixed in `CONTRACTS.md`.
 
 ## Order
 
 Group D is done except T23, which waits for an identity provider. The hero now says "You already
-know your next customer" and "investor", so the shortest path to making that true is
+know your next customer" and "business partner", so the shortest path to making that true is
 T08, T09, T01, T02, T03, T10, T11, then T04 and T12. T05, T06 and T07 wait.
+
+Group E runs alongside it in two tracks: calendar (T29, T30, T31, T32, with T33 in parallel)
+and messaging (T34, T35), joined by T36 and T37. T38 closes it.
 
 ## Keeping this folder small
 
 - One task is one pull request. If a task will not fit in 45 lines, split it.
 - Status lives only in the table above, never inside a task file.
 - A shape used by both backend and widget is written once, in `CONTRACTS.md`. The waitlist's
-  rules, shape and copy are written once, in `WAITLIST.md`.
+  rules, shape and copy are written once, in `WAITLIST.md`; scheduling and messaging, in
+  `SCHEDULING.md`.
 - A new idea goes into `BACKLOG.md` as one line. It becomes a task file when someone will do it next.
 - When a whole group (A, B or C) is done, delete its task files. Git keeps the history.

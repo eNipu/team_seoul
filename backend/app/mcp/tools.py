@@ -55,6 +55,7 @@ from app.schemas.memory import (
 from app.schemas.profile import ProfileUpdate, ProfileVisibility, SocialGoal
 from app.schemas.social import PersonCandidate
 from app.services import (
+    availability_service,
     dashboard_service,
     memory_service,
     people_service,
@@ -146,6 +147,70 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
                 [PROFILE_WRITE], lambda db, user, _: user_service.update_profile(db, user, update)
             )
             return ok("Profile updated.", profile)
+
+        return await guarded(body)
+
+    # ------------------------------------------------------------- availability
+    @mcp.tool(
+        name="venn_get_availability",
+        title="Get meeting hours",
+        description=(
+            "Get when the user takes meetings: time zone, work days (Monday = 0), day start and end in "
+            "local time, buffer between meetings, minimum notice and default meeting length. Data only "
+            "(no card). is_default is true until the user has saved their own."
+        ),
+        annotations=READ_ONLY,
+        meta=invocation_meta("Checking your meeting hours…", "Meeting hours loaded", widget_accessible=True),
+    )
+    async def venn_get_availability() -> CallToolResult:
+        async def body():
+            result = await run_as_user([PROFILE_READ], lambda db, user, _: availability_service.get(db, user))
+            text = f"Meetings {result.day_start}–{result.day_end} {result.timezone}, days {result.work_days}."
+            if result.is_default:
+                text += " These are the defaults; ask the user for their time zone and hours before scheduling."
+            return ok(text, result)
+
+        return await guarded(body)
+
+    @mcp.tool(
+        name="venn_set_availability",
+        title="Set meeting hours",
+        description=(
+            "Change when the user takes meetings. Only the fields given change. Only call with values the "
+            "user stated or confirmed; ask for their time zone rather than guessing it."
+        ),
+        annotations=WRITE_IDEMPOTENT,
+        meta=invocation_meta("Saving your meeting hours…", "Meeting hours saved", widget_accessible=True),
+    )
+    async def venn_set_availability(
+        timezone: Annotated[str | None, Field(max_length=64, description="IANA name, e.g. Europe/Berlin")] = None,
+        work_days: Annotated[
+            list[Annotated[int, Field(ge=0, le=6)]] | None, Field(max_length=7, description="Monday = 0")
+        ] = None,
+        day_start: Annotated[str | None, Field(max_length=5, description="Local time, HH:MM")] = None,
+        day_end: Annotated[str | None, Field(max_length=5, description="Local time, HH:MM")] = None,
+        buffer_minutes: Annotated[int | None, Field(ge=0, le=availability_service.MAX_BUFFER)] = None,
+        min_notice_minutes: Annotated[int | None, Field(ge=0, le=availability_service.MAX_NOTICE)] = None,
+        default_length_minutes: Annotated[
+            int | None, Field(ge=availability_service.MIN_LENGTH, le=availability_service.MAX_LENGTH)
+        ] = None,
+    ) -> CallToolResult:
+        async def body():
+            result = await run_as_user(
+                [PROFILE_WRITE],
+                lambda db, user, _: availability_service.update(
+                    db,
+                    user,
+                    timezone=timezone,
+                    work_days=work_days,
+                    day_start=day_start,
+                    day_end=day_end,
+                    buffer_minutes=buffer_minutes,
+                    min_notice_minutes=min_notice_minutes,
+                    default_length_minutes=default_length_minutes,
+                ),
+            )
+            return ok(f"Meeting hours saved: {result.day_start}–{result.day_end} {result.timezone}.", result)
 
         return await guarded(body)
 
@@ -1442,6 +1507,8 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
 ToolName = Literal[
     "venn_get_profile",
     "venn_update_profile",
+    "venn_get_availability",
+    "venn_set_availability",
     "venn_propose_memories",
     "venn_import_chatgpt_memory",
     "venn_save_memories",

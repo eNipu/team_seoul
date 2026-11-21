@@ -90,10 +90,16 @@ See `site/README.md` › Waitlist, Analytics.
 | `dev_oauth_clients` | client_id*, client_info* (JSON), created_at* |
 | `dev_oauth_codes` | code*, client_id*, data* (JSON), note, created_at* |
 
+## Scheduling
+
+| Table | Columns | Notes |
+| --- | --- | --- |
+| `availability` | id*, user_id* (FK cascade, unique), timezone*, work_days* (JSON, Monday = 0), day_start_minute*, day_end_minute*, buffer_minutes*, min_notice_minutes*, default_length_minutes*, created_at*, updated_at* | When the user takes meetings. Minutes are local wall-clock (0–1440). No row means the defaults. See `docs/tasks/SCHEDULING.md`. |
+
 ## Deletion
 
 `venn_delete_account` deletes the user row; profile, memories, proposals, invites, requests,
-connections (and their events), people notes (and their hangout logs), pending imports, follow-ups, plans, question links and their responses, blocks and consents cascade; the account's sample friends are deleted with it. Analytics events keep no user link
+connections (and their events), people notes (and their hangout logs), pending imports, follow-ups, plans, question links and their responses, availability, blocks and consents cascade; the account's sample friends are deleted with it. Analytics events keep no user link
 (`user_id` set null).
 
 ## Migrations

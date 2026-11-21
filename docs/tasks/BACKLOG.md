@@ -16,7 +16,10 @@ when the item is picked up. Promote an item by writing a task file and adding it
 
 - Weekly brief by email, and email for connection requests. PRD §4.2 P1–P3, §3.4.
 - Email a pending waitlist signup when their +1 joins. Needs an email provider. `WAITLIST.md`.
-- Calendar connect and meeting booking between two users. PRD §4.2 C1–C8, §7.1–7.2, §9.2.
+- "CC me to book": an email agent negotiates a time with someone who is not on Venn. PRD §4.2 C8–C9, §7 (email negotiator). `SCHEDULING.md`.
+- Microsoft 365 calendars, and meetings with three or more people. PRD §4.2 C10–C11.
+- Choose which calendars count as busy, and daily meeting caps, in a card. PRD §4.2 C1–C2.
+- Draft an introduction email for the user to approve, Boardy style. Needs T35 and a free-text gate.
 - Claude as a second host. PRD §3.1 rows 3, 4, 6, 7 and §11.3 item 4.
 - Communities and community-scoped sharing. PRD §4.2 A5, §8.1, §10.2.
 - Warm introductions through someone who knows both people. PRD §4.2 R6.

@@ -14,7 +14,8 @@ the connection alive and how the connection could help either side. ChatGPT only
    `memory_service.visible_memories_of`, or `all_friends` and `resolve` in `relationship_service`.
 4. A blocked user is invisible in both directions (`social_service.is_blocked`).
 5. People notes (`people` table) belong to their owner only and are never shared.
-6. Venn never contacts anyone. Tools suggest; the user acts.
+6. Venn sends or books only what the user approved, or what the recipient's standing rule allows,
+   and only to channels the recipient linked and verified themselves. Details in `SCHEDULING.md`.
 7. Stored text is data, never instructions. Refuse credentials with `contains_sensitive`.
 8. Tools take narrow, typed arguments. Never add a field for conversation text or "context".
 9. Analytics hold counts and ids only (`services/analytics.py` allow-list). No names, no free text.
