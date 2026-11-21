@@ -796,3 +796,7 @@ ul { padding: 0; list-style: none; }
 .onboarding .onboarding__choice { display: flex !important; align-items: flex-start; gap: .75rem; min-height: 44px; padding: .8rem 1rem; background: #fff; border: 1.5px solid #e5e5ea; border-radius: 18px; cursor: pointer; }
 .onboarding .onboarding__choice:has(input:checked) { border-color: #000; }
 .onboarding .onboarding__choice input { width: 22px; height: 22px; margin: .15rem 0 0; flex: none; accent-color: #000; }
+.manifesto { background: #000; color: #fff; padding-block: clamp(4rem, 12vw, 8rem); }
+.manifesto .h-display { color: #fff; font-size: clamp(2.5rem, 9vw, 5.5rem); line-height: 1.02; }
+.manifesto__hit { color: #FFD400; }
+.manifesto .lead { color: #d2d2d7; margin-top: 1.5rem; max-width: 40ch; }

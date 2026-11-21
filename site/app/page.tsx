@@ -55,6 +55,19 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           </div>
         </section>
 
+        <section className="section section--dark manifesto" aria-labelledby="manifesto-title">
+          <div className="wrap">
+            <h2 className="h-display" id="manifesto-title">
+              Connecting is solved.<br />
+              <span className="manifesto__hit">Keeping relationships is not.</span>
+            </h2>
+            <p className="lead">
+              You meet people at every conference, every trip, every job. Then life happens and you lose them. Venn makes sure
+              you don&apos;t forget the people you connected with.
+            </p>
+          </div>
+        </section>
+
         <HowItWorks />
         <UseCases />
 
