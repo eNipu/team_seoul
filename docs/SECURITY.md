@@ -86,6 +86,19 @@
   the OpenAI API for extraction (structured output). Without a key, a local heuristic is used.
 - Logs do not include tokens or memory text.
 
+### LinkedIn import
+
+- The user pastes their own LinkedIn session cookies on the website. They are a full LinkedIn login,
+  so they are used for the connection-list requests and then dropped: not stored, not logged, not in
+  error messages, not sent to Apify (Apify gets only the public profile links of the people picked).
+- Only cookie names and values that cannot split a header are forwarded; requests go to one fixed
+  LinkedIn URL and redirects are not followed.
+- Reading the list this way is automated access that LinkedIn's terms do not allow, and LinkedIn may
+  restrict the account. The website says so and asks the user to confirm before it runs. Reads are
+  limited to 6 per hour per Venn account and stop at the first rate-limit answer.
+- Imported people are third parties who have not agreed to anything: only what the user picks is
+  saved, as private notes, after the usual review.
+
 ## Operational checklist
 
 - [ ] `ENVIRONMENT=production`, `AUTH_MODE=jwt`, `OAUTH_*` set

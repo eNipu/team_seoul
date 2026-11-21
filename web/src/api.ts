@@ -37,6 +37,9 @@ export interface Api {
   deletePerson(personId: string): Promise<void>;
   previewImport(people: T.PersonInput[], source?: string): Promise<T.PeopleImport>;
   importPeople(importId: string, indexes: number[]): Promise<T.Person[]>;
+  /** Reads the user's own LinkedIn connections with the cookies they pasted. Saves nothing. */
+  linkedinConnections(cookies: string): Promise<T.LinkedInConnections>;
+  linkedinPreview(people: T.LinkedInPick[]): Promise<T.LinkedInImport>;
   // Friends
   listFriends(): Promise<T.FriendSummary[]>;
   getFriend(kind: T.FriendKind, id: string): Promise<T.Friend>;
@@ -221,6 +224,12 @@ const realApi: Api = {
   // POST /people/import
   importPeople: async (importId, indexes) =>
     T.parsePeople(await request("POST", "/people/import", { body: { import_id: importId, indexes } }), "imported"),
+  // POST /linkedin/connections
+  linkedinConnections: async (cookies) =>
+    T.parseLinkedInConnections(await request("POST", "/linkedin/connections", { body: { cookies } })),
+  // POST /linkedin/import-preview
+  linkedinPreview: async (people) =>
+    T.parseLinkedInImport(await request("POST", "/linkedin/import-preview", { body: { people } })),
 
   // GET /friends
   listFriends: async () => T.parseFriendSummaries(await request("GET", "/friends")),

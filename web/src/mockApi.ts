@@ -373,6 +373,16 @@ function hit(text: string, token: string): boolean {
 }
 
 const first = (name: string) => name.trim().split(/\s+/)[0] || name;
+/** Demo connections: identifier, name, headline, extra note, skills. */
+const LINKEDIN_DEMO: [string, string, string, string, string[]][] = [
+  ["maya-chen", "Maya Chen", "Photographer at Lens Studio", "Based in Berlin, Germany", ["Photography", "Editing"]],
+  ["daniel-okafor", "Daniel Okafor", "Product Manager at Northwind", "Based in London, UK", ["Roadmaps", "Fintech"]],
+  ["sofia-rossi", "Sofia Rossi", "Founder at Tavola", "Based in Milan, Italy", ["Food", "Startups"]],
+  ["kenji-watanabe", "Kenji Watanabe", "Staff Engineer at Hikari", "Based in Tokyo, Japan", ["Rust", "Climbing"]],
+  ["amelie-laurent", "Amélie Laurent", "Design Lead at Atelier", "Based in Paris, France", ["Typography"]],
+  ["sam-rivera", "Sam Rivera", "Recruiter at Brightside", "Based in Austin, Texas", ["Hiring", "Running"]],
+];
+
 const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
 function unique(values: string[]): string[] {
@@ -795,6 +805,57 @@ export function createMockApi(options: MockOptions): Api {
           candidates,
           skipped: people.length - candidates.length,
           note: "Nothing is added until you choose who to import.",
+        };
+      }),
+    linkedinConnections: (cookies) =>
+      wait(() => {
+        if (!cookies.includes("li_at") && cookies.trim().length < 20) {
+          fail("INVALID_REQUEST", "These cookies do not include li_at, LinkedIn's sign-in cookie.", 400);
+        }
+        const connections = LINKEDIN_DEMO.map(([public_identifier, name, headline], i) => ({
+          public_identifier,
+          name,
+          headline,
+          profile_url: `https://www.linkedin.com/in/${public_identifier}`,
+          connected_on: ago(20 + i * 37).slice(0, 10),
+          already_added: state.friends.some((f) => same(f.name, name)),
+        }));
+        return {
+          connections,
+          count: connections.length,
+          total: 412,
+          truncated: true,
+          details_available: true,
+          max_details: 25,
+          max_import: 50,
+        };
+      }),
+    linkedinPreview: (people) =>
+      wait(() => {
+        const candidates: T.ImportCandidate[] = people.map((p, index) => {
+          const demo = LINKEDIN_DEMO.find(([id]) => id === p.public_identifier);
+          return {
+            index,
+            name: p.name,
+            relationship: "LinkedIn connection",
+            notes: [p.headline, demo?.[3]].filter(Boolean).join(". ") + ".",
+            interests: demo?.[4] ?? [],
+            last_met_days_ago: null,
+            already_added: state.friends.some((f) => same(f.name, p.name)),
+          };
+        });
+        const importId = newId("imp");
+        state.imports.set(importId, candidates);
+        return {
+          view: "people_import" as const,
+          import_id: importId,
+          expires_at: ahead(1, 12),
+          source: "linkedin",
+          candidates,
+          skipped: 0,
+          note: "",
+          details_for: candidates.length,
+          details_error: null,
         };
       }),
     importPeople: (importId, indexes) =>

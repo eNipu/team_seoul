@@ -38,6 +38,15 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-5-mini"
     openai_timeout_seconds: float = 25.0
 
+    # LinkedIn import (website). The Apify token is optional: without it people are
+    # imported with the name and headline from the connections list only.
+    apify_token: str | None = None
+    apify_profile_actor: str = "LpVuK3Zozwuipa5bp"  # harvestapi/linkedin-profile-scraper
+    apify_timeout_seconds: float = 240.0
+    linkedin_max_connections: int = 500
+    linkedin_max_enriched: int = 25
+    linkedin_fetches_per_hour: int = 6
+
     # Public URL of this server (scheme://host[:port]) — used as OAuth issuer in dev
     # mode and to build the MCP resource URL.
     public_base_url: str = "http://localhost:8081"
