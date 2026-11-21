@@ -2,16 +2,18 @@
 
 Heldly is a ChatGPT-native AI social companion. It remembers what matters to you — **only what
 you approve** — and helps you stay close to friends, whether or not they use Heldly:
-invite-code connections, private notes on friends who aren't on it, activity ideas based on
-shared interests, and gentle reconnection nudges. It never contacts anyone for you.
+invite-code connections, private notes on friends who aren't on it (import a whole list at
+once), "who do I know who…" search, activity ideas for one friend or a group, a brief before
+you meet and a recap after, reconnection nudges, and a quiz on how well you know your friends.
+It never contacts anyone for you.
 
 This repo contains the first version of the plugin:
 
 - **MCP server** (`backend/`): Python, FastAPI + the official MCP Python SDK, streamable HTTP at `/mcp`, OAuth, SQLAlchemy 2 + Alembic (Postgres/Supabase, SQLite for dev).
-- **Widget** (`widget/`): React UI rendered inside ChatGPT via MCP Apps (memory review, home, invite, friend, activity ideas and reconnect cards).
+- **Widget** (`widget/`): React UI rendered inside ChatGPT via MCP Apps (memory review, ChatGPT-memory import, home, invite with QR code, friend, activity ideas, reconnect, people import, people search, group plan, meetup brief and quiz cards).
 - **Plugin package** (`plugin/`): `plugin.json`, `mcp.json`, and the `heldly-social` skill.
 
-Games are intentionally out of scope for this version.
+The one game is a quiz built from what friends chose to share; there are no other games.
 
 ## Quick start
 
@@ -20,7 +22,7 @@ Requirements: Python 3.12 + [uv](https://docs.astral.sh/uv/), Node 20+, (optiona
 ```bash
 make setup    # uv sync, npm install, build widget, create .env from .env.example
 make dev      # http://localhost:8081/mcp
-make test     # 61 unit / integration / security tests (SQLite)
+make test     # unit / integration / security tests (SQLite)
 ```
 
 Check it's up: `curl localhost:8081/readyz`. Unauthenticated `POST /mcp` returns `401` with OAuth
@@ -102,11 +104,27 @@ welcome card rather than a text answer.
 - *"Set up my Heldly profile. I love bouldering and ramen, and I want to meet new people."*
   A memory review card appears; nothing is saved until you approve it.
 - *"Show my Heldly dashboard"* — a brand-new account gets a welcome card instead
+- *"Import my ChatGPT memory into Heldly"* — pick the areas on the card; ChatGPT lists what it
+  remembers about you in the chat, you say which to keep, and those come back as a review
+  card. Needs ChatGPT's Memory to be on and to know something about you.
 - *"Create a Heldly invite code"*
 - *"Add my friend Maya to Heldly — college roommate, loves hiking, haven't seen her in two months"*
 - *"What could I do with Maya?"*
 - *"Who should I reconnect with?"*
 - *"What did I save about food?"*
+- *"Import my friends: Maya (college roommate, loves pottery), Tom (old coworker, cycling), …"*
+  — or paste a list / upload a contacts export. A card lets you pick who to add.
+- *"Who do I know who climbs?"*
+- *"Plan something for me, Hana and Diego"*
+- *"I'm seeing Maya tomorrow — brief me"*, and afterwards *"I had dinner with Maya, she got
+  promoted; remind me to ask about Busan"*
+- *"Quiz me on Jun"* or *"Play the Heldly quiz"* (needs friends who have shared a few things)
+
+**Demo data:** most of these need friends. `make seed me=<your dev username>` adds three
+demo connections (with shared memories and past hangouts), a pending request and five notes
+about people who aren't on Heldly; it adds memories of your own only if you have none.
+`make seed-remove me=<your dev username>` takes the demo data out again. Start a new chat
+afterwards.
 
 **Testing two users:** connect from a second ChatGPT account and sign in with a different
 username (e.g. `bob`). Redeem alice's invite code as bob, then accept the request as alice.
@@ -136,21 +154,36 @@ connect to `https://abc123.ngrok-free.app/mcp`).
 
 ```
 ChatGPT ──MCP (OAuth bearer)──▶ FastAPI /mcp ──▶ services ──▶ Postgres
-   └─ widget iframe ◀── ui://heldly/app-v2.html  (calls tools back through the host)
+   └─ widget iframe ◀── ui://heldly/app-v4.html  (calls tools back through the host)
 ```
 
 - **Consent-based memories**: `heldly_propose_memories` creates a server-side proposal and
   shows a review card — nothing is saved. Only items the user approves are saved with
   `heldly_save_memories` (default visibility `PRIVATE`).
+- **Import from ChatGPT memory**: Heldly cannot read ChatGPT's memory, so
+  `heldly_import_chatgpt_memory` shows a card that asks ChatGPT to list what it remembers in
+  the chat; only what you pick is proposed (`source: "chatgpt_memory"`) and only what you
+  confirm is saved.
 - **Connections**: invite code → connection request → friend accepts. Block/report built in.
 - **Friends who aren't on Heldly**: private, owner-only notes (`heldly_add_person`) so they get
   activity ideas and reconnection nudges too. Never shared, never used to contact anyone.
 - **Staying close**: a friend card, activity ideas from interests *both* people chose to share
   (or from your own notes), hangout logging, reconnection suggestions.
-- **Cards**: six tools render an interactive card in ChatGPT; the rest return data.
+- **Import with review**: `heldly_propose_people_import` shows up to 50 candidates on a card;
+  only the ones the user ticks are added. Contact details are stripped.
+- **Find and plan**: `heldly_find_people` searches your notes and what friends shared;
+  `heldly_plan_group` finds common ground for 2–6 friends.
+- **Meetups**: `heldly_meetup_brief` before, `heldly_recap_meetup` after; follow-ups ("ask
+  about…") carry over to the next brief. "Add to calendar" opens a prefilled Google Calendar
+  link — Heldly has no calendar access.
+- **Quiz**: `heldly_start_quiz` — "How well do you know Jun?" or "Who's who in your circle?".
+  Uses only what friends shared with connections; scores aren't stored.
+- **Invite link + QR**: the invite card shows a QR code for `/i/{CODE}`, a page with the code
+  and how to redeem it.
+- **Cards**: twelve tools render an interactive card in ChatGPT; the rest return data.
 - **Identity** always comes from the OAuth token, never from tool arguments.
 
-28 tools in total — see [docs/MCP_TOOLS.md](docs/MCP_TOOLS.md).
+38 tools in total — see [docs/MCP_TOOLS.md](docs/MCP_TOOLS.md).
 
 ## Configuration
 
@@ -185,7 +218,8 @@ backend/
   app/main.py               FastAPI app factory (uvicorn app.main:create_app --factory)
   app/mcp/                  MCP server, tools, helpers
   app/auth/                 JWT verifier (prod), dev OAuth provider, identity mapping
-  app/services/             memories, social graph, people notes, relationship views, dashboard, analytics, consent
+  app/services/             memories, social graph, people notes + import, relationship views, quiz, dashboard, analytics, consent
+  scripts/seed_demo.py      demo data for a dev account (make seed me=<username>)
   app/ai/                   memory extraction + sensitive-data filter
   app/models/, migrations/  SQLAlchemy models, Alembic
   tests/                    unit/, integration/, security/
@@ -200,6 +234,6 @@ Makefile, Dockerfile, docker-compose.yml, .env.example
 make lint            # ruff + widget typecheck
 make format
 make migration m="…" # autogenerate an Alembic revision
-cd widget && npm run dev   # widget with mock data: ?view=memory_review | dashboard | welcome |
+cd widget && npm run dev   # widget with mock data: ?view=memory_review | memory_import | dashboard | welcome |
                            #   invite | friend | friend_person | activity_ideas | reconnect
 ```

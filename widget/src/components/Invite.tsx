@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { formatDate, isObj, plural, type InviteViewData } from "../types";
 import { ActionError, copyText, useAction, type ViewProps } from "./common";
+import QrCode from "./QrCode";
 
-type Copied = "code" | "message" | null;
+type Copied = "code" | "message" | "link" | null;
 
 export default function Invite({ data, bridge }: ViewProps<InviteViewData>) {
   const action = useAction();
@@ -23,7 +24,7 @@ export default function Invite({ data, bridge }: ViewProps<InviteViewData>) {
   }, [manual]);
 
   async function copy(what: Exclude<Copied, null>) {
-    const value = what === "code" ? data.code : data.share_text || data.code;
+    const value = what === "code" ? data.code : what === "link" ? data.link : data.share_text || data.code;
     const ok = await copyText(value);
     window.clearTimeout(timer.current);
     if (ok) {
@@ -76,6 +77,13 @@ export default function Invite({ data, bridge }: ViewProps<InviteViewData>) {
         )}
       </div>
 
+      {!revoked && data.qr.length > 0 && (
+        <figure className="qr">
+          <QrCode rows={data.qr} label="QR code that opens your Heldly invite link" />
+          <figcaption className="qr__caption">Scan to connect</figcaption>
+        </figure>
+      )}
+
       {!revoked && (
         <>
           <div className="button-row">
@@ -85,6 +93,11 @@ export default function Invite({ data, bridge }: ViewProps<InviteViewData>) {
             <button type="button" className="btn" onClick={() => void copy("message")}>
               {copied === "message" ? "✓ Copied" : "Copy invite message"}
             </button>
+            {data.link && (
+              <button type="button" className="btn" onClick={() => void copy("link")}>
+                {copied === "link" ? "✓ Copied" : "Copy link"}
+              </button>
+            )}
           </div>
           <span className="sr-only" role="status">
             {copied ? "Copied to clipboard" : ""}

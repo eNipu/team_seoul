@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { LIMITS, type WelcomeViewData } from "../types";
 import ErrorBanner from "./ErrorBanner";
-import type { ViewProps } from "./common";
+import { ActionError, useAction, type ViewProps } from "./common";
 
 const SETUP_PROMPT = "Let's set up Heldly. Ask me a few questions about my interests and the people I want to stay close to.";
 
@@ -13,7 +13,8 @@ const POINTS: { icon: string; title: string; text: string }[] = [
 
 type Phase = "choosing" | "starting" | "started" | "unavailable";
 
-export default function Welcome({ data, bridge }: ViewProps<WelcomeViewData>) {
+export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData>) {
+  const action = useAction();
   const [selected, setSelected] = useState<string[]>([]);
   const [phase, setPhase] = useState<Phase>("choosing");
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +26,7 @@ export default function Welcome({ data, bridge }: ViewProps<WelcomeViewData>) {
     );
 
   async function start() {
-    if (phase === "starting") return;
+    if (phase === "starting" || action.busy !== null) return;
     setPhase("starting");
     setError(null);
     if (selected.length > 0) {
@@ -54,7 +55,7 @@ export default function Welcome({ data, bridge }: ViewProps<WelcomeViewData>) {
     );
   }
 
-  const busy = phase === "starting";
+  const busy = phase === "starting" || action.busy !== null;
 
   return (
     <section className="panel welcome">
@@ -75,6 +76,23 @@ export default function Welcome({ data, bridge }: ViewProps<WelcomeViewData>) {
           </li>
         ))}
       </ul>
+
+      <ActionError action={action} />
+
+      <div className="offer">
+        <div className="offer__body">
+          <strong>Already told ChatGPT about yourself?</strong>
+          <p className="muted small">Start with what ChatGPT already knows about you. You choose what comes over.</p>
+        </div>
+        <button
+          type="button"
+          className="btn btn--block"
+          disabled={busy}
+          onClick={() => void action.run("import", () => nav.openView("heldly_import_chatgpt_memory", {}))}
+        >
+          {action.busy === "import" ? "Opening…" : "Import my ChatGPT memory"}
+        </button>
+      </div>
 
       {data.goal_options.length > 0 && (
         <fieldset className="goal-picker" disabled={busy}>
@@ -103,7 +121,7 @@ export default function Welcome({ data, bridge }: ViewProps<WelcomeViewData>) {
 
       <div className="actions">
         <button type="button" className="btn btn--primary btn--block" disabled={busy} onClick={() => void start()}>
-          {busy ? "Getting started…" : "Get started"}
+          {phase === "starting" ? "Getting started…" : "Get started"}
         </button>
       </div>
     </section>

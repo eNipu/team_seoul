@@ -9,6 +9,8 @@ import ErrorBanner from "./ErrorBanner";
 export interface Nav {
   /** Call a view-returning tool and push its view. Resolves to an error message, or null on success. */
   openView(tool: string, args: Record<string, unknown>): Promise<string | null>;
+  /** Like openView, but swaps the current view in place (no new Back step). */
+  replaceView(tool: string, args: Record<string, unknown>): Promise<string | null>;
   back(): void;
   canGoBack: boolean;
 }

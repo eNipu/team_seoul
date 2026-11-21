@@ -13,7 +13,7 @@ from app.models.connection import (
 )
 from app.models.invite import Invite
 from app.models.memory import Memory, MemoryProposal
-from app.models.person import Person, PersonInteraction
+from app.models.person import FollowUp, PeopleImport, Person, PersonInteraction
 from app.models.user import User, UserProfile
 
 __all__ = [
@@ -25,9 +25,11 @@ __all__ = [
     "Consent",
     "DevOAuthClient",
     "DevOAuthCode",
+    "FollowUp",
     "Invite",
     "Memory",
     "MemoryProposal",
+    "PeopleImport",
     "Person",
     "PersonInteraction",
     "RelationshipEvent",

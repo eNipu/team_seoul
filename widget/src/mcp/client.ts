@@ -25,6 +25,8 @@ export interface HostBridge {
   updateModelContext(text: string): Promise<boolean>;
   /** Send a user message into the conversation. Resolves false if unsupported/failed. */
   sendMessage(text: string): Promise<boolean>;
+  /** Ask the host to open an external link. Resolves false if unsupported/denied/failed. */
+  openLink(url: string): Promise<boolean>;
 }
 
 export interface BridgeHandlers {
@@ -111,6 +113,17 @@ class ExtAppsBridge implements HostBridge {
     }
   }
 
+  async openLink(url: string): Promise<boolean> {
+    if (typeof this.app.openLink !== "function") return false;
+    const caps = this.app.getHostCapabilities();
+    if (caps && !caps.openLinks) return false;
+    try {
+      const res = await this.app.openLink({ url });
+      return !res?.isError;
+    } catch {
+      return false;
+    }
+  }
 }
 
 /**

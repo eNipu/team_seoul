@@ -21,7 +21,7 @@ log = logging.getLogger("heldly.mcp")
 
 T = TypeVar("T")
 
-WIDGET_URI = "ui://heldly/app-v2.html"
+WIDGET_URI = "ui://heldly/app-v4.html"
 
 # Scopes
 PROFILE_READ = "heldly.profile.read"

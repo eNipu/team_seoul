@@ -18,12 +18,15 @@ from app.models import Memory, MemoryProposal, User
 from app.models._base import as_aware, utcnow
 from app.schemas.memory import (
     DeleteMemoryOut,
+    ImportArea,
     MemoryApproval,
     MemoryCandidate,
     MemoryCategory,
+    MemoryImportView,
     MemoryListOut,
     MemoryOut,
     MemoryProposalOut,
+    MemorySource,
     MemoryVisibility,
     ProposedMemory,
     SaveMemoriesOut,
@@ -33,6 +36,34 @@ from app.services.errors import InvalidRequest, NotFound, PrivacyViolation
 
 PROPOSAL_TTL = timedelta(hours=24)
 MAX_MEMORIES_PER_USER = 500
+MAX_PROPOSED = 8
+# An import brings over what ChatGPT already remembered, so one card may hold more.
+MAX_IMPORT_ITEMS = 30
+CHATGPT_MEMORY = "chatgpt_memory"
+
+# What the user can ask ChatGPT to look for. Sensitive areas are not offered at all.
+IMPORT_AREAS: tuple[tuple[str, str, str, bool], ...] = (
+    ("interests", "Interests and hobbies", "What you enjoy doing and talking about.", True),
+    (
+        "preferences",
+        "Likes, dislikes and preferences",
+        "Food, places, plans — what you go for and what you avoid.",
+        True,
+    ),
+    ("work", "Work and projects", "What you do and what you are building.", True),
+    ("goals", "Goals and plans", "What you are working towards.", True),
+    ("experiences", "Experiences and places", "Trips, events and things you have done.", True),
+    ("personal", "Personal life", "Family, relationships and milestones.", False),
+)
+IMPORT_ALWAYS_EXCLUDED = "Health, money, passwords and ID numbers are never imported."
+IMPORT_NOTE = (
+    "Heldly cannot read ChatGPT's memory; only you can. Nothing has been imported. When the user presses "
+    "the button on this card (or asks in chat), list in the chat what you already remember about them in "
+    "the areas they chose — numbered, at most 30, leaving out health, money, credentials, ID numbers and "
+    "anything you are not sure is about them — and do NOT call a Heldly tool with those items yet. Only "
+    'after the user says which ones to keep, call heldly_propose_memories with source "chatgpt_memory" '
+    "and just those items. If you remember nothing about the user, say so instead of guessing."
+)
 
 
 def _parse_uuid(value: str, what: str) -> uuid.UUID:
@@ -50,7 +81,29 @@ def to_out(m: Memory) -> MemoryOut:
         description=m.description,
         tags=list(m.tags or []),
         visibility=MemoryVisibility(m.visibility),
+        source=CHATGPT_MEMORY if m.source == CHATGPT_MEMORY else None,
         created_at=as_aware(m.created_at),
+    )
+
+
+def _title_key(title: str) -> str:
+    return " ".join(title.lower().split())
+
+
+def import_view(db: Session, user: User) -> MemoryImportView:
+    """Chooser card for an import from ChatGPT's memory. Reads nothing but the caller's own count."""
+    imported = (
+        db.scalar(
+            select(func.count()).select_from(Memory).where(Memory.user_id == user.id, Memory.source == CHATGPT_MEMORY)
+        )
+        or 0
+    )
+    return MemoryImportView(
+        areas=[ImportArea(value=v, label=label, description=d, selected=on) for v, label, d, on in IMPORT_AREAS],
+        always_excluded=IMPORT_ALWAYS_EXCLUDED,
+        imported_count=imported,
+        max_items=MAX_IMPORT_ITEMS,
+        note=IMPORT_NOTE,
     )
 
 
@@ -59,37 +112,57 @@ def propose_memories(
     user: User,
     text: str | None = None,
     suggested: list[MemoryCandidate] | None = None,
+    source: MemorySource = "conversation",
 ) -> MemoryProposalOut:
-    """Create a proposal from user-provided text and/or assistant-suggested candidates."""
+    """Create a proposal from user-provided text and/or assistant-suggested candidates.
+
+    `source` says where the candidates come from: this conversation, or ChatGPT's own memory
+    of the user (an import the user asked for and already narrowed down in the chat).
+    """
+    from_memory = source == CHATGPT_MEMORY
+    limit = MAX_IMPORT_ITEMS if from_memory else MAX_PROPOSED
     candidates: list[MemoryCandidate] = []
-    source = "assistant"
+    origin = "assistant"
     if text and text.strip():
-        extracted, source = extract_candidates(text)
+        extracted, origin = extract_candidates(text)
         candidates.extend(extracted)
     if suggested:
         candidates.extend(suggested)
         if not text:
-            source = "assistant"
-    candidates = sanitize_candidates(candidates)
+            origin = "assistant"
+    if from_memory:
+        origin = CHATGPT_MEMORY
+    candidates = sanitize_candidates(candidates, limit=limit)
     if not candidates:
         raise InvalidRequest(
             "No memory candidates found. Ask the user a question about their interests or goals first."
         )
+    have = {_title_key(t) for t in db.scalars(select(Memory.title).where(Memory.user_id == user.id))}
     expires_at = utcnow() + PROPOSAL_TTL
     items = [
-        ProposedMemory(index=i, suggested_visibility=MemoryVisibility.PRIVATE, **c.model_dump())
+        ProposedMemory(
+            index=i,
+            suggested_visibility=MemoryVisibility.PRIVATE,
+            already_saved=_title_key(c.title) in have,
+            **c.model_dump(),
+        )
         for i, c in enumerate(candidates)
     ]
     proposal = MemoryProposal(
         user_id=user.id,
         items=[i.model_dump(mode="json") for i in items],
-        source=source,
+        source=origin,
         expires_at=expires_at,
     )
     db.add(proposal)
     db.flush()
-    analytics.track(db, "memory_proposed", user.id, count=len(items), source=source)
-    return MemoryProposalOut(proposal_id=str(proposal.id), expires_at=expires_at, proposals=items)
+    analytics.track(db, "memory_proposed", user.id, count=len(items), source=origin)
+    return MemoryProposalOut(
+        proposal_id=str(proposal.id),
+        expires_at=expires_at,
+        source=CHATGPT_MEMORY if from_memory else "conversation",
+        proposals=items,
+    )
 
 
 def save_memories(db: Session, user: User, proposal_id: str, approvals: list[MemoryApproval]) -> SaveMemoriesOut:
@@ -113,6 +186,7 @@ def save_memories(db: Session, user: User, proposal_id: str, approvals: list[Mem
         raise InvalidRequest(f"Memory limit reached ({MAX_MEMORIES_PER_USER}). Delete some memories first.")
 
     now = utcnow()
+    source = CHATGPT_MEMORY if proposal.source == CHATGPT_MEMORY else None
     saved: list[Memory] = []
     for a in approvals:
         if a.index in seen:
@@ -132,13 +206,15 @@ def save_memories(db: Session, user: User, proposal_id: str, approvals: list[Mem
             description=description[:500],
             tags=list(item.get("tags") or []),
             visibility=a.visibility.value,
+            source=source,
             approved_at=now,
         )
         db.add(m)
         saved.append(m)
     proposal.consumed_at = now
+    proposal.items = []  # whatever the user did not pick is dropped, not kept
     db.flush()
-    analytics.track(db, "memory_approved", user.id, count=len(saved))
+    analytics.track(db, "memory_approved", user.id, count=len(saved), source=source or "conversation")
     return SaveMemoriesOut(saved=[to_out(m) for m in saved], count=len(saved))
 
 

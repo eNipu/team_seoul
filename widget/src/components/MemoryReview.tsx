@@ -6,16 +6,22 @@ import {
   VISIBILITY_LABELS,
   formatDate,
   parseSaveMemories,
+  plural,
   type Memory,
   type MemoryReviewViewData,
   type Visibility,
 } from "../types";
 import ErrorBanner from "./ErrorBanner";
+import { ActionError, useAction, type Nav } from "./common";
 
 interface Props {
   data: MemoryReviewViewData;
   bridge: HostBridge;
+  nav: Nav;
 }
+
+/** Above this many items the card shows the selection count and Select all / None. */
+const BULK_CONTROLS_ABOVE = 3;
 
 interface Draft {
   index: number;
@@ -27,11 +33,13 @@ interface Draft {
 
 type Phase = "editing" | "saving" | "saved" | "discarded";
 
-export default function MemoryReview({ data, bridge }: Props) {
+export default function MemoryReview({ data, bridge, nav }: Props) {
+  const action = useAction();
+  const fromChatGpt = data.source === "chatgpt_memory";
   const [drafts, setDrafts] = useState<Draft[]>(() =>
     data.proposals.map((p) => ({
       index: p.index,
-      checked: true,
+      checked: !p.already_saved,
       title: p.title,
       description: p.description,
       visibility: p.suggested_visibility,
@@ -43,6 +51,15 @@ export default function MemoryReview({ data, bridge }: Props) {
 
   const update = (index: number, patch: Partial<Draft>) =>
     setDrafts((ds) => ds.map((d) => (d.index === index ? { ...d, ...patch } : d)));
+
+  const setAll = (checked: boolean) =>
+    setDrafts((ds) =>
+      ds.map((d) => ({
+        ...d,
+        // Select all skips what Heldly already holds, like the people import card.
+        checked: checked && !data.proposals.some((p) => p.index === d.index && p.already_saved),
+      })),
+    );
 
   const selected = drafts.filter((d) => d.checked);
   const invalid = selected.some((d) => d.title.trim() === "");
@@ -82,24 +99,39 @@ export default function MemoryReview({ data, bridge }: Props) {
   if (phase === "saved") {
     return (
       <section className="panel">
+        <ActionError action={action} />
         <div className="success">
           <span className="success__icon" aria-hidden="true">✓</span>
-          <h2>
-            Saved {saved.length} {saved.length === 1 ? "memory" : "memories"}
+          <h2 role={fromChatGpt ? "status" : undefined}>
+            {fromChatGpt
+              ? `${plural(saved.length, "memory", "memories")} imported from ChatGPT`
+              : `Saved ${saved.length} ${saved.length === 1 ? "memory" : "memories"}`}
           </h2>
         </div>
-        <ul className="list">
-          {saved.map((m) => (
-            <li key={m.memory_id} className="card">
-              <div className="row row--between">
-                <strong>{m.title}</strong>
-                <span className={`badge badge--vis-${m.visibility.toLowerCase()}`}>{VISIBILITY_LABELS[m.visibility]}</span>
-              </div>
-              {m.description && <p className="muted small">{m.description}</p>}
-            </li>
-          ))}
-        </ul>
+          <ul className="list">
+            {saved.map((m) => (
+              <li key={m.memory_id} className="card">
+                <div className="row row--between">
+                  <strong>{m.title}</strong>
+                  <span className={`badge badge--vis-${m.visibility.toLowerCase()}`}>{VISIBILITY_LABELS[m.visibility]}</span>
+                </div>
+                {m.description && <p className="muted small">{m.description}</p>}
+              </li>
+            ))}
+          </ul>
         <p className="muted small">You can review or delete these any time from your Heldly dashboard.</p>
+        {fromChatGpt && (
+          <div className="sticky-bar">
+            <button
+              type="button"
+              className="btn btn--primary btn--block"
+              disabled={action.busy !== null}
+              onClick={() => void action.run("dashboard", () => nav.openView("heldly_show_dashboard", {}))}
+            >
+              {action.busy === "dashboard" ? "Loading…" : "Open my Heldly"}
+            </button>
+          </div>
+        )}
       </section>
     );
   }
@@ -118,11 +150,17 @@ export default function MemoryReview({ data, bridge }: Props) {
 
   return (
     <section className="panel">
-      <h2>Review what Heldly learned</h2>
-      <p className="notice">
-        <strong>Nothing is saved until you approve it.</strong> Uncheck anything you don't want remembered, edit the
-        wording, and choose who can see each memory.
-      </p>
+      <h2>{fromChatGpt ? "From your ChatGPT memory" : "Review what Heldly learned"}</h2>
+      {fromChatGpt ? (
+        <p className="notice">
+          ChatGPT picked these from what it remembers about you. <strong>Nothing is saved until you confirm.</strong>
+        </p>
+      ) : (
+        <p className="notice">
+          <strong>Nothing is saved until you approve it.</strong> Uncheck anything you don't want remembered, edit the
+          wording, and choose who can see each memory.
+        </p>
+      )}
       {expiresAt && !Number.isNaN(expiresAt.getTime()) && (
         <p className={`small ${expired ? "text-danger" : "muted"}`}>
           {expired ? "This proposal has expired — ask Heldly again to save these." : `Review before ${formatDate(data.expires_at)}`}
@@ -134,13 +172,27 @@ export default function MemoryReview({ data, bridge }: Props) {
       {drafts.length === 0 ? (
         <p className="muted">There are no memories to review.</p>
       ) : (
+        <>
+          {drafts.length > BULK_CONTROLS_ABOVE && (
+            <div className="pick-bar">
+              <span className="pick-bar__count" role="status">
+                {selected.length} of {drafts.length} selected
+              </span>
+              <button type="button" className="btn btn--ghost btn--small" disabled={busy} onClick={() => setAll(true)}>
+                Select all
+              </button>
+              <button type="button" className="btn btn--ghost btn--small" disabled={busy} onClick={() => setAll(false)}>
+                None
+              </button>
+            </div>
+          )}
         <ul className="list">
           {data.proposals.map((p) => {
             const d = drafts.find((x) => x.index === p.index)!;
             const id = `mem-${p.index}`;
             return (
               <li key={p.index} className={`card memory-item ${d.checked ? "" : "memory-item--off"}`}>
-                <div className="row row--between">
+                <div className="memory-item__head">
                   <label className="check">
                     <input
                       type="checkbox"
@@ -150,7 +202,10 @@ export default function MemoryReview({ data, bridge }: Props) {
                     />
                     <span>{d.checked ? "Keep" : "Skip"}</span>
                   </label>
-                  <span className={`badge badge--cat-${p.category.toLowerCase()}`}>{CATEGORY_LABELS[p.category]}</span>
+                  <span className="memory-item__badges">
+                    {p.already_saved && <span className="badge badge--on">Already in Heldly</span>}
+                    <span className={`badge badge--cat-${p.category.toLowerCase()}`}>{CATEGORY_LABELS[p.category]}</span>
+                  </span>
                 </div>
 
                 <label className="field" htmlFor={`${id}-title`}>
@@ -203,11 +258,12 @@ export default function MemoryReview({ data, bridge }: Props) {
             );
           })}
         </ul>
+        </>
       )}
 
       {invalid && <p className="small text-danger">Each selected memory needs a title.</p>}
 
-      <div className="actions">
+      <div className={`actions ${drafts.length > BULK_CONTROLS_ABOVE ? "sticky-bar sticky-bar--actions" : ""}`}>
         <button type="button" className="btn btn--ghost" onClick={discard} disabled={busy}>
           Discard
         </button>

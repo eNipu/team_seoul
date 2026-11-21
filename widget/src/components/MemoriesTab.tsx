@@ -17,11 +17,12 @@ import {
   type Memory,
   type Visibility,
 } from "../types";
-import { EmptyNote, type Action } from "./common";
+import { EmptyNote, SectionTitle, type Action, type Nav } from "./common";
 
 interface Props {
   memories: Memory[];
   bridge: HostBridge;
+  nav: Nav;
   action: Action;
   onChange: (next: Memory[]) => void;
 }
@@ -33,7 +34,7 @@ function matches(m: Memory, q: string): boolean {
   return q.split(/\s+/).every((word) => hay.includes(word));
 }
 
-export default function MemoriesTab({ memories, bridge, action, onChange }: Props) {
+export default function MemoriesTab({ memories, bridge, nav, action, onChange }: Props) {
   const id = useId();
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState<string | null>(null);
@@ -76,16 +77,44 @@ export default function MemoriesTab({ memories, bridge, action, onChange }: Prop
     });
   }
 
+  const importedCount = memories.filter((m) => m.source === "chatgpt_memory").length;
+  const sources = (
+    <section className="sources" aria-label="Sources">
+      <SectionTitle>Sources</SectionTitle>
+      <div className="source-row">
+        <span className="source-row__icon" aria-hidden="true">
+          💬
+        </span>
+        <div className="source-row__body">
+          <strong>ChatGPT memory</strong>
+          <span className="muted small">{importedCount > 0 ? `${importedCount} imported` : "Not imported yet"}</span>
+        </div>
+        <button
+          type="button"
+          className="btn btn--small"
+          disabled={busy}
+          onClick={() => void action.run("import-chatgpt", () => nav.openView("heldly_import_chatgpt_memory", {}))}
+        >
+          {action.busy === "import-chatgpt" ? "Opening…" : importedCount > 0 ? "Import more" : "Import from ChatGPT"}
+        </button>
+      </div>
+    </section>
+  );
+
   if (memories.length === 0) {
     return (
-      <EmptyNote icon="🫙" title="No memories yet">
-        Tell Heldly something about yourself in the chat. Nothing is saved until you approve it.
-      </EmptyNote>
+      <>
+        {sources}
+        <EmptyNote icon="🫙" title="No memories yet">
+          Tell Heldly something about yourself in the chat. Nothing is saved until you approve it.
+        </EmptyNote>
+      </>
     );
   }
 
   return (
     <>
+      {sources}
       <div className="search">
         <label className="sr-only" htmlFor={`${id}-search`}>
           Search memories
@@ -178,7 +207,10 @@ export default function MemoriesTab({ memories, bridge, action, onChange }: Prop
                         </div>
                       ) : (
                         <div className="card__foot">
-                          <span className="muted small">{formatDate(m.created_at)}</span>
+                          <span className="card__foot-meta">
+                            <span className="muted small">{formatDate(m.created_at)}</span>
+                            {m.source === "chatgpt_memory" && <span className="badge">From ChatGPT</span>}
+                          </span>
                           <div className="card__foot-actions">
                             <button
                               type="button"
