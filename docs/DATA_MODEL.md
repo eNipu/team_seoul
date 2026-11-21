@@ -46,6 +46,18 @@ Limits: 500 memories per user, 8 items per proposal (30 for an import from ChatG
 
 Limits: 500 people per user, 50 candidates per import, 20 open follow-ups per friend (≤ 200 chars), name/relationship ≤ 80, notes ≤ 1000, 12 interests of ≤ 40 chars.
 
+## Plans, question links, samples
+
+| Table | Columns | Notes |
+| --- | --- | --- |
+| `plans` | id*, owner_user_id* (FK cascade), title*, details, planned_for, done_at, created_at*, updated_at* | Something the user wants to do with friends. |
+| `plan_members` | id*, plan_id* (FK cascade), connection_id (FK cascade), person_id (FK cascade) | Exactly one target per row. |
+| `question_links` | id*, owner_user_id* (FK cascade), token* (unique), person_id (FK set null), for_name, max_responses*, response_count*, expires_at*, revoked_at, created_at* | A link a friend can answer without an account. |
+| `question_responses` | id*, link_id* (FK cascade), owner_user_id* (FK cascade), name*, answers* (JSON), reviewed_at, created_at* | Waits for the owner's review; `answers` is emptied once saved or discarded. |
+
+Also: `memories.people` (JSON list of names the memory is about), `people.is_sample`, and `memories.source = "sample"`
+mark sample data. Sample friends are users with `auth_subject = "sample|<owner id>|<slug>"`.
+
 ## Consent & analytics
 
 | Table | Columns | Notes |
@@ -81,7 +93,7 @@ See `site/README.md` › Waitlist, Analytics.
 ## Deletion
 
 `venn_delete_account` deletes the user row; profile, memories, proposals, invites, requests,
-connections (and their events), people notes (and their hangout logs), pending imports, follow-ups, blocks and consents cascade. Analytics events keep no user link
+connections (and their events), people notes (and their hangout logs), pending imports, follow-ups, plans, question links and their responses, blocks and consents cascade; the account's sample friends are deleted with it. Analytics events keep no user link
 (`user_id` set null).
 
 ## Migrations

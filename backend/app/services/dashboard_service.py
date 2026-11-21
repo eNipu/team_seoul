@@ -9,7 +9,15 @@ from sqlalchemy.orm import Session
 from app.models import User
 from app.schemas.profile import SocialGoal
 from app.schemas.social import DashboardView, GoalOption, HelpTopic, HelpView, SetupStep, WelcomeView
-from app.services import memory_service, people_service, social_service, user_service
+from app.services import (
+    memory_service,
+    people_service,
+    plan_service,
+    question_service,
+    sample_service,
+    social_service,
+    user_service,
+)
 
 GOAL_LABELS: dict[SocialGoal, str] = {
     SocialGoal.make_friends: "Make new friends",
@@ -57,12 +65,19 @@ SETUP_STEPS: tuple[_Step, ...] = (
 
 
 def _setup(db: Session, user: User, dashboard: DashboardView) -> list[SetupStep]:
-    """Each step is done when the data it produces exists; nothing extra is stored for set-up."""
+    """Each step is done when the data it produces exists; nothing extra is stored for set-up.
+
+    Sample data (the "try with sample friends" circle) never counts: it is not the user's own.
+    """
     invited = any(i["active"] or i["use_count"] for i in social_service.list_invites(db, user))
+    memories = [m for m in dashboard.memories if m.get("source") != memory_service.SAMPLE]
+    people = [p for p in dashboard.people if not p.get("is_sample")]
+    connections = [c for c in dashboard.connections if not c.get("is_sample")]
+    requests = [r for r in dashboard.pending_requests if not r.get("is_sample")]
     done = {
-        "about_you": bool(dashboard.memories),
-        "your_people": bool(dashboard.people or dashboard.connections),
-        "connect": bool(dashboard.connections or dashboard.pending_requests or invited),
+        "about_you": bool(memories),
+        "your_people": bool(people or connections),
+        "connect": bool(connections or requests or invited),
     }
     return [SetupStep(key=s.key, title=s.title, description=s.description, done=done[s.key]) for s in SETUP_STEPS]
 
@@ -79,6 +94,9 @@ def build_dashboard(db: Session, user: User) -> DashboardView:
         connections=[c.model_dump(mode="json") for c in connections],
         people=[p.model_dump(mode="json") for p in people],
         pending_requests=[p.model_dump(mode="json") for p in pending],
+        plans=[p.model_dump(mode="json") for p in plan_service.list_plans(db, user, "planned").plans],
+        pending_answers=question_service.pending_count(db, user),
+        sample_loaded=sample_service.is_loaded(db, user),
     )
     dashboard.setup = _setup(db, user, dashboard)
     return dashboard
@@ -93,6 +111,8 @@ def build_home(db: Session, user: User) -> DashboardView | WelcomeView:
         or dashboard.people
         or dashboard.pending_requests
         or dashboard.profile["social_goals"]
+        or dashboard.plans
+        or dashboard.pending_answers
     )
     if not empty:
         return dashboard
@@ -147,8 +167,15 @@ HELP_TOPICS: tuple[HelpTopic, ...] = (
     HelpTopic(
         key="people",
         title="Keep notes on your people",
-        description=("Add friends who are not on Venn, one at a time or a whole list. Notes stay private to you."),
-        examples=["Import my friends into Venn", "Who do I know who likes hiking?"],
+        description=(
+            "Add friends who are not on Venn, one at a time or a whole list, then ask who comes to mind for "
+            "something. Notes stay private to you."
+        ),
+        examples=[
+            "Who do I know who'd enjoy a photo walk?",
+            "Import my friends into Venn",
+            "Ask a friend a few questions for me",
+        ],
     ),
     HelpTopic(
         key="connect",
@@ -160,18 +187,19 @@ HELP_TOPICS: tuple[HelpTopic, ...] = (
         key="stay_close",
         title="Stay close",
         description=(
-            "Ideas for time together, a brief before you meet, a recap after, and nudges when it has been a while."
+            "What you have in common, three things to do this week, a brief before you meet, a recap after, "
+            "and nudges when it has been a while."
         ),
         examples=[
-            "Who should I reconnect with?",
-            "Plan something with a few friends",
+            "What should I do this week?",
+            "What do I have in common with a friend?",
             "I'm seeing a friend tomorrow — brief me",
         ],
     ),
     HelpTopic(
         key="quiz",
         title="Play",
-        description="A quick quiz on how well you know your friends, from what they chose to share.",
+        description="A quick quiz on how well you remember your people. It works with your own notes.",
         examples=["Play the Venn quiz"],
     ),
 )
@@ -179,7 +207,9 @@ HELP_TOPICS: tuple[HelpTopic, ...] = (
 HELP_PRIVACY: tuple[str, ...] = (
     "Nothing is saved until you approve it.",
     "Memories are private unless you choose to share them.",
-    "Venn never contacts anyone for you.",
+    "Venn never contacts anyone for you. It can draft a message; you send it.",
+    "What you save to Venn is there in ChatGPT and on the Venn website. "
+    "Your ChatGPT chats and ChatGPT's own memory are not synced.",
     "You can edit or delete anything, or delete your whole account.",
 )
 

@@ -68,6 +68,18 @@ input::placeholder { color: var(--muted); opacity: .7; }
 .err { color: #b3261e; background: #fdecea; padding: 10px 12px; border-radius: 12px; font-size: 14px;
   font-weight: 600; margin: 0 0 20px; }
 @media (prefers-color-scheme: dark) { .err { color: #ffb4ab; background: #3a1512; } }
+input[type="checkbox"] { display: inline-block; width: 22px; min-width: 22px; height: 22px; min-height: 0;
+  margin: 1px 0 0; padding: 0; accent-color: var(--accent); }
+label.check { display: flex; gap: 12px; align-items: flex-start; font-weight: 500; font-size: 15px; margin: 0 0 20px; }
+label .hint { display: block; font-weight: 400; color: var(--muted); font-size: 13px; margin-top: 2px; }
+.facts { list-style: none; margin: 0 0 20px; padding: 14px 16px; border-radius: 14px; background: var(--field);
+  border: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+.facts strong { display: block; color: var(--fg); margin-bottom: 6px; }
+.facts li { position: relative; padding-left: 18px; margin-top: 4px; }
+.facts li::before { content: ""; position: absolute; left: 2px; top: .6em; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); }
+.hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+a.quiet { color: var(--tint-fg); font-weight: 600; }
 @media (max-width: 360px) { main { padding: 24px 18px 20px; } h1 { font-size: 23px; } .code { font-size: 25px; } }
 """
 

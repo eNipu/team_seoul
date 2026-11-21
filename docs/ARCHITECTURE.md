@@ -8,7 +8,7 @@ invite-code connections, relationship maintenance. (Games are out of scope for n
 ChatGPT ──(MCP over streamable HTTP, OAuth bearer)──▶ FastAPI app
    │                                                    ├── /mcp                MCP server (official Python SDK, MCPServer)
    │  renders                                           ├── /.well-known/*      OAuth protected-resource + AS metadata
-   └── widget iframe (ui://venn/app-v1.html) ◀────────├── /authorize /token /register /dev/login   (dev auth only)
+   └── widget iframe (ui://venn/app-v2.html) ◀────────├── /authorize /token /register /dev/login   (dev auth only)
         React, MCP Apps bridge                          ├── /healthz /readyz
         calls tools via host                            └── services ──▶ SQLAlchemy ──▶ Postgres (Supabase) / SQLite (dev)
                                                                      └─▶ OpenAI (optional memory extraction)
@@ -24,7 +24,10 @@ ChatGPT ──(MCP over streamable HTTP, OAuth bearer)──▶ FastAPI app
 | `backend/app/invite_page.py` | The static page behind an invite link / QR code |
 | `backend/app/branding.py` | Shared look (mark, CSS, page shell) of the server-rendered pages: invite page and dev sign-in. No scripts or external requests |
 | `backend/app/mcp/server.py` | Builds `MCPServer` with the `Apps` extension, widget resource and auth |
-| `backend/app/mcp/tools.py` | All 39 MCP tools (thin: auth → service → result) |
+| `backend/app/mcp/tools.py` | All 52 MCP tools (thin: auth → service → result) |
+| `backend/app/web/` | The website's side of the same backend: `session.py` (dev session cookie), `api.py` (`/api/v1` routes calling the same services as the tools; see `docs/WEB_API.md`), `site.py` (serves `web/dist` at `/app`) |
+| `backend/app/question_page.py` | The public page behind a question link (`/q/{token}`) |
+| `web/` | React + Vite website for signed-in users; talks only to `/api/v1` on its own origin |
 | `backend/app/mcp/common.py` | Scope constants, annotations, `run_as_user`, result/error shaping |
 | `backend/app/auth/` | `JWTTokenVerifier` (production), `DevOAuthProvider` (development), identity mapping |
 | `backend/app/services/` | Business logic: users, memories (+ search), social (invites/connections/blocking), people (notes on friends not on Venn, import review), relationship (friend view, activity ideas, reconnection, "who do I know who…" search, group plans, meetup brief/recap, follow-ups), quiz, dashboard (home, set-up steps, help), analytics, consent |
@@ -32,6 +35,15 @@ ChatGPT ──(MCP over streamable HTTP, OAuth bearer)──▶ FastAPI app
 | `backend/app/ai/extraction.py` | Memory candidate extraction (OpenAI structured output, heuristic fallback) and sensitive-data filter |
 | `backend/app/models/` | SQLAlchemy 2 models; `backend/migrations/` Alembic |
 | `widget/` | React + Vite single-file bundle rendered by ChatGPT (memory review, home with set-up checklist, help, invite, friend, activity ideas, reconnect, people import, people search, group plan, meetup brief, quiz) |
+
+## One account, two interfaces
+
+ChatGPT (MCP tools) and the website (`/api/v1`) are two front ends over the same services and the same `users`
+row. A tool call resolves the user from the OAuth token; a website request resolves it from the session cookie
+(development) or a bearer token from the same IdP (production). In development both map to `dev|<username>`, so
+the username is the link. Neither side creates an account silently: an unknown username gets an explicit
+create step, on the website and on the ChatGPT connect page. Only saved Venn records are shared; ChatGPT chats
+and ChatGPT's own memory never reach the server unless the user approves a memory.
 
 ## Request flow
 
@@ -49,7 +61,7 @@ User ids are **never** taken from tool arguments.
 
 ## Widget (MCP Apps)
 
-- One HTML resource `ui://venn/app-v1.html` (`text/html;profile=mcp-app`), built from
+- One HTML resource `ui://venn/app-v2.html` (`text/html;profile=mcp-app`), built from
   `widget/` into a single file and served from `widget/dist/index.html` (fallback page if missing).
 - Thirteen *render* tools are bound to it via `_meta.ui.resourceUri`; each result carries a `view`
   discriminator the widget switches on: `venn_propose_memories` (`memory_review`),
@@ -67,7 +79,7 @@ User ids are **never** taken from tool arguments.
 - The invite QR code is generated on the server (`segno`) and sent as rows of `0`/`1`, so the
   widget needs no QR library. "Add to calendar" builds a Google Calendar link in the widget and
   opens it through the host; Venn itself has no calendar access.
-- Bump the resource URI (`app-v2`) when shipping breaking widget changes; ChatGPT caches templates.
+- Bump the resource URI (`app-v3`) when shipping breaking widget changes; ChatGPT caches templates.
 
 ## Memory consent flow
 

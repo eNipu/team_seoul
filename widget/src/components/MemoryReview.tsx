@@ -5,14 +5,16 @@ import {
   VISIBILITIES,
   VISIBILITY_LABELS,
   formatDate,
+  joinNames,
   parseSaveMemories,
   plural,
   type Memory,
   type MemoryReviewViewData,
+  type Person,
   type Visibility,
 } from "../types";
 import ErrorBanner from "./ErrorBanner";
-import { ActionError, useAction, type Nav } from "./common";
+import { ActionError, PeopleChips, useAction, type Nav } from "./common";
 import { CATEGORY_ICONS, Icon, Illustration } from "./icons";
 
 interface Props {
@@ -49,6 +51,7 @@ export default function MemoryReview({ data, bridge, nav }: Props) {
   const [phase, setPhase] = useState<Phase>("editing");
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<Memory[]>([]);
+  const [peopleAdded, setPeopleAdded] = useState<Person[]>([]);
 
   const update = (index: number, patch: Partial<Draft>) =>
     setDrafts((ds) => ds.map((d) => (d.index === index ? { ...d, ...patch } : d)));
@@ -87,9 +90,13 @@ export default function MemoryReview({ data, bridge, nav }: Props) {
     }
     const result = parseSaveMemories(res.data);
     setSaved(result.saved);
+    setPeopleAdded(result.people_added);
     setPhase("saved");
     const titles = result.saved.map((m) => m.title).join(", ");
-    void bridge.updateModelContext(`Saved ${result.count} memories to Venn profile: ${titles}`);
+    const added = result.people_added.map((p) => p.name);
+    void bridge.updateModelContext(
+      `Saved ${result.count} memories to Venn profile: ${titles}${added.length > 0 ? `. Added to the user's people: ${added.join(", ")}` : ""}`,
+    );
   }
 
   function discard() {
@@ -119,9 +126,18 @@ export default function MemoryReview({ data, bridge, nav }: Props) {
                   <span className={`badge badge--vis-${m.visibility.toLowerCase()}`}>{VISIBILITY_LABELS[m.visibility]}</span>
                 </div>
                 {m.description && <p className="muted small">{m.description}</p>}
+                <PeopleChips people={m.people} />
               </li>
             ))}
           </ul>
+        {peopleAdded.length > 0 && (
+          <p className="logged-row" role="status">
+            <Icon name="user-plus" size={16} />
+            <span>
+              {joinNames(peopleAdded.map((p) => p.name))} {peopleAdded.length === 1 ? "was" : "were"} added to your people
+            </span>
+          </p>
+        )}
         <p className="muted small">You can review or delete these any time from your Venn dashboard.</p>
         {fromChatGpt && (
           <div className="sticky-bar">
@@ -265,6 +281,16 @@ export default function MemoryReview({ data, bridge, nav }: Props) {
                       </span>
                     ))}
                   </div>
+                )}
+                <PeopleChips people={p.people} />
+                {p.new_people.length > 0 && (
+                  <p className="also-adds">
+                    <Icon name="user-plus" size={16} />
+                    <span>
+                      Also adds <strong>{joinNames(p.new_people)}</strong> to your people
+                      <span className="muted"> · as {p.new_people.length === 1 ? "a private note" : "private notes"} only you can see</span>
+                    </span>
+                  </p>
                 )}
               </li>
             );

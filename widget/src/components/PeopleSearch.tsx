@@ -1,6 +1,6 @@
 import { useId, useState, type FormEvent } from "react";
 import { LIMITS, formatRelative, friendArg, groupArgs, plural, type PeopleSearchViewData, type SearchResult } from "../types";
-import { ActionError, Avatar, EmptyNote, Spinner, useAction, type ViewProps } from "./common";
+import { ActionError, Avatar, EmptyNote, PeopleChips, SectionTitle, Spinner, useAction, type ViewProps } from "./common";
 import { Icon } from "./icons";
 
 export function SearchIcon() {
@@ -52,7 +52,7 @@ export default function PeopleSearch({ data, nav }: ViewProps<PeopleSearchViewDa
             type="search"
             value={query}
             maxLength={LIMITS.searchQuery}
-            placeholder="climbing, Busan, loves ramen…"
+            placeholder="Who do I know who…"
             autoComplete="off"
             enterKeyHint="search"
             disabled={busy}
@@ -93,7 +93,13 @@ export default function PeopleSearch({ data, nav }: ViewProps<PeopleSearchViewDa
                         .filter(Boolean)
                         .join(" · ")}
                     </span>
-                    {r.matched.length > 0 && (
+                    {r.why && (
+                      <span className="small why">
+                        <Icon name="sparkle" size={14} />
+                        <span>{r.why}</span>
+                      </span>
+                    )}
+                    {!r.why && r.matched.length > 0 && (
                       <span className="chips">
                         <span className="sr-only">Matched: </span>
                         {r.matched.map((m, i) => (
@@ -104,7 +110,7 @@ export default function PeopleSearch({ data, nav }: ViewProps<PeopleSearchViewDa
                         ))}
                       </span>
                     )}
-                    {r.snippet && <span className="small snippet">{r.snippet}</span>}
+                    {!r.why && r.snippet && <span className="small snippet">{r.snippet}</span>}
                   </span>
                   <span className="friend-row__open" aria-hidden="true">
                     {action.busy === `open-${r.kind}:${r.id}` ? <Spinner /> : <Icon name="chevron-right" size={18} />}
@@ -130,6 +136,21 @@ export default function PeopleSearch({ data, nav }: ViewProps<PeopleSearchViewDa
               </button>
             </div>
           )}
+        </>
+      )}
+
+      {data.memories.length > 0 && (
+        <>
+          <SectionTitle count={data.memories.length}>From your memories</SectionTitle>
+          <ul className="list list--tight">
+            {data.memories.map((m, i) => (
+              <li key={m.memory_id || i} className="card card--memory-hit">
+                <strong className="card__title">{m.title}</strong>
+                {m.description && <p className="muted small">{m.description}</p>}
+                <PeopleChips people={m.people} />
+              </li>
+            ))}
+          </ul>
         </>
       )}
 

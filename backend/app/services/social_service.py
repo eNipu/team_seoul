@@ -43,7 +43,7 @@ from app.schemas.social import (
 )
 from app.services import analytics
 from app.services.errors import InvalidRequest, NotFound, RateLimited
-from app.services.user_service import display_name
+from app.services.user_service import display_name, is_sample_user
 
 # No ambiguous characters (0/O, 1/I/L).
 _CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
@@ -275,6 +275,7 @@ def pending_requests(db: Session, user: User) -> PendingRequestListOut:
             request_id=str(r.id),
             sender_display_name=display_name(db.get(User, r.sender_user_id)),
             created_at=as_aware(r.created_at),
+            is_sample=is_sample_user(db.get(User, r.sender_user_id)),
         )
         for r in rows
         if not is_blocked(db, user.id, r.sender_user_id)
@@ -347,13 +348,15 @@ def list_connections(db: Session, user: User) -> ConnectionListOut:
         friend_id = c.user_b_id if c.user_a_id == user.id else c.user_a_id
         if is_blocked(db, user.id, friend_id):
             continue
+        friend = db.get(User, friend_id)
         out.append(
             ConnectionOut(
                 connection_id=str(c.id),
                 user_id=str(friend_id),
-                display_name=display_name(db.get(User, friend_id)),
+                display_name=display_name(friend),
                 since=as_aware(c.created_at),
                 last_interaction_at=last_interaction(db, c.id),
+                is_sample=is_sample_user(friend),
             )
         )
     return ConnectionListOut(connections=out)

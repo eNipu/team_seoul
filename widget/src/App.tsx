@@ -5,6 +5,10 @@ import { friendArg, parseView, type ViewData } from "./types";
 import MemoryReview from "./components/MemoryReview";
 import MemoryImport from "./components/MemoryImport";
 import Dashboard, { type DashboardTab } from "./components/Dashboard";
+import VennCard from "./components/VennCard";
+import ThisWeek from "./components/ThisWeek";
+import AskLink from "./components/AskLink";
+import Answers from "./components/Answers";
 import Invite from "./components/Invite";
 import ActivityIdeas from "./components/ActivityIdeas";
 import Reconnect from "./components/Reconnect";
@@ -44,7 +48,18 @@ function skeletonFor(hint: string | null | undefined): SkeletonKind {
       return "profile";
     case "venn_create_invite":
     case "invite":
+    case "venn_create_question_link":
+    case "ask_link":
       return "ticket";
+    case "venn_compare":
+    case "venn":
+    case "venn_empty":
+    case "venn_full":
+      return "hero";
+    case "dashboard_sample":
+    case "dashboard_plans":
+    case "dashboard_setup":
+      return "dashboard";
     case "venn_onboard":
     case "welcome":
     case "venn_import_chatgpt_memory":
@@ -58,6 +73,12 @@ function skeletonFor(hint: string | null | undefined): SkeletonKind {
     case "people_search":
     case "venn_preview_people_import":
     case "people_import":
+    case "venn_this_week":
+    case "this_week":
+    case "this_week_empty":
+    case "venn_review_answers":
+    case "answers":
+    case "answers_empty":
       return "rows";
     default:
       return "cards";
@@ -79,6 +100,13 @@ function refreshCall(view: ViewData): { tool: string; args: Record<string, unkno
       return view.query ? { tool: "venn_find_people", args: { query: view.query } } : null;
     case "help":
       return { tool: "venn_help", args: {} };
+    case "venn":
+      return { tool: "venn_compare", args: friendArg(view.kind, view.id) };
+    case "this_week":
+      return { tool: "venn_this_week", args: {} };
+    case "answers":
+      return { tool: "venn_review_answers", args: {} };
+    // "ask_link" is deliberately not refreshed: creating a link again would mint a new one.
     default:
       return null;
   }
@@ -230,9 +258,19 @@ export default function App() {
   }, [refresh, setStack]);
 
   const canGoBack = stack.length > 1;
+  const openDashboard = useCallback(
+    async (tab: DashboardTab) => {
+      const previous = dashboardTab.current;
+      dashboardTab.current = tab;
+      const message = await openView("venn_show_dashboard", {});
+      if (message !== null) dashboardTab.current = previous;
+      return message;
+    },
+    [openView],
+  );
   const nav: Nav = useMemo(
-    () => ({ openView, replaceView, back, canGoBack }),
-    [openView, replaceView, back, canGoBack],
+    () => ({ openView, replaceView, openDashboard, back, canGoBack }),
+    [openView, replaceView, openDashboard, back, canGoBack],
   );
   const onTabChange = useCallback((t: DashboardTab) => {
     dashboardTab.current = t;
@@ -333,6 +371,14 @@ function renderView(
       return <Quiz key={key} data={view} bridge={bridge} nav={nav} />;
     case "help":
       return <Help key={key} data={view} bridge={bridge} nav={nav} />;
+    case "venn":
+      return <VennCard key={key} data={view} bridge={bridge} nav={nav} />;
+    case "this_week":
+      return <ThisWeek key={key} data={view} bridge={bridge} nav={nav} />;
+    case "ask_link":
+      return <AskLink key={key} data={view} bridge={bridge} nav={nav} />;
+    case "answers":
+      return <Answers key={key} data={view} bridge={bridge} nav={nav} />;
   }
 }
 

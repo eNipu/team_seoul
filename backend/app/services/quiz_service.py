@@ -2,8 +2,10 @@
 
 - Friend quiz ("How well do you know Jun?"): built only from memories the friend chose to share
   with connections. PRIVATE memories are never read.
-- Circle quiz ("Who's who in your circle?"): built from what connections shared and from the
-  user's own notes about people who are not on Venn.
+- Circle quiz ("Who's who in your circle?" / "How well do you remember your people?"): built from
+  what connections shared and from the user's own notes about people who are not on Venn (their
+  interests, how the user knows them, the last hangout, an open follow-up). It works with notes
+  alone, so nobody else has to join.
 - Wrong options come from the user's own memories, what their other friends shared with them,
   and a generic pool; an option is never something the quizzed friend also shared.
 - Answers are checked in the widget. Nothing about a quiz is stored and nobody is notified.
@@ -215,40 +217,98 @@ def _friend_quiz(db: Session, user: User, connection_id: str, rng: random.Random
 
 
 def _circle_quiz(db: Session, user: User, rng: random.Random) -> QuizView:
+    """ "Who's who?" across the whole circle. Works with private notes alone, so nobody else has to join.
+
+    Facts come from what connections shared and from the user's own notes: a person's interests,
+    how the user knows them, what they last did together and what the user wanted to ask them.
+    """
     friends = rel.all_friends(db, user)
-    # (friend, interest label, comparison terms, explanation)
-    facts: list[tuple[rel.Friend, str, set[str], str]] = []
+    # (friend, prompt, key that must be unique, friends that may be wrong answers, explanation)
+    facts: list[tuple[rel.Friend, str, str, list[rel.Friend], str]] = []
+
+    def others_without(friend: rel.Friend, terms: set[str]) -> list[rel.Friend]:
+        # Only friends who clearly don't share this can be wrong answers.
+        return [f for f in friends if f.id != friend.id and not (f.terms & terms)]
+
     for friend in friends:
+        name = friend.display_name
         if friend.kind == "connection":
             for memory in friend.memories:
                 if memory.category == "INTEREST":
-                    facts.append((friend, memory.title, _memory_terms(memory), _explain(friend.display_name, memory)))
-        else:
-            for label in friend.interest_labels:
-                facts.append((friend, label, rel.terms_of(label), f"From your notes on {friend.display_name}."))
+                    terms = _memory_terms(memory)
+                    if terms:
+                        facts.append(
+                            (
+                                friend,
+                                f"Who's into “{memory.title}”?",
+                                memory.title.lower(),
+                                others_without(friend, terms),
+                                _explain(name, memory),
+                            )
+                        )
+            continue
+        person = friend.person
+        note = f"From your notes on {name}."
+        for label in friend.interest_labels:
+            terms = rel.terms_of(label)
+            if terms:
+                facts.append((friend, f"Who's into “{label}”?", label.lower(), others_without(friend, terms), note))
+        if person.relationship:
+            relationship = person.relationship.lower()
+            different = [
+                f
+                for f in friends
+                if f.id != friend.id and (f.person is None or (f.person.relationship or "").lower() != relationship)
+            ]
+            prompt = f"Who do you know as “{person.relationship}”?"
+            facts.append((friend, prompt, f"rel:{relationship}", different, note))
+        if friend.last_activity:
+            activity = friend.last_activity.lower()
+            different = [f for f in friends if f.id != friend.id and (f.last_activity or "").lower() != activity]
+            facts.append(
+                (
+                    friend,
+                    f"Who did you last see for “{friend.last_activity}”?",
+                    f"last:{activity}",
+                    different,
+                    f"The last hangout you logged with {name}.",
+                )
+            )
+        for follow_up in rel.open_follow_ups(db, user, friend)[:1]:
+            facts.append(
+                (
+                    friend,
+                    f"Who did you want to follow up with about this: “{follow_up.text}”?",
+                    f"ask:{follow_up.text.lower()}",
+                    [f for f in friends if f.id != friend.id],
+                    f"It's on your list for {name}.",
+                )
+            )
     rng.shuffle(facts)
 
     questions: list[QuizQuestion] = []
     per_friend: dict[str, int] = {}
     asked: set[str] = set()
-    for friend, label, terms, explanation in facts:
+    with_connections = False
+    for friend, prompt, key, others, explanation in facts:
         if len(questions) >= MAX_CIRCLE_QUESTIONS:
             break
-        if per_friend.get(friend.id, 0) >= 2 or label.lower() in asked or not terms:
+        if per_friend.get(friend.id, 0) >= 2 or key in asked:
             continue
-        # Only friends who clearly don't share this interest can be wrong answers.
-        others = [f for f in friends if f.id != friend.id and not (f.terms & terms)]
+        others = list(others)
         rng.shuffle(others)
         wrong = _distinct([f.display_name for f in others], {friend.display_name.lower()})[:3]
         if not wrong:
             continue
-        asked.add(label.lower())
+        asked.add(key)
         per_friend[friend.id] = per_friend.get(friend.id, 0) + 1
-        questions.append(_question(f"Who's into “{label}”?", friend.display_name, wrong, explanation, rng))
+        with_connections = with_connections or friend.kind == "connection"
+        questions.append(_question(prompt, friend.display_name, wrong, explanation, rng))
 
     if len(questions) < MIN_QUESTIONS:
         raise InvalidRequest(
-            "Not enough to quiz on yet. Add interests for a few friends, or connect with friends who share theirs."
+            "Not enough to quiz on yet. Add a few people with their interests or how you know them, "
+            "or connect with friends who share theirs."
         )
     analytics.track(db, "quiz_started", user.id, count=len(questions), category="circle")
     return QuizView(
@@ -256,7 +316,7 @@ def _circle_quiz(db: Session, user: User, rng: random.Random) -> QuizView:
         kind=None,
         id=None,
         display_name=None,
-        title="Who's who in your circle?",
+        title="Who's who in your circle?" if with_connections else "How well do you remember your people?",
         questions=questions,
         common_ground=[],
         next=None,
