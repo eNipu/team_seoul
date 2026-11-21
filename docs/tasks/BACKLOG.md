@@ -5,7 +5,7 @@ when the item is picked up. Promote an item by writing a task file and adding it
 
 ## Next candidates
 
-- Search across connections' shared memories ("who do I know working on AI tools in Berlin?"). PRD §4.2 N1–N5, §8.1.
+- Search across connections' shared memories ("who do I know working on AI tools in Berlin?"). `find_people` already searches friends by name, notes and interests; check what is left. PRD §4.2 N1–N5, §8.1.
 - Check-in cadence for connections, not only people. Needs a per-user setting per connection. PRD §4.2 R2.
 - Name and merge interest clusters with a language model instead of shared words. PRD §7 (matcher).
 - Tell the user when a friend's new shared memory matches one of their needs. PRD §4.2 R5.

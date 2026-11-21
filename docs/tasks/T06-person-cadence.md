@@ -6,7 +6,7 @@ suggestions respect it instead of the fixed 21 days.
 ## Read first
 
 - `CONTEXT.md` › recipe "Add a column"
-- `backend/app/models/person.py`, `backend/migrations/versions/0002_people_notes.py`
+- `backend/app/models/person.py` › `Person`, and the newest file in `backend/migrations/versions/`
 - `backend/app/services/people_service.py` › `add_person`, `update_person`, `to_out`
 - `backend/app/services/relationship_service.py` › `reconnection_suggestions`
 - `backend/app/mcp/tools.py` › `heldly_add_person`, `heldly_update_person`

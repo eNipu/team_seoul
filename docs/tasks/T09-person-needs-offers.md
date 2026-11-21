@@ -7,7 +7,7 @@ and what they offer. T10 matches these against the user's own needs and offers.
 
 - `CONTEXT.md` › recipe "Add a column"
 - `backend/app/models/person.py`
-- `backend/app/services/people_service.py` › `clean_interests`, `_reject_sensitive`, `add_person`, `update_person`, `to_out`
+- `backend/app/services/people_service.py` › `clean_interests`, `reject_sensitive`, `add_person`, `update_person`, `to_out`
 - `backend/app/schemas/social.py` › `PersonOut`
 - `backend/app/mcp/tools.py` › `heldly_add_person`, `heldly_update_person`
 - `widget/src/components/PersonForm.tsx`, `Friend.tsx`; `widget/src/types.ts` › `Person`
