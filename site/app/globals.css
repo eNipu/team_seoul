@@ -800,3 +800,5 @@ ul { padding: 0; list-style: none; }
 .manifesto .h-display { color: #fff; font-size: clamp(2.5rem, 9vw, 5.5rem); line-height: 1.02; }
 .manifesto__hit { color: #FFD400; }
 .manifesto .lead { color: #d2d2d7; margin-top: 1.5rem; max-width: 40ch; }
+.legal { max-width: 44rem; display: grid; gap: .9rem; padding-block: 2rem 4rem; }
+.legal h2 { font-size: 1.25rem; margin-top: 1rem; }
