@@ -12,7 +12,7 @@ from app.config import ALL_SCOPES, Settings
 from app.db.database import Base, get_engine, session_scope
 from app.main import create_app
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = "http://localhost:8081"
 ACCEPT = "application/json, text/event-stream"
 # Set TEST_DATABASE_URL=postgresql://... to run the suite against Postgres (tables are reset per test).
 TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL")

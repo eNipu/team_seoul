@@ -41,7 +41,7 @@ class Settings(BaseSettings):
 
     # Public URL of this server (scheme://host[:port]) — used as OAuth issuer in dev
     # mode and to build the MCP resource URL.
-    public_base_url: str = "http://localhost:8000"
+    public_base_url: str = "http://localhost:8081"
     # Full URL of the MCP endpoint (the OAuth protected resource). Defaults to
     # {public_base_url}/mcp.
     mcp_base_url: str | None = None

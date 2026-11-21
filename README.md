@@ -18,17 +18,17 @@ Requirements: Python 3.12 + [uv](https://docs.astral.sh/uv/), Node 20+, (optiona
 
 ```bash
 make setup    # uv sync, npm install, build widget, create .env from .env.example
-make dev      # http://localhost:8000/mcp
+make dev      # http://localhost:8081/mcp
 make test     # 61 unit / integration / security tests (SQLite)
 ```
 
-Check it's up: `curl localhost:8000/readyz`. Unauthenticated `POST /mcp` returns `401` with OAuth
+Check it's up: `curl localhost:8081/readyz`. Unauthenticated `POST /mcp` returns `401` with OAuth
 discovery headers — that's expected.
 
 With Docker (Postgres + server, migrations applied on start):
 
 ```bash
-make docker-up                 # HELDLY_PORT / HELDLY_DB_PORT override 8000 / 5432
+make docker-up                 # HELDLY_PORT / HELDLY_DB_PORT override 8081 / 5432
 make test-postgres             # run the test suite against Postgres
 ```
 
@@ -37,7 +37,7 @@ make test-postgres             # run the test suite against Postgres
 ChatGPT needs a public HTTPS URL. During development use a tunnel:
 
 ```bash
-ngrok http 8000                # or: cloudflared tunnel --url http://localhost:8000
+ngrok http 8081                # or: cloudflared tunnel --url http://localhost:8081
 ```
 
 Then in `.env`:
