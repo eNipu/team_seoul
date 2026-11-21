@@ -247,10 +247,10 @@ code {
   flex: 1;
 }
 .heldly__header .icon-btn:last-child {
-  margin-right: -10px;
+  margin-right: -6px;
 }
 .back {
-  margin-left: -10px;
+  margin-left: -6px;
 }
 
 /* A view is one or more panels stacked. */
