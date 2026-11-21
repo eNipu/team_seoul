@@ -2,7 +2,6 @@ import { useId, useState, type FormEvent } from "react";
 import type { HostBridge } from "../mcp/client";
 import {
   CATEGORY_GROUP_LABELS,
-  CATEGORY_ICONS,
   CATEGORY_LABELS,
   LIMITS,
   MEMORY_CATEGORIES,
@@ -18,6 +17,7 @@ import {
   type Visibility,
 } from "../types";
 import { EmptyNote, SectionTitle, type Action, type Nav } from "./common";
+import { CategoryIcon, Icon } from "./icons";
 
 interface Props {
   memories: Memory[];
@@ -83,7 +83,7 @@ export default function MemoriesTab({ memories, bridge, nav, action, onChange }:
       <SectionTitle>Sources</SectionTitle>
       <div className="source-row">
         <span className="source-row__icon" aria-hidden="true">
-          💬
+          <Icon name="chat" />
         </span>
         <div className="source-row__body">
           <strong>ChatGPT memory</strong>
@@ -95,6 +95,7 @@ export default function MemoriesTab({ memories, bridge, nav, action, onChange }:
           disabled={busy}
           onClick={() => void action.run("import-chatgpt", () => nav.openView("venn_import_chatgpt_memory", {}))}
         >
+          <Icon name="import" size={16} />
           {action.busy === "import-chatgpt" ? "Opening…" : importedCount > 0 ? "Import more" : "Import from ChatGPT"}
         </button>
       </div>
@@ -105,7 +106,7 @@ export default function MemoriesTab({ memories, bridge, nav, action, onChange }:
     return (
       <>
         {sources}
-        <EmptyNote icon="🫙" title="No memories yet">
+        <EmptyNote art="memories" title="No memories yet">
           Tell Venn something about yourself in the chat. Nothing is saved until you approve it.
         </EmptyNote>
       </>
@@ -120,10 +121,7 @@ export default function MemoriesTab({ memories, bridge, nav, action, onChange }:
           Search memories
         </label>
         <span className="search__icon" aria-hidden="true">
-          <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <circle cx="9" cy="9" r="6" />
-            <path d="m14 14 4 4" />
-          </svg>
+          <Icon name="search" size={18} />
         </span>
         <input
           id={`${id}-search`}
@@ -141,7 +139,7 @@ export default function MemoriesTab({ memories, bridge, nav, action, onChange }:
       )}
 
       {groups.length === 0 ? (
-        <EmptyNote icon="🔎" title="No matches">
+        <EmptyNote art="search" title="No matches">
           Nothing matches “{query.trim()}”.{" "}
           <button type="button" className="link" onClick={() => setQuery("")}>
             Clear search
@@ -151,9 +149,7 @@ export default function MemoriesTab({ memories, bridge, nav, action, onChange }:
         groups.map((g) => (
           <section key={g.category} className="group" aria-label={CATEGORY_GROUP_LABELS[g.category]}>
             <h3 className="group__title">
-              <span className={`cat-icon cat--${g.category.toLowerCase()}`} aria-hidden="true">
-                {CATEGORY_ICONS[g.category]}
-              </span>
+              <CategoryIcon category={g.category} />
               <span>{CATEGORY_GROUP_LABELS[g.category]}</span>
               <span className="count">{g.items.length}</span>
             </h3>
@@ -209,7 +205,12 @@ export default function MemoriesTab({ memories, bridge, nav, action, onChange }:
                         <div className="card__foot">
                           <span className="card__foot-meta">
                             <span className="muted small">{formatDate(m.created_at)}</span>
-                            {m.source === "chatgpt_memory" && <span className="badge">From ChatGPT</span>}
+                            {m.source === "chatgpt_memory" && (
+                              <span className="badge">
+                                <Icon name="chat" size={12} />
+                                From ChatGPT
+                              </span>
+                            )}
                           </span>
                           <div className="card__foot-actions">
                             <button

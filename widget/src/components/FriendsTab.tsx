@@ -16,7 +16,8 @@ import {
   type PendingRequest,
   type Person,
 } from "../types";
-import { Avatar, ChatStatus, SectionTitle, Spinner, useChatPrompt, type Action, type Nav } from "./common";
+import { Avatar, ChatStatus, EmptyNote, SectionTitle, Spinner, useChatPrompt, type Action, type Nav } from "./common";
+import { Icon } from "./icons";
 import { SearchIcon } from "./PeopleSearch";
 import PersonForm, { type PersonValues } from "./PersonForm";
 
@@ -158,6 +159,7 @@ export default function FriendsTab(props: Props) {
           disabled={busy}
           onClick={() => void action.run("invite", () => nav.openView("venn_create_invite", {}))}
         >
+          <Icon name="user-plus" size={18} />
           {action.busy === "invite" ? "Creating code…" : "Invite a friend"}
         </button>
         <button
@@ -177,7 +179,7 @@ export default function FriendsTab(props: Props) {
           disabled={chat.state === "sending"}
           onClick={() => void chat.send(IMPORT_PROMPT)}
         >
-          <span aria-hidden="true">📥</span>
+          <Icon name="import" size={18} />
           {chat.state === "sending" ? "Asking…" : "Import friends"}
         </button>
         {connections.length > 0 && (
@@ -187,7 +189,7 @@ export default function FriendsTab(props: Props) {
             disabled={busy}
             onClick={() => void action.run("quiz", () => nav.openView("venn_start_quiz", {}))}
           >
-            <span aria-hidden="true">🎲</span>
+            <Icon name="dice" size={18} />
             {action.busy === "quiz" ? "Loading…" : "Play a quiz"}
           </button>
         )}
@@ -199,7 +201,7 @@ export default function FriendsTab(props: Props) {
             aria-pressed={picking}
             onClick={() => setGroup(picking ? null : [])}
           >
-            <span aria-hidden="true">🧑‍🤝‍🧑</span>
+            <Icon name="users" size={18} />
             Plan a group hangout
           </button>
         )}
@@ -256,8 +258,14 @@ export default function FriendsTab(props: Props) {
         </>
       )}
 
-      <SectionTitle count={connections.length}>On Venn</SectionTitle>
-      {connections.length === 0 ? (
+      {friendCount === 0 && (
+        <EmptyNote art="friends" title="Your circle starts here">
+          Invite a friend who uses ChatGPT, or add a private note about someone you want to stay close to.
+        </EmptyNote>
+      )}
+
+      {friendCount > 0 && <SectionTitle count={connections.length}>On Venn</SectionTitle>}
+      {friendCount === 0 ? null : connections.length === 0 ? (
         <p className="muted small">No connections yet. Invite a friend to get started.</p>
       ) : (
         <ul className="list list--tight">
@@ -275,8 +283,12 @@ export default function FriendsTab(props: Props) {
         </ul>
       )}
 
-      <SectionTitle count={people.length}>Private notes</SectionTitle>
-      <p className="muted small">Friends who aren't on Venn. Only you can see these.</p>
+      {friendCount > 0 && (
+        <>
+          <SectionTitle count={people.length}>Private notes</SectionTitle>
+          <p className="muted small">Friends who aren't on Venn. Only you can see these.</p>
+        </>
+      )}
       {people.length > 0 && (
         <ul className="list list--tight">
           {people.map((p) => (
@@ -308,7 +320,8 @@ export default function FriendsTab(props: Props) {
         </div>
       ) : (
         <button type="button" className="btn btn--dashed btn--block" disabled={busy} onClick={() => setAdding(true)}>
-          <span aria-hidden="true">+ </span>Add a person
+          <Icon name="plus" size={18} />
+          Add a person
         </button>
       )}
     </>
@@ -354,7 +367,7 @@ function FriendRow({ name, detail, opening, disabled, onOpen, picked, pickDisabl
           <span className="muted small">{detail}</span>
         </span>
         <span className="friend-row__open" aria-hidden="true">
-          {opening ? <Spinner /> : "›"}
+          {opening ? <Spinner /> : <Icon name="chevron-right" size={18} />}
         </span>
       </button>
     </li>

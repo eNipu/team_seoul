@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "venn",
   "version": "0.1.0",
-  "description": "Venn is a social companion that remembers what matters to you (only what you approve) and helps you stay close to friends.",
+  "description": "Venn finds what you and your friends have in common. It remembers what matters to you (only what you approve) and helps you stay close.",
   "author": {
     "name": "Venn",
     "url": "https://venn.example.com"
@@ -14,8 +14,8 @@
     "com.openai": {
       "interface": {
         "displayName": "Venn",
-        "shortDescription": "Remember what matters and stay close to friends.",
-        "longDescription": "Venn keeps a private, user-approved memory of your interests, preferences and social goals, lets you connect with friends through invite codes, and suggests ways to reconnect. Nothing is saved without your approval, and Venn never contacts anyone on your behalf.",
+        "shortDescription": "Find your common ground and stay close to friends.",
+        "longDescription": "Venn keeps a private, user-approved memory of what matters to you and the people you care about. Set up in three short steps: tell Venn about you (or bring over what ChatGPT already remembers), add your people, and connect with friends through an invite code, link or QR. Then get ideas for time together, a brief before you meet, nudges when it has been a while, and a quiz on how well you know your friends. Nothing is saved without your approval, and Venn never contacts anyone on your behalf.",
         "developerName": "Venn",
         "category": "Lifestyle",
         "capabilities": ["Interactive", "Write"],
@@ -23,11 +23,11 @@
         "privacyPolicyURL": "https://venn.example.com/privacy",
         "termsOfServiceURL": "https://venn.example.com/terms",
         "defaultPrompt": [
-          "Set up my Venn profile",
-          "Show my Venn dashboard",
-          "Who should I reconnect with this week?"
+          "Set up Venn",
+          "Who should I reconnect with this week?",
+          "What can Venn do?"
         ],
-        "brandColor": "#000000",
+        "brandColor": "#E86A4A",
         "composerIcon": "./assets/icon.svg",
         "logo": "./assets/logo.svg"
       },

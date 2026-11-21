@@ -3,7 +3,7 @@
 //
 //   ?view=memory_review|dashboard|invite|activity_ideas|reconnect|friend|friend_person|welcome
 //         people_import|people_search|group_plan|brief|brief_person|quiz|quiz_circle
-//         memory_import|memory_review_import
+//         memory_import|memory_review_import|help|dashboard_setup
 //   &tab=profile|memories|friends   initial dashboard tab
 //   &theme=light|dark               force a theme (default: prefers-color-scheme)
 //   &flaky=1                        every other tool call fails (error/retry UI)
@@ -25,6 +25,8 @@ import type {
   FriendKind,
   FriendViewData,
   GroupPlanViewData,
+  HelpTopic,
+  HelpViewData,
   ImportCandidate,
   Interaction,
   InviteViewData,
@@ -43,6 +45,7 @@ import type {
   QuizViewData,
   ReconnectViewData,
   SearchResult,
+  SetupStep,
   SharedMemory,
   ViewData,
   Visibility,
@@ -68,6 +71,8 @@ export const DEMO_VIEWS = [
   "quiz_circle",
   "memory_import",
   "memory_review_import",
+  "help",
+  "dashboard_setup",
 ] as const;
 
 export function demoParam(name: string): string | null {
@@ -566,6 +571,86 @@ function findFriend(args: Record<string, unknown>):
   return null;
 }
 
+/** The three onboarding steps, derived from what the store already holds. */
+function setupSteps(fresh = false): SetupStep[] {
+  const connected = !fresh && connections.length > 0;
+  return [
+    {
+      key: "about_you",
+      title: "Tell Venn about you",
+      description: "Bring over what ChatGPT already remembers, or answer a couple of questions.",
+      done: !fresh && memories.length > 0,
+    },
+    {
+      key: "your_people",
+      title: "Add your people",
+      description: "Paste a list, upload your contacts, or name a few friends.",
+      done: !fresh && (people.length > 0 || connected),
+    },
+    {
+      key: "connect",
+      title: "Connect with friends",
+      description: "Share an invite so friends on ChatGPT can connect with you.",
+      done: connected,
+    },
+  ];
+}
+
+const HELP_TOPICS: HelpTopic[] = [
+  {
+    key: "setup",
+    title: "Getting set up",
+    description: "Three short steps: tell Venn about you, add your people, connect with friends.",
+    examples: ["Set up Venn"],
+  },
+  {
+    key: "memories",
+    title: "Remember what matters to you",
+    description: "Venn suggests memories from what you say; you choose what to keep and who can see it.",
+    examples: ["Remember that I love bouldering and ramen", "Import my ChatGPT memory into Venn", "What did I save about food?"],
+  },
+  {
+    key: "people",
+    title: "Keep notes on your people",
+    description: "Add friends who are not on Venn, one at a time or a whole list. Notes stay private to you.",
+    examples: ["Import my friends into Venn", "Who do I know who likes hiking?"],
+  },
+  {
+    key: "connect",
+    title: "Connect with friends on Venn",
+    description: "Share an invite code, link or QR. Friends accept before you are connected.",
+    examples: ["Create a Venn invite", "I have a Venn invite code"],
+  },
+  {
+    key: "stay_close",
+    title: "Stay close",
+    description: "Ideas for time together, a brief before you meet, a recap after, and nudges when it has been a while.",
+    examples: ["Who should I reconnect with?", "Plan something with a few friends", "I'm seeing a friend tomorrow — brief me"],
+  },
+  {
+    key: "quiz",
+    title: "Play",
+    description: "A quick quiz on how well you know your friends, from what they chose to share.",
+    examples: ["Play the Venn quiz"],
+  },
+];
+
+function helpView(): HelpViewData {
+  return structuredClone({
+    view: "help" as const,
+    display_name: profile.display_name,
+    topics: HELP_TOPICS,
+    setup: setupSteps(),
+    privacy: [
+      "Nothing is saved until you approve it.",
+      "Memories are private unless you choose to share them.",
+      "Venn never contacts anyone for you.",
+      "You can edit or delete anything, or delete your whole account.",
+    ],
+    note: "Offer to start whichever set-up step is still open.",
+  });
+}
+
 function dashboardView(): DashboardViewData {
   return structuredClone({
     view: "dashboard" as const,
@@ -580,6 +665,7 @@ function dashboardView(): DashboardViewData {
     })),
     people,
     pending_requests: pending,
+    setup: setupSteps(),
   });
 }
 
@@ -1117,7 +1203,8 @@ function quizView(args: Record<string, unknown>): QuizViewData | null {
 }
 
 function welcomeView(): WelcomeViewData {
-  return { view: "welcome", display_name: profile.display_name, goal_options: GOAL_OPTIONS };
+  // The welcome card is for a brand-new user: every step is still open.
+  return { view: "welcome", display_name: profile.display_name, goal_options: GOAL_OPTIONS, setup: setupSteps(true) };
 }
 
 export function mockInitialView(): ViewData | null {
@@ -1131,7 +1218,7 @@ export function mockInitialView(): ViewData | null {
     case "dashboard":
       return dashboardView();
     case "invite":
-      return inviteView(3, "HELD-7K2M");
+      return inviteView(3, "VENN-7K2M");
     case "activity_ideas":
       return activityView({ connection_id: "c1" });
     case "reconnect":
@@ -1158,6 +1245,14 @@ export function mockInitialView(): ViewData | null {
       return quizView({ connection_id: "c1" });
     case "quiz_circle":
       return quizView({});
+    case "help":
+      return helpView();
+    case "dashboard_setup":
+      // A user who saved memories but has not added or connected with anyone yet.
+      people = [];
+      connections = [];
+      pending = [];
+      return dashboardView();
     default:
       return null;
   }
@@ -1203,6 +1298,9 @@ export function createMockBridge(): HostBridge {
       switch (name) {
         case "venn_show_dashboard":
           return ok(dashboardView());
+
+        case "venn_help":
+          return ok(helpView());
 
         case "venn_import_chatgpt_memory":
           return ok(memoryImportView());

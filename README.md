@@ -15,7 +15,7 @@ This repo contains the first version of the plugin:
 - **Site** (`site/`): the public landing page, waitlist and `/metrics` (Next.js). See `site/README.md`.
 
 The product was called Heldly before it became Venn, and the rename went all the way down: tool
-names (`venn_save_memories`), OAuth scopes (`venn.profile.read`), the `ui://venn/app-v4.html`
+names (`venn_save_memories`), OAuth scopes (`venn.profile.read`), the `ui://venn/app-v1.html`
 resource, the skill folder, and the Docker and database names. Anything set up under the old name
 has to be redone once: reconnect the server in ChatGPT, use the new scopes at the IdP, and see
 "Coming from Heldly" under Dev loop and troubleshooting for a local database.
@@ -106,7 +106,12 @@ points at `./plugin`. Set the `url` in `plugin/mcp.json` to your tunnel's `/mcp`
 
 Start a new chat, enable Venn, and try the prompts below. Venn is meant to open with a
 card: any opening prompt ("open Venn", "set up my Venn profile") should show the home or
-welcome card rather than a text answer.
+welcome card rather than a text answer. While set-up is unfinished it then goes straight into
+it without being asked: first you (import your ChatGPT memory or answer two questions), then
+your people (paste a list, upload contacts or name a few), then an invite for friends who use
+ChatGPT. Say "skip" to move on. The home card shows the same three steps as a checklist with
+buttons until they are done, and the **?** in the corner of any card (or *"help"*) opens a
+card with everything Venn can do and examples to tap.
 
 - *"Set up my Venn profile. I love bouldering and ramen, and I want to meet new people."*
   A memory review card appears; nothing is saved until you approve it.
@@ -166,7 +171,7 @@ connect to `https://abc123.ngrok-free.app/mcp`).
 
 ```
 ChatGPT ──MCP (OAuth bearer)──▶ FastAPI /mcp ──▶ services ──▶ Postgres
-   └─ widget iframe ◀── ui://venn/app-v4.html  (calls tools back through the host)
+   └─ widget iframe ◀── ui://venn/app-v1.html  (calls tools back through the host)
 ```
 
 - **Consent-based memories**: `venn_propose_memories` creates a server-side proposal and
@@ -192,10 +197,13 @@ ChatGPT ──MCP (OAuth bearer)──▶ FastAPI /mcp ──▶ services ──
   Uses only what friends shared with connections; scores aren't stored.
 - **Invite link + QR**: the invite card shows a QR code for `/i/{CODE}`, a page with the code
   and how to redeem it.
-- **Cards**: twelve tools render an interactive card in ChatGPT; the rest return data.
+- **Set-up and help**: the home card carries a three-step set-up checklist (about you, your
+  people, connect) until it is done, and the model is told to start it without being asked.
+  `venn_help` shows what Venn can do, with examples to tap.
+- **Cards**: thirteen tools render an interactive card in ChatGPT; the rest return data.
 - **Identity** always comes from the OAuth token, never from tool arguments.
 
-38 tools in total — see [docs/MCP_TOOLS.md](docs/MCP_TOOLS.md).
+39 tools in total — see [docs/MCP_TOOLS.md](docs/MCP_TOOLS.md).
 
 ## Configuration
 

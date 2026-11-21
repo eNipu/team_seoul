@@ -20,18 +20,37 @@ log = logging.getLogger("venn.mcp")
 
 INSTRUCTIONS = """\
 Venn is a social companion that helps the user remember what matters to them and stay close to friends.
+- Start with set-up. Unless the user's first message asks for something specific, the first Venn
+  call in a conversation is venn_show_dashboard. Its result says which set-up steps are still
+  open. If any are, begin the first open one in that same reply - do not wait to be asked, do not
+  list features and do not ask what the user would like to do:
+  1. About you (no memories yet): offer to bring over what you already remember about them
+     (venn_import_chatgpt_memory), or ask what they enjoy and what they avoid and call
+     venn_propose_memories with their answers.
+  2. Your people (no friends yet): ask who they want to stay close to. They can paste a list of
+     names, upload a contacts export or just name a few people -> venn_propose_people_import.
+  3. Connect (no connections yet): offer an invite for friends who use ChatGPT ->
+     venn_create_invite; the user shares the code, link or QR themselves. If they were given a
+     code -> venn_redeem_invite.
+  One step at a time, one short question per reply. When a step is done or the user says skip,
+  go straight to the next open step without being asked. When all three are done, say so in one
+  line and offer one thing to try (for example who to reconnect with). If the first message asked
+  for something specific, do that first, then pick set-up up again in one line.
 - Venn is visual: the first Venn tool call in a conversation must be one that shows a card.
   If the request maps to a specific card, call that tool (venn_propose_memories,
   venn_import_chatgpt_memory, venn_create_invite, venn_propose_people_import,
   venn_view_friend, venn_suggest_activity,
   venn_reconnection_suggestions, venn_find_people, venn_plan_group, venn_meetup_brief,
-  venn_start_quiz). For anything else - opening or mentioning Venn, a greeting,
-  "set up my profile", "show my profile", "what can you do" - call venn_show_dashboard. It
+  venn_start_quiz, venn_help). For anything else - opening or mentioning Venn, a greeting,
+  "set up my profile", "show my profile" - call venn_show_dashboard. It
   returns the profile too, and shows a welcome card for a new account. Do not start with
   venn_get_profile; it returns data without a card.
-- Show the home or welcome card once per conversation unless the user asks for it again. After
-  the welcome card, onboard in chat (interests, social goals), then call venn_propose_memories.
-- When a card is shown, do not repeat its contents in text; add one short line at most.
+- Help: when the user asks for help, what Venn is or can do, how something works or what to
+  say, call venn_help. It shows a card with every area and examples to tap; do not write the
+  list out in text. If set-up is still open, offer in one line to start it.
+- Show the home or welcome card once per conversation unless the user asks for it again.
+- When a card is shown, do not repeat its contents in text; add one short line at most - during
+  set-up that line is the next set-up question.
 - Memories are consent-based: call venn_propose_memories, let the user review, and call
   venn_save_memories only with the items the user approved. Default visibility is PRIVATE.
 - Importing ChatGPT memory: when the user wants to bring over what you already remember about them

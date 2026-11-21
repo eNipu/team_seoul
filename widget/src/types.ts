@@ -54,17 +54,6 @@ export const CATEGORY_GROUP_LABELS: Record<MemoryCategory, string> = {
   WORK: "Work & projects",
 };
 
-export const CATEGORY_ICONS: Record<MemoryCategory, string> = {
-  INTEREST: "✨",
-  DISLIKE: "🚫",
-  PREFERENCE: "👍",
-  EXPERIENCE: "🧭",
-  PERSONAL_MEMORY: "📷",
-  SOCIAL_GOAL: "🎯",
-  RELATIONSHIP_CONTEXT: "🤝",
-  WORK: "💼",
-};
-
 export const PROFILE_VISIBILITIES = ["PRIVATE", "CONNECTIONS", "PUBLIC"] as const;
 export type ProfileVisibility = (typeof PROFILE_VISIBILITIES)[number];
 
@@ -190,6 +179,17 @@ export interface MemoryImportViewData {
   max_items: number;
 }
 
+/** The three onboarding steps, in the order the server sends them. */
+export const SETUP_KEYS = ["about_you", "your_people", "connect"] as const;
+export type SetupKey = (typeof SETUP_KEYS)[number];
+
+export interface SetupStep {
+  key: SetupKey;
+  title: string;
+  description: string;
+  done: boolean;
+}
+
 export interface DashboardViewData {
   view: "dashboard";
   profile: Profile;
@@ -197,6 +197,8 @@ export interface DashboardViewData {
   connections: Connection[];
   people: Person[];
   pending_requests: PendingRequest[];
+  /** Onboarding steps; empty when the server did not send any. */
+  setup: SetupStep[];
 }
 
 export interface InviteViewData {
@@ -294,6 +296,25 @@ export interface WelcomeViewData {
   view: "welcome";
   display_name: string;
   goal_options: GoalOption[];
+  setup: SetupStep[];
+}
+
+export interface HelpTopic {
+  key: string;
+  title: string;
+  description: string;
+  /** Things the user can say; at most 4. */
+  examples: string[];
+}
+
+export interface HelpViewData {
+  view: "help";
+  display_name: string;
+  topics: HelpTopic[];
+  setup: SetupStep[];
+  privacy: string[];
+  /** Model-facing; never displayed. */
+  note: string;
 }
 
 export interface ImportCandidate {
@@ -411,7 +432,8 @@ export type ViewData =
   | PeopleSearchViewData
   | GroupPlanViewData
   | BriefViewData
-  | QuizViewData;
+  | QuizViewData
+  | HelpViewData;
 
 export type ViewName = ViewData["view"];
 
@@ -500,6 +522,43 @@ function parseLink(v: unknown): string {
   if (typeof v !== "string") return "";
   const link = v.trim();
   return /^https?:\/\/\S+$/i.test(link) ? link : "";
+}
+
+/** Missing or malformed → []. Steps with unknown or repeated keys are dropped. */
+export function parseSetup(v: unknown): SetupStep[] {
+  const seen = new Set<string>();
+  const out: SetupStep[] = [];
+  for (const s of objs(v)) {
+    const key = s.key;
+    if (typeof key !== "string" || !(SETUP_KEYS as readonly string[]).includes(key) || seen.has(key)) continue;
+    seen.add(key);
+    out.push({
+      key: key as SetupKey,
+      title: str(s.title).trim() || humanize(key),
+      description: str(s.description).trim(),
+      done: s.done === true,
+    });
+  }
+  return out;
+}
+
+const MAX_HELP_TOPICS = 10;
+const MAX_HELP_EXAMPLES = 4;
+
+function parseHelpTopics(v: unknown): HelpTopic[] {
+  const out: HelpTopic[] = [];
+  for (const t of objs(v)) {
+    const title = str(t.title).trim();
+    if (!title) continue;
+    out.push({
+      key: str(t.key).trim(),
+      title,
+      description: str(t.description).trim(),
+      examples: strArr(t.examples).slice(0, MAX_HELP_EXAMPLES),
+    });
+    if (out.length === MAX_HELP_TOPICS) break;
+  }
+  return out;
 }
 
 function parseSharedMemory(m: Obj): SharedMemory {
@@ -609,6 +668,7 @@ function parseDashboard(sc: Obj): DashboardViewData {
       sender_display_name: str(r.sender_display_name, "Someone") || "Someone",
       created_at: str(r.created_at),
     })),
+    setup: parseSetup(sc.setup),
   };
 }
 
@@ -815,6 +875,16 @@ export function parseView(sc: unknown): ViewData | null {
         goal_options: objs(sc.goal_options)
           .map((g) => ({ value: str(g.value), label: str(g.label) || humanize(str(g.value)) }))
           .filter((g) => g.value !== ""),
+        setup: parseSetup(sc.setup),
+      };
+    case "help":
+      return {
+        view: "help",
+        display_name: str(sc.display_name),
+        topics: parseHelpTopics(sc.topics),
+        setup: parseSetup(sc.setup),
+        privacy: strArr(sc.privacy),
+        note: str(sc.note),
       };
     default:
       return null;

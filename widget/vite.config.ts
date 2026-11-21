@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import { viteSingleFile } from "vite-plugin-singlefile";
 
 // Builds a single self-contained dist/index.html (all JS/CSS inlined) that the
-// Python MCP server serves as the `ui://venn/app-v4.html` resource.
+// Python MCP server serves as the `ui://venn/app-v1.html` resource.
 export default defineConfig({
   plugins: [react(), viteSingleFile()],
   build: {
