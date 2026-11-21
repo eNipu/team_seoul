@@ -11,7 +11,7 @@ the connection alive and how the connection could help either side. ChatGPT only
 1. The acting user comes from the OAuth token. No tool takes a user id.
 2. Nothing is saved without approval: `heldly_save_memories` needs a server-issued `proposal_id`.
 3. Another user's `PRIVATE` memories are never read. Go through
-   `memory_service.visible_memories_of` or the friend helpers in `relationship_service`.
+   `memory_service.visible_memories_of`, or `all_friends` and `resolve` in `relationship_service`.
 4. A blocked user is invisible in both directions (`social_service.is_blocked`).
 5. People notes (`people` table) belong to their owner only and are never shared.
 6. Heldly never contacts anyone. Tools suggest; the user acts.

@@ -5,15 +5,15 @@ allowed to see.
 
 ## Read first
 
-- `backend/app/services/relationship_service.py` › `_Friend`, `_all_friends`, `_days_since`
+- `backend/app/services/relationship_service.py` › `Friend`, `all_friends`, `days_since`
 - `backend/app/services/interest_service.py` (from T01)
 - `backend/tests/security/test_authz.py` › `test_private_memories_never_shared_with_connections`, `test_blocked_connection_cannot_be_viewed`, `test_people_notes_are_owner_only`
 - `CONTRACTS.md` › Interests
 
 ## Do
 
-1. Make `_all_friends` and `_days_since` public (`all_friends`, `days_since`). They already
-   apply the visibility and block rules; do not write a second path to friends' data.
+1. Get friends only through `all_friends`. It already applies the visibility and block
+   rules; do not write a second path to friends' data.
 2. In `build_interests`, a friend joins a cluster when `cluster.key` is in `friend.terms`.
    Fill `kind`, `id`, `display_name` and `days_since_last_interaction`. Leave `keep_alive`
    as `null` and `due` as `false`.

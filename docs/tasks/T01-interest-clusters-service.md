@@ -5,21 +5,20 @@ no card yet; T02 exposes it.
 
 ## Read first
 
-- `backend/app/services/relationship_service.py` › `_WORD`, `_STOPWORDS`, `_INTEREST_CATEGORIES`, `_terms`, `_memory_terms`
+- `backend/app/services/relationship_service.py` › `terms_of`, `_STOPWORDS`, `_INTEREST_CATEGORIES`, `_memory_terms`
 - `backend/app/models/memory.py` › `Memory`
 - `CONTRACTS.md` › Interests
 
 ## Do
 
-1. Move `_WORD`, `_STOPWORDS`, `_terms` and `_INTEREST_CATEGORIES` into a new
-   `backend/app/services/terms.py` as `terms()` and `INTEREST_CATEGORIES`. Import them back
-   into `relationship_service`. Behaviour must not change.
+1. Reuse `relationship_service.terms_of`; do not write a second tokenizer. In
+   `interest_service`, define `CLUSTER_CATEGORIES` as the interest categories plus `WORK`.
 2. Add `backend/app/schemas/interests.py`: `ClusterMemory`, `ClusterFriend`, `InterestCluster`,
    `InterestsView`, matching the contract.
 3. Add `backend/app/services/interest_service.py`:
    - `cluster_memories(memories) -> (clusters, unclustered_count)`, a pure function.
-     Only categories in `INTEREST_CATEGORIES` take part. Each memory's terms are
-     `terms(title, *tags)`. Repeatedly pick the term that covers the most unassigned memories
+     Only categories in `CLUSTER_CATEGORIES` take part. Each memory's terms are
+     `terms_of(title, *tags)`. Repeatedly pick the term that covers the most unassigned memories
      (ties: more words first, then alphabetical); it becomes a cluster holding those memories.
      Stop at 12 clusters; count the rest as unclustered.
    - `label` is the tag or title that equals the term, in its original spelling; otherwise the
@@ -34,7 +33,8 @@ no card yet; T02 exposes it.
 - [ ] A `DISLIKE` memory never appears in a cluster.
 - [ ] The same input always gives the same clusters in the same order.
 - [ ] With 13 unrelated interests, 12 clusters come back and `unclustered_count == 1`.
-- [ ] Existing tests still pass after the move in step 1: `make test && make lint`.
+- [ ] A `WORK` memory can form a cluster.
+- [ ] `make test && make lint` pass.
 
 ## Not in this task
 
