@@ -88,5 +88,5 @@ caller's own memories. Heldly never contacts anyone.
 
 ```bash
 make dev
-npx @modelcontextprotocol/inspector   # connect to http://localhost:8000/mcp, complete the dev OAuth flow
+npx @modelcontextprotocol/inspector   # connect to http://localhost:8081/mcp, complete the dev OAuth flow
 ```

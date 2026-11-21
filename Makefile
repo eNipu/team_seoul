@@ -9,8 +9,8 @@ setup: ## Install backend + widget dependencies and build the widget
 	$(MAKE) build-widget
 	@test -f .env || cp .env.example .env
 
-dev: ## Run the MCP server with autoreload on :8000
-	cd $(BACKEND) && uv run uvicorn app.main:create_app --factory --reload --host 0.0.0.0 --port 8000
+dev: ## Run the MCP server with autoreload on :8081
+	cd $(BACKEND) && uv run uvicorn app.main:create_app --factory --reload --host 0.0.0.0 --port 8081
 
 test: ## Run backend tests (SQLite)
 	cd $(BACKEND) && uv run pytest
