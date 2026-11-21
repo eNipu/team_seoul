@@ -951,3 +951,5 @@ html[data-motion] [data-reveal="group"]:not([data-in]) .usecase .moment { opacit
 
 /* Focus moves to the confirmation only so that it is announced; it is not a control. */
 .waitlist__joined:focus-visible { outline: none; box-shadow: none; }
+.legal { max-width: 44rem; display: grid; gap: .9rem; padding-block: 2rem 4rem; }
+.legal h2 { font-size: 1.25rem; margin-top: 1rem; }
