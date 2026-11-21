@@ -21,8 +21,8 @@ export default function PrivacyPrinciples() {
   return (
     <section className="section principles" id="privacy" aria-labelledby="privacy-title">
       <div className="wrap">
-        <h2 className="h-section" id="privacy-title">Consent first.</h2>
-        <ul>
+        <h2 className="h-section" id="privacy-title" data-reveal="up">Consent first.</h2>
+        <ul data-reveal="group">
           {PRINCIPLES.map(({ title, text }) => (
             <li key={title}>
               <h3>{title}</h3>
