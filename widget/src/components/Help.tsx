@@ -1,4 +1,4 @@
-// The help card: what Heldly can do, with things to say that start each task.
+// The help card: what Venn can do, with things to say that start each task.
 
 import { useState } from "react";
 import type { HelpTopic, HelpViewData } from "../types";
@@ -40,9 +40,9 @@ export default function Help({ data, bridge, nav }: ViewProps<HelpViewData>) {
         <div className="hero hero--row">
           <Illustration name="help" size="sm" />
           <div>
-            <h2>How Heldly helps</h2>
+            <h2>How Venn helps</h2>
             <p className="muted small">
-              Heldly remembers what matters to you and helps you stay close to your people. Pick something to try, or just ask in
+              Venn remembers what matters to you and helps you stay close to your people. Pick something to try, or just ask in
               the chat.
             </p>
           </div>

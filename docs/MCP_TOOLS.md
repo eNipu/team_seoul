@@ -1,4 +1,4 @@
-# Heldly MCP tools
+# Venn MCP tools
 
 Endpoint: `POST {PUBLIC_BASE_URL}/mcp` (streamable HTTP, stateless, JSON responses).
 All tools require a valid OAuth bearer token. The acting user always comes from the token.
@@ -21,16 +21,16 @@ protected-resource metadata and requires them at the transport level; each tool 
 checks the scopes it needs (defense in depth).
 
 Annotations: **R** read-only, **W** write, **D** destructive (ChatGPT asks for confirmation).
-**UI** = renders the widget (`_meta.ui.resourceUri = ui://heldly/app-v4.html`); the result's
+**UI** = renders the widget (`_meta.ui.resourceUri = ui://venn/app-v1.html`); the result's
 `view` field tells the widget which card to show.
 
-39 tools, 13 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Heldly) or
+39 tools, 13 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Venn) or
 `person_id` (a private note about someone who is not); results name it as `kind`
 (`"connection"` \| `"person"`) + `id`.
 
 **UI first.** The server instructions, the tool descriptions and the skill tell the model that the
-first Heldly call in a conversation must render a card: the specific card if the request maps
-to one, otherwise `heldly_show_dashboard` (home, or the welcome card for an empty account).
+first Venn call in a conversation must render a card: the specific card if the request maps
+to one, otherwise `venn_show_dashboard` (home, or the welcome card for an empty account).
 This is guidance to the model, not something the server can enforce.
 
 **Set-up first.** Set-up has three steps, in order: *about you* (done once a memory is saved),
@@ -40,9 +40,9 @@ stored: each step is derived from the data it produces.
 - The home, welcome and help cards carry them as `setup[{key, title, description, done}]`. While
   a step is open the home card shows a "Finish setting up" checklist with a button per step, so
   set-up is always one tap away even if the model says nothing.
-- `heldly_show_dashboard` also puts the open steps into its result text and tells the model to
+- `venn_show_dashboard` also puts the open steps into its result text and tells the model to
   start the first open one in the same reply — import from ChatGPT memory or a couple of
-  questions, then `heldly_propose_people_import`, then `heldly_create_invite` — and to move on
+  questions, then `venn_propose_people_import`, then `venn_create_invite` — and to move on
   by itself when a step is done or skipped.
 - What the model does with that text is guidance, not enforced; the checklist on the card is
   what is guaranteed. Every step still ends in a review card.
@@ -51,22 +51,22 @@ stored: each step is derived from the data it produces.
 
 | Tool | Args | Scope | | Returns |
 | --- | --- | --- | --- | --- |
-| `heldly_get_profile` | – | profile.read | R | `ProfileOut {user_id, display_name, bio, social_goals, interests, memory_count, profile_visibility, is_new}` — `is_new` until the first memory is approved. Data only: the model is told not to open a conversation with it |
-| `heldly_update_profile` | `display_name?`, `bio?`, `social_goals?[]`, `profile_visibility?` | profile.write | W | `ProfileOut` |
-| `heldly_delete_account` | `confirmation` = `"DELETE MY HELDLY ACCOUNT"` | profile.write | D | `{deleted: true}` |
+| `venn_get_profile` | – | profile.read | R | `ProfileOut {user_id, display_name, bio, social_goals, interests, memory_count, profile_visibility, is_new}` — `is_new` until the first memory is approved. Data only: the model is told not to open a conversation with it |
+| `venn_update_profile` | `display_name?`, `bio?`, `social_goals?[]`, `profile_visibility?` | profile.write | W | `ProfileOut` |
+| `venn_delete_account` | `confirmation` = `"DELETE MY VENN ACCOUNT"` | profile.write | D | `{deleted: true}` |
 
 ## Memories
 
 | Tool | Args | Scope | | Returns |
 | --- | --- | --- | --- | --- |
-| `heldly_propose_memories` | `text?` (≤4000), `suggested?[]` (`{category, title, description, tags}`; ≤8, or ≤30 for an import), `source?` (`conversation` default \| `chatgpt_memory`) | memories.write | W, UI | `{view: "memory_review", proposal_id, expires_at, source, proposals[{index, category, title, description, tags, suggested_visibility, already_saved}], note}` — **saves nothing**. `already_saved`: the user already has a memory with that title |
-| `heldly_import_chatgpt_memory` | – | memories.read | R, UI | `{view: "memory_import", areas[{value, label, description, selected}], always_excluded, imported_count, max_items, note}` — a chooser card; takes no data and saves nothing (see below) |
-| `heldly_save_memories` | `proposal_id`, `approvals[{index, visibility?, title?, description?}]` | memories.write | W | `{saved: MemoryOut[], count}` |
-| `heldly_discard_memory_proposal` | `proposal_id` | memories.write | W | `{discarded, proposal_id}` |
-| `heldly_list_memories` | `category?`, `limit?` (≤200) | memories.read | R | `{memories: MemoryOut[], count}` |
-| `heldly_search_memories` | `query` (2–200 chars), `limit?` (≤50, default 10) | memories.read | R | `{memories: MemoryOut[], count}` — own memories only, best match first; every word must match (title/tags/category weigh more than description) |
-| `heldly_update_memory` | `memory_id`, `title?`, `description?`, `visibility?` | memories.write | W | `MemoryOut` |
-| `heldly_delete_memory` | `memory_id` | memories.write | D | `{deleted, memory_id}` |
+| `venn_propose_memories` | `text?` (≤4000), `suggested?[]` (`{category, title, description, tags}`; ≤8, or ≤30 for an import), `source?` (`conversation` default \| `chatgpt_memory`) | memories.write | W, UI | `{view: "memory_review", proposal_id, expires_at, source, proposals[{index, category, title, description, tags, suggested_visibility, already_saved}], note}` — **saves nothing**. `already_saved`: the user already has a memory with that title |
+| `venn_import_chatgpt_memory` | – | memories.read | R, UI | `{view: "memory_import", areas[{value, label, description, selected}], always_excluded, imported_count, max_items, note}` — a chooser card; takes no data and saves nothing (see below) |
+| `venn_save_memories` | `proposal_id`, `approvals[{index, visibility?, title?, description?}]` | memories.write | W | `{saved: MemoryOut[], count}` |
+| `venn_discard_memory_proposal` | `proposal_id` | memories.write | W | `{discarded, proposal_id}` |
+| `venn_list_memories` | `category?`, `limit?` (≤200) | memories.read | R | `{memories: MemoryOut[], count}` |
+| `venn_search_memories` | `query` (2–200 chars), `limit?` (≤50, default 10) | memories.read | R | `{memories: MemoryOut[], count}` — own memories only, best match first; every word must match (title/tags/category weigh more than description) |
+| `venn_update_memory` | `memory_id`, `title?`, `description?`, `visibility?` | memories.write | W | `MemoryOut` |
+| `venn_delete_memory` | `memory_id` | memories.write | D | `{deleted, memory_id}` |
 
 `MemoryOut = {memory_id, category, title, description, tags, visibility, source, created_at}`;
 `source` is `"chatgpt_memory"` for imported memories, otherwise `null`. Categories: `INTEREST`,
@@ -76,18 +76,18 @@ stored: each step is derived from the data it produces.
 ### Importing from ChatGPT memory
 
 An MCP server cannot read ChatGPT's saved memories or other chats; only the model can see what
-it remembers. So the import is a conversation, with Heldly's cards at both ends:
+it remembers. So the import is a conversation, with Venn's cards at both ends:
 
-1. `heldly_import_chatgpt_memory` shows a card with six areas (interests, preferences, work,
+1. `venn_import_chatgpt_memory` shows a card with six areas (interests, preferences, work,
    goals, experiences ticked; personal life unticked). Health, money, passwords and ID numbers
    are not offered.
 2. "Preview my ChatGPT memory" posts a message into the chat (`ui/message`) asking ChatGPT to
    **list in the chat** what it remembers in those areas — numbered, at most 30 — and to send
-   nothing to Heldly yet.
+   nothing to Venn yet.
 3. The user says which ones to keep ("all except 3 and 7").
-4. ChatGPT calls `heldly_propose_memories` with `source: "chatgpt_memory"` and only those items.
+4. ChatGPT calls `venn_propose_memories` with `source: "chatgpt_memory"` and only those items.
    The usual review card appears, labelled as an import.
-5. The user confirms; `heldly_save_memories` stores them with `source = "chatgpt_memory"`.
+5. The user confirms; `venn_save_memories` stores them with `source = "chatgpt_memory"`.
    Items left unticked are deleted with the proposal.
 
 Steps 2–4 are instructions to the model (tool descriptions, server instructions, skill, and the
@@ -98,22 +98,22 @@ it does enforce is that nothing is saved without the user's confirmation on the 
 
 | Tool | Args | Scope | | Returns |
 | --- | --- | --- | --- | --- |
-| `heldly_show_dashboard` | – | profile.read, memories.read, connections.manage | R, UI | `{view: "dashboard", profile, memories[], connections[{connection_id, user_id, display_name, since, last_interaction_at}], people[Person], pending_requests[{request_id, sender_display_name, created_at}]}` — or, for an account with no memories, friends, requests or goals, `{view: "welcome", display_name, goal_options[{value, label}], setup[]}`. The dashboard has `setup[{key, title, description, done}]` too (keys `about_you`, `your_people`, `connect`). |
-| `heldly_help` | – | profile.read, memories.read, connections.manage | R, UI | `{view: "help", display_name, topics[{key, title, description, examples[]}], setup[], privacy[], note}` — what Heldly can do, with example requests the user can tap (the widget sends the example as a chat message). Topic keys: `setup`, `memories`, `people`, `connect`, `stay_close`, `quiz`. Changes nothing. The widget header has a Help button that opens this card from any other card. |
+| `venn_show_dashboard` | – | profile.read, memories.read, connections.manage | R, UI | `{view: "dashboard", profile, memories[], connections[{connection_id, user_id, display_name, since, last_interaction_at}], people[Person], pending_requests[{request_id, sender_display_name, created_at}]}` — or, for an account with no memories, friends, requests or goals, `{view: "welcome", display_name, goal_options[{value, label}], setup[]}`. The dashboard has `setup[{key, title, description, done}]` too (keys `about_you`, `your_people`, `connect`). |
+| `venn_help` | – | profile.read, memories.read, connections.manage | R, UI | `{view: "help", display_name, topics[{key, title, description, examples[]}], setup[], privacy[], note}` — what Venn can do, with example requests the user can tap (the widget sends the example as a chat message). Topic keys: `setup`, `memories`, `people`, `connect`, `stay_close`, `quiz`. Changes nothing. The widget header has a Help button that opens this card from any other card. |
 
 ## Invites & connections
 
 | Tool | Args | Scope | | Returns |
 | --- | --- | --- | --- | --- |
-| `heldly_create_invite` | `max_uses?` (1–20, default 5), `note?` | connections | W, UI | `{view: "invite", code, expires_at, max_uses, share_text, note, link, qr[]}` — `link` is `{PUBLIC_BASE_URL}/i/{CODE}`; `qr` is that link as a QR code, one string of `0`/`1` per row (`1` = dark, no quiet zone) |
-| `heldly_list_invites` | – | connections | R | `{invites[]}` |
-| `heldly_revoke_invite` | `code` | connections | W | `{revoked}` |
-| `heldly_redeem_invite` | `code` | connections | W | `{status: PENDING\|ALREADY_PENDING\|ALREADY_CONNECTED, request_id, inviter_display_name, message}` |
-| `heldly_list_connections` | – | connections | R | `{connections[], pending_requests[], outgoing_pending_count}` |
-| `heldly_respond_to_connection` | `request_id`, `accept` | connections | W | `{request_id, status: ACCEPTED\|REJECTED, connection_id}` |
-| `heldly_remove_connection` | `connection_id` | connections | D | `{removed, connection_id}` |
-| `heldly_block_user` | `connection_id?` \| `request_id?` | connections | D | `{blocked}` |
-| `heldly_report_user` | `reason`, `connection_id?` \| `request_id?` | connections | W | `{reported}` |
+| `venn_create_invite` | `max_uses?` (1–20, default 5), `note?` | connections | W, UI | `{view: "invite", code, expires_at, max_uses, share_text, note, link, qr[]}` — `link` is `{PUBLIC_BASE_URL}/i/{CODE}`; `qr` is that link as a QR code, one string of `0`/`1` per row (`1` = dark, no quiet zone) |
+| `venn_list_invites` | – | connections | R | `{invites[]}` |
+| `venn_revoke_invite` | `code` | connections | W | `{revoked}` |
+| `venn_redeem_invite` | `code` | connections | W | `{status: PENDING\|ALREADY_PENDING\|ALREADY_CONNECTED, request_id, inviter_display_name, message}` |
+| `venn_list_connections` | – | connections | R | `{connections[], pending_requests[], outgoing_pending_count}` |
+| `venn_respond_to_connection` | `request_id`, `accept` | connections | W | `{request_id, status: ACCEPTED\|REJECTED, connection_id}` |
+| `venn_remove_connection` | `connection_id` | connections | D | `{removed, connection_id}` |
+| `venn_block_user` | `connection_id?` \| `request_id?` | connections | D | `{blocked}` |
+| `venn_report_user` | `reason`, `connection_id?` \| `request_id?` | connections | W | `{reported}` |
 
 Unknown, revoked, expired, exhausted and blocked invite codes all return the same
 `NOT_FOUND: invite code is invalid or expired`.
@@ -123,17 +123,17 @@ it shows the code, how to redeem it, and a button that opens ChatGPT with the re
 filled in. It is static — it never looks the code up, so it shows no inviter name and cannot be
 used to test whether a code is valid. Malformed codes get a 404.
 
-## People who are not on Heldly
+## People who are not on Venn
 
-Private, owner-only notes about friends who don't use Heldly, so they can get activity ideas
+Private, owner-only notes about friends who don't use Venn, so they can get activity ideas
 and reconnection nudges too. Never shared with anyone, never used to contact the person.
 
 | Tool | Args | Scope | | Returns |
 | --- | --- | --- | --- | --- |
-| `heldly_list_people` | – | connections | R | `{people: Person[], count}` |
-| `heldly_add_person` | `name` (≤80), `relationship?` (≤80), `notes?` (≤1000), `interests?[]` (≤12 × ≤40), `last_met_days_ago?` | connections | W | `Person` |
-| `heldly_update_person` | `person_id`, `name?`, `relationship?`, `notes?`, `interests?[]` — omitted = unchanged, `""`/`[]` clears | connections | W | `Person` |
-| `heldly_delete_person` | `person_id` | connections | D | `{deleted, person_id}` |
+| `venn_list_people` | – | connections | R | `{people: Person[], count}` |
+| `venn_add_person` | `name` (≤80), `relationship?` (≤80), `notes?` (≤1000), `interests?[]` (≤12 × ≤40), `last_met_days_ago?` | connections | W | `Person` |
+| `venn_update_person` | `person_id`, `name?`, `relationship?`, `notes?`, `interests?[]` — omitted = unchanged, `""`/`[]` clears | connections | W | `Person` |
+| `venn_delete_person` | `person_id` | connections | D | `{deleted, person_id}` |
 
 `Person = {person_id, name, relationship, notes, interests[], last_interaction_at, created_at}`.
 Limit: 500 people per user. Credentials and card/ID numbers are refused (`PRIVACY_VIOLATION`).
@@ -146,8 +146,8 @@ candidates are stored server-side, so nothing can be added that the user was not
 
 | Tool | Args | Scope | | Returns |
 | --- | --- | --- | --- | --- |
-| `heldly_propose_people_import` | `people[]` (1–50 `{name, relationship?, notes?, interests?[], last_met_days_ago?}`), `source?` (≤60) | connections | W, UI | `{view: "people_import", import_id, expires_at, source, candidates[{index, name, relationship, notes, interests[], last_met_days_ago, already_added}], skipped, note}` — **adds nobody** |
-| `heldly_import_people` | `import_id`, `indexes[]` | connections | W | `{imported: Person[], count}` |
+| `venn_propose_people_import` | `people[]` (1–50 `{name, relationship?, notes?, interests?[], last_met_days_ago?}`), `source?` (≤60) | connections | W, UI | `{view: "people_import", import_id, expires_at, source, candidates[{index, name, relationship, notes, interests[], last_met_days_ago, already_added}], skipped, note}` — **adds nobody** |
+| `venn_import_people` | `import_id`, `indexes[]` | connections | W | `{imported: Person[], count}` |
 
 Emails, links and phone numbers are stripped from names, relationships and notes; entries
 containing credentials or card/ID numbers are dropped and counted in `skipped`. `already_added`
@@ -158,22 +158,22 @@ after 24 hours.
 
 | Tool | Args | Scope | | Returns |
 | --- | --- | --- | --- | --- |
-| `heldly_view_friend` | `connection_id` \| `person_id` | connections, memories.read | R, UI | `{view: "friend", kind, id, display_name, on_heldly, since, last_interaction_at, bio, relationship, notes, interests[], shared_interests[], shared_memories[{category, title, description, tags}], recent_interactions[{occurred_at, activity}], follow_ups[FollowUp], note}` |
-| `heldly_suggest_activity` | `connection_id` \| `person_id` | connections, memories.read | R, UI | `{view: "activity_ideas", kind, id, display_name, shared_interests, match_score, score_explanation, suggestions[{title, description, grounded_in, suggested_action}], note}` |
-| `heldly_log_interaction` | `connection_id` \| `person_id`, `activity?` (≤120) | connections | W | `{recorded, kind, id, last_interaction_at}` |
-| `heldly_reconnection_suggestions` | `min_days?` (default 21), `limit?` (default 5) | connections, memories.read | R, UI | `{view: "reconnect", min_days, candidates[{kind, id, display_name, days_since_last_interaction, last_activity, reason, suggested_activity}]}` — connections and people together, longest gap first |
+| `venn_view_friend` | `connection_id` \| `person_id` | connections, memories.read | R, UI | `{view: "friend", kind, id, display_name, on_venn, since, last_interaction_at, bio, relationship, notes, interests[], shared_interests[], shared_memories[{category, title, description, tags}], recent_interactions[{occurred_at, activity}], follow_ups[FollowUp], note}` |
+| `venn_suggest_activity` | `connection_id` \| `person_id` | connections, memories.read | R, UI | `{view: "activity_ideas", kind, id, display_name, shared_interests, match_score, score_explanation, suggestions[{title, description, grounded_in, suggested_action}], note}` |
+| `venn_log_interaction` | `connection_id` \| `person_id`, `activity?` (≤120) | connections | W | `{recorded, kind, id, last_interaction_at}` |
+| `venn_reconnection_suggestions` | `min_days?` (default 21), `limit?` (default 5) | connections, memories.read | R, UI | `{view: "reconnect", min_days, candidates[{kind, id, display_name, days_since_last_interaction, last_activity, reason, suggested_activity}]}` — connections and people together, longest gap first |
 
 For a connection, the friend view and suggestions only use their `SHARED_WITH_CONNECTIONS`/
 `PUBLIC_PROFILE` memories (and their `bio` only if their profile visibility is `CONNECTIONS` or
 `PUBLIC`) plus the caller's own memories. For a person, they use the caller's own note. Shared
-interests ignore filler words ("loves", "really", …). Heldly never contacts anyone.
+interests ignore filler words ("loves", "really", …). Venn never contacts anyone.
 
 ## Finding people and planning for a group
 
 | Tool | Args | Scope | | Returns |
 | --- | --- | --- | --- | --- |
-| `heldly_find_people` | `query` (2–120), `limit?` (≤20, default 8) | connections, memories.read | R, UI | `{view: "people_search", query, results[{kind, id, display_name, on_heldly, relationship, matched[], snippet, last_interaction_at}], count, searched, note}` |
-| `heldly_plan_group` | `connection_ids?[]`, `person_ids?[]` (2–6 friends in total) | connections, memories.read | R, UI | `{view: "group_plan", members[{kind, id, display_name, interests[]}], common_to_all[], common_to_some[{interest, members[]}], suggestions[{title, description, grounded_in, suggested_action}], note}` |
+| `venn_find_people` | `query` (2–120), `limit?` (≤20, default 8) | connections, memories.read | R, UI | `{view: "people_search", query, results[{kind, id, display_name, on_venn, relationship, matched[], snippet, last_interaction_at}], count, searched, note}` |
+| `venn_plan_group` | `connection_ids?[]`, `person_ids?[]` (2–6 friends in total) | connections, memories.read | R, UI | `{view: "group_plan", members[{kind, id, display_name, interests[]}], common_to_all[], common_to_some[{interest, members[]}], suggestions[{title, description, grounded_in, suggested_action}], note}` |
 
 "Who do I know who…" searches the caller's own notes (name, relationship, notes, interests)
 and what each connection chose to share (non-private memories, and the bio if their profile
@@ -185,23 +185,23 @@ were looked at. In a group plan the caller counts as a member, named `You`.
 
 | Tool | Args | Scope | | Returns |
 | --- | --- | --- | --- | --- |
-| `heldly_meetup_brief` | `connection_id` \| `person_id` | connections, memories.read | R, UI | `{view: "brief", kind, id, display_name, on_heldly, relationship, notes, last_interaction_at, last_activity, days_since_last_interaction, interests[], shared_interests[], shared_memories[], things_to_ask[FollowUp], conversation_starters[], note}` |
-| `heldly_recap_meetup` | `connection_id` \| `person_id`, `activity?` (≤120), `follow_ups?[]` (≤5 × ≤200), `notes_to_add?` (≤500), `new_interests?[]`, `done_follow_up_ids?[]` | connections | W | `{recorded, kind, id, last_interaction_at, follow_ups[FollowUp], notes_updated}` |
-| `heldly_add_follow_up` | `text` (≤200), `connection_id` \| `person_id` | connections | W | `FollowUp` |
-| `heldly_complete_follow_up` | `follow_up_id` | connections | W | `{done, follow_up_id}` |
+| `venn_meetup_brief` | `connection_id` \| `person_id` | connections, memories.read | R, UI | `{view: "brief", kind, id, display_name, on_venn, relationship, notes, last_interaction_at, last_activity, days_since_last_interaction, interests[], shared_interests[], shared_memories[], things_to_ask[FollowUp], conversation_starters[], note}` |
+| `venn_recap_meetup` | `connection_id` \| `person_id`, `activity?` (≤120), `follow_ups?[]` (≤5 × ≤200), `notes_to_add?` (≤500), `new_interests?[]`, `done_follow_up_ids?[]` | connections | W | `{recorded, kind, id, last_interaction_at, follow_ups[FollowUp], notes_updated}` |
+| `venn_add_follow_up` | `text` (≤200), `connection_id` \| `person_id` | connections | W | `FollowUp` |
+| `venn_complete_follow_up` | `follow_up_id` | connections | W | `{done, follow_up_id}` |
 
 `FollowUp = {follow_up_id, text, created_at}` — something the user wants to ask about next time.
 Follow-ups are private to the user (up to 20 open per friend). A recap logs the hangout, ticks
 off `done_follow_up_ids`, adds new follow-ups and, for a person, appends `notes_to_add` to the
 note and merges `new_interests`. It is all-or-nothing: if the note would pass 1000 characters,
 nothing is recorded. For a connection `notes_to_add` and `new_interests` are ignored
-(`notes_updated: false`), because Heldly keeps no private notes about other users.
+(`notes_updated: false`), because Venn keeps no private notes about other users.
 
 ## Quiz
 
 | Tool | Args | Scope | | Returns |
 | --- | --- | --- | --- | --- |
-| `heldly_start_quiz` | `connection_id?` | connections, memories.read | R, UI | `{view: "quiz", mode: "friend"\|"circle", kind, id, display_name, title, questions[{prompt, options[], answer_index, explanation}], common_ground[], next{title, description}, note}` |
+| `venn_start_quiz` | `connection_id?` | connections, memories.read | R, UI | `{view: "quiz", mode: "friend"\|"circle", kind, id, display_name, title, questions[{prompt, options[], answer_index, explanation}], common_ground[], next{title, description}, note}` |
 
 With `connection_id`: "How well do you know …?" — up to five questions built from what that
 friend shares with connections; wrong options come from the caller's own memories, other
@@ -215,7 +215,7 @@ The answers are in the payload, so the model is told not to reveal them before t
 
 | URI | MIME | Content |
 | --- | --- | --- |
-| `ui://heldly/app-v4.html` | `text/html;profile=mcp-app` | The widget bundle (`widget/dist/index.html`) |
+| `ui://venn/app-v1.html` | `text/html;profile=mcp-app` | The widget bundle (`widget/dist/index.html`) |
 
 ## Trying it locally
 

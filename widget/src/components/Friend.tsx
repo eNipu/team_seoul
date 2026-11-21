@@ -52,25 +52,25 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
   const shared = new Set(data.shared_interests.map((s) => s.toLowerCase()));
 
   function ideas() {
-    void action.run("ideas", () => nav.openView("heldly_suggest_activity", arg));
+    void action.run("ideas", () => nav.openView("venn_suggest_activity", arg));
   }
 
   function prep() {
-    void action.run("prep", () => nav.openView("heldly_meetup_brief", arg));
+    void action.run("prep", () => nav.openView("venn_meetup_brief", arg));
   }
 
   function quiz() {
-    void action.run("quiz", () => nav.openView("heldly_start_quiz", { connection_id: data.id }));
+    void action.run("quiz", () => nav.openView("venn_start_quiz", { connection_id: data.id }));
   }
 
   function logHangout(e: FormEvent) {
     e.preventDefault();
     const what = activity.trim();
     void action.run("log", async () => {
-      const res = await bridge.callTool("heldly_log_interaction", what ? { ...arg, activity: what } : arg);
+      const res = await bridge.callTool("venn_log_interaction", what ? { ...arg, activity: what } : arg);
       if (!res.ok) return res.errorText;
       const result = parseLogInteraction(res.data);
-      if (!result.recorded) return "Heldly couldn't log that.";
+      if (!result.recorded) return "Venn couldn't log that.";
       const at = result.last_interaction_at ?? new Date().toISOString();
       setInteractions((list) => [{ occurred_at: at, activity: what || null }, ...list]);
       setLastAt(at);
@@ -93,7 +93,7 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
       return;
     }
     void action.run("edit", async () => {
-      const res = await bridge.callTool("heldly_update_person", { person_id: data.id, ...patch });
+      const res = await bridge.callTool("venn_update_person", { person_id: data.id, ...patch });
       if (!res.ok) return res.errorText;
       if (hasId(res.data, "person_id")) {
         const p = parsePerson(res.data);
@@ -114,11 +114,11 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
   function remove() {
     void action.run("remove", async () => {
       const res = isPerson
-        ? await bridge.callTool("heldly_delete_person", { person_id: data.id })
-        : await bridge.callTool("heldly_remove_connection", { connection_id: data.id });
+        ? await bridge.callTool("venn_delete_person", { person_id: data.id })
+        : await bridge.callTool("venn_remove_connection", { connection_id: data.id });
       if (!res.ok) return res.errorText;
       const confirmed = isObj(res.data) && (isPerson ? res.data.deleted === true : res.data.removed === true);
-      if (!confirmed) return isPerson ? "Heldly couldn't delete this note." : "Heldly couldn't remove this connection.";
+      if (!confirmed) return isPerson ? "Venn couldn't delete this note." : "Venn couldn't remove this connection.";
       if (nav.canGoBack) nav.back();
       else setGone(true);
       return null;
@@ -133,7 +133,7 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
         <p className="muted">
           {isPerson
             ? `Your private note about ${details.name} is gone.`
-            : `You and ${details.name} are no longer connected on Heldly.`}
+            : `You and ${details.name} are no longer connected on Venn.`}
         </p>
       </section>
     );
@@ -150,11 +150,11 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
         <div className="profile-head__body">
           <h2>{details.name}</h2>
           <p className="muted small">
-            {isPerson || !data.on_heldly
+            {isPerson || !data.on_venn
               ? "Private note · only you can see this"
               : data.since
-                ? `On Heldly since ${formatDate(data.since)}`
-                : "On Heldly"}
+                ? `On Venn since ${formatDate(data.since)}`
+                : "On Venn"}
           </p>
           <div className="row row--wrap">
             {details.relationship && <span className="badge badge--note">{details.relationship}</span>}

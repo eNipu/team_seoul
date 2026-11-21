@@ -1,7 +1,7 @@
 """Look of the few HTML pages the server renders itself (invite link, dev sign-in).
 
 Self-contained on purpose: no scripts, fonts, images or other requests, so the pages work under
-`default-src 'none'`. The mark is the same one the widget and the plugin icon use.
+`default-src 'none'`.
 """
 
 from __future__ import annotations
@@ -11,13 +11,16 @@ HEART_PATH = (
     "M32 47s-15-8.6-15-19.2C17 22.4 21 19 25.3 19c2.9 0 5.3 1.6 6.7 3.9 "
     "1.4-2.3 3.8-3.9 6.7-3.9C43 19 47 22.4 47 27.8 47 38.4 32 47 32 47z"
 )
-"""Heart on a 64x64 grid, shared with plugin/assets/*.svg."""
+"""Heart on a 64x64 grid, used in the invite page illustration."""
 
-# White heart on the brand tile. Decorative: the word "Heldly" is always next to it.
+# Two overlapping circles on the brand tile, same as plugin/assets/*.svg and the widget header.
+# Decorative: the word "Venn" is always next to it.
 MARK_SVG = (
     '<svg class="mark" viewBox="0 0 64 64" width="32" height="32" aria-hidden="true" focusable="false">'
-    '<rect width="64" height="64" rx="16" fill="#E86A4A"/>'
-    f'<path fill="#fff" d="{HEART_PATH}"/>'
+    '<rect width="64" height="64" rx="15" fill="#E86A4A"/>'
+    '<circle cx="23.5" cy="32" r="17" fill="#fff" fill-opacity=".5"/>'
+    '<circle cx="40.5" cy="32" r="17" fill="#fff" fill-opacity=".5"/>'
+    '<path fill="#fff" d="M32 17.28a17 17 0 0 1 0 29.44 17 17 0 0 1 0-29.44z"/>'
     "</svg>"
 )
 
@@ -76,5 +79,5 @@ def page(title: str, body: str, *, noindex: bool = True) -> str:
         '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
         f"{robots}<title>{title}</title>\n<style>{PAGE_CSS}</style>\n</head>\n<body>\n<main>\n"
-        f'<div class="brand">{MARK_SVG}<span>Heldly</span></div>\n{body}\n</main>\n</body>\n</html>\n'
+        f'<div class="brand">{MARK_SVG}<span>Venn</span></div>\n{body}\n</main>\n</body>\n</html>\n'
     )

@@ -8,9 +8,9 @@ import type { SetupKey, SetupStep } from "../types";
 import { ActionError, ChatFallback, Ring, useAction, type Nav } from "./common";
 import { Icon, type IconName } from "./icons";
 
-export const ABOUT_YOU_PROMPT = "Let's set up Heldly. Ask me a few questions about what I enjoy and what I like to avoid.";
+export const ABOUT_YOU_PROMPT = "Let's set up Venn. Ask me a few questions about what I enjoy and what I like to avoid.";
 export const YOUR_PEOPLE_PROMPT =
-  "I'd like to add my friends to Heldly. I'll paste a list, upload a contacts file, or just tell you about them.";
+  "I'd like to add my friends to Venn. I'll paste a list, upload a contacts file, or just tell you about them.";
 
 type StepAction =
   | { id: string; label: string; busyLabel: string; icon: IconName; tool: string }
@@ -18,11 +18,11 @@ type StepAction =
 
 const STEP_ACTIONS: Record<SetupKey, StepAction[]> = {
   about_you: [
-    { id: "import", label: "Import from ChatGPT", busyLabel: "Opening…", icon: "import", tool: "heldly_import_chatgpt_memory" },
+    { id: "import", label: "Import from ChatGPT", busyLabel: "Opening…", icon: "import", tool: "venn_import_chatgpt_memory" },
     { id: "questions", label: "Answer a few questions", busyLabel: "Asking…", icon: "chat", prompt: ABOUT_YOU_PROMPT },
   ],
   your_people: [{ id: "people", label: "Add your people", busyLabel: "Asking…", icon: "users", prompt: YOUR_PEOPLE_PROMPT }],
-  connect: [{ id: "invite", label: "Invite a friend", busyLabel: "Creating code…", icon: "user-plus", tool: "heldly_create_invite" }],
+  connect: [{ id: "invite", label: "Invite a friend", busyLabel: "Creating code…", icon: "user-plus", tool: "venn_create_invite" }],
 };
 
 type Sent = { key: SetupKey; ok: true } | { key: SetupKey; ok: false; text: string };

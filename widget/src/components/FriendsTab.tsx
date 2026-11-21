@@ -51,7 +51,7 @@ export default function FriendsTab(props: Props) {
     e.preventDefault();
     const q = query.trim();
     if (!q) return;
-    void action.run("search", () => nav.openView("heldly_find_people", { query: q }));
+    void action.run("search", () => nav.openView("venn_find_people", { query: q }));
   }
 
   function togglePick(kind: FriendKind, id: string) {
@@ -66,7 +66,7 @@ export default function FriendsTab(props: Props) {
       return { kind: k.slice(0, cut) as FriendKind, id: k.slice(cut + 1) };
     });
     void action.run("group", async () => {
-      const failure = await nav.openView("heldly_plan_group", groupArgs(friends));
+      const failure = await nav.openView("venn_plan_group", groupArgs(friends));
       if (failure === null) setGroup(null);
       return failure;
     });
@@ -78,19 +78,19 @@ export default function FriendsTab(props: Props) {
       : {};
 
   function open(kind: FriendKind, id: string) {
-    void action.run(`open-${kind}:${id}`, () => nav.openView("heldly_view_friend", friendArg(kind, id)));
+    void action.run(`open-${kind}:${id}`, () => nav.openView("venn_view_friend", friendArg(kind, id)));
   }
 
   function respond(req: PendingRequest, accept: boolean) {
     void action.run(`${accept ? "accept" : "decline"}-${req.request_id}`, async () => {
-      const res = await bridge.callTool("heldly_respond_to_connection", { request_id: req.request_id, accept });
+      const res = await bridge.callTool("venn_respond_to_connection", { request_id: req.request_id, accept });
       if (!res.ok) return res.errorText;
       const result = parseRespondConnection(res.data);
       const rest = pending.filter((p) => p.request_id !== req.request_id);
       props.onPending(rest);
       if (result.status !== "ACCEPTED") return null;
       // Show the new friend: refresh the dashboard, or fall back to a minimal local entry.
-      const fresh = await bridge.callTool("heldly_show_dashboard", {});
+      const fresh = await bridge.callTool("venn_show_dashboard", {});
       const parsed = fresh.ok ? parseView(fresh.data) : null;
       if (parsed && parsed.view === "dashboard") {
         props.onDashboard(parsed);
@@ -116,9 +116,9 @@ export default function FriendsTab(props: Props) {
     if (values.notes) args.notes = values.notes;
     if (values.interests.length > 0) args.interests = values.interests;
     void action.run("add-person", async () => {
-      const res = await bridge.callTool("heldly_add_person", args);
+      const res = await bridge.callTool("venn_add_person", args);
       if (!res.ok) return res.errorText;
-      if (!hasId(res.data, "person_id")) return "Heldly didn't confirm the new person. Try again.";
+      if (!hasId(res.data, "person_id")) return "Venn didn't confirm the new person. Try again.";
       props.onPeople([...people, parsePerson(res.data)]);
       setAdding(false);
       return null;
@@ -157,7 +157,7 @@ export default function FriendsTab(props: Props) {
           type="button"
           className="btn btn--primary"
           disabled={busy}
-          onClick={() => void action.run("invite", () => nav.openView("heldly_create_invite", {}))}
+          onClick={() => void action.run("invite", () => nav.openView("venn_create_invite", {}))}
         >
           <Icon name="user-plus" size={18} />
           {action.busy === "invite" ? "Creating code…" : "Invite a friend"}
@@ -166,7 +166,7 @@ export default function FriendsTab(props: Props) {
           type="button"
           className="btn"
           disabled={busy}
-          onClick={() => void action.run("reconnect", () => nav.openView("heldly_reconnection_suggestions", {}))}
+          onClick={() => void action.run("reconnect", () => nav.openView("venn_reconnection_suggestions", {}))}
         >
           {action.busy === "reconnect" ? "Looking…" : "Who should I reconnect with?"}
         </button>
@@ -187,7 +187,7 @@ export default function FriendsTab(props: Props) {
             type="button"
             className="quick-action"
             disabled={busy}
-            onClick={() => void action.run("quiz", () => nav.openView("heldly_start_quiz", {}))}
+            onClick={() => void action.run("quiz", () => nav.openView("venn_start_quiz", {}))}
           >
             <Icon name="dice" size={18} />
             {action.busy === "quiz" ? "Loading…" : "Play a quiz"}
@@ -264,7 +264,7 @@ export default function FriendsTab(props: Props) {
         </EmptyNote>
       )}
 
-      {friendCount > 0 && <SectionTitle count={connections.length}>On Heldly</SectionTitle>}
+      {friendCount > 0 && <SectionTitle count={connections.length}>On Venn</SectionTitle>}
       {friendCount === 0 ? null : connections.length === 0 ? (
         <p className="muted small">No connections yet. Invite a friend to get started.</p>
       ) : (
@@ -286,7 +286,7 @@ export default function FriendsTab(props: Props) {
       {friendCount > 0 && (
         <>
           <SectionTitle count={people.length}>Private notes</SectionTitle>
-          <p className="muted small">Friends who aren't on Heldly. Only you can see these.</p>
+          <p className="muted small">Friends who aren't on Venn. Only you can see these.</p>
         </>
       )}
       {people.length > 0 && (
@@ -329,7 +329,7 @@ export default function FriendsTab(props: Props) {
 }
 
 const IMPORT_PROMPT =
-  "I'd like to import my friends into Heldly. I'll paste a list, upload a contacts file, or just tell you about them.";
+  "I'd like to import my friends into Venn. I'll paste a list, upload a contacts file, or just tell you about them.";
 
 interface RowProps {
   name: string;

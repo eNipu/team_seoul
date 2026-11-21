@@ -21,9 +21,9 @@ export default function ActivityIdeas({ data, bridge }: ViewProps<ActivityIdeasV
 
   function didThis(index: number, title: string) {
     void action.run(`log-${index}`, async () => {
-      const res = await bridge.callTool("heldly_log_interaction", { ...friendArg(data.kind, data.id), activity: title });
+      const res = await bridge.callTool("venn_log_interaction", { ...friendArg(data.kind, data.id), activity: title });
       if (!res.ok) return res.errorText;
-      if (!parseLogInteraction(res.data).recorded) return "Heldly couldn't log that.";
+      if (!parseLogInteraction(res.data).recorded) return "Venn couldn't log that.";
       setLogged((l) => [...l, index]);
       return null;
     });
@@ -87,7 +87,7 @@ export default function ActivityIdeas({ data, bridge }: ViewProps<ActivityIdeasV
 
       {data.suggestions.length === 0 ? (
         <EmptyNote art="ideas" title="No ideas yet">
-          Tell Heldly a bit more about what you both enjoy and ask again.
+          Tell Venn a bit more about what you both enjoy and ask again.
         </EmptyNote>
       ) : (
         <ul className="list">

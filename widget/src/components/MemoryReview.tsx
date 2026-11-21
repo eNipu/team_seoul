@@ -57,7 +57,7 @@ export default function MemoryReview({ data, bridge, nav }: Props) {
     setDrafts((ds) =>
       ds.map((d) => ({
         ...d,
-        // Select all skips what Heldly already holds, like the people import card.
+        // Select all skips what Venn already holds, like the people import card.
         checked: checked && !data.proposals.some((p) => p.index === d.index && p.already_saved),
       })),
     );
@@ -71,7 +71,7 @@ export default function MemoryReview({ data, bridge, nav }: Props) {
     if (selected.length === 0 || invalid) return;
     setPhase("saving");
     setError(null);
-    const res = await bridge.callTool("heldly_save_memories", {
+    const res = await bridge.callTool("venn_save_memories", {
       proposal_id: data.proposal_id,
       approvals: selected.map((d) => ({
         index: d.index,
@@ -89,7 +89,7 @@ export default function MemoryReview({ data, bridge, nav }: Props) {
     setSaved(result.saved);
     setPhase("saved");
     const titles = result.saved.map((m) => m.title).join(", ");
-    void bridge.updateModelContext(`Saved ${result.count} memories to Heldly profile: ${titles}`);
+    void bridge.updateModelContext(`Saved ${result.count} memories to Venn profile: ${titles}`);
   }
 
   function discard() {
@@ -122,16 +122,16 @@ export default function MemoryReview({ data, bridge, nav }: Props) {
               </li>
             ))}
           </ul>
-        <p className="muted small">You can review or delete these any time from your Heldly dashboard.</p>
+        <p className="muted small">You can review or delete these any time from your Venn dashboard.</p>
         {fromChatGpt && (
           <div className="sticky-bar">
             <button
               type="button"
               className="btn btn--primary btn--block"
               disabled={action.busy !== null}
-              onClick={() => void action.run("dashboard", () => nav.openView("heldly_show_dashboard", {}))}
+              onClick={() => void action.run("dashboard", () => nav.openView("venn_show_dashboard", {}))}
             >
-              {action.busy === "dashboard" ? "Loading…" : "Open my Heldly"}
+              {action.busy === "dashboard" ? "Loading…" : "Open my Venn"}
             </button>
           </div>
         )}
@@ -153,7 +153,7 @@ export default function MemoryReview({ data, bridge, nav }: Props) {
 
   return (
     <section className="panel">
-      <h2>{fromChatGpt ? "From your ChatGPT memory" : "Review what Heldly learned"}</h2>
+      <h2>{fromChatGpt ? "From your ChatGPT memory" : "Review what Venn learned"}</h2>
       {fromChatGpt ? (
         <p className="notice">
           <Icon name="shield" size={18} />
@@ -172,7 +172,7 @@ export default function MemoryReview({ data, bridge, nav }: Props) {
       )}
       {expiresAt && !Number.isNaN(expiresAt.getTime()) && (
         <p className={`small ${expired ? "text-danger" : "muted"}`}>
-          {expired ? "This proposal has expired — ask Heldly again to save these." : `Review before ${formatDate(data.expires_at)}`}
+          {expired ? "This proposal has expired — ask Venn again to save these." : `Review before ${formatDate(data.expires_at)}`}
         </p>
       )}
 
@@ -212,7 +212,7 @@ export default function MemoryReview({ data, bridge, nav }: Props) {
                     <span>{d.checked ? "Keep" : "Skip"}</span>
                   </label>
                   <span className="memory-item__badges">
-                    {p.already_saved && <span className="badge badge--on">Already in Heldly</span>}
+                    {p.already_saved && <span className="badge badge--on">Already in Venn</span>}
                     <span className={`badge badge--cat cat--${p.category.toLowerCase()}`}>
                       <Icon name={CATEGORY_ICONS[p.category]} size={14} />
                       {CATEGORY_LABELS[p.category]}

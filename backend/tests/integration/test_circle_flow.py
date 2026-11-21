@@ -25,12 +25,12 @@ PEOPLE = [
 
 # ----------------------------------------------------------------------- import
 def test_import_is_reviewed_before_anything_is_saved(alice):
-    view = alice.ok("heldly_propose_people_import", people=PEOPLE, source="pasted list")
+    view = alice.ok("venn_propose_people_import", people=PEOPLE, source="pasted list")
     assert view["view"] == "people_import"
     assert view["source"] == "pasted list"
     assert [c["index"] for c in view["candidates"]] == [0, 1, 2]
     assert view["skipped"] == 0
-    assert alice.ok("heldly_list_people")["count"] == 0  # proposing saves nothing
+    assert alice.ok("venn_list_people")["count"] == 0  # proposing saves nothing
 
     tom, sora = view["candidates"][1], view["candidates"][2]
     # Contact details are stripped; a year range is not a phone number.
@@ -38,20 +38,20 @@ def test_import_is_reviewed_before_anything_is_saved(alice):
     assert sora["notes"] == "See"
     assert sora["relationship"] == "ex-colleague 2019 - 2021"
 
-    done = alice.ok("heldly_import_people", import_id=view["import_id"], indexes=[0, 2, 0])
+    done = alice.ok("venn_import_people", import_id=view["import_id"], indexes=[0, 2, 0])
     assert done["count"] == 2
     assert [p["name"] for p in done["imported"]] == ["Maya Park", "Sora"]
     assert done["imported"][0]["last_interaction_at"] is not None  # "last met 40 days ago"
-    assert sorted(p["name"] for p in alice.ok("heldly_list_people")["people"]) == ["Maya Park", "Sora"]
+    assert sorted(p["name"] for p in alice.ok("venn_list_people")["people"]) == ["Maya Park", "Sora"]
 
     # Single use: the unpicked entry cannot be added later from the same import.
-    assert "already used" in alice.err("heldly_import_people", import_id=view["import_id"], indexes=[1])
+    assert "already used" in alice.err("venn_import_people", import_id=view["import_id"], indexes=[1])
 
 
 def test_import_flags_people_already_added_and_skips_sensitive(alice):
     add(alice, name="Maya Park")
     view = alice.ok(
-        "heldly_propose_people_import",
+        "venn_propose_people_import",
         people=[
             {"name": "maya park"},
             {"name": "Jun", "notes": "his password is hunter2hunter2"},
@@ -64,14 +64,14 @@ def test_import_flags_people_already_added_and_skips_sensitive(alice):
 
 
 def test_import_validation(alice):
-    view = alice.ok("heldly_propose_people_import", people=[{"name": "Maya"}])
-    assert alice.err("heldly_import_people", import_id=view["import_id"], indexes=[3]).startswith("INVALID_REQUEST")
-    assert alice.err("heldly_import_people", import_id="nope", indexes=[0]).startswith("NOT_FOUND")
+    view = alice.ok("venn_propose_people_import", people=[{"name": "Maya"}])
+    assert alice.err("venn_import_people", import_id=view["import_id"], indexes=[3]).startswith("INVALID_REQUEST")
+    assert alice.err("venn_import_people", import_id="nope", indexes=[0]).startswith("NOT_FOUND")
     assert "No people" in alice.err(
-        "heldly_propose_people_import", people=[{"name": "x", "notes": "api key sk-abcdefghijklmnopqrstuvwx"}]
+        "venn_propose_people_import", people=[{"name": "x", "notes": "api key sk-abcdefghijklmnopqrstuvwx"}]
     )
     # The failed attempts did not consume the import.
-    assert alice.ok("heldly_import_people", import_id=view["import_id"], indexes=[0])["count"] == 1
+    assert alice.ok("venn_import_people", import_id=view["import_id"], indexes=[0])["count"] == 1
 
 
 def test_expired_import_is_refused(alice):
@@ -80,11 +80,11 @@ def test_expired_import_is_refused(alice):
     from app.models import PeopleImport
     from app.models._base import utcnow
 
-    view = alice.ok("heldly_propose_people_import", people=[{"name": "Maya"}])
+    view = alice.ok("venn_propose_people_import", people=[{"name": "Maya"}])
     with session_scope() as db:
         db.query(PeopleImport).update({PeopleImport.expires_at: utcnow() - timedelta(minutes=1)})
-    assert "expired" in alice.err("heldly_import_people", import_id=view["import_id"], indexes=[0])
-    assert alice.ok("heldly_list_people")["count"] == 0
+    assert "expired" in alice.err("venn_import_people", import_id=view["import_id"], indexes=[0])
+    assert alice.ok("venn_list_people")["count"] == 0
 
 
 # ------------------------------------------------------------------ find people
@@ -96,14 +96,14 @@ def test_find_people_across_notes_and_shared_memories(alice, bob):
     add(alice, name="Tom", notes="Went to a party with him. Works in design; a keen climber since school.")
     add(alice, name="Hana", interests=["Pottery"])
 
-    view = alice.ok("heldly_find_people", query="who do I know who climbs?")
+    view = alice.ok("venn_find_people", query="who do I know who climbs?")
     assert view["view"] == "people_search"
     assert view["searched"] == 4
     by_name = {r["display_name"]: r for r in view["results"]}
     assert set(by_name) == {"Maya", "Bob", "Tom"}
-    assert by_name["Maya"] | {"kind": "person", "id": maya["person_id"], "on_heldly": False} == by_name["Maya"]
+    assert by_name["Maya"] | {"kind": "person", "id": maya["person_id"], "on_venn": False} == by_name["Maya"]
     assert by_name["Maya"]["matched"] == ["Rock climbing"]
-    assert by_name["Bob"] | {"kind": "connection", "id": conn, "on_heldly": True} == by_name["Bob"]
+    assert by_name["Bob"] | {"kind": "connection", "id": conn, "on_venn": True} == by_name["Bob"]
     assert by_name["Bob"]["matched"] == ["Bouldering"]
     assert "Climbs at the gym" in by_name["Bob"]["snippet"]
     assert by_name["Tom"]["matched"] == ["notes"]
@@ -112,11 +112,11 @@ def test_find_people_across_notes_and_shared_memories(alice, bob):
     assert [r["display_name"] for r in view["results"]][-1] == "Tom"
 
     # Private memories of a connection are never searched.
-    assert alice.ok("heldly_find_people", query="tarot")["results"] == []
+    assert alice.ok("venn_find_people", query="tarot")["results"] == []
     # Short words match exactly: "art" does not find "party".
-    assert alice.ok("heldly_find_people", query="art")["results"] == []
-    assert [r["display_name"] for r in alice.ok("heldly_find_people", query="design")["results"]] == ["Tom"]
-    assert alice.err("heldly_find_people", query="who do I know").startswith("INVALID_REQUEST")
+    assert alice.ok("venn_find_people", query="art")["results"] == []
+    assert [r["display_name"] for r in alice.ok("venn_find_people", query="design")["results"]] == ["Tom"]
+    assert alice.err("venn_find_people", query="who do I know").startswith("INVALID_REQUEST")
 
 
 # ------------------------------------------------------------------- group plan
@@ -127,7 +127,7 @@ def test_plan_group_finds_common_ground(alice, bob):
     save(bob, "INTEREST", "Jazz", "Goes to gigs", "SHARED_WITH_CONNECTIONS")
     maya = add(alice, name="Maya", interests=["Board games", "Jazz", "Hiking"])
 
-    view = alice.ok("heldly_plan_group", connection_ids=[conn], person_ids=[maya["person_id"]])
+    view = alice.ok("venn_plan_group", connection_ids=[conn], person_ids=[maya["person_id"]])
     assert view["view"] == "group_plan"
     assert [(m["kind"], m["display_name"]) for m in view["members"]] == [("connection", "Bob"), ("person", "Maya")]
     assert view["common_to_all"] == ["board games"]  # not also "board" and "games"
@@ -137,8 +137,8 @@ def test_plan_group_finds_common_ground(alice, bob):
     assert view["suggestions"][0]["grounded_in"] == ["board games"]
     assert len(view["suggestions"]) == 3
 
-    assert "2 to 6" in alice.err("heldly_plan_group", person_ids=[maya["person_id"]])
-    assert alice.err("heldly_plan_group", connection_ids=[conn], person_ids=["nope"]).startswith("NOT_FOUND")
+    assert "2 to 6" in alice.err("venn_plan_group", person_ids=[maya["person_id"]])
+    assert alice.err("venn_plan_group", connection_ids=[conn], person_ids=["nope"]).startswith("NOT_FOUND")
 
 
 # --------------------------------------------------------- brief, recap, follow-ups
@@ -149,12 +149,12 @@ def test_meetup_brief_recap_and_follow_ups(alice):
     )
     pid = maya["person_id"]
 
-    asked = alice.ok("heldly_add_follow_up", person_id=pid, text="  How the   job interview went ")
+    asked = alice.ok("venn_add_follow_up", person_id=pid, text="  How the   job interview went ")
     assert asked["text"] == "How the job interview went"
 
-    brief = alice.ok("heldly_meetup_brief", person_id=pid)
+    brief = alice.ok("venn_meetup_brief", person_id=pid)
     assert brief["view"] == "brief"
-    assert brief | {"kind": "person", "id": pid, "on_heldly": False, "relationship": "cousin"} == brief
+    assert brief | {"kind": "person", "id": pid, "on_venn": False, "relationship": "cousin"} == brief
     assert brief["notes"] == "Has a dog called Bori."
     assert brief["shared_interests"] == ["hiking"]
     assert brief["last_interaction_at"] is None and brief["days_since_last_interaction"] is None
@@ -163,7 +163,7 @@ def test_meetup_brief_recap_and_follow_ups(alice):
     assert "Still into Pottery? What's new with that?" in brief["conversation_starters"]
 
     recap = alice.ok(
-        "heldly_recap_meetup",
+        "venn_recap_meetup",
         person_id=pid,
         activity="Ramen in Hongdae",
         follow_ups=["Her move to Busan"],
@@ -174,45 +174,45 @@ def test_meetup_brief_recap_and_follow_ups(alice):
     assert recap["recorded"] is True and recap["notes_updated"] is True
     assert [f["text"] for f in recap["follow_ups"]] == ["Her move to Busan"]
 
-    friend = alice.ok("heldly_view_friend", person_id=pid)
+    friend = alice.ok("venn_view_friend", person_id=pid)
     assert friend["notes"] == "Has a dog called Bori.\nGot the job at the studio."
     assert friend["interests"] == ["Hiking", "Pottery", "Ceramics"]
     assert friend["recent_interactions"][0]["activity"] == "Ramen in Hongdae"
     assert [f["text"] for f in friend["follow_ups"]] == ["Her move to Busan"]
 
-    after = alice.ok("heldly_meetup_brief", person_id=pid)
+    after = alice.ok("venn_meetup_brief", person_id=pid)
     assert after["last_activity"] == "Ramen in Hongdae"
     assert after["days_since_last_interaction"] == 0
     assert after["conversation_starters"][0] == "Last time was “Ramen in Hongdae” — want to do that again?"
 
     # Ticking off is idempotent.
     fid = recap["follow_ups"][0]["follow_up_id"]
-    assert alice.ok("heldly_complete_follow_up", follow_up_id=fid) == {"done": True, "follow_up_id": fid}
-    assert alice.ok("heldly_complete_follow_up", follow_up_id=fid)["done"] is True
-    assert alice.ok("heldly_view_friend", person_id=pid)["follow_ups"] == []
+    assert alice.ok("venn_complete_follow_up", follow_up_id=fid) == {"done": True, "follow_up_id": fid}
+    assert alice.ok("venn_complete_follow_up", follow_up_id=fid)["done"] is True
+    assert alice.ok("venn_view_friend", person_id=pid)["follow_ups"] == []
 
 
 def test_recap_for_connection_keeps_no_private_note(alice, bob):
     conn = connect(alice, bob)
     save(bob, "EXPERIENCE", "Moved to Seoul", "Relocated last spring", "SHARED_WITH_CONNECTIONS")
     recap = alice.ok(
-        "heldly_recap_meetup", connection_id=conn, activity="Coffee", follow_ups=["His new flat"], notes_to_add="x"
+        "venn_recap_meetup", connection_id=conn, activity="Coffee", follow_ups=["His new flat"], notes_to_add="x"
     )
     assert recap | {"kind": "connection", "id": conn, "notes_updated": False} == recap
-    brief = alice.ok("heldly_meetup_brief", connection_id=conn)
-    assert brief["on_heldly"] is True and brief["notes"] is None
+    brief = alice.ok("venn_meetup_brief", connection_id=conn)
+    assert brief["on_venn"] is True and brief["notes"] is None
     assert [m["title"] for m in brief["shared_memories"]] == ["Moved to Seoul"]
     assert [f["text"] for f in brief["things_to_ask"]] == ["His new flat"]
     # Bob never sees Alice's follow-ups about him.
-    assert alice.ok("heldly_view_friend", connection_id=conn)["follow_ups"] != []
-    assert bob.ok("heldly_view_friend", connection_id=conn)["follow_ups"] == []
+    assert alice.ok("venn_view_friend", connection_id=conn)["follow_ups"] != []
+    assert bob.ok("venn_view_friend", connection_id=conn)["follow_ups"] == []
 
 
 def test_recap_is_all_or_nothing(alice):
     maya = add(alice, name="Maya", notes="n" * 990)
-    err = alice.err("heldly_recap_meetup", person_id=maya["person_id"], activity="Tea", notes_to_add="x" * 50)
+    err = alice.err("venn_recap_meetup", person_id=maya["person_id"], activity="Tea", notes_to_add="x" * 50)
     assert "Nothing was recorded" in err
-    assert alice.ok("heldly_view_friend", person_id=maya["person_id"])["recent_interactions"] == []
+    assert alice.ok("venn_view_friend", person_id=maya["person_id"])["recent_interactions"] == []
 
 
 # ------------------------------------------------------------------------ quiz
@@ -241,7 +241,7 @@ def test_friend_quiz_uses_only_what_the_friend_shared(alice, bob, carol):
     save(bob, "INTEREST", "Secret tarot habit", "Reads tarot cards", "PRIVATE")
 
     for _ in range(8):  # questions are shuffled; the rules must hold every time
-        view = alice.ok("heldly_start_quiz", connection_id=conn)
+        view = alice.ok("venn_start_quiz", connection_id=conn)
         assert view | {"view": "quiz", "mode": "friend", "kind": "connection", "id": conn} == view
         assert view["title"] == "How well do you know Bob?"
         assert view["common_ground"] == ["board games"]
@@ -260,8 +260,8 @@ def test_friend_quiz_uses_only_what_the_friend_shared(alice, bob, carol):
 def test_friend_quiz_needs_enough_shared(alice, bob):
     conn = connect(alice, bob)
     save(bob, "INTEREST", "Jazz", "Goes to gigs", "SHARED_WITH_CONNECTIONS")
-    assert "hasn't shared enough" in alice.err("heldly_start_quiz", connection_id=conn)
-    assert alice.err("heldly_start_quiz", connection_id="nope").startswith("NOT_FOUND")
+    assert "hasn't shared enough" in alice.err("venn_start_quiz", connection_id=conn)
+    assert alice.err("venn_start_quiz", connection_id="nope").startswith("NOT_FOUND")
 
 
 def test_circle_quiz_mixes_connections_and_people(alice, bob):
@@ -269,9 +269,9 @@ def test_circle_quiz_mixes_connections_and_people(alice, bob):
     save(bob, "INTEREST", "Jazz", "Goes to gigs", "SHARED_WITH_CONNECTIONS")
     add(alice, name="Maya", interests=["Climbing", "Pottery"])
     add(alice, name="Tom", interests=["Chess", "Jazz"])
-    assert "Not enough" not in str(alice.call("heldly_start_quiz"))
+    assert "Not enough" not in str(alice.call("venn_start_quiz"))
     for _ in range(8):
-        view = alice.ok("heldly_start_quiz")
+        view = alice.ok("venn_start_quiz")
         assert view | {"mode": "circle", "kind": None, "id": None, "next": None, "common_ground": []} == view
         _check_questions(view)
         for q in view["questions"]:
@@ -285,7 +285,7 @@ def test_circle_quiz_mixes_connections_and_people(alice, bob):
 
 def test_circle_quiz_needs_friends(alice):
     add(alice, name="Maya", interests=["Climbing"])
-    assert alice.err("heldly_start_quiz").startswith("INVALID_REQUEST")
+    assert alice.err("venn_start_quiz").startswith("INVALID_REQUEST")
 
 
 def test_quiz_is_reproducible_with_a_seed(alice, bob):
@@ -301,7 +301,7 @@ def test_quiz_is_reproducible_with_a_seed(alice, bob):
 
 # ------------------------------------------------------------------ invite link
 def test_invite_has_link_and_scannable_qr(alice, client):
-    invite = alice.ok("heldly_create_invite")
+    invite = alice.ok("venn_create_invite")
     assert invite["link"].endswith(f"/i/{invite['code']}")
     assert invite["link"] in invite["share_text"]
     qr = invite["qr"]
@@ -347,9 +347,9 @@ def test_deleting_account_removes_imports_and_follow_ups(alice):
     from app.models import FollowUp, PeopleImport
 
     maya = add(alice, name="Maya")
-    alice.ok("heldly_add_follow_up", person_id=maya["person_id"], text="Her trip")
-    alice.ok("heldly_propose_people_import", people=[{"name": "Tom"}])
-    alice.ok("heldly_delete_account", confirmation="DELETE MY HELDLY ACCOUNT")
+    alice.ok("venn_add_follow_up", person_id=maya["person_id"], text="Her trip")
+    alice.ok("venn_propose_people_import", people=[{"name": "Tom"}])
+    alice.ok("venn_delete_account", confirmation="DELETE MY VENN ACCOUNT")
     with session_scope() as db:
         assert db.query(Person).count() == 0
         assert db.query(FollowUp).count() == 0

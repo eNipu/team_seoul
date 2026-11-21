@@ -1,6 +1,6 @@
-# Heldly widget (MCP Apps UI)
+# Venn widget (MCP Apps UI)
 
-The embedded UI for **Heldly**, shown inside ChatGPT through the MCP Apps extension.
+The embedded UI for **Venn**, shown inside ChatGPT through the MCP Apps extension.
 It's built with React 19, TypeScript, Vite 8 and `vite-plugin-singlefile`, and talks to the host with
 [`@modelcontextprotocol/ext-apps`](https://github.com/modelcontextprotocol/ext-apps) (v2.0.4).
 
@@ -14,7 +14,7 @@ npm run dev        # local demo harness
 ```
 
 The Python server reads `widget/dist/index.html` and serves it as MCP resource
-`ui://heldly/app-v4.html` with mimeType `text/html;profile=mcp-app`.
+`ui://venn/app-v1.html` with mimeType `text/html;profile=mcp-app`.
 
 ### Demo mode
 
@@ -23,10 +23,12 @@ mock bridge (`src/mock.ts`) instead of the ext-apps connection. It also works st
 `dist/index.html` over `file://`.
 
 - `?view=memory_review|dashboard|invite|activity_ideas|reconnect|friend|friend_person|welcome|`
-  `people_import|people_search|group_plan|brief|brief_person|quiz|quiz_circle|memory_import|memory_review_import`
-  (`friend`/`brief`/`quiz` use a Heldly connection, `friend_person`/`brief_person` a private person
+  `people_import|people_search|group_plan|brief|brief_person|quiz|quiz_circle|memory_import|memory_review_import|help|dashboard_setup`
+  (`friend`/`brief`/`quiz` use a Venn connection, `friend_person`/`brief_person` a private person
   note, `quiz_circle` is the circle quiz, `memory_review_import` is a 12-item review card with
-  `source: "chatgpt_memory"`, two of them already saved); no `view` → empty state with links to every demo view
+  `source: "chatgpt_memory"`, two of them already saved, `help` is the help card, `dashboard_setup` is a
+  dashboard with memories but no people or connections, so the set-up card shows "1 of 3 done"; the plain
+  `dashboard` demo has every step done and shows no set-up card); no `view` → empty state with links to every demo view
 - `&tab=profile|memories|friends` opens a dashboard tab
 - `&theme=dark|light` forces a theme (default: `prefers-color-scheme`)
 - `&flaky=1` makes every other tool call fail, so you can test the error banner and Retry
@@ -50,19 +52,20 @@ roughly matches the incoming view. A tool result with `isError` shows an error b
 
 | `view` | Produced by | What it shows |
 | --- | --- | --- |
-| `memory_review` | `heldly_propose_memories` | Proposed memories (up to 30) with a checkbox, editable title/description, visibility select. More than 3 items adds "N of M selected", **Select all** / **None** and a sticky action bar. Items with `already_saved` start unticked with an "Already in Heldly" badge. With `source: "chatgpt_memory"` the card is titled "From your ChatGPT memory" and the success state offers **Open my Heldly**. Nothing is saved until **Save selected**. |
-| `memory_import` | `heldly_import_chatgpt_memory` | "Bring your ChatGPT memory with you": one checkbox per area, the always-excluded note, **Preview my ChatGPT memory** (sends a prompt into the chat), then "Check the chat" with **Choose again**, or the prompt to copy when the host refuses the message. Nothing is sent to Heldly from this card. |
-| `dashboard` | `heldly_show_dashboard` | Tabs **Profile** (edit name/bio, goals, interests), **Memories** ("Sources" row for ChatGPT memory with **Import from ChatGPT** / **Import more**, search, grouped by category, "From ChatGPT" badge, edit, delete), **Friends** (search "Who do I know who…", invite, reconnect, quick actions **Import friends** / **Play a quiz** / **Plan a group hangout** (pick 2 to 6 friends), pending requests, "On Heldly", "Private notes", add a person). |
-| `welcome` | `heldly_show_dashboard` (new user) | Welcome, three points about Heldly, **Import my ChatGPT memory** (secondary), goal chips (max 6), **Get started** (primary). |
-| `invite` | `heldly_create_invite` | Code as a ticket, QR code ("Scan to connect", when `qr` is non-empty), copy code / copy invite message / copy link (when `link` is non-empty), expiry, uses, revoke. |
-| `activity_ideas` | `heldly_suggest_activity` | Shared interests, match meter with "Why this score?", suggestion cards with **Plan it** / **We did this** / **Add to calendar**. |
-| `reconnect` | `heldly_reconnection_suggestions` | Friends not seen for a while, with **Get ideas** / **Draft a message** / **We met up**. |
-| `friend` | `heldly_view_friend` | Profile of a connection or a private person note, "Things to ask about" (tick off / add), interests, shared memories, hangout timeline, actions incl. **Prep for a meetup** and (connections) **Quiz**. |
-| `people_import` | `heldly_propose_people_import` | Checklist of proposed people (already-added ones unchecked), Select all / None, **Add N people**, then a success state. Nothing is saved until confirmed. |
-| `people_search` | `heldly_find_people` | The query, an editable search field that re-runs in place, result rows with matched labels, **Plan something together** (2+ results). |
-| `group_plan` | `heldly_plan_group` | Avatar stack, "Everyone's into", partial overlaps, group ideas with **Plan it** / **Add to calendar**. |
-| `brief` | `heldly_meetup_brief` | "Before you see <name>": last time, common ground, things to ask about, copyable conversation starters, notes or shared memories. |
-| `quiz` | `heldly_start_quiz` | One question at a time with instant feedback, then score, verdict and (friend mode) common-ground reveal. All state is client-side. |
+| `memory_review` | `venn_propose_memories` | Proposed memories (up to 30) with a checkbox, editable title/description, visibility select. More than 3 items adds "N of M selected", **Select all** / **None** and a sticky action bar. Items with `already_saved` start unticked with an "Already in Venn" badge. With `source: "chatgpt_memory"` the card is titled "From your ChatGPT memory" and the success state offers **Open my Venn**. Nothing is saved until **Save selected**. |
+| `memory_import` | `venn_import_chatgpt_memory` | "Bring your ChatGPT memory with you": one checkbox per area, the always-excluded note, **Preview my ChatGPT memory** (sends a prompt into the chat), then "Check the chat" with **Choose again**, or the prompt to copy when the host refuses the message. Nothing is sent to Venn from this card. |
+| `dashboard` | `venn_show_dashboard` | "Finish setting up" card above the tabs while a set-up step is open (see "Set-up"). Tabs **Profile** (edit name/bio, at-a-glance tiles for memories / friends / requests that open the matching tab, goals, interests), **Memories** ("Sources" row for ChatGPT memory with **Import from ChatGPT** / **Import more**, search, grouped by category, "From ChatGPT" badge, edit, delete), **Friends** (search "Who do I know who…", invite, reconnect, quick actions **Import friends** / **Play a quiz** / **Plan a group hangout** (pick 2 to 6 friends), pending requests, "On Venn", "Private notes", add a person). |
+| `welcome` | `venn_show_dashboard` (new user) | Start of set-up: hero, the three set-up steps as a numbered path, and inside step 1 the goal chips (max 6), **Get started** (primary) and **Import my ChatGPT memory** (secondary). |
+| `help` | `venn_help` | "How Venn helps": the set-up card (while a step is open), topics with an icon, a description and "try it" examples that are sent into the chat ("Sent — continue in the chat", or the text with **Copy** when the host refuses), then "Your data". `note` is model-facing and not shown. |
+| `invite` | `venn_create_invite` | Code as a ticket, QR code ("Scan to connect", when `qr` is non-empty), copy code / copy invite message / copy link (when `link` is non-empty), expiry, uses, revoke. |
+| `activity_ideas` | `venn_suggest_activity` | Shared interests, match ring (`match_score`) with "Why this score?", suggestion cards with **Plan it** / **We did this** / **Add to calendar**. |
+| `reconnect` | `venn_reconnection_suggestions` | Friends not seen for a while, each with a "days since" figure and a bar relative to the longest gap in the list, with **Get ideas** / **Draft a message** / **We met up**. |
+| `friend` | `venn_view_friend` | Profile of a connection or a private person note, "Things to ask about" (tick off / add), interests, shared memories, hangout timeline, actions incl. **Prep for a meetup** and (connections) **Quiz**. |
+| `people_import` | `venn_propose_people_import` | Checklist of proposed people (already-added ones unchecked), Select all / None, **Add N people**, then a success state. Nothing is saved until confirmed. |
+| `people_search` | `venn_find_people` | The query, an editable search field that re-runs in place, result rows with matched labels, **Plan something together** (2+ results). |
+| `group_plan` | `venn_plan_group` | Avatar stack, "Everyone's into", partial overlaps, group ideas with **Plan it** / **Add to calendar**. |
+| `brief` | `venn_meetup_brief` | "Before you see <name>": last time, common ground, things to ask about, copyable conversation starters, notes or shared memories. |
+| `quiz` | `venn_start_quiz` | One question at a time with instant feedback, then score, verdict and (friend mode) common-ground reveal. All state is client-side. |
 | anything else | | Empty state |
 
 ### Navigation
@@ -70,9 +73,9 @@ roughly matches the incoming view. A tool result with `isError` shows an error b
 `App.tsx` keeps a small view stack. `openView(tool, args)` calls a tool, parses the result with
 `parseView` and pushes it; **Back** in the header pops. A result delivered by the host resets the
 stack to that one view. After going back, the revealed view is refreshed in the background
-(`dashboard` → `heldly_show_dashboard {}`, `reconnect` → `heldly_reconnection_suggestions {}`,
-`friend` → `heldly_view_friend`, `brief` → `heldly_meetup_brief`, `people_search` →
-`heldly_find_people {query}`); the stale view stays visible, and is kept if the refresh fails.
+(`dashboard` → `venn_show_dashboard {}`, `reconnect` → `venn_reconnection_suggestions {}`,
+`friend` → `venn_view_friend`, `brief` → `venn_meetup_brief`, `people_search` →
+`venn_find_people {query}`, `help` → `venn_help {}`); the stale view stays visible, and is kept if the refresh fails.
 `replaceView(tool, args)` swaps the current view without adding a Back step (search re-runs,
 quiz **Play again**).
 
@@ -87,24 +90,28 @@ memory_review  { proposal_id, expires_at, source: "conversation" | "chatgpt_memo
                  source missing/unknown = "conversation"; already_saved missing = false
 memory_import  { areas: [{ value, label, description, selected }] (1..10), always_excluded,
                  imported_count, max_items, note }   note is model-facing and not shown
-dashboard      { profile, memories: [Memory], connections: [Connection], people: [Person], pending_requests: [PendingRequest] }
-welcome        { display_name, goal_options: [{ value, label }] }
+dashboard      { profile, memories: [Memory], connections: [Connection], people: [Person], pending_requests: [PendingRequest],
+                 setup: [SetupStep] }
+welcome        { display_name, goal_options: [{ value, label }], setup: [SetupStep] }
+help           { display_name, topics: [{ key, title, description, examples (0..4) }] (1..10),
+                 setup: [SetupStep], privacy: string[], note }   note is model-facing and not shown
+                 known topic keys: setup, memories, people, connect, stay_close, quiz, privacy (others get a generic icon)
 invite         { code, expires_at, max_uses, share_text, note, link, qr: string[] }
                qr = rows of '0'/'1' ('1' = dark); must be a square grid or it is ignored. link must be http(s).
 activity_ideas { kind, id, display_name, shared_interests, match_score (0..1), score_explanation,
                  suggestions: [{ title, description, grounded_in, suggested_action }], note }
 reconnect      { min_days, candidates: [{ kind, id, display_name, days_since_last_interaction,
                  last_activity, reason, suggested_activity }] }
-friend         { kind, id, display_name, on_heldly, since, last_interaction_at, bio, relationship, notes,
+friend         { kind, id, display_name, on_venn, since, last_interaction_at, bio, relationship, notes,
                  interests, shared_interests, shared_memories: [{ category, title, description, tags }],
                  recent_interactions: [{ occurred_at, activity }], follow_ups: [FollowUp] }
 people_import  { import_id, expires_at, source, candidates: [{ index, name, relationship, notes, interests,
                  last_met_days_ago, already_added }], skipped, note }
-people_search  { query, results: [{ kind, id, display_name, on_heldly, relationship, matched, snippet,
+people_search  { query, results: [{ kind, id, display_name, on_venn, relationship, matched, snippet,
                  last_interaction_at }], count, searched, note }
 group_plan     { members: [{ kind, id, display_name, interests }], common_to_all,
                  common_to_some: [{ interest, members }], suggestions: [Suggestion], note }
-brief          { kind, id, display_name, on_heldly, relationship, notes, last_interaction_at, last_activity,
+brief          { kind, id, display_name, on_venn, relationship, notes, last_interaction_at, last_activity,
                  days_since_last_interaction, interests, shared_interests, shared_memories,
                  things_to_ask: [FollowUp], conversation_starters, note }
 quiz           { mode: "friend" | "circle", kind, id, display_name, title,
@@ -118,60 +125,76 @@ Connection     { connection_id, user_id, display_name, since, last_interaction_a
 Person         { person_id, name, relationship, notes, interests, last_interaction_at, created_at }
 PendingRequest { request_id, sender_display_name, created_at }
 FollowUp       { follow_up_id, text, created_at }
+SetupStep      { key: "about_you" | "your_people" | "connect", title, description, done }
+                 missing/invalid = empty list; steps with unknown keys are dropped
 ```
 
 Memory categories: `INTEREST`, `DISLIKE`, `PREFERENCE`, `EXPERIENCE`, `PERSONAL_MEMORY`, `SOCIAL_GOAL`,
-`RELATIONSHIP_CONTEXT` and `WORK` ("Work & projects", 💼). Unknown categories fall back to
+`RELATIONSHIP_CONTEXT` and `WORK` ("Work & projects"). Unknown categories fall back to
 `PERSONAL_MEMORY`.
 
 Counts shown in the UI are derived from the arrays (`memories.length`, `connections.length +
 people.length`), not from `profile.memory_count`.
 
+### Set-up
+
+`setup` drives onboarding. The dashboard and the help card show a "Finish setting up" card (progress
+ring, "N of 3 done", the steps) while at least one step is open, and nothing once all are done; the
+welcome card shows the same steps as a numbered path. The actions are fixed per step key: `about_you`
+→ **Import from ChatGPT** (opens the import card) and **Answer a few questions** (chat prompt);
+`your_people` → **Add your people** (chat prompt); `connect` → **Invite a friend** (opens the invite
+card). The first open step gets the primary button, later open steps a secondary one, done steps none.
+After a chat prompt is accepted the step shows "Continue in the chat"; if the host refuses, the text is
+shown with **Copy**. The card is updated whenever the dashboard payload is refreshed (after **Back**,
+or after an action that returns a dashboard).
+
 ## Tool calls made by the widget
 
 | Trigger | Tool | Arguments | Expected `structuredContent` |
 | --- | --- | --- | --- |
-| Save selected | `heldly_save_memories` | `{ proposal_id, approvals: [{ index, visibility, title, description }] }` | `{ saved: Memory[], count }` |
-| Back to dashboard; after accepting a request; **Open my Heldly** (after an import) | `heldly_show_dashboard` | `{}` | `dashboard` view |
-| Welcome → Import my ChatGPT memory; Memories tab → Import from ChatGPT / Import more | `heldly_import_chatgpt_memory` | `{}` | `memory_import` view |
-| Edit profile | `heldly_update_profile` | `{ display_name?, bio? }` (changed fields only) | Profile |
-| Welcome → Get started | `heldly_update_profile` | `{ social_goals: string[] }` | Profile (result ignored) |
-| Edit memory | `heldly_update_memory` | `{ memory_id, title?, description?, visibility? }` | Memory |
-| Delete memory | `heldly_delete_memory` | `{ memory_id }` | `{ deleted: true, memory_id }` |
-| Accept / Decline | `heldly_respond_to_connection` | `{ request_id, accept }` | `{ request_id, status, connection_id }` |
-| Add a person | `heldly_add_person` | `{ name, relationship?, notes?, interests? }` | Person |
-| Edit person | `heldly_update_person` | `{ person_id, name?, relationship?, notes?, interests? }` | Person |
-| Delete person | `heldly_delete_person` | `{ person_id }` | `{ deleted: true, person_id }` |
-| Remove connection | `heldly_remove_connection` | `{ connection_id }` | `{ removed: true, connection_id }` |
-| Open a friend | `heldly_view_friend` | friendArg | `friend` view |
-| Get ideas | `heldly_suggest_activity` | friendArg | `activity_ideas` view |
-| Who should I reconnect with? | `heldly_reconnection_suggestions` | `{}` | `reconnect` view |
-| We did this / We met up / Log a hangout | `heldly_log_interaction` | `{ ...friendArg, activity? }` | `{ recorded: true, kind, id, last_interaction_at }` |
-| Invite a friend | `heldly_create_invite` | `{}` | `invite` view |
-| Revoke code | `heldly_revoke_invite` | `{ code }` | `{ revoked: true }` |
-| Add N people (import) | `heldly_import_people` | `{ import_id, indexes: number[] }` | `{ imported: Person[], count }` |
-| Friends tab search; search again | `heldly_find_people` | `{ query }` | `people_search` view |
-| Plan a group hangout; Plan something together | `heldly_plan_group` | `{ connection_ids: string[], person_ids: string[] }` (2 to 6 in total) | `group_plan` view |
-| Prep for a meetup | `heldly_meetup_brief` | friendArg | `brief` view |
-| Quiz (friend); Play a quiz / Play again | `heldly_start_quiz` | `{ connection_id }` or `{}` | `quiz` view |
-| Tick off a thing to ask | `heldly_complete_follow_up` | `{ follow_up_id }` | `{ done: true, follow_up_id }` |
-| Add a thing to ask | `heldly_add_follow_up` | `{ ...friendArg, text }` (max 200 chars) | FollowUp |
+| Save selected | `venn_save_memories` | `{ proposal_id, approvals: [{ index, visibility, title, description }] }` | `{ saved: Memory[], count }` |
+| Back to dashboard; after accepting a request; **Open my Venn** (after an import) | `venn_show_dashboard` | `{}` | `dashboard` view |
+| Header **Help** (every view except `help`) | `venn_help` | `{}` | `help` view |
+| Set-up → Invite a friend | `venn_create_invite` | `{}` | `invite` view |
+| Welcome → Import my ChatGPT memory; Set-up → Import from ChatGPT; Memories tab → Import from ChatGPT / Import more | `venn_import_chatgpt_memory` | `{}` | `memory_import` view |
+| Edit profile | `venn_update_profile` | `{ display_name?, bio? }` (changed fields only) | Profile |
+| Welcome → Get started | `venn_update_profile` | `{ social_goals: string[] }` | Profile (result ignored) |
+| Edit memory | `venn_update_memory` | `{ memory_id, title?, description?, visibility? }` | Memory |
+| Delete memory | `venn_delete_memory` | `{ memory_id }` | `{ deleted: true, memory_id }` |
+| Accept / Decline | `venn_respond_to_connection` | `{ request_id, accept }` | `{ request_id, status, connection_id }` |
+| Add a person | `venn_add_person` | `{ name, relationship?, notes?, interests? }` | Person |
+| Edit person | `venn_update_person` | `{ person_id, name?, relationship?, notes?, interests? }` | Person |
+| Delete person | `venn_delete_person` | `{ person_id }` | `{ deleted: true, person_id }` |
+| Remove connection | `venn_remove_connection` | `{ connection_id }` | `{ removed: true, connection_id }` |
+| Open a friend | `venn_view_friend` | friendArg | `friend` view |
+| Get ideas | `venn_suggest_activity` | friendArg | `activity_ideas` view |
+| Who should I reconnect with? | `venn_reconnection_suggestions` | `{}` | `reconnect` view |
+| We did this / We met up / Log a hangout | `venn_log_interaction` | `{ ...friendArg, activity? }` | `{ recorded: true, kind, id, last_interaction_at }` |
+| Invite a friend | `venn_create_invite` | `{}` | `invite` view |
+| Revoke code | `venn_revoke_invite` | `{ code }` | `{ revoked: true }` |
+| Add N people (import) | `venn_import_people` | `{ import_id, indexes: number[] }` | `{ imported: Person[], count }` |
+| Friends tab search; search again | `venn_find_people` | `{ query }` | `people_search` view |
+| Plan a group hangout; Plan something together | `venn_plan_group` | `{ connection_ids: string[], person_ids: string[] }` (2 to 6 in total) | `group_plan` view |
+| Prep for a meetup | `venn_meetup_brief` | friendArg | `brief` view |
+| Quiz (friend); Play a quiz / Play again | `venn_start_quiz` | `{ connection_id }` or `{}` | `quiz` view |
+| Tick off a thing to ask | `venn_complete_follow_up` | `{ follow_up_id }` | `{ done: true, follow_up_id }` |
+| Add a thing to ask | `venn_add_follow_up` | `{ ...friendArg, text }` (max 200 chars) | FollowUp |
 
-`heldly_propose_people_import` and `heldly_propose_memories` are called by the model, not by the widget.
+`venn_propose_people_import` and `venn_propose_memories` are called by the model, not by the widget.
 
 ### Importing ChatGPT memory
 
-The Heldly server cannot read ChatGPT's memory, so the import goes through the chat:
+The Venn server cannot read ChatGPT's memory, so the import goes through the chat:
 
 1. `memory_import` card: the user ticks areas and presses **Preview my ChatGPT memory**.
 2. The widget sends `buildMemoryImportPrompt(areas, selectedValues, maxItems)` (pure, in
    `src/memoryImport.ts`) with `sendMessage`. The prompt lists the ticked areas as `- <label>: <description>`
    in payload order, adds `Leave out these areas: <label>, <label>.` only when some area is unticked,
-   and asks ChatGPT to list at most `max_items` items in the chat without sending anything to Heldly.
-3. The user tells ChatGPT which ones to keep; ChatGPT calls `heldly_propose_memories` with
+   and asks ChatGPT to list at most `max_items` items in the chat without sending anything to Venn.
+3. The user tells ChatGPT which ones to keep; ChatGPT calls `venn_propose_memories` with
    `source: "chatgpt_memory"` for just those.
 4. The `memory_review` card shows them ("From your ChatGPT memory"); the user confirms with the
-   unchanged `heldly_save_memories` call, and the saved memories carry `source: "chatgpt_memory"`.
+   unchanged `venn_save_memories` call, and the saved memories carry `source: "chatgpt_memory"`.
 
 If `sendMessage` is refused, the card shows the prompt in a read-only box with **Copy** and
 "Paste this into the chat to start."
@@ -181,14 +204,17 @@ the local state and show a banner with **Retry**. Buttons are disabled while a c
 
 ## Host interactions (feature-detected)
 
-- `updateModelContext`: after saving (`Saved N memories to Heldly profile: <titles>`) or discarding
+- `updateModelContext`: after saving (`Saved N memories to Venn profile: <titles>`) or discarding
   (`User discarded the proposed memories.`) proposed memories.
 - `sendMessage`: **Plan it** (`Help me plan "<title>" with <name>. I will reach out myself.`),
   **Draft a message** (`Help me draft a short, warm message to reconnect with <name>. I will send it myself.`)
-  and **Get started** (`Let's set up Heldly. Ask me a few questions about my interests and the people I want to stay close to.`).
-  Also **Import friends** (`I'd like to import my friends into Heldly. I'll paste a list, upload a contacts file, or just tell you about them.`),
+  and **Get started** (`Let's set up Venn. Ask me a few questions about my interests and the people I want to stay close to.`).
+  Also **Import friends** (`I'd like to import my friends into Venn. I'll paste a list, upload a contacts file, or just tell you about them.`),
   group **Plan it** (`Help me plan "<title>" with <names>. I will reach out to everyone myself.`) and
-  **Tell <name> my score** (`I just scored X out of N on Heldly's "How well do you know <name>?" quiz. Help me draft a short, playful message telling <name> my score. I will send it myself.`).
+  **Tell <name> my score** (`I just scored X out of N on Venn's "How well do you know <name>?" quiz. Help me draft a short, playful message telling <name> my score. I will send it myself.`).
+  Set-up **Answer a few questions** (`Let's set up Venn. Ask me a few questions about what I enjoy and what I like to avoid.`)
+  and **Add your people** (`I'd like to add my friends to Venn. I'll paste a list, upload a contacts file, or just tell you about them.`);
+  a help example sends its own text unchanged.
   **Preview my ChatGPT memory** sends the import prompt described under "Importing ChatGPT memory".
   If the host doesn't support `message`, the widget shows the text to type in chat instead.
 - `openLink` (`app.openLink({ url })`, needs the host's `openLinks` capability): **Add to calendar**
@@ -210,7 +236,10 @@ src/types.ts               data contract, friendArg, defensive parsers, formatte
 src/calendar.ts            pure Google Calendar URL builder + date helpers
 src/memoryImport.ts        pure prompt builder for the ChatGPT memory import
 src/mockQr.ts              demo-only QR encoder for mock invites
-src/components/common.tsx  Avatar, useAction (busy / retry), chat prompts, copyText, small UI bits
+src/components/common.tsx  Avatar, useAction (busy / retry), chat prompts, copyText, CopyButton, ChatFallback, Ring, small UI bits
+src/components/icons.tsx   the icon set (Icon), category icons, the Venn mark (BrandMark) and spot illustrations (Illustration); all inline SVG
+src/components/Setup.tsx   "Finish setting up" card and the per-step actions (shared by Dashboard, Welcome and Help)
+src/components/Help.tsx    help card
 src/components/            MemoryReview, MemoryImport, Dashboard (+ MemoriesTab, FriendsTab), Friend, PersonForm,
                            Invite (+ QrCode), ActivityIdeas, Reconnect, Welcome, ErrorBanner,
                            PeopleImport, PeopleSearch, GroupPlan, Brief, Quiz,

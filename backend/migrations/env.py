@@ -1,6 +1,6 @@
 """Alembic environment: metadata from app.models.
 
-URL: the `heldly.database_url` attribute when run programmatically (see app/db/migrate.py),
+URL: the `venn.database_url` attribute when run programmatically (see app/db/migrate.py),
 otherwise DATABASE_URL from app settings (CLI: `alembic upgrade head`).
 """
 
@@ -23,7 +23,7 @@ log = logging.getLogger("alembic.env")
 
 
 def _url() -> str:
-    return config.attributes.get("heldly.database_url") or get_settings().database_url
+    return config.attributes.get("venn.database_url") or get_settings().database_url
 
 
 def run_migrations_offline() -> None:
@@ -47,7 +47,7 @@ def _adopt_unversioned_database(connection) -> None:
     tables = set(inspect(connection).get_table_names())
     # An empty alembic_version table can be left behind by a failed SQLite upgrade (non-transactional DDL).
     if "users" in tables and context.get_context().get_current_revision() is None:
-        log.warning("Database has Heldly tables but no Alembic version; stamping revision 0001")
+        log.warning("Database has Venn tables but no Alembic version; stamping revision 0001")
         context.get_context().stamp(context.script, "0001")
 
 

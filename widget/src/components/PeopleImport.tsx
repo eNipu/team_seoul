@@ -29,10 +29,10 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
     const indexes = data.candidates.filter((c) => picked.has(c.index)).map((c) => c.index);
     if (indexes.length === 0) return;
     void action.run("import", async () => {
-      const res = await bridge.callTool("heldly_import_people", { import_id: data.import_id, indexes });
+      const res = await bridge.callTool("venn_import_people", { import_id: data.import_id, indexes });
       if (!res.ok) return res.errorText;
       const result = parseImportPeople(res.data);
-      if (result.count === 0 && result.imported.length === 0) return "Heldly didn't add anyone. Try again.";
+      if (result.count === 0 && result.imported.length === 0) return "Venn didn't add anyone. Try again.";
       setAdded({ count: result.count || result.imported.length, names: result.imported.map((p) => p.name) });
       window.scrollTo?.(0, 0);
       return null;
@@ -61,7 +61,7 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
             type="button"
             className="btn btn--primary"
             disabled={busy}
-            onClick={() => void action.run("friends", () => nav.openView("heldly_show_dashboard", {}))}
+            onClick={() => void action.run("friends", () => nav.openView("venn_show_dashboard", {}))}
           >
             {action.busy === "friends" ? "Loading…" : "See my friends"}
           </button>
@@ -69,7 +69,7 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
             type="button"
             className="btn"
             disabled={busy}
-            onClick={() => void action.run("reconnect", () => nav.openView("heldly_reconnection_suggestions", {}))}
+            onClick={() => void action.run("reconnect", () => nav.openView("venn_reconnection_suggestions", {}))}
           >
             {action.busy === "reconnect" ? "Looking…" : "Who should I reconnect with?"}
           </button>
@@ -90,7 +90,7 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
 
       {data.candidates.length === 0 ? (
         <EmptyNote art="search" title="No one to add">
-          Heldly couldn't find any people in that. Try pasting names, one per line.
+          Venn couldn't find any people in that. Try pasting names, one per line.
         </EmptyNote>
       ) : (
         <>
@@ -125,7 +125,7 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
                     <span className="pick__body">
                       <span className="pick__name">
                         <strong>{c.name}</strong>
-                        {c.already_added && <span className="badge badge--on">Already in Heldly</span>}
+                        {c.already_added && <span className="badge badge--on">Already in Venn</span>}
                       </span>
                       {meta && <span className="muted small">{meta}</span>}
                       {c.notes && <span className="muted small pick__notes">{c.notes}</span>}

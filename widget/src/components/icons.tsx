@@ -1,4 +1,4 @@
-// Heldly's icon set, brand mark and spot illustrations. Everything is inline SVG:
+// Venn's icon set, brand mark and spot illustrations. Everything is inline SVG:
 // no fonts, no image files, no remote assets.
 //
 // Icons share one grid (24×24), one stroke (1.75, round caps and joins) and take
@@ -231,16 +231,15 @@ export function CategoryIcon({ category, small }: { category: MemoryCategory; sm
   );
 }
 
-/** The Heldly mark: a heart, held. Brand coral #E86A4A in both themes. */
+/** The Venn mark: a heart, held. Brand coral #E86A4A in both themes. */
 export function BrandMark({ size = 28 }: { size?: number }) {
   return (
     <svg className="brand-mark" width={size} height={size} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-      <rect width="32" height="32" rx="10" fill="#E86A4A" />
-      <path
-        d="M16 21.6s-6.4-3.9-6.4-8.5a3.5 3.5 0 0 1 6.4-2 3.5 3.5 0 0 1 6.4 2c0 4.6-6.4 8.5-6.4 8.5z"
-        fill="#fff"
-      />
-      <path d="M8.2 20.2c1.9 3.3 4.7 5 7.8 5s5.9-1.7 7.8-5" fill="none" stroke="#fff" strokeWidth="1.9" strokeLinecap="round" opacity="0.7" />
+      {/* Two overlapping circles: you, a friend, and what you share. Same mark as plugin/assets. */}
+      <rect width="32" height="32" rx="8" fill="#E86A4A" />
+      <circle cx="11.75" cy="16" r="8.5" fill="#fff" fillOpacity="0.5" />
+      <circle cx="20.25" cy="16" r="8.5" fill="#fff" fillOpacity="0.5" />
+      <path d="M16 8.64a8.5 8.5 0 0 1 0 14.72 8.5 8.5 0 0 1 0-14.72z" fill="#fff" />
     </svg>
   );
 }

@@ -1,8 +1,8 @@
-"""Private notes about friends who are not on Heldly.
+"""Private notes about friends who are not on Venn.
 
 Rules:
 - Owner-only. A person note is never shared with connections or shown on a profile.
-- Heldly never contacts the person; notes only feed suggestions shown to the owner.
+- Venn never contacts the person; notes only feed suggestions shown to the owner.
 - Credentials and financial/ID numbers are refused, same as memories.
 - Unknown and other users' person ids are indistinguishable (NOT_FOUND).
 - Bulk imports are two-step: the assistant proposes, the user picks on a review card, and only
@@ -37,7 +37,7 @@ from app.services.errors import InvalidRequest, NotFound, PrivacyViolation
 MAX_PEOPLE_PER_USER = 500
 MAX_IMPORT_CANDIDATES = 50
 IMPORT_TTL = timedelta(hours=24)
-# Heldly keeps notes about people, not ways to reach them.
+# Venn keeps notes about people, not ways to reach them.
 _CONTACT_DETAIL = re.compile(
     r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+"  # email addresses
     r"|https?://\S+|www\.\S+"  # links (profile URLs)
@@ -75,7 +75,7 @@ def clean_interests(interests: list[str] | None) -> list[str]:
 
 def reject_sensitive(*values: str | None) -> None:
     if any(v and contains_sensitive(v) for v in values):
-        raise PrivacyViolation("Heldly does not store credentials or financial/ID numbers.")
+        raise PrivacyViolation("Venn does not store credentials or financial/ID numbers.")
 
 
 def strip_contact_details(text: str | None) -> str | None:

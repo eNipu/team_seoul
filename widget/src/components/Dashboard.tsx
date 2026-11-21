@@ -161,7 +161,7 @@ function ProfileTab({ profile, memoryCount, friendCount, pendingCount, onOpenTab
       return;
     }
     void action.run("profile", async () => {
-      const res = await bridge.callTool("heldly_update_profile", patch);
+      const res = await bridge.callTool("venn_update_profile", patch);
       if (!res.ok) return res.errorText;
       onProfile(
         hasId(res.data, "display_name")
@@ -268,7 +268,7 @@ function ProfileTab({ profile, memoryCount, friendCount, pendingCount, onOpenTab
           ))}
         </div>
       ) : (
-        <p className="muted small">Tell Heldly what kind of connections you're looking for.</p>
+        <p className="muted small">Tell Venn what kind of connections you're looking for.</p>
       )}
 
       <SectionTitle>Interests</SectionTitle>
@@ -281,7 +281,7 @@ function ProfileTab({ profile, memoryCount, friendCount, pendingCount, onOpenTab
           ))}
         </div>
       ) : (
-        <p className="muted small">No interests yet. Tell Heldly what you enjoy and approve what it should remember.</p>
+        <p className="muted small">No interests yet. Tell Venn what you enjoy and approve what it should remember.</p>
       )}
     </>
   );

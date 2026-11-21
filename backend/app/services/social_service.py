@@ -6,7 +6,7 @@ Relationship maintenance (friend view, activity ideas, reconnection) lives in
 Rules:
 - Connections are mutual: a request (created by redeeming an invite code) must be accepted by
   the invite creator.
-- Heldly never contacts anyone automatically.
+- Venn never contacts anyone automatically.
 - Blocks are enforced in both directions.
 """
 
@@ -142,8 +142,8 @@ def create_invite(db: Session, user: User, note: str | None = None, max_uses: in
         expires_at=expires_at,
         max_uses=max_uses,
         share_text=(
-            f"Let's connect on Heldly! In ChatGPT, open the Heldly plugin and say: "
-            f'"Redeem Heldly invite {pretty}". Or open {link} (Expires in {settings.invite_ttl_hours}h.)'
+            f"Let's connect on Venn! In ChatGPT, open the Venn plugin and say: "
+            f'"Redeem Venn invite {pretty}". Or open {link} (Expires in {settings.invite_ttl_hours}h.)'
         ),
         link=link,
         qr=qr_rows(link),
