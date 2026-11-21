@@ -17,6 +17,9 @@ Canonical skill packages live in `.agents/skills/`. Relative directory links in
   accents, or less generic visual design, also read
   `.agents/skills/turbota-new-startup-design-from-nazarii/SKILL.md`.
   This is an optional visual direction, not a mandatory Venn rebrand.
+- For any UI or copy change under `site/`, read `.agents/skills/venn-site-design/SKILL.md`
+  first. It records the landing page's established look and the rules `site/check.mjs`
+  enforces, and it takes precedence over the general skills above for the site.
 - Product requirements, consent, accessibility, and host integration take precedence over
   decorative styling. Preserve host theme support, usable narrow iframe layouts, keyboard
   access, visible focus, reduced motion, and explicit approval before saving memories.
