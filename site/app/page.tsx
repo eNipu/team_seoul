@@ -1,7 +1,5 @@
-import ChatPreview from "@/components/ChatPreview";
 import HeroBackdrop from "@/components/HeroBackdrop";
-import HeroCollage, { type CollageProps } from "@/components/HeroCollage";
-import NextWord from "@/components/NextWord";
+import OnboardingPreview from "@/components/OnboardingPreview";
 import PageView from "@/components/PageView";
 import SiteHeader from "@/components/SiteHeader";
 import Waitlist from "@/components/Waitlist";
@@ -9,18 +7,6 @@ import { cleanRef } from "@/lib/analytics";
 import { hasDatabase } from "@/lib/db";
 import { cleanVersion, defaultVersion } from "@/lib/version";
 import { inviteHasRoom } from "@/lib/waitlist";
-
-// Optional hero visual. Add `image: "/people/you.jpg"` to either person to show a
-// portrait instead of initials, or set this to null to remove the collage.
-const COLLAGE: CollageProps | null = {
-  left: { name: "You", context: "Launching in Berlin" },
-  right: { name: "Teodor Marin", context: "Just moved into Berlin B2B growth" },
-  shared: "Berlin",
-};
-
-// "You already know your next …": the line under the headline shows these one at a time.
-// Each one is a claim; keep "What the copy may claim" in site/README.md in step.
-const NEXT = ["customer", "friend", "business partner"];
 
 const PRINCIPLES = [
   {
@@ -65,25 +51,18 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           <HeroBackdrop />
           <SiteHeader />
           <div className="hero__content wrap">
-            <h1 id="hero-title">Find the common ground.</h1>
-            <NextWord words={NEXT} />
-            <p className="hero__sub">
-              Venn shows where you overlap, from what each of you approves, right inside ChatGPT.
-            </p>
+            <h1 id="hero-title">Venn. Connect your AI memories.</h1>
+            <p className="hero__sub">Build your inner circle.</p>
             <Waitlist version={version} invite={invite} />
-            {COLLAGE && <HeroCollage {...COLLAGE} />}
           </div>
         </section>
 
         <section className="showcase" id="inside" aria-labelledby="inside-title">
           <div className="wrap">
             <div className="section-intro">
-              <span className="eyebrow">Inside ChatGPT</span>
-              <h2 id="inside-title">Two taps to common ground.</h2>
-              <p>Approve what Venn may use, then see who you share ground with. Try it here.</p>
+              <h2 id="inside-title">Try the onboarding.</h2>
             </div>
-            <ChatPreview />
-            <p className="showcase__note">A preview with made-up people. Venn is in development.</p>
+            <OnboardingPreview />
           </div>
         </section>
 
@@ -112,7 +91,6 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
 
       <footer className="site-footer wrap">
         <span>© {new Date().getFullYear()} Venn</span>
-        <span>The people in the examples are made up.</span>
       </footer>
       <PageView version={version} />
     </>
