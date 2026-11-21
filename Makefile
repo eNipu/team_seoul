@@ -16,7 +16,7 @@ test: ## Run backend tests (SQLite)
 	cd $(BACKEND) && uv run pytest
 
 test-postgres: db-up ## Run backend tests against the docker-compose Postgres
-	cd $(BACKEND) && TEST_DATABASE_URL=postgresql://heldly:heldly@localhost:5432/heldly uv run pytest
+	cd $(BACKEND) && TEST_DATABASE_URL=postgresql://venn:venn@localhost:5432/venn uv run pytest
 
 lint: ## Lint backend (ruff) and typecheck widget
 	cd $(BACKEND) && uv run ruff check . && uv run ruff format --check .

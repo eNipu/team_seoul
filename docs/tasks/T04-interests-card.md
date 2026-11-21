@@ -23,7 +23,7 @@ for the backend tasks.
    - One section per cluster: label, "N memories", up to 5 memory titles.
    - Friends under it: name, "N days since you last met", and the `keep_alive` line when present.
    - `due` is shown with words ("Time to reconnect"), never colour alone.
-   - Empty state: "No interests yet. Tell Heldly what you're into, then save what it suggests."
+   - Empty state: "No interests yet. Tell Venn what you're into, then save what it suggests."
    - If `unclustered_count > 0`: "N more memories don't fit a group yet."
 4. Wire it into `App.tsx` and document it in `widget/README.md`.
 

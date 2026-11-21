@@ -483,7 +483,7 @@ const IMPORT_PROPOSALS: ProposalSeed[] = [
   },
 ];
 
-/** Proposals awaiting approval, by proposal_id (what heldly_save_memories looks up). */
+/** Proposals awaiting approval, by proposal_id (what venn_save_memories looks up). */
 const proposalStore = new Map<string, MemoryReviewViewData>();
 
 function reviewView(source: ProposalSource, seeds: ProposalSeed[], proposalId: string): MemoryReviewViewData {
@@ -599,7 +599,7 @@ function friendView(args: Record<string, unknown>): FriendViewData | null {
     return structuredClone({
       ...base,
       kind: "connection" as const,
-      on_heldly: true,
+      on_venn: true,
       since: f.conn.since,
       last_interaction_at: f.conn.last_interaction_at,
       bio: f.conn.bio,
@@ -611,7 +611,7 @@ function friendView(args: Record<string, unknown>): FriendViewData | null {
   return structuredClone({
     ...base,
     kind: "person" as const,
-    on_heldly: false,
+    on_venn: false,
     since: f.person.created_at,
     last_interaction_at: f.person.last_interaction_at,
     bio: null,
@@ -699,7 +699,7 @@ function activityView(args: Record<string, unknown>): ActivityIdeasViewData | nu
         : "Based on what each of you chose to share with connections.",
     ],
     suggestions,
-    note: "Heldly only suggests. It never contacts anyone for you.",
+    note: "Venn only suggests. It never contacts anyone for you.",
   };
 }
 
@@ -758,7 +758,7 @@ function inviteView(maxUses: unknown, code = newCode()): InviteViewData {
   const max_uses = typeof maxUses === "number" && maxUses >= 1 ? Math.min(10, Math.floor(maxUses)) : 1;
   const expires_at = iso(7);
   invites.set(code, { max_uses, expires_at });
-  const link = `https://heldly.app/i/${code}`;
+  const link = `https://venn.app/i/${code}`;
   return {
     view: "invite",
     code,
@@ -766,7 +766,7 @@ function inviteView(maxUses: unknown, code = newCode()): InviteViewData {
     qr: mockQrRows(link),
     expires_at,
     max_uses,
-    share_text: `I'm using Heldly to keep up with the people I care about. Join me with invite code ${code}: open Heldly in ChatGPT and say "connect with code ${code}".`,
+    share_text: `I'm using Venn to keep up with the people I care about. Join me with invite code ${code}: open Venn in ChatGPT and say "connect with code ${code}".`,
     note: "Share this code only with people you know. Anyone who uses it can send you a connection request, which you still approve.",
   };
 }
@@ -839,7 +839,7 @@ function searchView(rawQuery: unknown): PeopleSearchViewData {
       kind: "connection",
       id: c.connection_id,
       display_name: c.display_name,
-      on_heldly: true,
+      on_venn: true,
       relationship: null,
       matched,
       snippet: memory?.description ?? c.bio,
@@ -857,7 +857,7 @@ function searchView(rawQuery: unknown): PeopleSearchViewData {
       kind: "person",
       id: p.person_id,
       display_name: p.name,
-      on_heldly: false,
+      on_venn: false,
       relationship: p.relationship,
       matched,
       snippet: p.notes,
@@ -937,7 +937,7 @@ function groupView(args: Record<string, unknown>): GroupPlanViewData | string {
     common_to_all,
     common_to_some,
     suggestions,
-    note: "Based on your private notes and what each connection chose to share. Heldly never contacts anyone for you.",
+    note: "Based on your private notes and what each connection chose to share. Venn never contacts anyone for you.",
   });
 }
 
@@ -961,7 +961,7 @@ function briefView(args: Record<string, unknown>): BriefViewData | null {
     kind: f.kind,
     id: f.id,
     display_name: f.name,
-    on_heldly: f.kind === "connection",
+    on_venn: f.kind === "connection",
     relationship: f.kind === "person" ? f.person.relationship : null,
     notes: f.kind === "person" ? f.person.notes : null,
     last_interaction_at: last,
@@ -1019,7 +1019,7 @@ function friendQuiz(conn: MockConnection): QuizViewData {
   }
   if (conn.bio) {
     questions.push(
-      question(`How does ${first} describe themselves?`, conn.bio, shuffle(DECOY_BIOS), `That is ${first}'s own bio on Heldly.`),
+      question(`How does ${first} describe themselves?`, conn.bio, shuffle(DECOY_BIOS), `That is ${first}'s own bio on Venn.`),
     );
   }
   for (const memory of conn.shared_memories.slice(0, 2)) {
@@ -1201,13 +1201,13 @@ export function createMockBridge(): HostBridge {
       if (flaky && calls % 2 === 1) return fail("NETWORK_ERROR: simulated failure (flaky mode). Try again.");
 
       switch (name) {
-        case "heldly_show_dashboard":
+        case "venn_show_dashboard":
           return ok(dashboardView());
 
-        case "heldly_import_chatgpt_memory":
+        case "venn_import_chatgpt_memory":
           return ok(memoryImportView());
 
-        case "heldly_propose_memories": {
+        case "venn_propose_memories": {
           const source: ProposalSource = args.source === "chatgpt_memory" ? "chatgpt_memory" : "conversation";
           const given: Record<string, unknown>[] = Array.isArray(args.memories) ? args.memories : [];
           const seeds: ProposalSeed[] = given.map((m) => ({
@@ -1221,7 +1221,7 @@ export function createMockBridge(): HostBridge {
           return ok(reviewView(source, seeds.length > 0 ? seeds : fallback, nextId("prop")));
         }
 
-        case "heldly_save_memories": {
+        case "venn_save_memories": {
           const approvals: Record<string, unknown>[] = Array.isArray(args.approvals) ? args.approvals : [];
           const review = proposalStore.get(String(args.proposal_id));
           if (!review) return fail("NOT_FOUND: proposal not found or expired");
@@ -1242,7 +1242,7 @@ export function createMockBridge(): HostBridge {
           return ok({ saved, count: saved.length });
         }
 
-        case "heldly_update_memory": {
+        case "venn_update_memory": {
           const m = memories.find((x) => x.memory_id === args.memory_id);
           if (!m) return fail("NOT_FOUND: memory not found");
           const title = text(args.title, 120);
@@ -1256,13 +1256,13 @@ export function createMockBridge(): HostBridge {
           return ok(m);
         }
 
-        case "heldly_delete_memory": {
+        case "venn_delete_memory": {
           if (!memories.some((m) => m.memory_id === args.memory_id)) return fail("NOT_FOUND: memory not found");
           memories = memories.filter((m) => m.memory_id !== args.memory_id);
           return ok({ deleted: true, memory_id: args.memory_id });
         }
 
-        case "heldly_update_profile": {
+        case "venn_update_profile": {
           const displayName = text(args.display_name, 60);
           if (displayName !== undefined) {
             if (!displayName) return fail("INVALID_ARGUMENT: display name cannot be empty");
@@ -1276,7 +1276,7 @@ export function createMockBridge(): HostBridge {
           return ok({ ...profile, memory_count: memories.length });
         }
 
-        case "heldly_respond_to_connection": {
+        case "venn_respond_to_connection": {
           const req = pending.find((r) => r.request_id === args.request_id);
           if (!req) return fail("NOT_FOUND: connection request not found");
           pending = pending.filter((r) => r.request_id !== req.request_id);
@@ -1291,7 +1291,7 @@ export function createMockBridge(): HostBridge {
                 display_name: req.sender_display_name,
                 since: new Date().toISOString(),
                 last_interaction_at: null,
-                bio: "Just joined Heldly.",
+                bio: "Just joined Venn.",
                 interests: ["Hiking", "Photography"],
                 shared_memories: [],
               },
@@ -1304,29 +1304,29 @@ export function createMockBridge(): HostBridge {
           });
         }
 
-        case "heldly_create_invite":
+        case "venn_create_invite":
           return ok(inviteView(args.max_uses));
 
-        case "heldly_revoke_invite": {
+        case "venn_revoke_invite": {
           if (typeof args.code !== "string" || !invites.has(args.code)) return fail("NOT_FOUND: invite code not found");
           invites.delete(args.code);
           return ok({ revoked: true });
         }
 
-        case "heldly_view_friend": {
+        case "venn_view_friend": {
           const view = friendView(args);
           return view ? ok(view) : fail("NOT_FOUND: friend not found");
         }
 
-        case "heldly_suggest_activity": {
+        case "venn_suggest_activity": {
           const view = activityView(args);
           return view ? ok(view) : fail("NOT_FOUND: friend not found");
         }
 
-        case "heldly_reconnection_suggestions":
+        case "venn_reconnection_suggestions":
           return ok(reconnectView());
 
-        case "heldly_log_interaction": {
+        case "venn_log_interaction": {
           const f = findFriend(args);
           if (!f) return fail("NOT_FOUND: friend not found");
           const occurred_at = new Date().toISOString();
@@ -1337,7 +1337,7 @@ export function createMockBridge(): HostBridge {
           return ok({ recorded: true, kind: f.kind, id: f.id, last_interaction_at: occurred_at });
         }
 
-        case "heldly_add_person": {
+        case "venn_add_person": {
           const personName = text(args.name, 80);
           if (!personName) return fail("INVALID_ARGUMENT: name is required");
           const person: Person = {
@@ -1353,7 +1353,7 @@ export function createMockBridge(): HostBridge {
           return ok(person);
         }
 
-        case "heldly_update_person": {
+        case "venn_update_person": {
           const person = people.find((p) => p.person_id === args.person_id);
           if (!person) return fail("NOT_FOUND: person not found");
           const personName = text(args.name, 80);
@@ -1367,7 +1367,7 @@ export function createMockBridge(): HostBridge {
           return ok(person);
         }
 
-        case "heldly_delete_person": {
+        case "venn_delete_person": {
           if (!people.some((p) => p.person_id === args.person_id)) return fail("NOT_FOUND: person not found");
           people = people.filter((p) => p.person_id !== args.person_id);
           delete interactions[`person:${String(args.person_id)}`];
@@ -1375,7 +1375,7 @@ export function createMockBridge(): HostBridge {
           return ok({ deleted: true, person_id: args.person_id });
         }
 
-        case "heldly_remove_connection": {
+        case "venn_remove_connection": {
           if (!connections.some((c) => c.connection_id === args.connection_id)) {
             return fail("NOT_FOUND: connection not found");
           }
@@ -1385,12 +1385,12 @@ export function createMockBridge(): HostBridge {
           return ok({ removed: true, connection_id: args.connection_id });
         }
 
-        case "heldly_propose_people_import":
+        case "venn_propose_people_import":
           return ok(importView());
 
-        case "heldly_import_people": {
+        case "venn_import_people": {
           const candidates = typeof args.import_id === "string" ? imports.get(args.import_id) : undefined;
-          if (!candidates) return fail("NOT_FOUND: this import has expired. Ask Heldly to read the list again.");
+          if (!candidates) return fail("NOT_FOUND: this import has expired. Ask Venn to read the list again.");
           const wanted = new Set(Array.isArray(args.indexes) ? args.indexes : []);
           const imported: Person[] = candidates
             .filter((c) => wanted.has(c.index))
@@ -1409,25 +1409,25 @@ export function createMockBridge(): HostBridge {
           return ok({ imported, count: imported.length });
         }
 
-        case "heldly_find_people":
+        case "venn_find_people":
           return ok(searchView(args.query));
 
-        case "heldly_plan_group": {
+        case "venn_plan_group": {
           const view = groupView(args);
           return typeof view === "string" ? fail(view) : ok(view);
         }
 
-        case "heldly_meetup_brief": {
+        case "venn_meetup_brief": {
           const view = briefView(args);
           return view ? ok(view) : fail("NOT_FOUND: friend not found");
         }
 
-        case "heldly_start_quiz": {
+        case "venn_start_quiz": {
           const view = quizView(args);
           return view ? ok(view) : fail("NOT_FOUND: connection not found");
         }
 
-        case "heldly_add_follow_up": {
+        case "venn_add_follow_up": {
           const f = findFriend(args);
           if (!f) return fail("NOT_FOUND: friend not found");
           const body = text(args.text, 200);
@@ -1438,7 +1438,7 @@ export function createMockBridge(): HostBridge {
           return ok(followUp);
         }
 
-        case "heldly_complete_follow_up": {
+        case "venn_complete_follow_up": {
           const entry = Object.entries(followUps).find(([, items]) => items.some((i) => i.follow_up_id === args.follow_up_id));
           if (!entry) return fail("NOT_FOUND: follow-up not found");
           followUps[entry[0]] = entry[1].filter((i) => i.follow_up_id !== args.follow_up_id);

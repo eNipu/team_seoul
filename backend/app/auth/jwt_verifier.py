@@ -1,6 +1,6 @@
 """Production token verification: JWT access tokens from an external OAuth provider.
 
-Validates signature (JWKS), issuer, audience, expiry and extracts scopes. The Heldly user is
+Validates signature (JWKS), issuer, audience, expiry and extracts scopes. The Venn user is
 derived only from (iss, sub) of a verified token — never from tool arguments.
 """
 
@@ -13,7 +13,7 @@ import jwt
 from jwt import PyJWKClient
 from mcp.server.auth.provider import AccessToken, TokenVerifier
 
-log = logging.getLogger("heldly.auth")
+log = logging.getLogger("venn.auth")
 
 ALLOWED_ALGORITHMS = ["RS256", "RS384", "RS512", "ES256", "ES384", "PS256"]
 

@@ -1,4 +1,4 @@
-"""FastAPI entrypoint: health endpoints, the invite landing page and the Heldly MCP server (/mcp)."""
+"""FastAPI entrypoint: health endpoints, the invite landing page and the Venn MCP server (/mcp)."""
 
 from __future__ import annotations
 
@@ -57,7 +57,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         async with mcp.session_manager.run():
             yield
 
-    app = FastAPI(title="Heldly", version="0.1.0", lifespan=lifespan, docs_url=None, redoc_url=None)
+    app = FastAPI(title="Venn", version="0.1.0", lifespan=lifespan, docs_url=None, redoc_url=None)
     app.state.settings = settings
     app.state.mcp = mcp
     app.state.dev_provider = dev_provider

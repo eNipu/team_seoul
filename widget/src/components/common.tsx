@@ -140,14 +140,14 @@ export function ChatStatus({ state, prompt }: { state: ChatState; prompt: string
   if (state === "sent") {
     return (
       <p className="hint hint--ok" role="status">
-        <span aria-hidden="true">💬</span> Sent to the chat. Heldly will pick it up there.
+        <span aria-hidden="true">💬</span> Sent to the chat. Venn will pick it up there.
       </p>
     );
   }
   if (state === "unavailable") {
     return (
       <p className="hint" role="status">
-        Couldn't post to the chat from here. Ask Heldly directly: “{prompt}”
+        Couldn't post to the chat from here. Ask Venn directly: “{prompt}”
       </p>
     );
   }
@@ -212,6 +212,17 @@ export function interestsError(items: string[]): string | null {
     return `Each interest can be at most ${LIMITS.interestLength} characters.`;
   }
   return null;
+}
+
+/** The Venn mark: two circles and the ground they share. Decorative; pair it with the name. */
+export function VennMark({ size = 28 }: { size?: number }) {
+  return (
+    <svg className="venn-mark" viewBox="0 0 32 20" width={size} height={(size * 20) / 32} aria-hidden="true" focusable="false">
+      <circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" strokeWidth="1.75" />
+      <circle cx="22" cy="10" r="9" fill="none" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M16 3.29a9 9 0 0 1 0 13.42a9 9 0 0 1 0-13.42z" fill="currentColor" />
+    </svg>
+  );
 }
 
 export function Spinner({ label }: { label?: string }) {

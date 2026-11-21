@@ -1,10 +1,10 @@
-# Heldly: Product Requirements, Feasibility Study and Technical Design
+# Venn: Product Requirements, Feasibility Study and Technical Design
 
 | | |
 | :-- | :-- |
 | **Status** | Draft 1, for design and validation |
 | **Date** | 2026-11-21 |
-| **Inputs** | `Heldly idea memo.md` (Draft 2), the product brief (no standalone frontend; UI inside ChatGPT and Claude; agents that schedule meetings), boardy.ai as reference |
+| **Inputs** | `Venn idea memo.md` (Draft 2), the product brief (no standalone frontend; UI inside ChatGPT and Claude; agents that schedule meetings), boardy.ai as reference |
 | **Platform facts** | Checked against live OpenAI, Anthropic and MCP documentation on the date above. Sources in section 14. Anything not checked is listed in section 3.5. |
 | **Existing code** | A first implementation (commit `d7bb6c8`) arrived in this repository while this document was being written. Section 11 compares it with this document. |
 
@@ -37,13 +37,13 @@
 
 ## 1. Summary and verdict
 
-**What we are building.** Heldly keeps a business user's existing relationships warm without the user doing relationship admin. It has three jobs:
+**What we are building.** Venn keeps a business user's existing relationships warm without the user doing relationship admin. It has three jobs:
 
 1. **Context.** Each user publishes short, approved statements about what they are doing ("signals"). Their mutual connections can query them from inside their own AI: "who in my network is working on AI tools in Berlin?"
-2. **Maintenance.** Heldly tracks who the user has not spoken to, spots when a contact's signal matches something the user needs, and says so.
-3. **Scheduling.** Heldly's agents find a time across both calendars and book the meeting.
+2. **Maintenance.** Venn tracks who the user has not spoken to, spots when a contact's signal matches something the user needs, and says so.
+3. **Scheduling.** Venn's agents find a time across both calendars and book the meeting.
 
-There is no Heldly app. The interface is the user's ChatGPT or Claude, which renders our UI inline. We run the backend: knowledge, schedules, and agents.
+There is no Venn app. The interface is the user's ChatGPT or Claude, which renders our UI inline. We run the backend: knowledge, schedules, and agents.
 
 **Verdict: feasible, with four corrections to the plan.**
 
@@ -54,11 +54,11 @@ There is no Heldly app. The interface is the user's ChatGPT or Claude, which ren
 | 3 | "No frontend" cannot be literal. We still ship UI code (it runs in the host's iframe) and need a handful of hosted pages: sign-in, calendar consent, invite landing, email confirm, privacy policy. | Reframe as "no standalone app, no dashboard". Budget for about five minimal pages. See 3.4. |
 | 4 | Reaching the user when they are not in a chat is weak. In-chat push exists on ChatGPT only in Work chats, and we could not confirm it for Claude. | Email is the dependable proactive channel for digests, meeting requests and nudges. |
 
-**Hardest parts, in order:** the network cold start (not a technical problem), scheduling with people who are not Heldly users, asynchronous two-party confirmation, and getting the model to call our tools at the right moments.
+**Hardest parts, in order:** the network cold start (not a technical problem), scheduling with people who are not Venn users, asynchronous two-party confirmation, and getting the model to call our tools at the right moments.
 
 **Recommendation.** Build a pilot for one 30 to 80 member community, installed as a custom connector on both hosts (no directory review needed). Give it single-player value from day one (private contact memory, follow-up reminders, scheduling) so it is useful before the network fills in.
 
-**State of the repository.** The code now in this repo is a ChatGPT-only, consumer-framed "social companion" in Python: consent-gated memories, invite-code connections, reconnection suggestions. It has no network query, no scheduling and no Claude support, and its stated rule is that Heldly never contacts anyone. That rule and that framing conflict with the brief this document answers (business users, agents that book meetings, both hosts). The team needs to pick a direction; it is question 1 in section 13.2.
+**State of the repository.** The code now in this repo is a ChatGPT-only, consumer-framed "social companion" in Python: consent-gated memories, invite-code connections, reconnection suggestions. It has no network query, no scheduling and no Claude support, and its stated rule is that Venn never contacts anyone. That rule and that framing conflict with the brief this document answers (business users, agents that book meetings, both hosts). The team needs to pick a direction; it is question 1 in section 13.2.
 
 The requirements and design below describe the brief's product. They were drafted before the code was visible. I have changed them only where the code made a recommendation wrong: the stack (5.2), UI packaging (6.5) and the delivery plan (12).
 
@@ -78,13 +78,13 @@ The brief adds a second problem: even when a user knows who to talk to, arrangin
 | :-- | :-- | :-- |
 | **Member** (primary) | Founder, operator or investor in a professional community. Uses ChatGPT or Claude daily. Has 50 to 500 contacts worth keeping. | Know what contacts are up to, be reminded who to reach, get meetings booked. |
 | **Community lead** (buyer) | Runs an accelerator, mastermind or cohort. One decision-maker. | Members help each other more. Pays the licence. |
-| **Counterparty** | Someone the member wants to meet. May or may not be a Heldly user. | Low-effort way to say yes and pick a time. |
+| **Counterparty** | Someone the member wants to meet. May or may not be a Venn user. | Low-effort way to say yes and pick a time. |
 
 ### 2.3 Positioning against Boardy
 
 Boardy (boardy.ai) is an AI "superconnector": users message it on WhatsApp, email, ChatGPT or Claude, it interviews them, and it introduces them to people in **Boardy's** network after both sides opt in. It also books the meeting (connect Google Calendar once, or CC Boardy on a thread) and can join calls.
 
-| | Boardy | Heldly |
+| | Boardy | Venn |
 | :-- | :-- | :-- |
 | Whose network | Boardy's network of strangers | The user's own existing contacts |
 | Core job | New introductions | Keeping existing relationships warm |
@@ -101,11 +101,11 @@ Boardy already covers scheduling and already has ChatGPT and Claude entry points
 3. **Mutuality is the consent model.** One-sided follows grant no access.
 4. **We never see conversations.** We receive only what the user confirms into a tool call.
 5. **Agents propose, people confirm.** Irreversible actions (sending invites, booking) need a human yes, unless the user has set a standing rule.
-6. **Useful alone.** A member with zero connections on Heldly still gets value.
+6. **Useful alone.** A member with zero connections on Venn still gets value.
 
 ### 2.5 Scope
 
-**In scope for the pilot:** signals, mutual graph, network query, private contact memory, follow-up reminders, weekly email digest, Google Calendar scheduling between Heldly users.
+**In scope for the pilot:** signals, mutual graph, network query, private contact memory, follow-up reminders, weekly email digest, Google Calendar scheduling between Venn users.
 
 **Later:** scheduling with non-users by email, Microsoft calendars, warm intro suggestions, in-chat push events, directory listings.
 
@@ -133,7 +133,7 @@ Boardy already covers scheduling and already has ChatGPT and Claude entry points
 | 12 | MCP revision 2026-07-28 is stateless: no sessions, no `initialize` handshake, and a required `server/discover` method. Cross-call state travels as explicit handles in tool arguments. | MCP changelog | Build the server stateless from day one. |
 | 13 | MCP Sampling (server asks the host's model to generate) is deprecated. | MCP changelog | Our agents must call an LLM API with our own key. That cost is ours. |
 | 14 | OpenAI recommends separating data tools from render tools, and keeping every tool useful without UI. | OpenAI "Add UI to your MCP server" | Adopted in section 6.1. |
-| 15 | Both hosts gate when tools run: Claude users toggle connectors per conversation; ChatGPT users select a plugin with `@`. | Claude article; OpenAI "Connect and test" | The user has to have Heldly switched on in the chat. It is not ambient. |
+| 15 | Both hosts gate when tools run: Claude users toggle connectors per conversation; ChatGPT users select a plugin with `@`. | Claude article; OpenAI "Connect and test" | The user has to have Venn switched on in the chat. It is not ambient. |
 
 ### 3.2 Feasibility and difficulty by capability
 
@@ -144,13 +144,13 @@ Difficulty: 1 is routine, 3 is real integration work with known answers, 5 is un
 | Remote MCP server with typed tools | Yes | 2 | Official SDKs. Must handle old and new protocol revisions. |
 | OAuth 2.1 for both hosts | Yes | 3 | Routine with a hosted identity provider. Building our own authorization server would be a 5; do not. |
 | Inline UI on both hosts from one bundle | Yes | 3 | Standard is shared; expect per-host and mobile quirks. Needs a test matrix. |
-| Signal capture, user-initiated | Yes | 2 | "Update my Heldly" then confirm. |
+| Signal capture, user-initiated | Yes | 2 | "Update my Venn" then confirm. |
 | Signal capture, passive or ambient | **No** | 5 | Technically impossible (we do not see the chat) and against ChatGPT policy. |
 | Mutual-graph visibility | Yes | 2 | One SQL function; property-tested. |
 | Natural-language network query | Yes | 2 | The host model turns the question into tool arguments. We do filtering plus vector search. |
 | Private contact memory and cadence reminders | Yes | 2 | Plain CRUD plus a daily job. |
 | Google Calendar connect, free/busy, booking | Yes | 3 | Second OAuth flow; Google app verification for public launch. |
-| Scheduling between two Heldly users | Yes | 3 to 4 | The 4 is the asynchronous confirm. Standing booking rules bring it back to 3. |
+| Scheduling between two Venn users | Yes | 3 to 4 | The 4 is the asynchronous confirm. Standing booking rules bring it back to 3. |
 | Scheduling with non-users by email agent | Yes, later | 5 | Inbound email parsing, threading, time zones, an LLM in a loop with strangers. Boardy's core competence. |
 | Weekly digest by email | Yes | 2 | |
 | In-chat proactive nudges | Partly | 4 | ChatGPT Work chats only. Claude not confirmed. |
@@ -165,12 +165,12 @@ Difficulty: 1 is routine, 3 is real integration work with known answers, 5 is un
 
 | Capture path | How it works | Reliability |
 | :-- | :-- | :-- |
-| **Explicit** (P0) | User says "update my Heldly" or "share that with my network". The model drafts signals from the conversation it already has, shows them, and calls `publish_signals` only after the user confirms. | High |
-| **Skill-prompted** (P1) | Our packaged skill tells the model that when Heldly is enabled and the user has just described a plan or need, it may offer once to save it. | Medium. Model-dependent; must stay within "explicit user intent". |
-| **User's own instruction** (P1) | The user adds a line to their own custom instructions asking their AI to offer Heldly updates. This is the memo's V1 idea. It is the user's choice, so it is permitted. | Medium. Early adopters only. |
-| **Server-side sources** (P1) | After a Heldly-booked meeting, or from calendar metadata, our agent drafts a signal and puts it in the pending queue. | High, narrow |
+| **Explicit** (P0) | User says "update my Venn" or "share that with my network". The model drafts signals from the conversation it already has, shows them, and calls `publish_signals` only after the user confirms. | High |
+| **Skill-prompted** (P1) | Our packaged skill tells the model that when Venn is enabled and the user has just described a plan or need, it may offer once to save it. | Medium. Model-dependent; must stay within "explicit user intent". |
+| **User's own instruction** (P1) | The user adds a line to their own custom instructions asking their AI to offer Venn updates. This is the memo's V1 idea. It is the user's choice, so it is permitted. | Medium. Early adopters only. |
+| **Server-side sources** (P1) | After a Venn-booked meeting, or from calendar metadata, our agent drafts a signal and puts it in the pending queue. | High, narrow |
 
-**"Heldly only stores approved signals."** This holds for the explicit path if we design it carefully: the model shows drafts in the chat and calls us only on confirmation, so rejected drafts never reach our server. It does not hold for server-originated drafts, which must be stored as `pending` until reviewed. The privacy copy should say: "we store signals you approved, and drafts we generated ourselves that are waiting for your review".
+**"Venn only stores approved signals."** This holds for the explicit path if we design it carefully: the model shows drafts in the chat and calls us only on confirmation, so rejected drafts never reach our server. It does not hold for server-originated drafts, which must be stored as `pending` until reviewed. The privacy copy should say: "we store signals you approved, and drafts we generated ourselves that are waiting for your review".
 
 **"Weekly digest: approve, edit or delete."** With the explicit path there is usually nothing pending to approve. The digest's better job is a weekly brief: what changed in your network, who to reach out to, and which of your signals are going stale.
 
@@ -186,7 +186,7 @@ Difficulty: 1 is routine, 3 is real integration work with known answers, 5 is un
 | :-- | :-- | :-- |
 | Sign-in and consent | OAuth runs in a browser. | Identity provider's hosted pages. |
 | Calendar connect callback | Google's OAuth redirects to us. | One "connected, return to your chat" page. |
-| Invite landing | A new member arrives from an email link. | One page: what Heldly is, sign up, how to add the connector to ChatGPT or Claude. |
+| Invite landing | A new member arrives from an email link. | One page: what Venn is, sign up, how to add the connector to ChatGPT or Claude. |
 | Email action confirm | Email scanners pre-fetch links, so a link must never act on GET. | One page with a confirm button. |
 | Privacy policy, terms, support contact | Required by both directories. | Static pages. |
 | In-chat UI bundle | It is still HTML, CSS and JavaScript that we write. | One bundle with four small views (section 6.5). |
@@ -201,7 +201,7 @@ These should be confirmed in the Phase 0 spikes before anything depends on them.
 - Google's current classification of Calendar scopes and the user cap for unverified apps. From memory: Calendar scopes are "sensitive" (verification, no third-party security audit) and unverified apps are capped at 100 users. That would be fine for the pilot.
 - Whether both hosts honour app-only tool visibility (tools the UI can call but the model cannot). The field exists: the MCP Python SDK used in this repo accepts `visibility=["model", "app"]` on app tools. Whether each host enforces an app-only setting is untested. Section 8.3 relies on it and names a fallback.
 - Deep links that open ChatGPT or Claude with a pre-filled prompt.
-- Model behaviour: how often each host's model calls the right Heldly tool unprompted. Only measurable by testing.
+- Model behaviour: how often each host's model calls the right Venn tool unprompted. Only measurable by testing.
 
 ---
 
@@ -211,15 +211,15 @@ Priority: **P0** is required for the pilot, **P1** follows within the pilot peri
 
 ### 4.1 Core user journeys
 
-**J1. Onboarding.** A member receives an invite email, signs up, adds Heldly to ChatGPT or Claude, and authorises it. In the chat they are asked what they are working on and what they need; they confirm their first three signals; they are offered calendar connect.
+**J1. Onboarding.** A member receives an invite email, signs up, adds Venn to ChatGPT or Claude, and authorises it. In the chat they are asked what they are working on and what they need; they confirm their first three signals; they are offered calendar connect.
 
-**J2. Publish.** In any chat with Heldly enabled, the user says "add that to Heldly". The model drafts one or more signals. A review card shows them with edit and remove controls. The user approves. The signals are live to their audience.
+**J2. Publish.** In any chat with Venn enabled, the user says "add that to Venn". The model drafts one or more signals. A review card shows them with edit and remove controls. The user approves. The signals are live to their audience.
 
 **J3. Query.** "Who do I know working on AI tools in Berlin?" The model calls search, then renders a people card. Each person shows the matching signal, when it was posted, and actions: "why this match", "schedule", "log that we spoke".
 
 **J4. Brief.** "What's new in my network?" or the Monday email. Shows new signals from connections, matches to the user's own needs, follow-ups due, and the user's signals that are about to expire.
 
-**J5. Schedule.** "Set up 30 minutes with Teodor next week." Heldly checks both calendars and shows three slots. The user picks one. If Teodor allows auto-booking from this user, it is booked. Otherwise Teodor gets an email and an item in his next brief, and confirms.
+**J5. Schedule.** "Set up 30 minutes with Teodor next week." Venn checks both calendars and shows three slots. The user picks one. If Teodor allows auto-booking from this user, it is booked. Otherwise Teodor gets an email and an item in his next brief, and confirms.
 
 **J6. Keep warm.** The user says "remind me to check in with Mina every two months". When it is due, the brief says so, with Mina's latest signal as a reason to write.
 
@@ -230,7 +230,7 @@ Priority: **P0** is required for the pilot, **P1** follows within the pilot peri
 | ID | Requirement | Pri |
 | :-- | :-- | :-: |
 | A1 | Sign up by email invite; passwordless or social sign-in through the identity provider. | P0 |
-| A2 | One Heldly account can be linked from both ChatGPT and Claude and sees the same data. | P0 |
+| A2 | One Venn account can be linked from both ChatGPT and Claude and sees the same data. | P0 |
 | A3 | Send a connection request by email address. Accept or decline. Pending requests give no visibility. | P0 |
 | A4 | Remove a connection. The other party loses access to the user's signals immediately. | P0 |
 | A5 | Join a community by invite. Community scope is an explicit choice per signal. | P0 |
@@ -265,9 +265,9 @@ Priority: **P0** is required for the pilot, **P1** follows within the pilot peri
 
 | ID | Requirement | Pri |
 | :-- | :-- | :-: |
-| R1 | Private contact list, including people not on Heldly. Notes are never shared. | P0 |
+| R1 | Private contact list, including people not on Venn. Notes are never shared. | P0 |
 | R2 | Set a check-in cadence per contact. | P0 |
-| R3 | Log an interaction ("had coffee with Mina yesterday"). Heldly-booked meetings are logged automatically. | P0 |
+| R3 | Log an interaction ("had coffee with Mina yesterday"). Venn-booked meetings are logged automatically. | P0 |
 | R4 | Follow-ups due appear in the brief with a reason. | P0 |
 | R5 | When a connection's new signal matches one of my needs, I am told. | P1 |
 | R6 | Suggest a warm intro to a hub who knows both people. Both must accept. | P2 |
@@ -278,13 +278,13 @@ Priority: **P0** is required for the pilot, **P1** follows within the pilot peri
 | :-- | :-- | :-: |
 | C1 | Connect Google Calendar. Choose which calendars count as busy. | P0 |
 | C2 | Set working hours, buffers, minimum notice and default meeting length. | P0 |
-| C3 | Find mutual free slots between two Heldly users with calendars connected. | P0 |
+| C3 | Find mutual free slots between two Venn users with calendars connected. | P0 |
 | C4 | Propose slots; the counterparty accepts one or declines. | P0 |
 | C5 | On confirmation, create the event on both calendars with a video link. | P0 |
 | C6 | Cancel and reschedule. | P0 |
 | C7 | Standing rule per contact: "this person may book me within my rules without asking". | P1 |
 | C8 | Counterparty has no calendar connected: they pick from the organiser's free slots by email. | P1 |
-| C9 | Counterparty is not a Heldly user: an email agent negotiates the time. | P2 |
+| C9 | Counterparty is not a Venn user: an email agent negotiates the time. | P2 |
 | C10 | Microsoft 365 calendars. | P2 |
 | C11 | Three or more participants. | P2 |
 
@@ -328,8 +328,8 @@ Targets are hypotheses for the pilot, to be replaced by measured baselines.
 | Activation | Invited members who publish at least 3 signals in week one | 60% |
 | Freshness | Active members with a signal newer than 30 days | 50% |
 | Query use | Members running at least one network query per week | 40% |
-| Second meetings | Meetings booked through Heldly per active member per month | 1 |
-| Tool precision | Share of Heldly-relevant prompts where the model calls the right tool | 85% |
+| Second meetings | Meetings booked through Venn per active member per month | 1 |
+| Tool precision | Share of Venn-relevant prompts where the model calls the right tool | 85% |
 | Retention | Members active in week 8 | 40% |
 
 The last behavioural test of the idea is "second meetings". If queries happen but meetings do not, the product is a curiosity.
@@ -344,9 +344,9 @@ One principle sets the cost and the shape: **in-session intelligence belongs to 
 flowchart TD
     U[User] --> H1[ChatGPT]
     U --> H2[Claude]
-    H1 --> MCP[Heldly MCP server]
+    H1 --> MCP[Venn MCP server]
     H2 --> MCP
-    H1 -.renders.-> UI[Heldly UI bundle in host iframe]
+    H1 -.renders.-> UI[Venn UI bundle in host iframe]
     H2 -.renders.-> UI
     UI -.tool calls via host.-> MCP
     MCP --> IDP[Identity provider, OAuth 2.1]
@@ -407,7 +407,7 @@ The repository already has a working stack. Nothing in this design needs a diffe
 6. **Each operation is its own tool.** A generic "execute" tool is not allowed in the ChatGPT directory.
 7. **Responses contain what the request needs and no more.** Opaque IDs are returned only where a follow-up call needs them.
 
-Tool names below are written without a prefix for readability. The repo prefixes every tool with `heldly_`; new tools should follow that.
+Tool names below are written without a prefix for readability. The repo prefixes every tool with `venn_`; new tools should follow that.
 
 ### 6.2 OAuth scopes
 
@@ -467,18 +467,18 @@ Hints are shown as read-only / destructive / open-world.
 
 State rules, following OpenAI's guidance: the server is the source of truth; the component keeps only presentation state; selections the model should know about are sent with `ui/update-model-context`; nothing important goes in `localStorage`.
 
-The repo ships one bundle at `ui://heldly/app-v1.html` and selects the view from the tool result. That is simpler than one resource per component and should be kept. A breaking change publishes a new URI (`app-v2`), because hosts cache the template. The content security policy lists only the origins the bundle needs; today that is none.
+The repo ships one bundle at `ui://venn/app-v1.html` and selects the view from the tool result. That is simpler than one resource per component and should be kept. A breaking change publishes a new URI (`app-v2`), because hosts cache the template. The content security policy lists only the origins the bundle needs; today that is none.
 
 ### 6.6 Skills
 
 | Skill | Triggers when | Teaches the model |
 | :-- | :-- | :-- |
-| `heldly-update` | The user asks to share or save something to their network. | Draft at most three signals about the user only; show them; call `publish_signals` only after a yes; never include third-party or sensitive details. |
-| `heldly-find` | The user asks who they know. | Call `search_network`, reason over the results, then `show_people` with the filtered IDs. |
-| `heldly-schedule` | The user asks to set up a meeting. | Check calendar status, find times, render the picker, never claim a meeting is booked until the tool says so. |
-| `heldly-brief` | The user asks what is new or who to reach out to. | Call `get_brief`, then `show_brief`. |
+| `venn-update` | The user asks to share or save something to their network. | Draft at most three signals about the user only; show them; call `publish_signals` only after a yes; never include third-party or sensitive details. |
+| `venn-find` | The user asks who they know. | Call `search_network`, reason over the results, then `show_people` with the filtered IDs. |
+| `venn-schedule` | The user asks to set up a meeting. | Check calendar status, find times, render the picker, never claim a meeting is booked until the tool says so. |
+| `venn-brief` | The user asks what is new or who to reach out to. | Call `get_brief`, then `show_brief`. |
 
-Skill descriptions must describe real triggers and must not ask the model to prefer Heldly over other tools.
+Skill descriptions must describe real triggers and must not ask the model to prefer Venn over other tools.
 
 ### 6.7 Events (P2)
 
@@ -576,7 +576,7 @@ All text that came from another user (signal bodies, names, meeting titles) is r
 | Private contacts and notes | Yes | Third-party personal data. Minimal fields; no enrichment. |
 | Calendar tokens | Yes, encrypted | Revoked at Google on disconnect. |
 | Calendar event contents | No | Free/busy only, read live. |
-| Meetings booked by Heldly | Yes | Time, participants, provider event ID. |
+| Meetings booked by Venn | Yes | Time, participants, provider event ID. |
 | Embeddings of approved signals | Yes | Deleted with the signal. The embedding provider is a sub-processor. |
 | Query text | No | Counters only. |
 
@@ -597,9 +597,9 @@ All text that came from another user (signal bodies, names, meeting titles) is r
 sequenceDiagram
     participant U as User
     participant H as Host model
-    participant S as Heldly server
+    participant S as Venn server
     participant W as Signal review UI
-    U->>H: "Add that to Heldly"
+    U->>H: "Add that to Venn"
     H->>U: Drafts shown in chat
     U->>H: "Yes, but drop the second one"
     H->>S: publish_signals(drafts)
@@ -618,7 +618,7 @@ Rejected drafts never leave the host. If the checker refuses a signal, the tool 
 sequenceDiagram
     participant A as Organiser
     participant H as Host model
-    participant S as Heldly server
+    participant S as Venn server
     participant G as Google Calendar
     participant B as Counterparty
     A->>H: "30 minutes with Teodor next week"
@@ -763,7 +763,7 @@ create table connections (
 create index connections_high_idx on connections (user_high, status);
 create index connections_low_idx  on connections (user_low, status);
 
--- Private address book. Rows may point at a Heldly user or at someone outside it.
+-- Private address book. Rows may point at a Venn user or at someone outside it.
 create table contacts (
   id                  uuid primary key default gen_random_uuid(),
   owner_id            uuid not null references users(id) on delete cascade,
@@ -1207,17 +1207,17 @@ It covers: profile, consent-gated memories, invite-code connections with block a
 | Area | In the repo | In this document | Status |
 | :-- | :-- | :-- | :-- |
 | Audience | Friends and social life. Plugin category "Lifestyle". | Business users in professional communities. | **Conflict** |
-| Outreach | "Heldly never contacts anyone on the user's behalf." Stated in the README, the skill, the server instructions and the security doc. | Agents send invites and book meetings. | **Conflict** with the brief's headline feature |
+| Outreach | "Venn never contacts anyone on the user's behalf." Stated in the README, the skill, the server instructions and the security doc. | Agents send invites and book meetings. | **Conflict** with the brief's headline feature |
 | Hosts | ChatGPT only. | ChatGPT and Claude. | Claude untested |
 | Shared unit | `memories`: interests, dislikes, preferences, experiences. Private by default. Three visibility levels including `PUBLIC_PROFILE`. | `signals`: what I am doing and what I need. Shared by default. Expiring. | Different concept. The memo says there is no public profile. |
-| Network query | None. A friend's shared memories are read only inside `heldly_suggest_activity`, one connection at a time. | `search_network`, `get_person`. | Missing. This is the memo's core feature. |
+| Network query | None. A friend's shared memories are read only inside `venn_suggest_activity`, one connection at a time. | `search_network`, `get_person`. | Missing. This is the memo's core feature. |
 | Scheduling and calendar | None. | Section 7. | Missing |
 | Communities | None. | Communities and community-scoped signals. | Missing |
-| Contacts outside Heldly | None. | `contacts`. | Missing |
-| Keeping warm | `heldly_log_interaction`, `heldly_reconnection_suggestions` with a day threshold. | Per-contact cadence, nudges, weekly brief. | Partly there |
+| Contacts outside Venn | None. | `contacts`. | Missing |
+| Keeping warm | `venn_log_interaction`, `venn_reconnection_suggestions` with a day threshold. | Per-contact cadence, nudges, weekly brief. | Partly there |
 | Proactive delivery | None. | Email brief and transactional email. | Missing |
 | Background work | None. All work happens inside the tool call. | Queue and agent workers. | Missing |
-| Capture | `heldly_propose_memories` takes up to 4,000 characters of the user's words and model-drafted candidates, and stores a proposal for 24 hours. | The model drafts; the server receives confirmed signals only. | Different. See 11.3. |
+| Capture | `venn_propose_memories` takes up to 4,000 characters of the user's words and model-drafted candidates, and stores a proposal for 24 hours. | The model drafts; the server receives confirmed signals only. | Different. See 11.3. |
 | Consent gate | Saving needs a server-issued, single-use, owner-bound `proposal_id`, and accepts only indexes from that proposal. | App-only approval, or host confirmation. | The repo's gate is good. Keep it. |
 | Connections | Invite codes (72 hours, limited uses, revocable), requests, canonical pairs, blocks, abuse reports, daily rate limits. | Email invites and requests. | The repo is ahead here. This document left out abuse reporting and should not have. |
 | Identity | `users.auth_subject` only. No email. | Email plus identity rows. | Email is needed for invites, notifications and calendar matching. |
@@ -1231,8 +1231,8 @@ It covers: profile, consent-gated memories, invite-code connections with block a
 
 1. **Direction.** The repo and the brief describe different products that share a name and a consent model. Roughly a third of the repo carries over to the brief's product unchanged (auth, transport, the consent gate, connections, the widget shell). The rest of the brief's product is not started.
 
-2. **Raw user text reaches the server and a second OpenAI call.** `heldly_propose_memories` accepts a `text` argument of up to 4,000 characters. When `OPENAI_API_KEY` is set, that text is sent to the OpenAI API for extraction. The text itself is not stored, but the extracted candidates are, for 24 hours, whether or not the user approves them. This matters for three reasons:
-   - The memo promises that Heldly "never sees your raw conversations" and stores only approved signals. Neither is true of this flow.
+2. **Raw user text reaches the server and a second OpenAI call.** `venn_propose_memories` accepts a `text` argument of up to 4,000 characters. When `OPENAI_API_KEY` is set, that text is sent to the OpenAI API for extraction. The text itself is not stored, but the extracted candidates are, for 24 hours, whether or not the user approves them. This matters for three reasons:
+   - The memo promises that Venn "never sees your raw conversations" and stores only approved signals. Neither is true of this flow.
    - ChatGPT's guidelines tell tools not to request raw transcripts or broad context, and allow only a brief, task-specific intent field. A 4,000-character free-text field is a review risk.
    - The host model has already read the conversation and can draft the candidates itself through the existing `suggested` argument, at no cost to us. The server-side extraction duplicates that.
 
@@ -1301,7 +1301,7 @@ Demo script: user A shares what they are working on in ChatGPT; user B asks Clau
 
 Step 2 requires dropping the "never contacts anyone" rule, so it depends on question 1 in 13.2.
 
-Left out: email, background agents, communities, contacts outside Heldly, briefs.
+Left out: email, background agents, communities, contacts outside Venn, briefs.
 
 ---
 
@@ -1332,7 +1332,7 @@ Left out: email, background agents, communities, contacts outside Heldly, briefs
 6. **Default signal lifetime.** 90 days is a guess.
 7. **Default booking policy.** "Ask" is safe; "auto within rules" is the experience the brief describes.
 8. **Which host first if Phase 0 shows one is materially weaker,** for example on mobile?
-9. **Does the Rundbrief idea survive** as an outbound email to contacts who are not on Heldly? It would help the cold start and is not designed here.
+9. **Does the Rundbrief idea survive** as an outbound email to contacts who are not on Venn? It would help the cold start and is not designed here.
 
 ---
 

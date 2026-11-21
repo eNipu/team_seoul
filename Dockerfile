@@ -15,7 +15,7 @@ COPY backend/pyproject.toml backend/uv.lock ./
 RUN uv sync --frozen --no-dev
 COPY backend/ ./
 COPY --from=widget /widget/dist /app/widget/dist
-RUN useradd --create-home heldly
-USER heldly
+RUN useradd --create-home venn
+USER venn
 EXPOSE 8081
 CMD ["sh", "-c", "uv run --no-sync alembic upgrade head && uv run --no-sync uvicorn app.main:create_app --factory --host 0.0.0.0 --port 8081 --proxy-headers"]

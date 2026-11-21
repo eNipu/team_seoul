@@ -19,7 +19,7 @@ connection could help. Works from demo data.
    "You could help them". Each row shows the name, your line, their line, what matched, and
    days since you last met. Row actions: open the friend, "Ideas".
 3. Empty state: "No openings yet. Save what you're looking for, or what you can offer, and
-   Heldly will match it with the people you know."
+   Venn will match it with the people you know."
 4. `Friend.tsx`: a section "How this connection could help" when the array is not empty.
 5. Demo data for both directions, `?view=opportunities`, and the tool in the mock bridge.
 6. Wire into `App.tsx` (`refreshCall` too) and document in `widget/README.md`.

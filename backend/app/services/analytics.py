@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.models import AnalyticsEvent
 
-log = logging.getLogger("heldly.analytics")
+log = logging.getLogger("venn.analytics")
 
 EVENT_TYPES = {
     "profile_created",

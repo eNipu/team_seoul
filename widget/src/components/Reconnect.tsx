@@ -15,7 +15,7 @@ export default function Reconnect({ data, bridge, nav }: ViewProps<ReconnectView
   const done = data.candidates.filter((c) => logged.includes(keyOf(c)));
 
   function ideas(c: ReconnectCandidate) {
-    void action.run(`ideas-${keyOf(c)}`, () => nav.openView("heldly_suggest_activity", friendArg(c.kind, c.id)));
+    void action.run(`ideas-${keyOf(c)}`, () => nav.openView("venn_suggest_activity", friendArg(c.kind, c.id)));
   }
 
   function draft(c: ReconnectCandidate) {
@@ -25,9 +25,9 @@ export default function Reconnect({ data, bridge, nav }: ViewProps<ReconnectView
 
   function metUp(c: ReconnectCandidate) {
     void action.run(`log-${keyOf(c)}`, async () => {
-      const res = await bridge.callTool("heldly_log_interaction", friendArg(c.kind, c.id));
+      const res = await bridge.callTool("venn_log_interaction", friendArg(c.kind, c.id));
       if (!res.ok) return res.errorText;
-      if (!parseLogInteraction(res.data).recorded) return "Heldly couldn't log that.";
+      if (!parseLogInteraction(res.data).recorded) return "Venn couldn't log that.";
       setLogged((l) => [...l, keyOf(c)]);
       return null;
     });
@@ -72,7 +72,7 @@ export default function Reconnect({ data, bridge, nav }: ViewProps<ReconnectView
                     <div className="row row--wrap">
                       <strong className="card__title">{c.display_name}</strong>
                       <span className={`badge ${c.kind === "connection" ? "badge--on" : "badge--note"}`}>
-                        {c.kind === "connection" ? "On Heldly" : "Private note"}
+                        {c.kind === "connection" ? "On Venn" : "Private note"}
                       </span>
                     </div>
                     <span className="muted small">

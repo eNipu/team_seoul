@@ -13,11 +13,11 @@ BACKEND_DIR = Path(__file__).resolve().parent.parent
 REPO_DIR = BACKEND_DIR.parent
 
 ALL_SCOPES = [
-    "heldly.profile.read",
-    "heldly.profile.write",
-    "heldly.memories.read",
-    "heldly.memories.write",
-    "heldly.connections.manage",
+    "venn.profile.read",
+    "venn.profile.write",
+    "venn.memories.read",
+    "venn.memories.write",
+    "venn.connections.manage",
 ]
 
 
@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     environment: Literal["development", "test", "production"] = "development"
     log_level: str = "INFO"
 
-    database_url: str = f"sqlite:///{BACKEND_DIR / 'heldly.db'}"
+    database_url: str = f"sqlite:///{BACKEND_DIR / 'venn.db'}"
     supabase_url: str | None = None
     supabase_service_role_key: str | None = None
 

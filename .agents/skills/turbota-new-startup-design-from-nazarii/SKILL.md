@@ -1,18 +1,18 @@
 ---
 name: turbota-new-startup-design-from-nazarii
 description: >-
-  Optional Nazarii-inspired editorial design direction for Heldly in team_seoul.
+  Optional Nazarii-inspired editorial design direction for Venn in team_seoul.
   Use when the user asks for Nazarii's style, cinematic imagery, editorial layouts,
   handwritten accents, or a less generic interface. Adapt the visual principles
   to the existing React widget; do not import TURBOTA branding or product content.
 ---
 
-# Nazarii-inspired design for Heldly
+# Nazarii-inspired design for Venn
 
 ## Source and scope
 
 Adapted from the user-supplied `turbota-new-startup-design-from-nazarii` design skill.
-The original describes TURBOTA's People First Merch Studio, not Heldly.
+The original describes TURBOTA's People First Merch Studio, not Venn.
 This project-local edition keeps its transferable design principles, not the original
 company's copy, private conversations, screenshots, fonts, or implementation assets.
 No redistribution license was supplied; this adaptation does not grant rights to the
@@ -25,7 +25,7 @@ repositories, home-directory files, external skills, fonts, or backend services.
 
 1. Read `README.md`, `widget/README.md`, and the relevant existing components and styles.
    Identify the audience, the screen's single job, and the existing host theme.
-2. State a one-sentence visual direction tied to Heldly: helping people maintain
+2. State a one-sentence visual direction tied to Venn: helping people maintain
    meaningful relationships while retaining control of their information.
 3. Define a small set of semantic color roles, type sizes, spacing, and one signature
    element before editing. Preserve existing tokens where they already do the job.
@@ -47,7 +47,7 @@ repositories, home-directory files, external skills, fonts, or backend services.
 
 ## Boundaries
 
-- Keep Heldly's own names, content, and workflows. Do not introduce merch catalogs,
+- Keep Venn's own names, content, and workflows. Do not introduce merch catalogs,
   maker maps, WhatsApp buttons, TURBOTA slogans, or claims from the original project.
 - Respect the ChatGPT host's light/dark appearance; a white-only reference is not an
   instruction to remove theme support.

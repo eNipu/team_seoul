@@ -114,7 +114,7 @@ def _claims(**overrides):
         "sub": "user-1",
         "iat": now,
         "exp": now + 600,
-        "scope": "heldly.profile.read",
+        "scope": "venn.profile.read",
     }
     base.update(overrides)
     return base
@@ -125,7 +125,7 @@ async def test_jwt_verifier_accepts_valid_token(rsa_key):
     at = await _verifier(rsa_key).verify_token(token)
     assert at is not None
     assert at.subject == "user-1"
-    assert at.scopes == ["heldly.profile.read"]
+    assert at.scopes == ["venn.profile.read"]
 
 
 @pytest.mark.parametrize(

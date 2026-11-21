@@ -1,6 +1,6 @@
 # Backlog
 
-One line each. Not cut into tasks yet. "PRD §" points at the section of `Heldly PRD.md` to read
+One line each. Not cut into tasks yet. "PRD §" points at the section of `Venn PRD.md` to read
 when the item is picked up. Promote an item by writing a task file and adding it to the board.
 
 ## Next candidates

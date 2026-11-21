@@ -19,7 +19,7 @@ export type ToolOutcome =
 
 export interface HostBridge {
   readonly isMock: boolean;
-  /** Call a tool on the Heldly MCP server (proxied by the host). Never throws. */
+  /** Call a tool on the Venn MCP server (proxied by the host). Never throws. */
   callTool(name: string, args: Record<string, unknown>): Promise<ToolOutcome>;
   /** Update the model's context for future turns. Resolves false if unsupported/failed. */
   updateModelContext(text: string): Promise<boolean>;
@@ -132,7 +132,7 @@ class ExtAppsBridge implements HostBridge {
  * the host over postMessage.
  */
 export async function connectToHost(handlers: BridgeHandlers): Promise<HostBridge> {
-  const app = new App({ name: "heldly-widget", version: "1.0.0" }, {}, { autoResize: true });
+  const app = new App({ name: "venn-widget", version: "1.0.0" }, {}, { autoResize: true });
   const bridge = new ExtAppsBridge(app);
 
   app.ontoolinput = (params) => handlers.onToolInput(params.arguments);

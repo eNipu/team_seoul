@@ -23,7 +23,7 @@ def settings(tmp_path) -> Settings:
     return Settings(
         _env_file=None,
         environment="test",
-        database_url=TEST_DATABASE_URL or f"sqlite:///{tmp_path / 'heldly_test.db'}",
+        database_url=TEST_DATABASE_URL or f"sqlite:///{tmp_path / 'venn_test.db'}",
         public_base_url=BASE_URL,
         auth_mode="dev",
         dev_auth_secret="test-secret-test-secret-test-secret-123",  # noqa: S106

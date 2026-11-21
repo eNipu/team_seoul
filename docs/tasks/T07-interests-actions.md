@@ -14,12 +14,12 @@ without typing.
 ## Do
 
 1. On each friend row:
-   - the name opens `heldly_view_friend`;
-   - "Ideas" opens `heldly_suggest_activity`;
-   - "We met" calls `heldly_log_interaction`, then refreshes the card.
-2. Add `interests` to `refreshCall` so the card reloads through `heldly_show_interests`.
-3. On the dashboard, add an "Interests" entry that opens `heldly_show_interests`.
-4. Add `heldly_show_interests` to the mock bridge so the demo works end to end.
+   - the name opens `venn_view_friend`;
+   - "Ideas" opens `venn_suggest_activity`;
+   - "We met" calls `venn_log_interaction`, then refreshes the card.
+2. Add `interests` to `refreshCall` so the card reloads through `venn_show_interests`.
+3. On the dashboard, add an "Interests" entry that opens `venn_show_interests`.
+4. Add `venn_show_interests` to the mock bridge so the demo works end to end.
 5. Failed calls show the existing error banner with Retry and keep the card as it was.
 
 ## Done when

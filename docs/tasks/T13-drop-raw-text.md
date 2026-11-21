@@ -2,25 +2,25 @@
 
 **Status note.** Needs a team decision before work starts. The case for it is below.
 
-**Goal.** `heldly_propose_memories` accepts only the candidates the model drafted, not up to
+**Goal.** `venn_propose_memories` accepts only the candidates the model drafted, not up to
 4,000 characters of the user's own words.
 
 ## Why
 
 - With `OPENAI_API_KEY` set, that text is forwarded to a second OpenAI call. The site and the
-  memo both promise that Heldly does not see conversations.
+  memo both promise that Venn does not see conversations.
 - ChatGPT's plugin rules tell tools not to ask for raw transcripts or broad context. A free-text
   field of this size is a review risk.
 - The model has already read the conversation and can fill `suggested` itself, at no cost to us.
 
-Background: `Heldly PRD.md` §11.3, item 2.
+Background: `Venn PRD.md` §11.3, item 2.
 
 ## Read first
 
-- `backend/app/mcp/tools.py` › `heldly_propose_memories`
+- `backend/app/mcp/tools.py` › `venn_propose_memories`
 - `backend/app/services/memory_service.py` › `propose_memories`
 - `backend/app/ai/extraction.py`
-- `plugin/skills/heldly-social/SKILL.md` › "Memories are consent-based"
+- `plugin/skills/venn-social/SKILL.md` › "Memories are consent-based"
 
 ## Do
 
