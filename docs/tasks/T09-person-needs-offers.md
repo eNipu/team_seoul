@@ -1,6 +1,6 @@
 # T09 · Needs and offers on people notes
 
-**Goal.** For a friend who is not on Heldly, the user can note what that person is looking for
+**Goal.** For a friend who is not on Venn, the user can note what that person is looking for
 and what they offer. T10 matches these against the user's own needs and offers.
 
 ## Read first
@@ -9,7 +9,7 @@ and what they offer. T10 matches these against the user's own needs and offers.
 - `backend/app/models/person.py`
 - `backend/app/services/people_service.py` › `clean_interests`, `reject_sensitive`, `add_person`, `update_person`, `to_out`
 - `backend/app/schemas/social.py` › `PersonOut`
-- `backend/app/mcp/tools.py` › `heldly_add_person`, `heldly_update_person`
+- `backend/app/mcp/tools.py` › `venn_add_person`, `venn_update_person`
 - `widget/src/components/PersonForm.tsx`, `Friend.tsx`; `widget/src/types.ts` › `Person`
 - `CONTRACTS.md` › Needs and offers
 
@@ -22,7 +22,7 @@ and what they offer. T10 matches these against the user's own needs and offers.
    `PersonOut` returns them.
 4. Widget: two fields in `PersonForm` ("Looking for", "Can offer"), and both lists on the
    Friend card for a person. Update the demo data.
-5. Skill: one sentence under "Friends who are not on Heldly" with an example.
+5. Skill: one sentence under "Friends who are not on Venn" with an example.
 6. Docs: `docs/MCP_TOOLS.md`, `docs/DATA_MODEL.md`.
 
 ## Done when
@@ -35,4 +35,4 @@ and what they offer. T10 matches these against the user's own needs and offers.
 
 ## Not in this task
 
-Matching (T10). Anything about people who are on Heldly: their needs are memories (T08).
+Matching (T10). Anything about people who are on Venn: their needs are memories (T08).

@@ -1,6 +1,6 @@
 **IDEA MEMO · DRAFT 2**
 
-**Heldly**
+**Venn**
 
 *A queryable context layer for professional communities.*
 
@@ -49,7 +49,7 @@ Signals are not raw conversation data. They are structured, human-readable state
 
 **WHERE IT LIVES — NO SEPARATE APP**
 
-| Claude skill  ChatGPT action  sign-up only Heldly is a plugin for Claude and ChatGPT — the tools you already use every day. You add it once. It runs inside your existing AI. The only moment you leave your AI is when you first sign up and connect with someone. No new app to open. No dashboard to maintain. No feed to check. Your AI is the interface. |
+| Claude skill  ChatGPT action  sign-up only Venn is a plugin for Claude and ChatGPT — the tools you already use every day. You add it once. It runs inside your existing AI. The only moment you leave your AI is when you first sign up and connect with someone. No new app to open. No dashboard to maintain. No feed to check. Your AI is the interface. |
 | :---- |
 
  
@@ -67,12 +67,12 @@ Signals are not raw conversation data. They are structured, human-readable state
 
 Here is exactly what happens to your data, step by step.
 
-| \- | Does Heldly read my conversations with Claude or ChatGPT? No. Heldly never sees your raw conversations. It only receives structured signal suggestions that your AI generates and surfaces to you — like a summary your assistant writes, which you then review. The conversation itself stays inside Claude or ChatGPT. |
+| \- | Does Venn read my conversations with Claude or ChatGPT? No. Venn never sees your raw conversations. It only receives structured signal suggestions that your AI generates and surfaces to you — like a summary your assistant writes, which you then review. The conversation itself stays inside Claude or ChatGPT. |
 | :---- | :---- |
 | \- | **What actually gets shared with my network?** Only signals you explicitly approve. A signal is a short, plain-language statement — "exploring a new startup idea," "looking for a designer," "going to Berlin in May." Nothing is shared automatically. Nothing is shared without your tap. |
 | \- | **Who can see my approved signals?** Only people you have mutually connected with — meaning you both chose each other. One-sided follows give no access. There is no public profile, no searchable directory, no feed. Your signals are invisible to everyone outside your mutual connections. |
 | \- | **Can I delete a signal after approving it?** Yes, at any time. Signals can be deleted individually. When deleted, they are removed from every query result immediately. You can also disconnect from someone entirely, which revokes their access to all your signals instantly. |
-| \- | **What data does Heldly store?** Only approved signals, your connection graph, and your account email. That is the complete list. No conversation history. No behavioral data. No inference about you beyond what you explicitly approved. |
+| \- | **What data does Venn store?** Only approved signals, your connection graph, and your account email. That is the complete list. No conversation history. No behavioral data. No inference about you beyond what you explicitly approved. |
 
  
 

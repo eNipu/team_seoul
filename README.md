@@ -1,7 +1,7 @@
-# Heldly — ChatGPT plugin
+# Venn — ChatGPT plugin
 
-Heldly is a ChatGPT-native AI social companion. It remembers what matters to you — **only what
-you approve** — and helps you stay close to friends, whether or not they use Heldly:
+Venn is a ChatGPT-native AI social companion. It remembers what matters to you — **only what
+you approve** — and helps you stay close to friends, whether or not they use Venn:
 invite-code connections, private notes on friends who aren't on it (import a whole list at
 once), "who do I know who…" search, activity ideas for one friend or a group, a brief before
 you meet and a recap after, reconnection nudges, and a quiz on how well you know your friends.
@@ -11,7 +11,14 @@ This repo contains the first version of the plugin:
 
 - **MCP server** (`backend/`): Python, FastAPI + the official MCP Python SDK, streamable HTTP at `/mcp`, OAuth, SQLAlchemy 2 + Alembic (Postgres/Supabase, SQLite for dev).
 - **Widget** (`widget/`): React UI rendered inside ChatGPT via MCP Apps (memory review, ChatGPT-memory import, home, invite with QR code, friend, activity ideas, reconnect, people import, people search, group plan, meetup brief and quiz cards).
-- **Plugin package** (`plugin/`): `plugin.json`, `mcp.json`, and the `heldly-social` skill.
+- **Plugin package** (`plugin/`): `plugin.json`, `mcp.json`, and the `venn-social` skill.
+- **Site** (`site/`): the public landing page, waitlist and `/metrics` (Next.js). See `site/README.md`.
+
+The product was called Heldly before it became Venn, and the rename went all the way down: tool
+names (`venn_save_memories`), OAuth scopes (`venn.profile.read`), the `ui://venn/app-v4.html`
+resource, the skill folder, and the Docker and database names. Anything set up under the old name
+has to be redone once: reconnect the server in ChatGPT, use the new scopes at the IdP, and see
+"Coming from Heldly" under Dev loop and troubleshooting for a local database.
 
 The one game is a quiz built from what friends chose to share; there are no other games.
 
@@ -31,7 +38,7 @@ discovery headers — that's expected.
 With Docker (Postgres + server, migrations applied on start):
 
 ```bash
-make docker-up                 # HELDLY_PORT / HELDLY_DB_PORT override 8081 / 5432
+make docker-up                 # VENN_PORT / VENN_DB_PORT override 8081 / 5432
 make test-postgres             # run the test suite against Postgres
 ```
 
@@ -89,26 +96,26 @@ curl https://abc123.ngrok-free.app/.well-known/oauth-protected-resource/mcp  # O
    - URL: `https://abc123.ngrok-free.app/mcp`
    - Authentication: **OAuth** (leave client ID/secret empty; ChatGPT registers itself)
 3. Choose **Create as plugin** and connect.
-4. A Heldly **dev sign-in** page opens. Enter any username (e.g. `alice`), a display name, and
-   your `DEV_AUTH_PASSCODE`. The username becomes your Heldly identity.
+4. A Venn **dev sign-in** page opens. Enter any username (e.g. `alice`), a display name, and
+   your `DEV_AUTH_PASSCODE`. The username becomes your Venn identity.
 
 Or install the packaged plugin from the repo marketplace: `.agents/plugins/marketplace.json`
 points at `./plugin`. Set the `url` in `plugin/mcp.json` to your tunnel's `/mcp` URL first.
 
 ### 6. Try it
 
-Start a new chat, enable Heldly, and try the prompts below. Heldly is meant to open with a
-card: any opening prompt ("open Heldly", "set up my Heldly profile") should show the home or
+Start a new chat, enable Venn, and try the prompts below. Venn is meant to open with a
+card: any opening prompt ("open Venn", "set up my Venn profile") should show the home or
 welcome card rather than a text answer.
 
-- *"Set up my Heldly profile. I love bouldering and ramen, and I want to meet new people."*
+- *"Set up my Venn profile. I love bouldering and ramen, and I want to meet new people."*
   A memory review card appears; nothing is saved until you approve it.
-- *"Show my Heldly dashboard"* — a brand-new account gets a welcome card instead
-- *"Import my ChatGPT memory into Heldly"* — pick the areas on the card; ChatGPT lists what it
+- *"Show my Venn dashboard"* — a brand-new account gets a welcome card instead
+- *"Import my ChatGPT memory into Venn"* — pick the areas on the card; ChatGPT lists what it
   remembers about you in the chat, you say which to keep, and those come back as a review
   card. Needs ChatGPT's Memory to be on and to know something about you.
-- *"Create a Heldly invite code"*
-- *"Add my friend Maya to Heldly — college roommate, loves hiking, haven't seen her in two months"*
+- *"Create a Venn invite code"*
+- *"Add my friend Maya to Venn — college roommate, loves hiking, haven't seen her in two months"*
 - *"What could I do with Maya?"*
 - *"Who should I reconnect with?"*
 - *"What did I save about food?"*
@@ -118,11 +125,11 @@ welcome card rather than a text answer.
 - *"Plan something for me, Hana and Diego"*
 - *"I'm seeing Maya tomorrow — brief me"*, and afterwards *"I had dinner with Maya, she got
   promoted; remind me to ask about Busan"*
-- *"Quiz me on Jun"* or *"Play the Heldly quiz"* (needs friends who have shared a few things)
+- *"Quiz me on Jun"* or *"Play the Venn quiz"* (needs friends who have shared a few things)
 
 **Demo data:** most of these need friends. `make seed me=<your dev username>` adds three
 demo connections (with shared memories and past hangouts), a pending request and five notes
-about people who aren't on Heldly; it adds memories of your own only if you have none.
+about people who aren't on Venn; it adds memories of your own only if you have none.
 `make seed-remove me=<your dev username>` takes the demo data out again. Start a new chat
 afterwards.
 
@@ -147,36 +154,41 @@ connect to `https://abc123.ngrok-free.app/mcp`).
 - **Tools missing or out of date:** after adding or changing tools, refresh the connector in
   ChatGPT settings.
 - **Server logs** show every MCP request; set `LOG_LEVEL=DEBUG` in `.env` for more detail.
-- **Start over:** stop the server and delete `backend/heldly.db`. It is recreated on the next
+- **Start over:** stop the server and delete `backend/venn.db`. It is recreated on the next
   start.
+- **Coming from Heldly:** the default SQLite file is now `backend/venn.db`; rename an old
+  `backend/heldly.db` to keep its data. Docker Compose now creates a `venn` Postgres user and
+  database, so an old volume has to be removed (`docker compose down -v`, which deletes its data) or
+  dumped and restored. `HELDLY_PORT` / `HELDLY_DB_PORT` are now `VENN_PORT` / `VENN_DB_PORT`. Tokens issued
+  with `heldly.*` scopes are rejected: disconnect and reconnect in ChatGPT.
 
 ## How it works
 
 ```
 ChatGPT ──MCP (OAuth bearer)──▶ FastAPI /mcp ──▶ services ──▶ Postgres
-   └─ widget iframe ◀── ui://heldly/app-v4.html  (calls tools back through the host)
+   └─ widget iframe ◀── ui://venn/app-v4.html  (calls tools back through the host)
 ```
 
-- **Consent-based memories**: `heldly_propose_memories` creates a server-side proposal and
+- **Consent-based memories**: `venn_propose_memories` creates a server-side proposal and
   shows a review card — nothing is saved. Only items the user approves are saved with
-  `heldly_save_memories` (default visibility `PRIVATE`).
-- **Import from ChatGPT memory**: Heldly cannot read ChatGPT's memory, so
-  `heldly_import_chatgpt_memory` shows a card that asks ChatGPT to list what it remembers in
+  `venn_save_memories` (default visibility `PRIVATE`).
+- **Import from ChatGPT memory**: Venn cannot read ChatGPT's memory, so
+  `venn_import_chatgpt_memory` shows a card that asks ChatGPT to list what it remembers in
   the chat; only what you pick is proposed (`source: "chatgpt_memory"`) and only what you
   confirm is saved.
 - **Connections**: invite code → connection request → friend accepts. Block/report built in.
-- **Friends who aren't on Heldly**: private, owner-only notes (`heldly_add_person`) so they get
+- **Friends who aren't on Venn**: private, owner-only notes (`venn_add_person`) so they get
   activity ideas and reconnection nudges too. Never shared, never used to contact anyone.
 - **Staying close**: a friend card, activity ideas from interests *both* people chose to share
   (or from your own notes), hangout logging, reconnection suggestions.
-- **Import with review**: `heldly_propose_people_import` shows up to 50 candidates on a card;
+- **Import with review**: `venn_propose_people_import` shows up to 50 candidates on a card;
   only the ones the user ticks are added. Contact details are stripped.
-- **Find and plan**: `heldly_find_people` searches your notes and what friends shared;
-  `heldly_plan_group` finds common ground for 2–6 friends.
-- **Meetups**: `heldly_meetup_brief` before, `heldly_recap_meetup` after; follow-ups ("ask
+- **Find and plan**: `venn_find_people` searches your notes and what friends shared;
+  `venn_plan_group` finds common ground for 2–6 friends.
+- **Meetups**: `venn_meetup_brief` before, `venn_recap_meetup` after; follow-ups ("ask
   about…") carry over to the next brief. "Add to calendar" opens a prefilled Google Calendar
-  link — Heldly has no calendar access.
-- **Quiz**: `heldly_start_quiz` — "How well do you know Jun?" or "Who's who in your circle?".
+  link — Venn has no calendar access.
+- **Quiz**: `venn_start_quiz` — "How well do you know Jun?" or "Who's who in your circle?".
   Uses only what friends shared with connections; scores aren't stored.
 - **Invite link + QR**: the invite card shows a QR code for `/i/{CODE}`, a page with the code
   and how to redeem it.
@@ -200,8 +212,8 @@ See [.env.example](.env.example). Key settings:
 ## Production
 
 1. Pick an OAuth IdP (Auth0, Clerk, Supabase Auth, …), create an API with audience
-   `https://<host>/mcp` and scopes `heldly.profile.read heldly.profile.write
-   heldly.memories.read heldly.memories.write heldly.connections.manage`, enable DCR/PKCE.
+   `https://<host>/mcp` and scopes `venn.profile.read venn.profile.write
+   venn.memories.read venn.memories.write venn.connections.manage`, enable DCR/PKCE.
 2. Set `ENVIRONMENT=production`, `AUTH_MODE=jwt`, `OAUTH_*`, `DATABASE_URL`, `PUBLIC_BASE_URL`.
 3. Deploy the `Dockerfile` (it builds the widget, runs `alembic upgrade head`, starts uvicorn).
 4. Point `plugin/mcp.json` at `https://<host>/mcp`, fill real URLs in `plugin/plugin.json`
@@ -209,10 +221,31 @@ See [.env.example](.env.example). Key settings:
 
 See [docs/SECURITY.md](docs/SECURITY.md) for the full checklist.
 
+### What runs on Railway today
+
+Railway project `heldly` (the old product name), environment `production`:
+
+| Service | URL | Notes |
+| --- | --- | --- |
+| `backend` | `https://backend-production-a7fad591.up.railway.app` (MCP at `/mcp`) | Built from the root `Dockerfile` |
+| `site` | `https://site-production-4ef8eb52.up.railway.app` | See `site/README.md` |
+| `Postgres` | private network only | Used by both |
+
+The backend is **not** in production mode. There is no identity provider yet, so it runs with
+`ENVIRONMENT=development` and `AUTH_MODE=dev`: the built-in sign-in page, behind
+`DEV_AUTH_PASSCODE` (in the service's Variables tab). Anyone who has the passcode can sign in
+under any username, so share it with the team only and do steps 1 and 2 above before real
+users arrive.
+
+```bash
+railway up --service backend --environment production --ci -m "what changed"   # from the repo root
+curl https://backend-production-a7fad591.up.railway.app/readyz
+```
+
 ## Repository layout
 
 ```
-plugin/                     plugin.json, mcp.json, skills/heldly-social/SKILL.md, assets/
+plugin/                     plugin.json, mcp.json, skills/venn-social/SKILL.md, assets/
 .agents/plugins/            local marketplace entry
 backend/
   app/main.py               FastAPI app factory (uvicorn app.main:create_app --factory)
@@ -224,6 +257,7 @@ backend/
   app/models/, migrations/  SQLAlchemy models, Alembic
   tests/                    unit/, integration/, security/
 widget/                     React + Vite single-file MCP App
+site/                       Next.js landing page, waitlist API and /metrics
 docs/                       ARCHITECTURE, DATA_MODEL, MCP_TOOLS, SECURITY
 Makefile, Dockerfile, docker-compose.yml, .env.example
 ```

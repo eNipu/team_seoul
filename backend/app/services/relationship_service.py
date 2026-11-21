@@ -1,9 +1,9 @@
 """Relationship maintenance: friend view, activity ideas, hangout log, reconnection nudges,
 finding people by interest, group plans, meetup briefs/recaps and follow-ups.
 
-A "friend" is either a mutual Heldly connection or a private person note (someone not on
-Heldly). Rules:
-- Heldly never contacts anyone; every suggestion is only shown to the requesting user.
+A "friend" is either a mutual Venn connection or a private person note (someone not on
+Venn). Rules:
+- Venn never contacts anyone; every suggestion is only shown to the requesting user.
 - For connections, only the friend's non-PRIVATE memories are ever read.
 - Person notes are owner-only and never leave the owner's account.
 - Unknown, foreign and blocked ids are indistinguishable (NOT_FOUND).
@@ -88,7 +88,7 @@ _GROUP_IDEAS: list[tuple[str, str]] = [
     ("Picnic in the park", "Low effort, easy to join late, and nobody has to host."),
     ("Board game night", "A couple of easy games so everyone can jump in."),
 ]
-_NO_CONTACT = "Propose a time yourself — Heldly won't contact them for you."
+_NO_CONTACT = "Propose a time yourself — Venn won't contact them for you."
 MAX_OPEN_FOLLOW_UPS = 20
 MAX_FOLLOW_UP_LEN = 200
 MIN_GROUP, MAX_GROUP = 2, 6
@@ -273,7 +273,7 @@ def view_friend(db: Session, user: User, connection_id: str | None = None, perso
             kind="person",
             id=friend.id,
             display_name=friend.display_name,
-            on_heldly=False,
+            on_venn=False,
             since=friend.since,
             last_interaction_at=friend.last_interaction_at,
             relationship=person.relationship,
@@ -290,7 +290,7 @@ def view_friend(db: Session, user: User, connection_id: str | None = None, perso
         kind="connection",
         id=friend.id,
         display_name=friend.display_name,
-        on_heldly=True,
+        on_venn=True,
         since=friend.since,
         last_interaction_at=friend.last_interaction_at,
         bio=bio,
@@ -309,7 +309,7 @@ def suggest_activity(
     shared = shared_terms(my_terms(db, user), friend)
     days = days_since(friend)
 
-    base = "You're connected on Heldly (+0.2)." if friend.kind == "connection" else "They're in your circle (+0.2)."
+    base = "You're connected on Venn (+0.2)." if friend.kind == "connection" else "They're in your circle (+0.2)."
     score = 0.2
     explanation = [base]
     if shared:
@@ -497,7 +497,7 @@ def meetup_brief(db: Session, user: User, connection_id: str | None = None, pers
         kind=friend.kind,
         id=friend.id,
         display_name=friend.display_name,
-        on_heldly=friend.kind == "connection",
+        on_venn=friend.kind == "connection",
         relationship=friend.person.relationship if friend.person else None,
         notes=friend.person.notes if friend.person else None,
         last_interaction_at=friend.last_interaction_at,
@@ -524,7 +524,7 @@ def recap_meetup(
 ) -> RecapOut:
     """Log a meetup and what to remember from it, in one step.
 
-    Private notes and interests exist only for people who are not on Heldly; for a connection
+    Private notes and interests exist only for people who are not on Venn; for a connection
     `notes_to_add` and `new_interests` are ignored and `notes_updated` is False.
     """
     friend = resolve(db, user, connection_id, person_id)
@@ -671,7 +671,7 @@ def find_people(db: Session, user: User, query: str, limit: int = 8) -> PeopleSe
                     kind=friend.kind,
                     id=friend.id,
                     display_name=friend.display_name,
-                    on_heldly=friend.kind == "connection",
+                    on_venn=friend.kind == "connection",
                     relationship=friend.person.relationship if friend.person else None,
                     matched=matched[:5],
                     snippet=snippet,

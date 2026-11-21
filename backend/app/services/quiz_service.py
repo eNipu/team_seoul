@@ -3,7 +3,7 @@
 - Friend quiz ("How well do you know Jun?"): built only from memories the friend chose to share
   with connections. PRIVATE memories are never read.
 - Circle quiz ("Who's who in your circle?"): built from what connections shared and from the
-  user's own notes about people who are not on Heldly.
+  user's own notes about people who are not on Venn.
 - Wrong options come from the user's own memories, what their other friends shared with them,
   and a generic pool; an option is never something the quizzed friend also shared.
 - Answers are checked in the widget. Nothing about a quiz is stored and nobody is notified.

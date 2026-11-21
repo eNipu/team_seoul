@@ -6,14 +6,14 @@ description: >
   exports, accessibility, typography, layout, color, dark mode, navigation, forms, onboarding,
   icons, motion, Liquid Glass, Apple Pay, and less generic visual design. Supports web,
   SwiftUI, UIKit, AppKit, Flutter, React Native, Tauri, and Electron. In team_seoul, apply
-  web foundations to Heldly's embedded React widget rather than native-only Apple conventions.
+  web foundations to Venn's embedded React widget rather than native-only Apple conventions.
 ---
 
 # Apple Design Skill
 
 ## team_seoul scope
 
-This project builds Heldly's React web widget embedded in ChatGPT, not a native Apple app.
+This project builds Venn's React web widget embedded in ChatGPT, not a native Apple app.
 Apply the web accessibility, typography, color, layout, and interaction foundations; do not
 force native tab bars, window controls, or Apple-specific branding onto the widget.
 Preserve the host theme, consent controls, and narrow iframe behavior.

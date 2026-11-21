@@ -23,9 +23,9 @@ export default function FollowUps({ bridge, friend, name, initial }: Props) {
 
   function complete(item: FollowUp) {
     void action.run(`done-${item.follow_up_id}`, async () => {
-      const res = await bridge.callTool("heldly_complete_follow_up", { follow_up_id: item.follow_up_id });
+      const res = await bridge.callTool("venn_complete_follow_up", { follow_up_id: item.follow_up_id });
       if (!res.ok) return res.errorText;
-      if (!isObj(res.data) || res.data.done !== true) return "Heldly couldn't tick that off.";
+      if (!isObj(res.data) || res.data.done !== true) return "Venn couldn't tick that off.";
       setDone((d) => [...d, item.follow_up_id]);
       return null;
     });
@@ -36,9 +36,9 @@ export default function FollowUps({ bridge, friend, name, initial }: Props) {
     const value = text.trim();
     if (!value) return;
     void action.run("add", async () => {
-      const res = await bridge.callTool("heldly_add_follow_up", { ...friend, text: value });
+      const res = await bridge.callTool("venn_add_follow_up", { ...friend, text: value });
       if (!res.ok) return res.errorText;
-      if (!hasId(res.data, "follow_up_id")) return "Heldly didn't confirm that. Try again.";
+      if (!hasId(res.data, "follow_up_id")) return "Venn didn't confirm that. Try again.";
       setItems((list) => [...list, parseFollowUp(res.data)]);
       setText("");
       return null;

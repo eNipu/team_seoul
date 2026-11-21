@@ -1,6 +1,6 @@
 """DEVELOPMENT-ONLY OAuth 2.1 authorization server (DCR + PKCE + simple login page).
 
-Lets you connect ChatGPT (or MCP Inspector) to a local Heldly server without an external
+Lets you connect ChatGPT (or MCP Inspector) to a local Venn server without an external
 identity provider. The "login" lets the developer choose a username, so it provides NO real
 authentication — it is refused when ENVIRONMENT=production (see app.config.Settings) and can be
 gated with DEV_AUTH_PASSCODE when exposed through a tunnel.
@@ -288,9 +288,9 @@ def _page(error: str | None, txn: str, need_passcode: bool = False) -> str:
         else ""
     )
     return f"""<!doctype html><html><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><title>Heldly dev sign-in</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Venn dev sign-in</title>
 <style>body{{font-family:system-ui;max-width:420px;margin:48px auto;padding:0 16px;color:#222}}
 label{{display:block;margin:12px 0}}input{{display:block;width:100%;padding:8px;margin-top:4px;box-sizing:border-box}}
-button{{padding:10px 16px;background:#e86a4a;color:#fff;border:0;border-radius:8px;font-size:16px}}
+button{{padding:10px 16px;background:#000;color:#fff;border:0;border-radius:999px;font-size:16px}}
 .err{{color:#b00020}}.warn{{background:#fff4e5;padding:8px;border-radius:6px;font-size:14px}}</style></head>
-<body><h1>Heldly</h1><p class="warn">Development sign-in. Not for production use.</p>{err}{form}</body></html>"""
+<body><h1>Venn</h1><p class="warn">Development sign-in. Not for production use.</p>{err}{form}</body></html>"""

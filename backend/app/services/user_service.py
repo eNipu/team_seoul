@@ -11,7 +11,7 @@ from app.services import analytics
 
 
 def get_or_create_user(db: Session, auth_subject: str, display_name_hint: str | None = None) -> tuple[User, bool]:
-    """Resolve (or provision) the Heldly user for a validated token subject."""
+    """Resolve (or provision) the Venn user for a validated token subject."""
     user = db.scalar(select(User).where(User.auth_subject == auth_subject))
     if user:
         return user, False
@@ -27,7 +27,7 @@ def get_or_create_user(db: Session, auth_subject: str, display_name_hint: str | 
 def display_name(user: User | None) -> str:
     if user is None:
         return "Someone"
-    return user.display_name or "A Heldly friend"
+    return user.display_name or "A Venn friend"
 
 
 def _ensure_profile(db: Session, user: User) -> UserProfile:

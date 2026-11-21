@@ -16,7 +16,7 @@ import GroupPlan from "./components/GroupPlan";
 import Brief from "./components/Brief";
 import Quiz from "./components/Quiz";
 import ErrorBanner from "./components/ErrorBanner";
-import { Spinner, type Nav } from "./components/common";
+import { Spinner, VennMark, type Nav } from "./components/common";
 
 const inHost = typeof window !== "undefined" && window.parent !== window;
 
@@ -30,18 +30,18 @@ type SkeletonKind = "dashboard" | "profile" | "ticket" | "cards";
 
 function skeletonFor(hint: string | null | undefined): SkeletonKind {
   switch (hint) {
-    case "heldly_show_dashboard":
+    case "venn_show_dashboard":
     case "dashboard":
       return "dashboard";
-    case "heldly_view_friend":
+    case "venn_view_friend":
     case "friend":
     case "friend_person":
     case "welcome":
-    case "heldly_meetup_brief":
+    case "venn_meetup_brief":
     case "brief":
     case "brief_person":
       return "profile";
-    case "heldly_create_invite":
+    case "venn_create_invite":
     case "invite":
       return "ticket";
     default:
@@ -53,15 +53,15 @@ function skeletonFor(hint: string | null | undefined): SkeletonKind {
 function refreshCall(view: ViewData): { tool: string; args: Record<string, unknown> } | null {
   switch (view.view) {
     case "dashboard":
-      return { tool: "heldly_show_dashboard", args: {} };
+      return { tool: "venn_show_dashboard", args: {} };
     case "reconnect":
-      return { tool: "heldly_reconnection_suggestions", args: {} };
+      return { tool: "venn_reconnection_suggestions", args: {} };
     case "friend":
-      return view.id ? { tool: "heldly_view_friend", args: friendArg(view.kind, view.id) } : null;
+      return view.id ? { tool: "venn_view_friend", args: friendArg(view.kind, view.id) } : null;
     case "brief":
-      return view.id ? { tool: "heldly_meetup_brief", args: friendArg(view.kind, view.id) } : null;
+      return view.id ? { tool: "venn_meetup_brief", args: friendArg(view.kind, view.id) } : null;
     case "people_search":
-      return view.query ? { tool: "heldly_find_people", args: { query: view.query } } : null;
+      return view.query ? { tool: "venn_find_people", args: { query: view.query } } : null;
     default:
       return null;
   }
@@ -125,7 +125,7 @@ export default function App() {
         toolRunning.current = false;
         setLoading(false);
         if (result.isError) {
-          setError(extractText(result) || "Heldly couldn't complete that request.");
+          setError(extractText(result) || "Venn couldn't complete that request.");
           return;
         }
         const parsed = parseView(result.structuredContent);
@@ -165,13 +165,13 @@ export default function App() {
   const loadView = useCallback(
     async (tool: string, args: Record<string, unknown>, replace: boolean): Promise<string | null> => {
       const b = bridgeRef.current;
-      if (!b) return "Heldly isn't connected yet.";
+      if (!b) return "Venn isn't connected yet.";
       const gen = generation.current;
       const res = await b.callTool(tool, args);
       if (gen !== generation.current) return null; // superseded by a host-delivered result
       if (!res.ok) return res.errorText;
       const parsed = parseView(res.data);
-      if (!parsed) return "Heldly sent something this widget can't show yet.";
+      if (!parsed) return "Venn sent something this widget can't show yet.";
       setError(null);
       const cur = stackRef.current;
       setStack([...(replace ? cur.slice(0, -1) : cur), entry(parsed)]);
@@ -225,16 +225,16 @@ export default function App() {
   const top = stack.length > 0 ? stack[stack.length - 1] : null;
 
   return (
-    <div className="heldly">
-      <header className="heldly__header">
+    <div className="venn">
+      <header className="venn__header">
         {canGoBack && !showSkeleton && (
           <button type="button" className="btn btn--ghost btn--small back" onClick={back}>
             <span aria-hidden="true">←</span> Back
           </button>
         )}
-        <span className="logo" aria-hidden="true">♡</span>
-        <span className="heldly__brand">Heldly</span>
-        <span className="heldly__spacer" />
+        <VennMark />
+        <span className="venn__brand">Venn</span>
+        <span className="venn__spacer" />
         {refreshing && <Spinner label="Refreshing" />}
         {bridge?.isMock && <span className="badge badge--demo">Demo mode</span>}
       </header>
@@ -358,8 +358,8 @@ function EmptyState({ demo }: { demo: boolean }) {
   return (
     <div className="panel empty">
       <div className="empty__art" aria-hidden="true">☕</div>
-      <p className="empty__title">Hi, I'm Heldly.</p>
-      <p className="muted">Ask Heldly to get to know you, remember something, or show your dashboard</p>
+      <p className="empty__title">Hi, I'm Venn.</p>
+      <p className="muted">Ask Venn to get to know you, remember something, or show your dashboard</p>
       {demo && (
         <div className="demo-links">
           <p className="small muted">Demo views</p>

@@ -7,9 +7,9 @@ these against friends.
 
 - `backend/app/schemas/memory.py` › `MemoryCategory`
 - `backend/app/ai/extraction.py` › `SYSTEM_PROMPT`, `_PATTERNS`, `_TITLE_PREFIX`
-- `backend/app/mcp/tools.py` › `heldly_propose_memories` (description text)
+- `backend/app/mcp/tools.py` › `venn_propose_memories` (description text)
 - `widget/src/types.ts` › `MEMORY_CATEGORIES`, `CATEGORY_LABELS`; `widget/src/styles.css` › `badge--cat-`
-- `plugin/skills/heldly-social/SKILL.md` › "Memories are consent-based"
+- `plugin/skills/venn-social/SKILL.md` › "Memories are consent-based"
 - `CONTRACTS.md` › Needs and offers
 
 ## Do

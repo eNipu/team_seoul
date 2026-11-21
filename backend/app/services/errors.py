@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 
-class HeldlyError(Exception):
+class VennError(Exception):
     code = "ERROR"
 
     def __init__(self, message: str):
@@ -14,35 +14,35 @@ class HeldlyError(Exception):
         return f"{self.code}: {self.message}"
 
 
-class NotFound(HeldlyError):
+class NotFound(VennError):
     """Also used for resources the caller may not see (avoids leaking existence)."""
 
     code = "NOT_FOUND"
 
 
-class Forbidden(HeldlyError):
+class Forbidden(VennError):
     code = "FORBIDDEN"
 
 
-class InvalidRequest(HeldlyError):
+class InvalidRequest(VennError):
     code = "INVALID_REQUEST"
 
 
-class VersionConflict(HeldlyError):
+class VersionConflict(VennError):
     code = "VERSION_CONFLICT"
 
 
-class RateLimited(HeldlyError):
+class RateLimited(VennError):
     code = "RATE_LIMITED"
 
 
-class ConsentRequired(HeldlyError):
+class ConsentRequired(VennError):
     code = "CONSENT_REQUIRED"
 
 
-class PrivacyViolation(HeldlyError):
+class PrivacyViolation(VennError):
     code = "PRIVACY_VIOLATION"
 
 
-class Unauthenticated(HeldlyError):
+class Unauthenticated(VennError):
     code = "UNAUTHENTICATED"

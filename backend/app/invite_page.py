@@ -2,7 +2,7 @@
 
 It only shows the code and how to redeem it in ChatGPT. It is static: no database lookup, no
 inviter name, and the same response for any well-formed code, so it reveals nothing about
-whether a code exists. Redeeming still requires signing in to Heldly inside ChatGPT.
+whether a code exists. Redeeming still requires signing in to Venn inside ChatGPT.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ _PAGE = """<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>You're invited to connect on Heldly</title>
+<title>You're invited to connect on Venn</title>
 <style>
   :root {{ color-scheme: light dark; --fg: #1d1d1f; --muted: #6e6e73; --bg: #f5f5f7; --card: #fff; --accent: #0a66d8; }}
   @media (prefers-color-scheme: dark) {{
@@ -43,12 +43,12 @@ _PAGE = """<!doctype html>
 </head>
 <body>
 <main>
-  <h1>A friend wants to connect on Heldly</h1>
-  <p>Heldly helps friends stay close, inside ChatGPT. Use this invite code:</p>
+  <h1>A friend wants to connect on Venn</h1>
+  <p>Venn helps friends stay close, inside ChatGPT. Use this invite code:</p>
   <div class="code" aria-label="Invite code">{code}</div>
   <ol>
-    <li>Open ChatGPT with the Heldly app added.</li>
-    <li>Say: <strong>Redeem Heldly invite {code}</strong></li>
+    <li>Open ChatGPT with the Venn app added.</li>
+    <li>Say: <strong>Redeem Venn invite {code}</strong></li>
     <li>Your friend gets a request and decides whether to accept.</li>
   </ol>
   <a class="button" href="{chatgpt_url}" rel="noopener noreferrer">Open in ChatGPT</a>
@@ -72,7 +72,7 @@ def render_invite_page(code: str) -> str | None:
     pretty = normalize(code)
     if pretty is None:
         return None
-    prompt = f"Redeem Heldly invite {pretty}"
+    prompt = f"Redeem Venn invite {pretty}"
     return _PAGE.format(
         code=html.escape(pretty),
         chatgpt_url=html.escape(f"https://chatgpt.com/?q={quote(prompt)}", quote=True),

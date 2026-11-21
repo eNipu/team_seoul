@@ -1,0 +1,3 @@
+# Left out of `railway up` from the repo root (the backend deploy). The Dockerfile
+# only needs backend/ and widget/.
+boardy-ai/

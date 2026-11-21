@@ -5,7 +5,7 @@ here first, in the same commit as the code.
 
 ## Interests
 
-Result of `heldly_show_interests` (T02). `friends` is empty until T03; `keep_alive` is `null`
+Result of `venn_show_interests` (T02). `friends` is empty until T03; `keep_alive` is `null`
 and `due` is `false` until T05.
 
 ```json
@@ -46,7 +46,7 @@ Limits: 12 clusters, 5 memories and 8 friends shown per cluster. `kind` is `"con
 
 ## Opportunities
 
-Result of `heldly_show_opportunities` (T11). `FriendView` gains the same `opportunities` array,
+Result of `venn_show_opportunities` (T11). `FriendView` gains the same `opportunities` array,
 limited to that friend.
 
 ```json

@@ -15,20 +15,20 @@ from sqlalchemy.orm import Session
 from app.auth.context import current_token, resolve_user
 from app.db.database import session_scope
 from app.models import User
-from app.services.errors import HeldlyError
+from app.services.errors import VennError
 
-log = logging.getLogger("heldly.mcp")
+log = logging.getLogger("venn.mcp")
 
 T = TypeVar("T")
 
-WIDGET_URI = "ui://heldly/app-v4.html"
+WIDGET_URI = "ui://venn/app-v4.html"
 
 # Scopes
-PROFILE_READ = "heldly.profile.read"
-PROFILE_WRITE = "heldly.profile.write"
-MEMORIES_READ = "heldly.memories.read"
-MEMORIES_WRITE = "heldly.memories.write"
-CONNECTIONS = "heldly.connections.manage"
+PROFILE_READ = "venn.profile.read"
+PROFILE_WRITE = "venn.profile.write"
+MEMORIES_READ = "venn.memories.read"
+MEMORIES_WRITE = "venn.memories.write"
+CONNECTIONS = "venn.connections.manage"
 
 READ_ONLY = ToolAnnotations(read_only_hint=True, destructive_hint=False, open_world_hint=False)
 WRITE = ToolAnnotations(read_only_hint=False, destructive_hint=False, open_world_hint=False)
@@ -82,7 +82,7 @@ def ok(text: str, data: BaseModel | dict | None = None, meta: dict | None = None
     return CallToolResult(content=[TextContent(type="text", text=text)], structured_content=_dump(data), meta=meta)
 
 
-def error(exc: HeldlyError) -> CallToolResult:
+def error(exc: VennError) -> CallToolResult:
     return CallToolResult(content=[TextContent(type="text", text=str(exc))], is_error=True)
 
 
@@ -90,6 +90,6 @@ async def guarded(coro_fn: Callable[[], Any]) -> CallToolResult:
     """Run a tool body, converting domain errors into is_error tool results."""
     try:
         return await coro_fn()
-    except HeldlyError as exc:
+    except VennError as exc:
         log.info("tool error %s", exc.code)
         return error(exc)

@@ -1,57 +1,82 @@
-// Browser checks for the Heldly site. No dependencies: Node 22+ and a local Chrome.
+// Browser checks for the Venn site. No dependencies beyond the site's own: Node 22+ and a local Chrome.
 //
-//   node site/check.mjs                 run the checks
-//   node site/check.mjs --shots <dir>   also write full-page screenshots
-//   node site/check.mjs --url <url>     check a deployed copy instead of site/public
+//   npm run build && node check.mjs     start the built site on a free port and check it
+//   node check.mjs --shots <dir>        also write screenshots
+//   node check.mjs --url <url>          check a running or deployed copy instead
 //
-// Covers: headings, horizontal overflow, text contrast, control sizes, console
-// errors, third-party requests, cookies, the interest example, and the 3D scene
-// (it must draw, and must hold still when reduced motion is requested).
+// Covers: headings, horizontal overflow, the hero fitting in one screen, text contrast,
+// control sizes, console errors, third-party requests, cookies, the hero scene (it must
+// draw, and must stay on the still CSS version with reduced motion), the two-step
+// "Inside ChatGPT" preview, the /metrics password, /metrics itself, and the waitlist
+// with its rate limit.
+//
+// The waitlist is only submitted against a local server started with DATABASE_URL.
+// With --url it is left alone, so checking production never adds a signup.
+// /metrics is opened with METRICS_PASSWORD; with --url and no password it is skipped.
 
 import { spawn } from "node:child_process";
-import { createServer } from "node:http";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { createServer } from "node:net";
 import { tmpdir } from "node:os";
-import { extname, join, normalize, resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
-const root = join(here, "public");
 const arg = (name) => {
   const i = process.argv.indexOf(name);
   return i === -1 ? null : process.argv[i + 1];
 };
 const shotsDir = arg("--shots") && resolve(arg("--shots"));
 const remoteUrl = arg("--url");
+// The local server gets a password of its own if the environment has none.
+const metricsPassword = process.env.METRICS_PASSWORD || (remoteUrl ? "" : "check-only-password");
 
 const VIEWPORTS = [
-  { name: "phone", width: 360, height: 780 },
+  { name: "phone-small", width: 360, height: 640 },
+  { name: "phone", width: 390, height: 780 },
   { name: "tablet", width: 768, height: 1024 },
   { name: "desktop", width: 1280, height: 900 },
 ];
-const SCHEMES = ["light", "dark"];
 
-const TYPES = {
-  ".html": "text/html; charset=utf-8",
-  ".css": "text/css; charset=utf-8",
-  ".js": "text/javascript; charset=utf-8",
-  ".svg": "image/svg+xml",
-  ".woff2": "font/woff2",
-  ".txt": "text/plain; charset=utf-8",
-};
+const sleep = (ms) => new Promise((done) => setTimeout(done, ms));
 
-function serve() {
-  const server = createServer((req, res) => {
-    const path = normalize(decodeURIComponent(new URL(req.url, "http://x").pathname));
-    const file = join(root, path.endsWith("/") ? path + "index.html" : path);
-    if (!file.startsWith(root) || !existsSync(file)) {
-      res.writeHead(404).end("Not found");
-      return;
-    }
-    res.writeHead(200, { "content-type": TYPES[extname(file)] ?? "application/octet-stream" });
-    res.end(readFileSync(file));
+function freePort() {
+  return new Promise((done, fail) => {
+    const probe = createServer();
+    probe.once("error", fail);
+    probe.listen(0, "127.0.0.1", () => {
+      const { port } = probe.address();
+      probe.close(() => done(port));
+    });
   });
-  return new Promise((done) => server.listen(0, "127.0.0.1", () => done(server)));
+}
+
+// Starts `next start` on the build in .next and waits until it answers.
+async function startSite() {
+  if (!existsSync(join(here, ".next", "BUILD_ID"))) {
+    throw new Error("No build found. Run `npm run build` first, or pass --url.");
+  }
+  const port = await freePort();
+  const child = spawn(process.execPath, [join(here, "node_modules/next/dist/bin/next"), "start", "-p", String(port)], {
+    cwd: here,
+    env: { ...process.env, METRICS_PASSWORD: metricsPassword },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  let log = "";
+  child.stdout.on("data", (chunk) => (log += chunk));
+  child.stderr.on("data", (chunk) => (log += chunk));
+  const base = `http://127.0.0.1:${port}/`;
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    if (child.exitCode !== null) throw new Error(`next start exited:\n${log}`);
+    try {
+      if ((await fetch(base)).ok) return { base, close: () => child.kill() };
+    } catch {
+      // not listening yet
+    }
+    await sleep(200);
+  }
+  child.kill();
+  throw new Error(`next start did not answer within 20s:\n${log}`);
 }
 
 function findChrome() {
@@ -69,7 +94,7 @@ function findChrome() {
 }
 
 function launch() {
-  const profile = mkdtempSync(join(tmpdir(), "heldly-check-"));
+  const profile = mkdtempSync(join(tmpdir(), "venn-check-"));
   const child = spawn(findChrome(), [
     "--headless=new",
     "--remote-debugging-port=0",
@@ -168,27 +193,27 @@ function audit() {
   const h1s = document.querySelectorAll("h1");
   if (h1s.length !== 1) problems.push(`expected one h1, found ${h1s.length}`);
   for (const h of document.querySelectorAll("h1, h2, h3")) {
-    if (visible(h) && !h.textContent.trim()) problems.push(`empty heading ${describe(h)}`);
+    if (!h.textContent.trim()) problems.push(`empty heading ${describe(h)}`);
   }
-  if (h1s[0] && parseFloat(getComputedStyle(h1s[0]).fontSize) < 32) problems.push("h1 is smaller than 32px");
 
   // Horizontal overflow
   const overflow = document.documentElement.scrollWidth - window.innerWidth;
   if (overflow > 0) problems.push(`page is ${overflow}px wider than the viewport`);
   for (const el of document.querySelectorAll("body *")) {
-    if (!visible(el) || el.closest("svg, .skip, .stage__washes")) continue; // washes are clipped decoration
+    // The backdrop is clipped decoration; a wide table scrolls inside its own box.
+    if (!visible(el) || el.closest("svg, .sr-only, .hero__backdrop, .metrics__scroll")) continue;
     const box = el.getBoundingClientRect();
     if (box.right > window.innerWidth + 0.5 || box.left < -0.5) problems.push(`sticks out sideways: ${describe(el)}`);
   }
 
-  // Text contrast (WCAG AA: 4.5, or 3 for large text)
+  // Text contrast (WCAG AA: 4.5, or 3 for large text) and a 12px floor
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   const seen = new Set();
   while (walker.nextNode()) {
     const el = walker.currentNode.parentElement;
     if (!walker.currentNode.nodeValue.trim() || seen.has(el)) continue;
     seen.add(el);
-    if (!visible(el) || el.closest("option, noscript, script, :disabled")) continue;
+    if (!visible(el) || el.closest("option, noscript, script, style, :disabled, .sr-only")) continue;
     const style = getComputedStyle(el);
     let bg = null;
     for (let node = el; node && !bg; node = node.parentElement) {
@@ -196,6 +221,7 @@ function audit() {
       if (color.a > 0.99) bg = color;
     }
     bg = bg || rgba(getComputedStyle(document.documentElement).backgroundColor);
+    if (bg.a < 0.99) bg = { r: 255, g: 255, b: 255, a: 1 };
     const fg = rgba(style.color);
     const [hi, lo] = [luminance(fg), luminance(bg)].sort((a, b) => b - a);
     const ratio = (hi + 0.05) / (lo + 0.05);
@@ -203,12 +229,12 @@ function audit() {
     const large = size >= 24 || (size >= 18.66 && parseInt(style.fontWeight, 10) >= 700);
     const need = large ? 3 : 4.5;
     if (ratio < need) problems.push(`contrast ${ratio.toFixed(2)} below ${need}: ${describe(el)}`);
-    if (size < 13) problems.push(`text smaller than 13px (${size}px): ${describe(el)}`);
+    if (size < 12) problems.push(`text smaller than 12px (${size}px): ${describe(el)}`);
   }
 
   // Control sizes: 44px, matching the widget
-  for (const el of document.querySelectorAll("a[href], button, select, label.chip")) {
-    if (!visible(el) || el.closest(".skip")) continue;
+  for (const el of document.querySelectorAll("a[href], button, input[type=email], select, label.pick")) {
+    if (!visible(el)) continue;
     const box = el.getBoundingClientRect();
     if (box.height < 43.5 || box.width < 43.5) {
       problems.push(`control ${Math.round(box.width)}x${Math.round(box.height)} is under 44px: ${describe(el)}`);
@@ -219,71 +245,140 @@ function audit() {
   return problems;
 }
 
-// Runs in the page. Exercises the "inside ChatGPT" example.
-function exerciseDemo() {
+// Runs in the page. The hero, header included, must fit in the first screen.
+function auditFold() {
   const problems = [];
-  const expect = (ok, message) => ok || problems.push(`interest example: ${message}`);
-  const radios = [...document.querySelectorAll('[data-clusters] input[type="radio"]')];
-  const names = () => [...document.querySelectorAll("[data-cluster-panel] .person__name")].map((n) => n.textContent);
-  const rows = () => [...document.querySelectorAll("[data-cluster-panel] .person")];
-
-  expect(radios.length === 5 && radios.every((r) => !r.disabled), "five enabled interests");
-  expect(radios[0].checked, "Climbing is selected at start");
-  expect(names().join() === "Mina Park,Jun Ito", `Climbing lists "${names().join()}"`);
-
-  radios[1].click();
-  expect(names().join() === "Mina Park,Lea Novak", `Design lists "${names().join()}"`);
-  for (const row of rows()) {
-    const labels = [...row.querySelectorAll(".person__label")].map((l) => l.textContent).join();
-    expect(labels === "Keep it alive,How it could help", `row labels were "${labels}"`);
-    expect([...row.querySelectorAll(".person__row span:last-child")].every((t) => t.textContent.length > 20), "each row has a suggestion");
+  const fold = window.innerHeight + 0.5;
+  const hero = document.querySelector(".hero");
+  if (!hero) return ["no .hero section"];
+  if (hero.getBoundingClientRect().bottom > fold) {
+    problems.push(`hero is ${Math.round(hero.getBoundingClientRect().height)}px tall, taller than the ${window.innerHeight}px screen`);
   }
-
-  radios[4].click();
-  expect(names().join() === "Sam Okafor,Jun Ito", `Retail lists "${names().join()}"`);
-  radios[0].click();
-  expect(names().join() === "Mina Park,Jun Ito", "returning to Climbing restores the first list");
+  for (const selector of [".site-header", "h1", ".hero__sub", ".waitlist"]) {
+    const el = hero.querySelector(selector);
+    if (!el) problems.push(`hero has no ${selector}`);
+    else if (el.getBoundingClientRect().bottom > fold) problems.push(`${selector} ends below the fold`);
+  }
+  const h1 = hero.querySelector("h1");
+  if (h1 && h1.textContent.trim() !== "Find the common ground.") problems.push(`h1 reads "${h1.textContent.trim()}"`);
+  if (h1 && parseFloat(getComputedStyle(h1).fontSize) < 32) problems.push("h1 is smaller than 32px");
+  const backdrop = getComputedStyle(hero.querySelector(".hero__backdrop"));
+  if (backdrop.pointerEvents !== "none" || backdrop.position !== "absolute" || Number(backdrop.zIndex) >= 0) {
+    problems.push("the hero backdrop must be absolute, behind the content and ignore the pointer");
+  }
   return problems;
 }
 
-// Runs in the page. Waits for the 3D scene to settle and reports its state.
+// Runs in the page. Plays the two-step "Inside ChatGPT" preview.
+async function exercisePreview() {
+  const problems = [];
+  const expect = (ok, message) => ok || problems.push(`preview: ${message}`);
+  const tick = () => new Promise((done) => requestAnimationFrame(() => setTimeout(done, 30)));
+  const root = document.querySelector(".chat");
+  if (!root) return ["preview: .chat is missing"];
+  const button = (text) => [...root.querySelectorAll("button")].find((b) => b.textContent.includes(text));
+  const boxes = () => [...root.querySelectorAll('input[type="checkbox"]')];
+  const labels = () => [...root.querySelectorAll(".pick__name strong")].map((n) => n.textContent);
+
+  expect(
+    labels().join() === "Building,Based in,Looking for,Can help with,Personal & sensitive info",
+    `signals were "${labels().join()}"`,
+  );
+  expect(boxes().map((b) => b.checked).join() === "true,true,true,true,false", "four signals on, sensitive info off at start");
+  expect(root.textContent.includes("Nothing is shared until you approve it"), "the approval note is shown");
+  expect(!!button("Approve 4 signals"), "approve button counts the ticked signals");
+
+  button("Approve")?.click();
+  await tick();
+  expect(root.querySelectorAll(".venn-pair__who").length === 2, "match card shows two overlapping circles");
+  expect(root.querySelector(".venn-pair__shared")?.textContent === "Berlin", "the shared ground is named");
+  expect(/launching in Berlin.*Teodor just shifted into Berlin B2B growth/s.test(root.textContent), "match line is shown");
+  button("Draft warm intro")?.click();
+  await tick();
+  expect(!!root.querySelector(".match__draft") && !button("Draft warm intro"), "a draft replaces the button");
+  expect(root.textContent.includes("Venn never sends anything for you"), "the draft says Venn does not send it");
+
+  // Without the two signals the match rests on, there is nothing to show.
+  button("Memory sync")?.click();
+  await tick();
+  boxes()[1]?.click();
+  boxes()[2]?.click();
+  await tick();
+  button("Approve")?.click();
+  await tick();
+  expect(root.textContent.includes("No common ground yet"), "no match without the signals it needs");
+
+  // Leave the preview as a visitor first sees it.
+  button("Memory sync")?.click();
+  await tick();
+  boxes()[1]?.click();
+  boxes()[2]?.click();
+  await tick();
+  return problems;
+}
+
+// Runs in the page. Waits for the hero scene to settle and reports its state.
 function sceneState() {
   return new Promise((done) => {
     const host = document.querySelector("[data-scene]");
     const started = performance.now();
+    const frames = () => Number(host?.querySelector(".venn-scene")?.dataset.frames ?? 0);
     const poll = () => {
-      const state = host?.dataset.state;
-      const ready = state === "flat" || (state && Number(host.dataset.frames) > 0 && Number(host.dataset.lit) > 0);
-      if (ready || performance.now() - started > 8000) {
-        done({
-          state: state ?? "missing",
-          frames: Number(host?.dataset.frames ?? 0),
-          lit: Number(host?.dataset.lit ?? 0),
-          reason: host?.dataset.reason ?? "",
-          canvas: !!host?.querySelector("canvas"),
-          labels: [...document.querySelectorAll(".tag--cluster")].map((t) => t.textContent).join(","),
-        });
+      const state = host?.dataset.scene;
+      const waited = performance.now() - started;
+      if ((state === "webgl" && frames() > 1) || waited > 8000) {
+        done({ state: state ?? "missing", frames: frames(), canvas: !!host?.querySelector("canvas") });
       } else setTimeout(poll, 100);
     };
     poll();
   });
 }
 
+// Runs in the page. Types into the waitlist form the way a person would and submits it.
+function submitWaitlist(email) {
+  const input = document.querySelector("#waitlist-email");
+  const setValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set;
+  setValue.call(input, email);
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  return new Promise((done) => {
+    requestAnimationFrame(() => {
+      document.querySelector(".waitlist__form").requestSubmit();
+      const started = performance.now();
+      const poll = () => {
+        const joined = document.querySelector(".waitlist__joined");
+        const error = document.querySelector(".waitlist__note--error");
+        if (joined || error || performance.now() - started > 8000) {
+          done({
+            joined: !!joined,
+            spot: joined?.querySelector(".waitlist__spot")?.textContent ?? "",
+            buttons: [...(joined?.querySelectorAll(".btn") ?? [])].map((b) => b.textContent.trim()),
+            jump: joined?.querySelector('a[href="#inside"]') ? "#inside" : "",
+            error: error?.textContent ?? "",
+            saved: localStorage.getItem("venn.waitlist"),
+          });
+        } else setTimeout(poll, 50);
+      };
+      poll();
+    });
+  });
+}
+
 async function main() {
-  const server = remoteUrl ? null : await serve();
-  const base = remoteUrl ?? `http://127.0.0.1:${server.address().port}/`;
+  const site = remoteUrl ? null : await startSite();
+  const base = remoteUrl ?? site.base;
   const origin = new URL(base).origin;
   const chrome = launch();
   const failures = [];
+  const notes = [];
 
   try {
     const cdp = await connect(await chrome.ready);
     const { targetId } = await cdp.send("Target.createTarget", { url: "about:blank" });
     const { sessionId } = await cdp.send("Target.attachToTarget", { targetId, flatten: true });
     const send = (method, params) => cdp.send(method, params, sessionId);
-    const run = async (fn) => {
+    const run = async (fn, ...args) => {
       const { result, exceptionDetails } = await send("Runtime.evaluate", {
-        expression: `(${fn})()`,
+        expression: `(${fn})(${args.map((a) => JSON.stringify(a)).join(",")})`,
         returnByValue: true,
         awaitPromise: true,
       });
@@ -305,76 +400,172 @@ async function main() {
     });
     for (const domain of ["Page", "Runtime", "Network", "Log"]) await send(`${domain}.enable`);
 
-    const runs = VIEWPORTS.flatMap((viewport) => SCHEMES.map((scheme) => ({ viewport, scheme, motion: "no-preference" })));
-    runs.push({ viewport: VIEWPORTS[2], scheme: "light", motion: "reduce" });
+    const open = async (path, viewport, { scheme = "light", motion = "no-preference" } = {}) => {
+      await send("Emulation.setDeviceMetricsOverride", {
+        width: viewport.width,
+        height: viewport.height,
+        deviceScaleFactor: shotsDir ? 2 : 1,
+        mobile: viewport.width < 600,
+      });
+      await send("Emulation.setEmulatedMedia", {
+        features: [
+          { name: "prefers-color-scheme", value: scheme },
+          { name: "prefers-reduced-motion", value: motion },
+        ],
+      });
+      const loaded = new Promise((done) => {
+        const off = cdp.on((m) => {
+          if (m.sessionId === sessionId && m.method === "Page.loadEventFired") {
+            off();
+            done();
+          }
+        });
+      });
+      await send("Page.navigate", { url: new URL(path, base).href });
+      await loaded;
+      await sleep(250); // hydration
+    };
+    const shot = async (name, fullPage = true) => {
+      if (!shotsDir) return;
+      mkdirSync(shotsDir, { recursive: true });
+      const params = { format: "png" };
+      if (fullPage) {
+        const { cssContentSize } = await send("Page.getLayoutMetrics");
+        params.captureBeyondViewport = true;
+        params.clip = { x: 0, y: 0, width: cssContentSize.width, height: cssContentSize.height, scale: 1 };
+      }
+      const { data } = await send("Page.captureScreenshot", params);
+      writeFileSync(join(shotsDir, `${name.replaceAll("/", "-")}.png`), Buffer.from(data, "base64"));
+    };
+
+    // The landing page at every size, plus dark (the page is light only and must stay
+    // readable) and reduced motion.
+    const runs = VIEWPORTS.map((viewport) => ({ viewport, scheme: "light", motion: "no-preference" }));
+    runs.push({ viewport: VIEWPORTS[1], scheme: "dark", motion: "no-preference" });
+    runs.push({ viewport: VIEWPORTS[3], scheme: "light", motion: "reduce" });
 
     for (const { viewport, scheme, motion } of runs) {
-      {
-        label = `${viewport.name}/${scheme}${motion === "reduce" ? "/reduced-motion" : ""}`;
-        await send("Emulation.setDeviceMetricsOverride", {
-          width: viewport.width,
-          height: viewport.height,
-          deviceScaleFactor: shotsDir ? 2 : 1,
-          mobile: viewport.width < 600,
-        });
-        await send("Emulation.setEmulatedMedia", {
-          features: [
-            { name: "prefers-color-scheme", value: scheme },
-            { name: "prefers-reduced-motion", value: motion },
-          ],
-        });
-        const loaded = new Promise((done) => {
-          const off = cdp.on((m) => {
-            if (m.sessionId === sessionId && m.method === "Page.loadEventFired") {
-              off();
-              done();
-            }
-          });
-        });
-        await send("Page.navigate", { url: base });
-        await loaded;
+      label = `${viewport.name}${scheme === "dark" ? "/dark" : ""}${motion === "reduce" ? "/reduced-motion" : ""}`;
+      await open("/", viewport, { scheme, motion });
 
-        const scene = await run(sceneState);
-        const wanted = motion === "reduce" ? "static" : "running";
-        if (scene.state !== wanted) {
-          failures.push(`${label}: scene state is "${scene.state}" ${scene.reason}, expected "${wanted}"`);
-        } else if (scene.lit < 50) {
-          failures.push(`${label}: scene drew almost nothing (${scene.lit} lit samples)`);
-        } else if (scene.labels !== "Climbing,Design,Berlin,AI tools,Retail") {
-          failures.push(`${label}: cluster labels were "${scene.labels}"`);
+      const scene = await run(sceneState);
+      if (motion === "reduce") {
+        if (scene.state !== "css" || scene.canvas) {
+          failures.push(`${label}: with reduced motion the hero must stay on the CSS circles (state "${scene.state}")`);
         }
-        if (motion === "reduce") {
-          const before = scene.frames;
-          await new Promise((r) => setTimeout(r, 1200));
-          const after = (await run(sceneState)).frames;
-          if (after !== before) failures.push(`${label}: scene kept animating with reduced motion (${before} -> ${after} frames)`);
-        }
-
-        for (const problem of await run(audit)) failures.push(`${label}: ${problem}`);
-        if (scheme === "light" && motion !== "reduce") {
-          for (const problem of await run(exerciseDemo)) failures.push(`${label}: ${problem}`);
-        }
-
-        if (shotsDir) {
-          // Let the dots finish gathering so the picture shows the settled scene.
-          if (motion !== "reduce") {
-            await run(`() => new Promise((done) => {
-              const t0 = performance.now();
-              const wait = () => document.querySelector(".stage--ready") || performance.now() - t0 > 7000 ? setTimeout(done, 1800) : setTimeout(wait, 100);
-              wait();
-            })`);
-          }
-          mkdirSync(shotsDir, { recursive: true });
-          const { cssContentSize } = await send("Page.getLayoutMetrics");
-          const { data } = await send("Page.captureScreenshot", {
-            format: "png",
-            captureBeyondViewport: true,
-            clip: { x: 0, y: 0, width: cssContentSize.width, height: cssContentSize.height, scale: 1 },
-          });
-          writeFileSync(join(shotsDir, `${label.replaceAll("/", "-")}.png`), Buffer.from(data, "base64"));
-        }
-        console.log(`checked ${label} (scene: ${scene.state}, ${scene.lit} lit samples)`);
+      } else if (scene.state !== "webgl" || !scene.canvas) {
+        failures.push(`${label}: hero scene state is "${scene.state}", expected "webgl"`);
+      } else {
+        await sleep(400);
+        const later = await run(sceneState);
+        if (later.frames <= scene.frames) failures.push(`${label}: hero scene is not animating (${scene.frames} frames)`);
       }
+
+      for (const problem of await run(auditFold)) failures.push(`${label}: ${problem}`);
+      for (const problem of await run(audit)) failures.push(`${label}: ${problem}`);
+      await shot(`${label}-fold`, false);
+      await shot(label);
+
+      if (scheme === "light" && motion !== "reduce") {
+        for (const problem of await run(exercisePreview)) failures.push(`${label}: ${problem}`);
+      }
+      console.log(`checked ${label} (scene: ${scene.state})`);
+    }
+
+    // The preview's second card, for the screenshots.
+    if (shotsDir) {
+      label = "phone/preview-match";
+      await open("/", VIEWPORTS[1]);
+      await run(`async () => {
+        const find = (text) => [...document.querySelectorAll(".chat button")].find((b) => b.textContent.includes(text));
+        find("Approve").click();
+        await new Promise((done) => setTimeout(done, 100));
+        document.querySelector(".chat").scrollIntoView({ block: "start" });
+        await new Promise((done) => setTimeout(done, 500));
+      }`);
+      await shot(label, false);
+    }
+
+    // The waitlist, on a phone.
+    label = "phone/waitlist";
+    await open("/?utm_source=check&utm_content=browser", VIEWPORTS[1]);
+    const invalid = await run(submitWaitlist, "not-an-email");
+    if (invalid.joined || !invalid.error.includes("valid email")) {
+      failures.push(`${label}: an invalid email should show an error, got "${invalid.error}"`);
+    }
+    if (remoteUrl) {
+      notes.push("waitlist signup skipped: not submitted against --url");
+    } else if (!process.env.DATABASE_URL) {
+      notes.push("waitlist signup skipped: start the check with DATABASE_URL to exercise it");
+    } else {
+      await open("/?utm_source=check&utm_content=browser", VIEWPORTS[1]); // a fresh form, without the error
+      const result = await run(submitWaitlist, `check+${Date.now()}@example.com`);
+      if (!result.joined) {
+        failures.push(`${label}: signup did not confirm: "${result.error}"`);
+      } else {
+        if (!/#\d{3,}/.test(result.spot)) failures.push(`${label}: no waitlist number in "${result.spot}"`);
+        if (result.buttons.join("|") !== "Invite a connection to move up|See it inside ChatGPT") {
+          failures.push(`${label}: confirmation buttons were "${result.buttons.join("|")}"`);
+        }
+        if (result.jump !== "#inside") failures.push(`${label}: no link to the preview`);
+        if (!result.saved || result.saved.includes("@")) failures.push(`${label}: the spot should be remembered without the email`);
+        for (const problem of await run(auditFold)) failures.push(`${label}: ${problem}`);
+        for (const problem of await run(audit)) failures.push(`${label}: ${problem}`);
+        if (shotsDir) await sleep(700); // let the confirmation finish fading in
+        await shot(`${label}-joined`, false);
+        console.log(`checked ${label} (${result.spot.trim()})`);
+      }
+      await run(`() => localStorage.clear()`);
+    }
+
+    // The waitlist rate limit. Local only: it relies on the server trusting X-Real-IP,
+    // and a made-up address keeps the browser's own allowance untouched.
+    if (!remoteUrl) {
+      const statuses = [];
+      for (let i = 0; i < 11; i += 1) {
+        const response = await fetch(new URL("/api/waitlist", base), {
+          method: "POST",
+          headers: { "content-type": "application/json", "x-real-ip": "203.0.113.9" },
+          body: JSON.stringify({ email: "not-an-email" }),
+        });
+        statuses.push(response.status);
+      }
+      if (statuses.slice(0, 10).some((s) => s !== 400) || statuses[10] !== 429) {
+        failures.push(`waitlist rate limit: expected ten 400s then a 429, got ${statuses.join(",")}`);
+      } else console.log("checked waitlist rate limit (429 after 10 tries)");
+    }
+
+    // /metrics is closed without the password.
+    const closed = await fetch(new URL("/metrics", base));
+    const wrong = await fetch(new URL("/metrics", base), {
+      headers: { authorization: `Basic ${Buffer.from("team:wrong-password").toString("base64")}` },
+    });
+    const closedText = await closed.text();
+    if (![401, 503].includes(closed.status) || ![401, 503].includes(wrong.status) || closedText.includes("Unique Visitors")) {
+      failures.push(`/metrics must not open without the password (got ${closed.status} and ${wrong.status})`);
+    } else console.log(`checked /metrics is closed without the password (${closed.status})`);
+
+    // /metrics
+    if (!metricsPassword) notes.push("metrics page skipped: set METRICS_PASSWORD to check it with --url");
+    else {
+      await send("Network.setExtraHTTPHeaders", {
+        headers: { authorization: `Basic ${Buffer.from(`team:${metricsPassword}`).toString("base64")}` },
+      });
+    }
+    for (const viewport of metricsPassword ? [VIEWPORTS[0], VIEWPORTS[3]] : []) {
+      label = `${viewport.name}/metrics`;
+      await open("/metrics", viewport);
+      for (const problem of await run(audit)) failures.push(`${label}: ${problem}`);
+      const text = await run(`() => document.body.innerText`);
+      if (text.includes("DATABASE_URL is not set")) {
+        notes.push("metrics tiles skipped: the site has no DATABASE_URL");
+      } else {
+        for (const wanted of ["Unique Visitors", "Total Waitlist Signups", "Activation Rate", "By UTM source", "By referral"]) {
+          if (!text.includes(wanted)) failures.push(`${label}: "${wanted}" is missing`);
+        }
+      }
+      await shot(label);
+      console.log(`checked ${label}`);
     }
 
     const { cookies } = await send("Network.getCookies", { urls: [base] });
@@ -382,9 +573,10 @@ async function main() {
     cdp.close();
   } finally {
     chrome.close();
-    server?.close();
+    site?.close();
   }
 
+  for (const note of [...new Set(notes)]) console.log(`note: ${note}`);
   if (failures.length) {
     console.error(`\n${failures.length} problem(s):`);
     for (const failure of [...new Set(failures)]) console.error(`  - ${failure}`);

@@ -1,4 +1,4 @@
-# Heldly data model
+# Venn data model
 
 SQLAlchemy 2 models in `backend/app/models/`, migrations in `backend/migrations/` (Alembic).
 Postgres (Supabase) in production; SQLite for local development and tests. Ids are UUIDs,
@@ -35,11 +35,11 @@ Limits: 500 memories per user, 8 items per proposal (30 for an import from ChatG
 | `blocks` | blocker_user_id*, blocked_user_id*, created_at* | Composite PK. Checked in both directions. |
 | `abuse_reports` | id*, reporter_user_id*, reported_user_id*, reason*, created_at* | For moderation review. |
 
-## People (friends who are not on Heldly)
+## People (friends who are not on Venn)
 
 | Table | Columns | Notes |
 | --- | --- | --- |
-| `people` | id*, owner_user_id* (FK cascade), name*, relationship, notes, interests* (JSON list), created_at*, updated_at* | Private note written by the owner. Never shared, never linked to a Heldly account, never used to contact the person. |
+| `people` | id*, owner_user_id* (FK cascade), name*, relationship, notes, interests* (JSON list), created_at*, updated_at* | Private note written by the owner. Never shared, never linked to a Venn account, never used to contact the person. |
 | `person_interactions` | id*, person_id* (FK cascade), activity, created_at* | Hangouts the owner logged; drives "last seen" and reconnection suggestions. |
 | `people_imports` | id*, user_id* (FK cascade), items* (JSON list of candidates), source, expires_at*, consumed_at, created_at* | Server-side record of the people shown on an import card. 24h TTL, single use; items are cleared once used. Nobody in here is a saved note. |
 | `follow_ups` | id*, owner_user_id* (FK cascade), connection_id (FK cascade), person_id (FK cascade), text*, done_at, created_at* | "Ask about this next time." Private to the owner. Exactly one of connection_id / person_id (check constraint). |
@@ -59,6 +59,18 @@ Events: `profile_created`, `memory_proposed`, `memory_approved`, `memory_deleted
 `people_searched`, `group_planned`, `meetup_brief`, `meetup_recapped`, `quiz_started`.
 Search queries, import sources and quiz content are never recorded. Quiz scores are not stored anywhere.
 
+## Site tables (not managed by Alembic)
+
+The landing page (`site/`) creates two tables of its own on first use, in whatever database its
+`DATABASE_URL` points at. They are not models here and `venn_delete_account` does not touch them.
+
+| Table | Columns | Notes |
+| --- | --- | --- |
+| `waitlist_signups` | id*, email* (unique), utm_source, utm_content, ref, ref_code* (unique), created_at* | Waitlist emails. `ref` is the invite code the person arrived with; `ref_code` is their own. |
+| `site_events` | id*, event*, visitor*, utm_source, utm_content, ref, created_at* | `page_view` and `core_action_completed`. `visitor` is a daily salted hash, never an IP. |
+
+See `site/README.md` › Waitlist, Analytics.
+
 ## Development OAuth (dev mode only)
 
 | Table | Columns |
@@ -68,7 +80,7 @@ Search queries, import sources and quiz content are never recorded. Quiz scores 
 
 ## Deletion
 
-`heldly_delete_account` deletes the user row; profile, memories, proposals, invites, requests,
+`venn_delete_account` deletes the user row; profile, memories, proposals, invites, requests,
 connections (and their events), people notes (and their hangout logs), pending imports, follow-ups, blocks and consents cascade. Analytics events keep no user link
 (`user_id` set null).
 

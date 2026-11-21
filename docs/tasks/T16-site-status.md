@@ -5,10 +5,15 @@ listing it under "In development" when it ships.
 
 Do this once when group A is done, and again when group B is done.
 
+**Needs a decision first.** The Venn landing page (`site/app/page.tsx`) has no "Works today" /
+"In development" section any more; it only says "Venn is in development" under the preview.
+Decide whether to bring a status section back or to keep this task to the claims table in
+`site/README.md`. Steps 1 to 3 below describe the old section.
+
 ## Read first
 
 - `site/README.md` › "What the copy may claim", "Deploy"
-- `site/public/index.html` › the `#status` section
+- `site/app/page.tsx` and `site/components/ChatPreview.tsx` (the old `#status` section is gone)
 
 ## Do
 
@@ -22,7 +27,7 @@ Do this once when group A is done, and again when group B is done.
 ## Done when
 
 - [ ] Every line under "Works today" names something a user can do in ChatGPT today.
-- [ ] `node site/check.mjs` passes locally.
+- [ ] `npm --prefix site run build && node site/check.mjs` passes locally.
 - [ ] `node site/check.mjs --url https://site-production-4ef8eb52.up.railway.app/` passes after the deploy.
 
 ## Not in this task

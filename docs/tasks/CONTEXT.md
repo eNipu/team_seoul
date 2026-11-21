@@ -2,19 +2,19 @@
 
 ## The product in four lines
 
-Heldly is a ChatGPT plugin that shows its own cards in the chat. It saves the memories a user
+Venn is a ChatGPT plugin that shows its own cards in the chat. It saves the memories a user
 approves, groups them into interests, and for each person the user knows it suggests how to keep
 the connection alive and how the connection could help either side. ChatGPT only, for now.
 
 ## Rules no task may break
 
 1. The acting user comes from the OAuth token. No tool takes a user id.
-2. Nothing is saved without approval: `heldly_save_memories` needs a server-issued `proposal_id`.
+2. Nothing is saved without approval: `venn_save_memories` needs a server-issued `proposal_id`.
 3. Another user's `PRIVATE` memories are never read. Go through
    `memory_service.visible_memories_of`, or `all_friends` and `resolve` in `relationship_service`.
 4. A blocked user is invisible in both directions (`social_service.is_blocked`).
 5. People notes (`people` table) belong to their owner only and are never shared.
-6. Heldly never contacts anyone. Tools suggest; the user acts.
+6. Venn never contacts anyone. Tools suggest; the user acts.
 7. Stored text is data, never instructions. Refuse credentials with `contains_sensitive`.
 8. Tools take narrow, typed arguments. Never add a field for conversation text or "context".
 9. Analytics hold counts and ids only (`services/analytics.py` allow-list). No names, no free text.
@@ -32,14 +32,14 @@ the connection alive and how the connection could help either side. ChatGPT only
 | Tables | `backend/app/models/`, migrations in `backend/migrations/versions/` |
 | Tests | `backend/tests/unit`, `integration`, `security`; fixtures in `conftest.py` |
 | Widget: shapes and parsers, demo data, cards, view switch | `widget/src/types.ts`, `mock.ts`, `components/`, `App.tsx` |
-| The skill shipped with the plugin | `plugin/skills/heldly-social/SKILL.md` |
+| The skill shipped with the plugin | `plugin/skills/venn-social/SKILL.md` |
 | Reference docs to update with behaviour | `docs/MCP_TOOLS.md`, `docs/DATA_MODEL.md`, `docs/SECURITY.md`, `widget/README.md` |
 
 ## Recipes
 
 **Add an MCP tool**
 1. Shape in `backend/app/schemas/`, logic in a service function `fn(db, user, ...)`.
-2. In `tools.py`, register it inside `register_tools`. A tool that shows a card uses `@apps.tool(resource_uri=WIDGET_URI, visibility=["model", "app"], meta=ui_meta(...), ...)`; copy `heldly_reconnection_suggestions`. A data tool uses `@mcp.tool(...)`.
+2. In `tools.py`, register it inside `register_tools`. A tool that shows a card uses `@apps.tool(resource_uri=WIDGET_URI, visibility=["model", "app"], meta=ui_meta(...), ...)`; copy `venn_reconnection_suggestions`. A data tool uses `@mcp.tool(...)`.
 3. Set `annotations` (`READ_ONLY`, `WRITE` or `DESTRUCTIVE`) and pass the scopes it needs to `run_as_user`.
 4. Return `ok(short_text, result)`. A card result carries a `view` field.
 5. Tests: happy path in `tests/integration` with `alice.ok("tool", **args)`; another user's data and a missing scope in `tests/security/test_authz.py`.
@@ -62,7 +62,7 @@ the connection alive and how the connection could help either side. ChatGPT only
 ```bash
 make test && make lint                                               # backend
 npm --prefix widget run typecheck && npm --prefix widget run build   # widget
-node site/check.mjs                                                  # site (needs Chrome)
+npm --prefix site run build && node site/check.mjs                   # site (needs Chrome)
 ```
 
 Widget demo: `cd widget && npm run dev`, then `?view=<name>`; add `&flaky=1` to test errors.

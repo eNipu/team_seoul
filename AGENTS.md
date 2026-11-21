@@ -1,6 +1,6 @@
 # team_seoul design guidance
 
-This repository builds Heldly, a consent-first social companion with a React/TypeScript
+This repository builds Venn, a consent-first social companion with a React/TypeScript
 widget embedded in ChatGPT. Read `README.md` and `widget/README.md` for product and runtime
 context before changing the UI.
 
@@ -16,7 +16,7 @@ Canonical skill packages live in `.agents/skills/`. Relative directory links in
 - When the user requests Nazarii's style, editorial layouts, cinematic imagery, handwritten
   accents, or less generic visual design, also read
   `.agents/skills/turbota-new-startup-design-from-nazarii/SKILL.md`.
-  This is an optional visual direction, not a mandatory Heldly rebrand.
+  This is an optional visual direction, not a mandatory Venn rebrand.
 - Product requirements, consent, accessibility, and host integration take precedence over
   decorative styling. Preserve host theme support, usable narrow iframe layouts, keyboard
   access, visible focus, reduced motion, and explicit approval before saving memories.
@@ -24,18 +24,20 @@ Canonical skill packages live in `.agents/skills/`. Relative directory links in
   of current platform behavior; verify questionable or version-specific claims against
   official documentation. Never claim a visual or accessibility check ran unless it did.
 - Do not load design skills for unrelated backend work. Do not modify the shipped
-  `plugin/skills/heldly-social/` skill as part of editor configuration.
+  `plugin/skills/venn-social/` skill as part of editor configuration.
 
 ## Validation
 
 After widget code changes, run `npm --prefix widget run typecheck` and
 `npm --prefix widget run build`. Use the demo views documented in `widget/README.md`
 to inspect memory review, dashboard, errors, narrow layouts, and light/dark themes.
+After site changes, run `npm --prefix site run build` and `node site/check.mjs` (see
+`site/README.md`). `widget/src/venn-kit.css` is shared by both: after changing it, build both.
 Consult the `Makefile` for backend and repository-wide checks when those areas change.
 
 ## Feature work
 
 Product work is cut into small tasks in `docs/tasks/`. Read `docs/tasks/README.md` (the board),
 then `docs/tasks/CONTEXT.md`, then the one task file you are doing and the files it lists.
-Do not read `Heldly PRD.md` in full; open a section only when a task or the backlog names it.
+Do not read `Venn PRD.md` in full; open a section only when a task or the backlog names it.
 Set the task's status on the board in the same commit as the work.

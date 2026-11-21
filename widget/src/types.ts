@@ -1,4 +1,4 @@
-// Data contract for Heldly tool results (structuredContent).
+// Data contract for Venn tool results (structuredContent).
 // Everything coming from a tool result is untrusted: the parse* helpers below
 // coerce unknown JSON into well-typed objects with safe defaults so React never
 // receives non-string children or undefined arrays.
@@ -94,7 +94,7 @@ export const LIMITS = {
   importAreas: 10,
 } as const;
 
-/** A friend is a mutual Heldly connection or a private "person" note. */
+/** A friend is a mutual Venn connection or a private "person" note. */
 export const FRIEND_KINDS = ["connection", "person"] as const;
 export type FriendKind = (typeof FRIEND_KINDS)[number];
 
@@ -129,7 +129,7 @@ export interface MemoryProposal {
   description: string;
   tags: string[];
   suggested_visibility: Visibility;
-  /** True when Heldly already holds this memory; it starts un-approved. */
+  /** True when Venn already holds this memory; it starts un-approved. */
   already_saved: boolean;
 }
 
@@ -272,7 +272,7 @@ export interface FriendViewData {
   kind: FriendKind;
   id: string;
   display_name: string;
-  on_heldly: boolean;
+  on_venn: boolean;
   since: string;
   last_interaction_at: string | null;
   bio: string | null;
@@ -320,7 +320,7 @@ export interface SearchResult {
   kind: FriendKind;
   id: string;
   display_name: string;
-  on_heldly: boolean;
+  on_venn: boolean;
   relationship: string | null;
   matched: string[];
   snippet: string | null;
@@ -363,7 +363,7 @@ export interface BriefViewData {
   kind: FriendKind;
   id: string;
   display_name: string;
-  on_heldly: boolean;
+  on_venn: boolean;
   relationship: string | null;
   notes: string | null;
   last_interaction_at: string | null;
@@ -697,7 +697,7 @@ export function parseView(sc: unknown): ViewData | null {
         kind,
         id: str(sc.id),
         display_name: str(sc.display_name, "Friend") || "Friend",
-        on_heldly: typeof sc.on_heldly === "boolean" ? sc.on_heldly : kind === "connection",
+        on_venn: typeof sc.on_venn === "boolean" ? sc.on_venn : kind === "connection",
         since: str(sc.since),
         last_interaction_at: strOrNull(sc.last_interaction_at),
         bio: strOrNull(sc.bio),
@@ -736,7 +736,7 @@ export function parseView(sc: unknown): ViewData | null {
             kind,
             id: str(r.id),
             display_name: str(r.display_name, "Friend") || "Friend",
-            on_heldly: typeof r.on_heldly === "boolean" ? r.on_heldly : kind === "connection",
+            on_venn: typeof r.on_venn === "boolean" ? r.on_venn : kind === "connection",
             relationship: strOrNull(r.relationship),
             matched: strArr(r.matched),
             snippet: strOrNull(r.snippet),
@@ -776,7 +776,7 @@ export function parseView(sc: unknown): ViewData | null {
         kind,
         id: str(sc.id),
         display_name: str(sc.display_name, "your friend") || "your friend",
-        on_heldly: typeof sc.on_heldly === "boolean" ? sc.on_heldly : kind === "connection",
+        on_venn: typeof sc.on_venn === "boolean" ? sc.on_venn : kind === "connection",
         relationship: strOrNull(sc.relationship),
         notes: strOrNull(sc.notes),
         last_interaction_at: strOrNull(sc.last_interaction_at),
@@ -914,7 +914,7 @@ export function joinNames(names: string[]): string {
   return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 }
 
-/** Split friends into the `{connection_ids, person_ids}` argument of heldly_plan_group. */
+/** Split friends into the `{connection_ids, person_ids}` argument of venn_plan_group. */
 export function groupArgs(friends: { kind: FriendKind; id: string }[]): { connection_ids: string[]; person_ids: string[] } {
   const picked = friends.slice(0, LIMITS.groupMax);
   return {

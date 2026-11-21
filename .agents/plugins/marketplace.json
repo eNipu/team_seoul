@@ -1,9 +1,9 @@
 {
-  "name": "heldly-local",
-  "interface": { "displayName": "Heldly (local development)" },
+  "name": "venn-local",
+  "interface": { "displayName": "Venn (local development)" },
   "plugins": [
     {
-      "name": "heldly",
+      "name": "venn",
       "source": { "source": "local", "path": "./plugin" },
       "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
       "category": "Lifestyle"
