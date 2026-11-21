@@ -143,12 +143,14 @@ Compose from the kit before writing new CSS: `.panel`, `.card`, `.notice`, `.btn
 
 - Short declarative sentences with a full stop, headlines included: "Find the common ground."
 - Sentence case everywhere. Title Case only for the CTA "Join the Waitlist", the proper name
-  "Founding Circle", and the three metric names on `/metrics`.
+  "Founding Circle", and the metric names on the `/metrics` tiles.
 - Second person; Venn is the subject of what it does and, just as often, of what it does not do
   ("It never contacts anyone for you").
 - Buttons name the result, verb first: "Draft warm intro", "Approve 4 signals".
 - Errors say what to do next. Notes under a control state a promise, not marketing.
 - No exclamation marks, emoji, superlatives, or invented numbers, logos, or testimonials.
+- Every sentence in the waitlist, in each of its states, is listed in `docs/tasks/WAITLIST.md`.
+  Change it there, in `Waitlist.tsx` and in `check.mjs` together.
 - A claim must match the table "What the copy may claim" in `site/README.md`. Update that table
   when a claim changes. Example people are made up and the page says so; never use a real
   person's name or photo.
@@ -174,7 +176,9 @@ system setting and once with reduced motion:
   "Find the common ground." or is under 32px
 - Any sideways overflow, or any visible element crossing the viewport edge (wide tables scroll
   inside `.metrics__scroll`)
-- A hero taller than the screen, or its header, `h1`, subhead, or waitlist below the fold
+- A hero taller than the screen, or its header, `h1`, subhead, or waitlist below the fold. This
+  is checked in every waitlist state (form, held, invited, confirmed), so a new line in one of
+  them has to fit at 360 x 640
 - Text under AA contrast or under 12px
 - A control under 44px in either dimension
 - A console error, an uncaught script error, a request to another origin, or a cookie

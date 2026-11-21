@@ -1,6 +1,7 @@
 import { cleanAttribution, cleanRef, track, visitorId } from "@/lib/analytics";
 import { hasDatabase } from "@/lib/db";
 import { type Limit, overLimit } from "@/lib/rate-limit";
+import { cleanVersion, defaultVersion } from "@/lib/version";
 import { joinWaitlist, normalizeEmail, spotForCode } from "@/lib/waitlist";
 
 export const dynamic = "force-dynamic";
@@ -41,11 +42,13 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const attribution = cleanAttribution(body);
+  // The page says which version it showed. A caller that does not gets the default.
+  const version = cleanVersion((body as { version?: unknown } | null)?.version) ?? defaultVersion();
   try {
-    const { spot, created } = await joinWaitlist(email, attribution);
+    const { spot, created } = await joinWaitlist(email, attribution, version);
     if (created) {
       // The signup is saved; losing the analytics event must not fail the request.
-      await track("core_action_completed", visitorId(request.headers), attribution).catch((error) =>
+      await track("core_action_completed", visitorId(request.headers), attribution, version).catch((error) =>
         console.error("waitlist: could not record core_action_completed", error),
       );
     }

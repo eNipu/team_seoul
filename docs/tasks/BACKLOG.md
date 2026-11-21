@@ -15,6 +15,7 @@ when the item is picked up. Promote an item by writing a task file and adding it
 ## Later
 
 - Weekly brief by email, and email for connection requests. PRD §4.2 P1–P3, §3.4.
+- Email a pending waitlist signup when their +1 joins. Needs an email provider. `WAITLIST.md`.
 - Calendar connect and meeting booking between two users. PRD §4.2 C1–C8, §7.1–7.2, §9.2.
 - Claude as a second host. PRD §3.1 rows 3, 4, 6, 7 and §11.3 item 4.
 - Communities and community-scoped sharing. PRD §4.2 A5, §8.1, §10.2.

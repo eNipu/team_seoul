@@ -113,7 +113,7 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
       <div className="welcome__hero">
         <Illustration name="welcome" size="lg" />
         <h2 className="welcome__title">{name ? `Welcome to Venn, ${name}` : "Welcome to Venn"}</h2>
-        <p className="muted">A companion that helps you keep the people you care about close.</p>
+        <p className="muted">Stay in touch and find the common ground with the people you already know.</p>
       </div>
 
       <ActionError action={action} />

@@ -9,6 +9,7 @@ import { createHash } from "node:crypto";
 
 import { hasDatabase, query } from "./db";
 import { clientIp } from "./rate-limit";
+import { type WaitlistVersion } from "./version";
 
 export type EventName = "page_view" | "core_action_completed";
 
@@ -56,16 +57,26 @@ export function visitorId(headers: Headers): string {
   return createHash("sha256").update(`${salt}|${day}|${ip}|${agent}`).digest("hex").slice(0, 32);
 }
 
-/** Records one event. Without a database this does nothing. */
-export async function track(event: EventName, visitor: string, attribution: Attribution): Promise<void> {
+/**
+ * Records one event. Without a database this does nothing. `version` is the waitlist
+ * version the page showed, or null when the page did not say.
+ */
+export async function track(
+  event: EventName,
+  visitor: string,
+  attribution: Attribution,
+  version: WaitlistVersion | null,
+): Promise<void> {
   if (!hasDatabase()) return;
   await query(
-    "INSERT INTO site_events (event, visitor, utm_source, utm_content, ref) VALUES ($1, $2, $3, $4, $5)",
-    [event, visitor, attribution.utm_source, attribution.utm_content, attribution.ref],
+    "INSERT INTO site_events (event, visitor, utm_source, utm_content, ref, version) VALUES ($1, $2, $3, $4, $5, $6)",
+    [event, visitor, attribution.utm_source, attribution.utm_content, attribution.ref, version],
   );
 }
 
 export type BreakdownRow = { label: string; detail: string; visitors: number; signups: number };
+
+export type VersionRow = { version: string; visitors: number; signups: number; confirmed: number };
 
 export type Metrics = {
   uniqueVisitors: number;
@@ -74,18 +85,44 @@ export type Metrics = {
   /** Visitors who completed the core action (joined the waitlist), as a share of all visitors. 0 to 1. */
   activationRate: number;
   referredSignups: number;
+  /** Signups whose place is confirmed, and those still waiting for their +1. */
+  confirmedSignups: number;
+  pendingSignups: number;
+  /** People whose link has at least one person attached to it. */
+  pairs: number;
+  byVersion: VersionRow[];
   bySource: BreakdownRow[];
   byReferral: BreakdownRow[];
 };
 
 export async function getMetrics(): Promise<Metrics> {
-  const [totals] = await query<{ visitors: string; activated: string; signups: string; referred: string }>(`
+  const [totals] = await query<{
+    visitors: string;
+    activated: string;
+    signups: string;
+    referred: string;
+    confirmed: string;
+    pairs: string;
+  }>(`
     SELECT
       (SELECT count(DISTINCT visitor) FROM site_events) AS visitors,
       (SELECT count(DISTINCT visitor) FROM site_events WHERE event = 'core_action_completed') AS activated,
       (SELECT count(*) FROM waitlist_signups) AS signups,
       (SELECT count(*) FROM waitlist_signups s
-        WHERE EXISTS (SELECT 1 FROM waitlist_signups r WHERE r.ref_code = s.ref)) AS referred
+        WHERE EXISTS (SELECT 1 FROM waitlist_signups r WHERE r.ref_code = s.ref)) AS referred,
+      (SELECT count(*) FROM waitlist_signups WHERE confirmed_at IS NOT NULL) AS confirmed,
+      (SELECT count(DISTINCT invited_by) FROM waitlist_signups) AS pairs
+  `);
+
+  // Visitors come from page views, signups from the list itself. A page view from before
+  // versions were recorded counts as open, which is what every page showed then.
+  const byVersion = await query<{ version: string; visitors: string; signups: string; confirmed: string }>(`
+    SELECT
+      v.version,
+      (SELECT count(DISTINCT e.visitor) FROM site_events e WHERE e.version = v.version) AS visitors,
+      (SELECT count(*) FROM waitlist_signups w WHERE w.version = v.version) AS signups,
+      (SELECT count(*) FROM waitlist_signups w WHERE w.version = v.version AND w.confirmed_at IS NOT NULL) AS confirmed
+    FROM (VALUES ('pair'), ('open')) AS v (version)
   `);
 
   const bySource = await query<{ label: string; detail: string; visitors: string; signups: string }>(`
@@ -114,6 +151,8 @@ export async function getMetrics(): Promise<Metrics> {
 
   const uniqueVisitors = Number(totals.visitors);
   const activatedVisitors = Number(totals.activated);
+  const waitlistSignups = Number(totals.signups);
+  const confirmedSignups = Number(totals.confirmed);
   const toRow = (row: { label: string; detail?: string; visitors: string; signups: string }): BreakdownRow => ({
     label: row.label,
     detail: row.detail ?? "",
@@ -123,10 +162,19 @@ export async function getMetrics(): Promise<Metrics> {
 
   return {
     uniqueVisitors,
-    waitlistSignups: Number(totals.signups),
+    waitlistSignups,
     activatedVisitors,
     activationRate: uniqueVisitors > 0 ? activatedVisitors / uniqueVisitors : 0,
     referredSignups: Number(totals.referred),
+    confirmedSignups,
+    pendingSignups: waitlistSignups - confirmedSignups,
+    pairs: Number(totals.pairs),
+    byVersion: byVersion.map((row) => ({
+      version: row.version,
+      visitors: Number(row.visitors),
+      signups: Number(row.signups),
+      confirmed: Number(row.confirmed),
+    })),
     bySource: bySource.map(toRow),
     byReferral: byReferral.map(toRow),
   };

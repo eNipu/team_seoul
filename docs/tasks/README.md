@@ -47,13 +47,34 @@ Sizes: **S** is about two hours, **M** is about half a day.
 | [T16](T16-site-status.md) | Keep the site's status section true | site | S | T07, T12 | needs decision |
 | [T17](T17-privacy-terms-pages.md) | Privacy policy and terms pages | site | M | – | needs input |
 
+### D. Waitlist: build the graph before launch
+
+Read `WAITLIST.md` before any task in this group.
+
+| ID | Task | Area | Size | Depends on | Status |
+| --- | --- | --- | --- | --- | --- |
+| [T18](T18-waitlist-pairs-model.md) | Waitlist pairs: model and API | site | M | – | done |
+| [T19](T19-waitlist-pair-states.md) | Waitlist states in the hero | site | M | T18 | done |
+| [T20](T20-waitlist-invitee-view.md) | What an invited person sees | site | S | T19 | done |
+| [T21](T21-hero-subhead-claims.md) | Hero subhead and the claims table | site | S | – | done |
+| [T22](T22-waitlist-metrics.md) | `/metrics` for pairs and for the two versions | site | S | T19 | done |
+| [T23](T23-waitlist-pairs-into-venn.md) | Carry waitlist pairs into Venn | backend | M | T18 | needs decision |
+| [T24](T24-people-you-know-wording.md) | Say "people you know" where Venn describes itself | both | S | – | done |
+
 T04 and T12 can start right away, in parallel with the backend tasks, because the shapes they
 render are fixed in `CONTRACTS.md`.
+
+## Order
+
+Group D is done except T23, which waits for an identity provider. The hero now says "Your next
+opportunity is someone you already know", so the shortest path to making that true is
+T08, T09, T01, T02, T03, T10, T11, then T04 and T12. T05, T06 and T07 wait.
 
 ## Keeping this folder small
 
 - One task is one pull request. If a task will not fit in 45 lines, split it.
 - Status lives only in the table above, never inside a task file.
-- A shape used by both backend and widget is written once, in `CONTRACTS.md`.
+- A shape used by both backend and widget is written once, in `CONTRACTS.md`. The waitlist's
+  rules, shape and copy are written once, in `WAITLIST.md`.
 - A new idea goes into `BACKLOG.md` as one line. It becomes a task file when someone will do it next.
 - When a whole group (A, B or C) is done, delete its task files. Git keeps the history.
