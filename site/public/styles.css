@@ -1,6 +1,13 @@
 /* Heldly site.
-   Colour has one job here: warm means kept or recent, cold means gone quiet.
-   Everything else is ink on paper. Contrast figures are in site/README.md. */
+   Colour has one job: warm is a connection that is active again, cold is one that has gone quiet.
+   The 3D scene in js/ reads the same tokens. Contrast figures are in site/README.md. */
+
+@font-face {
+  font-family: "Caveat";
+  src: url("fonts/caveat-600.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
 
 :root {
   color-scheme: light dark;
@@ -11,18 +18,19 @@
   --ink: #15181c;
   --ink-2: #505862;
   --line: #d9dcdd;
-  --edge: #7c858d; /* control borders, 3:1 or better on surface */
+  --edge: #7c858d;
 
-  --warm: #dc5a39; /* graphics only */
-  --warm-solid: #bf4326; /* fill behind white text */
-  --warm-ink: #a8391d; /* warm text */
+  --warm: #dc5a39;
+  --warm-solid: #bf4326;
+  --warm-ink: #a8391d;
   --on-warm: #ffffff;
   --cold: #647a92;
   --cold-ink: #465a70;
+  --cold-faint: #b7c2ce;
 
   --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Noto Sans KR",
     sans-serif;
-  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --hand: "Caveat", "Bradley Hand", "Segoe Print", cursive;
 
   --gutter: clamp(1.25rem, 5vw, 3rem);
   --radius: 14px;
@@ -44,6 +52,7 @@
     --on-warm: #101317;
     --cold: #7f95ad;
     --cold-ink: #a9bbcf;
+    --cold-faint: #3a4654;
   }
 }
 
@@ -87,18 +96,23 @@ body {
 h1,
 h2,
 h3,
+h4,
 p,
 ol,
 ul,
-dl,
-dd,
-figure {
+figure,
+fieldset {
   margin: 0;
 }
 ol,
 ul {
   padding: 0;
   list-style: none;
+}
+fieldset {
+  padding: 0;
+  border: 0;
+  min-width: 0;
 }
 
 a {
@@ -116,18 +130,18 @@ a:hover {
   border-radius: 4px;
 }
 
-code {
-  font-family: var(--mono);
-  font-size: 0.9em;
-  background: var(--sunk);
-  padding: 0.1em 0.35em;
-  border-radius: 5px;
+.vh {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
   white-space: nowrap;
 }
 
 .wrap {
   width: 100%;
-  max-width: 72rem;
+  max-width: 76rem;
   margin-inline: auto;
   padding-inline: var(--gutter);
 }
@@ -136,7 +150,7 @@ code {
   position: absolute;
   left: var(--gutter);
   top: -4rem;
-  z-index: 2;
+  z-index: 3;
   padding: 0.6rem 1rem;
   background: var(--ink);
   color: var(--paper);
@@ -170,7 +184,8 @@ code {
 }
 .top nav {
   display: flex;
-  gap: clamp(0.25rem, 2vw, 1.5rem);
+  align-items: center;
+  gap: clamp(0.25rem, 2vw, 1.25rem);
 }
 .top nav a {
   display: inline-flex;
@@ -183,52 +198,35 @@ code {
 .top nav a:hover {
   text-decoration: underline;
 }
+.top nav .top__cta {
+  padding-inline: 1rem;
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+}
+.top nav .top__cta:hover {
+  text-decoration: none;
+  background: var(--sunk);
+}
 
 /* Hero */
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 27rem);
-  gap: clamp(2.5rem, 6vw, 5rem);
-  align-items: start;
-  padding-block: clamp(2rem, 7vw, 5.5rem) clamp(2.5rem, 6vw, 4.5rem);
-}
-/* The card is taller than the copy, so the copy stays beside it while it scrolls. */
-.hero__copy {
-  position: sticky;
-  top: 2.5rem;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+  gap: clamp(1.5rem, 4vw, 3rem);
+  align-items: center;
+  padding-block: clamp(1.5rem, 5vw, 4rem) clamp(2.5rem, 6vw, 4.5rem);
 }
 
 h1 {
-  font-size: clamp(2.6rem, 1.4rem + 5.4vw, 5rem);
+  font-size: clamp(2.6rem, 1.3rem + 4.6vw, 4.75rem);
   line-height: 1.02;
   letter-spacing: -0.035em;
   font-weight: 700;
   text-wrap: balance;
 }
 
-.marked {
-  position: relative;
-  display: inline-block;
-  white-space: nowrap;
-}
-.marked svg {
-  position: absolute;
-  left: -1%;
-  bottom: -0.16em;
-  width: 102%;
-  height: 0.2em;
-  overflow: visible;
-}
-.marked path {
-  fill: none;
-  stroke: var(--warm);
-  stroke-width: 3.5;
-  stroke-linecap: round;
-  vector-effect: non-scaling-stroke;
-}
-
 .lede {
-  margin-top: 1.75rem;
+  margin-top: 1.5rem;
   max-width: 34rem;
   font-size: clamp(1.125rem, 1rem + 0.5vw, 1.3125rem);
   line-height: 1.5;
@@ -236,7 +234,7 @@ h1 {
 }
 
 .hero__actions,
-.start__actions {
+.status__actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -248,6 +246,98 @@ h1 {
   align-items: center;
   min-height: 44px;
   font-weight: 500;
+}
+
+.hero__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin-top: 2.25rem;
+  font-size: 0.9375rem;
+  color: var(--ink-2);
+}
+.hero__facts li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.hero__facts li::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--warm);
+}
+
+/* 3D stage */
+.stage {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  min-height: 20rem;
+  max-height: 40rem;
+}
+.stage__canvas {
+  position: absolute;
+  inset: 0;
+}
+.stage__canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  touch-action: pan-y;
+}
+.stage--flat .stage__canvas {
+  /* No WebGL: a quiet field of dots so the layout still holds. */
+  background-image: radial-gradient(circle, var(--cold-faint) 2px, transparent 2.5px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(closest-side, #000 40%, transparent);
+}
+
+.stage__note {
+  position: absolute;
+  top: 4%;
+  right: 2%;
+  white-space: nowrap;
+  font-family: var(--hand);
+  font-weight: 600;
+  font-size: clamp(1.5rem, 1.1rem + 1vw, 1.9rem);
+  line-height: 1.05;
+  color: var(--warm-ink);
+  transform: rotate(-4deg);
+  pointer-events: none;
+}
+
+.signal {
+  position: absolute;
+  left: 0;
+  bottom: 4%;
+  width: min(20rem, 88%);
+  padding: 0.85rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--warm);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px -12px rgb(0 0 0 / 0.25);
+  pointer-events: none;
+}
+.signal__meta {
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+}
+.signal__meta span:first-child {
+  font-weight: 600;
+  color: var(--ink);
+}
+.signal__text {
+  margin-top: 0.2rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.signal__kind {
+  margin-top: 0.45rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--warm-ink);
 }
 
 /* Buttons */
@@ -266,6 +356,11 @@ h1 {
   text-decoration: none;
   cursor: pointer;
   touch-action: manipulation;
+}
+.btn--small {
+  min-height: 44px;
+  padding: 0 1.1rem;
+  font-size: 0.9375rem;
 }
 .btn:disabled {
   opacity: 0.5;
@@ -292,7 +387,6 @@ h1 {
   background: var(--sunk);
 }
 
-/* Chat bubble: the user's own words */
 .bubble {
   display: inline-block;
   padding: 0.65rem 0.95rem;
@@ -302,164 +396,9 @@ h1 {
   line-height: 1.4;
 }
 
-/* Example card */
-.demo figcaption {
-  margin-bottom: 1rem;
-  font-size: 0.9375rem;
-  color: var(--ink-2);
-}
-.demo figcaption strong {
-  color: var(--ink);
-}
-.said {
-  display: grid;
-  gap: 0.35rem;
-  margin-bottom: 0.75rem;
-}
-.said__who {
-  font-size: 0.8125rem;
-  color: var(--ink-2);
-}
-.said .bubble {
-  font-size: 0.9375rem;
-}
-
-.card {
-  padding: 1.25rem;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-}
-.card__title {
-  font-size: 1.125rem;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
-}
-.card__note,
-.card__foot {
-  margin-top: 0.4rem;
-  font-size: 0.875rem;
-  color: var(--ink-2);
-}
-.card__note strong {
-  color: var(--ink);
-}
-
-.memories {
-  display: grid;
-  gap: 0.6rem;
-  margin-top: 1rem;
-}
-.memory {
-  display: grid;
-  gap: 0.15rem;
-  padding: 0.5rem 0.85rem 0.85rem;
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--warm);
-  border-radius: 10px;
-}
-.memory--off {
-  border-left-color: var(--cold);
-}
-.memory--off .memory__title,
-.memory--off .memory__text {
-  color: var(--ink-2);
-  text-decoration: line-through;
-}
-.memory__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-.memory__title {
-  font-weight: 600;
-  line-height: 1.35;
-}
-.memory__text {
-  font-size: 0.9375rem;
-  color: var(--ink-2);
-}
-
-.check {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  min-height: 44px;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-.check input {
-  width: 1.35rem;
-  height: 1.35rem;
-  margin: 0;
-  accent-color: var(--warm-solid);
-}
-
-.tag {
-  flex: none;
-  padding: 0.15rem 0.6rem;
-  background: var(--sunk);
-  border-radius: 999px;
-  font-size: 0.8125rem;
-  color: var(--ink-2);
-  white-space: nowrap;
-}
-
-.field {
-  display: grid;
-  gap: 0.25rem;
-  margin-top: 0.6rem;
-  font-size: 0.8125rem;
-  color: var(--ink-2);
-}
-.field select {
-  width: 100%;
-  min-height: 44px;
-  padding: 0 0.7rem;
-  background: var(--surface);
-  color: var(--ink);
-  border: 1px solid var(--edge);
-  border-radius: 8px;
-  font: inherit;
-  font-size: 0.9375rem;
-}
-.field select:disabled {
-  opacity: 0.55;
-}
-
-.card__actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.6rem;
-  margin-top: 1rem;
-}
-
-.saved {
-  display: grid;
-  gap: 0.5rem;
-  margin-top: 0.9rem;
-}
-.saved li {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.4rem 0.75rem;
-  padding: 0.7rem 0.85rem;
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--warm);
-  border-radius: 10px;
-}
-.saved__title {
-  font-weight: 600;
-}
-
 /* Sections */
 .band {
-  padding-block: clamp(2.5rem, 6vw, 4.5rem);
+  padding-block: clamp(2.5rem, 6vw, 5rem);
 }
 h2 {
   font-size: clamp(1.75rem, 1.3rem + 2vw, 2.75rem);
@@ -482,12 +421,188 @@ h2 {
   margin-top: clamp(2rem, 4vw, 3rem);
   font-size: 1.125rem;
 }
+h3 {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
 
-/* Going cold: five moments on a line that loses its warmth */
+/* How it works */
+.how {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: clamp(2rem, 5vw, 4.5rem);
+  align-items: start;
+}
+.steps {
+  counter-reset: step;
+  margin-top: 2rem;
+  border-top: 1px solid var(--line);
+}
+.steps li {
+  position: relative;
+  counter-increment: step;
+  padding: 1.1rem 0 1.1rem 2.75rem;
+  border-bottom: 1px solid var(--line);
+}
+.steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 1.05rem;
+  display: grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border: 1px solid var(--edge);
+  border-radius: 50%;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+}
+.steps p {
+  margin-top: 0.3rem;
+  color: var(--ink-2);
+}
+
+/* Example chat */
+.demo {
+  position: sticky;
+  top: 1.5rem;
+}
+.demo figcaption {
+  margin-bottom: 0.9rem;
+  font-size: 0.9375rem;
+  color: var(--ink-2);
+}
+.demo figcaption strong {
+  color: var(--ink);
+}
+.chat {
+  display: grid;
+  gap: 0.75rem;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  background: var(--sunk);
+  border-radius: 20px;
+}
+.chat__who {
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+}
+.chat > .bubble {
+  justify-self: start;
+  background: var(--surface);
+  font-size: 0.9375rem;
+}
+
+.card {
+  padding: 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.card__title {
+  font-size: 1.0625rem;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+.card__text {
+  margin-top: 0.5rem;
+}
+.card__foot {
+  margin-top: 0.6rem;
+  font-size: 0.875rem;
+  color: var(--ink-2);
+}
+.card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.people {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.9rem;
+}
+.person {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--cold);
+  border-radius: 10px;
+}
+.person:hover {
+  border-left-color: var(--warm);
+}
+.person__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0 0.75rem;
+}
+.person__name {
+  font-weight: 700;
+}
+.person__quiet {
+  font-size: 0.8125rem;
+  color: var(--cold-ink);
+}
+.person__signal {
+  line-height: 1.4;
+}
+.person__age {
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+}
+.person .btn {
+  justify-self: start;
+  margin-top: 0.45rem;
+}
+
+.slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+.slot {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 1rem;
+  border: 1px solid var(--edge);
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.slot input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.slot:has(input:checked) {
+  background: var(--warm-solid);
+  border-color: var(--warm-solid);
+  color: var(--on-warm);
+}
+.slot:has(input:focus-visible) {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+
+/* Going cold */
 .cooling {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1.5rem;
   margin-top: clamp(2.25rem, 5vw, 3.5rem);
   padding-top: 1.75rem;
@@ -505,15 +620,12 @@ h2 {
   --heat: 100%;
 }
 .cooling li:nth-child(2) {
-  --heat: 75%;
+  --heat: 66%;
 }
 .cooling li:nth-child(3) {
-  --heat: 45%;
+  --heat: 25%;
 }
 .cooling li:nth-child(4) {
-  --heat: 15%;
-}
-.cooling li:nth-child(5) {
   --heat: 0%;
 }
 .cooling li::before {
@@ -527,7 +639,7 @@ h2 {
   background: color-mix(in oklab, var(--warm) var(--heat), var(--cold));
   box-shadow: 0 0 0 4px var(--paper);
 }
-.cooling li:nth-child(5)::before {
+.cooling li:nth-child(4)::before {
   background: var(--paper);
   border: 2px solid var(--cold);
 }
@@ -538,44 +650,29 @@ h2 {
   font-weight: 600;
   color: color-mix(in oklab, var(--warm-ink) var(--heat), var(--cold-ink));
 }
-.cooling p {
-  font-size: 1rem;
-  line-height: 1.5;
-}
 
-/* What you can ask */
+/* Asks */
 .asks {
-  margin-top: clamp(2rem, 4vw, 3rem);
-  border-bottom: 1px solid var(--line);
-}
-.asks > div {
-  display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  gap: 1rem 2.5rem;
-  align-items: start;
-  padding-block: 1.4rem;
-  border-top: 1px solid var(--line);
-}
-.asks dd {
-  padding-top: 0.55rem;
-  color: var(--ink-2);
-}
-.asks code {
-  color: var(--ink);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: clamp(1.75rem, 4vw, 2.5rem);
 }
 
-/* Kept and not kept */
-.ledger {
+/* Ledgers */
+.ledger,
+.status__lists {
   display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 2.5rem;
+}
+.ledger {
   margin-top: clamp(2rem, 4vw, 3rem);
 }
-h3 {
+.ledger h3,
+.status__lists h3 {
   padding-bottom: 0.75rem;
   border-bottom: 2px solid var(--ink);
-  font-size: 1.0625rem;
-  font-weight: 700;
 }
 .ledger__list li {
   position: relative;
@@ -595,43 +692,22 @@ h3 {
   content: "\2715";
   color: var(--ink-2);
 }
+.ledger__list--soon li::before {
+  content: "\25CB";
+  color: var(--cold-ink);
+}
 
-/* Where it stands */
-.start {
+/* Status */
+.status {
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
   gap: 2.5rem;
   align-items: start;
 }
-.start p:not(.start__actions) {
+.status > div > p:not(.status__actions) {
   margin-top: 1rem;
   font-size: 1.125rem;
   color: var(--ink-2);
-}
-.steps {
-  counter-reset: step;
-  border-top: 2px solid var(--ink);
-}
-.steps li {
-  position: relative;
-  counter-increment: step;
-  padding: 1rem 0 1rem 2.4rem;
-  border-bottom: 1px solid var(--line);
-}
-.steps li::before {
-  content: counter(step);
-  position: absolute;
-  left: 0;
-  top: 1.05rem;
-  display: grid;
-  place-items: center;
-  width: 1.6rem;
-  height: 1.6rem;
-  border: 1px solid var(--edge);
-  border-radius: 50%;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  line-height: 1;
 }
 
 /* Footer */
@@ -642,7 +718,6 @@ h3 {
   gap: 0.5rem 2rem;
   margin-top: clamp(1.5rem, 4vw, 3rem);
   padding-block: 2rem 3rem;
-  /* a rule that lines up with the content, not the gutters */
   background: linear-gradient(var(--line), var(--line)) no-repeat center top / calc(100% - 2 * var(--gutter)) 1px;
   font-size: 0.9375rem;
   color: var(--ink-2);
@@ -659,14 +734,20 @@ h3 {
 
 /* Narrow layouts */
 @media (max-width: 60rem) {
-  .hero {
+  .hero,
+  .how,
+  .status {
     grid-template-columns: minmax(0, 1fr);
   }
-  .hero__copy {
-    position: static;
+  .stage {
+    max-height: 30rem;
+    width: 100%;
+    max-width: 34rem;
+    margin-inline: auto;
   }
   .demo {
-    max-width: 30rem;
+    position: static;
+    max-width: 34rem;
   }
   .cooling {
     grid-template-columns: minmax(0, 1fr);
@@ -684,19 +765,12 @@ h3 {
     left: -2rem;
     top: 0.3rem;
   }
-  .ledger,
-  .start {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 
-@media (max-width: 44rem) {
-  .asks > div {
+@media (max-width: 40rem) {
+  .ledger,
+  .status__lists {
     grid-template-columns: minmax(0, 1fr);
-    gap: 0.5rem;
-  }
-  .asks dd {
-    padding-top: 0;
   }
 }
 
@@ -704,12 +778,26 @@ h3 {
   .top__anchor {
     display: none !important;
   }
-  .card {
-    padding: 1rem;
+  /* Room under the network for the signal card, so it never covers "you". */
+  .stage {
+    aspect-ratio: auto;
+    height: calc(100vw - 2 * var(--gutter) + 6rem);
+    min-height: 0;
+  }
+  .stage__canvas {
+    inset: 1.5rem 0 6rem 0;
+  }
+  .stage__note {
+    top: 0;
+    right: 0;
+  }
+  .signal {
+    bottom: 0;
+    width: 100%;
   }
   .card__actions .btn,
   .hero__actions .btn,
-  .start__actions .btn {
+  .status__actions .btn {
     flex: 1 1 auto;
   }
 }
@@ -719,15 +807,26 @@ h3 {
     scroll-behavior: smooth;
   }
   .btn,
-  .memory {
+  .person,
+  .slot {
     transition:
       filter 0.15s,
       background-color 0.15s,
       border-color 0.15s;
   }
+  .signal {
+    transition:
+      opacity 0.35s ease,
+      transform 0.35s ease;
+  }
+  .signal.is-changing {
+    opacity: 0;
+    transform: translateY(6px);
+  }
 }
 
 @media print {
+  .stage,
   .demo,
   .skip {
     display: none;

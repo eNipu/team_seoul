@@ -1,53 +1,78 @@
 # Heldly site
 
-The public page for Heldly. Three static files in `public/` (`index.html`, `styles.css`, `demo.js`) plus the logo.
-There is no build step and there are no dependencies.
+The public landing page for Heldly. Static files in `public/`, plus one bundled script built from `src/`.
 
-## Preview and check
+| Path | What it is |
+| --- | --- |
+| `public/index.html`, `public/styles.css` | The page |
+| `public/js/` | Build output from `src/`. Committed, so the deploy needs no build step |
+| `public/fonts/caveat-600.woff2` | Caveat, for the one handwritten note. SIL Open Font License, see `Caveat-OFL.txt` |
+| `src/main.js` | Booking example, signal card, and loading of the 3D scene |
+| `src/scene.js` | The 3D network in the hero, built with three.js (MIT) |
+| `check.mjs` | Browser checks |
+
+## Build, preview, check
 
 ```bash
-python3 -m http.server 8090 -d site/public   # http://localhost:8090
-node site/check.mjs                           # browser checks, needs Node 22+ and Chrome
-node site/check.mjs --shots /tmp/heldly-shots # same, plus full-page screenshots
-node site/check.mjs --url https://<host>/     # run the checks against a deployed copy
+cd site
+npm install
+npm run build                                  # writes public/js/
+python3 -m http.server 8090 -d public          # http://localhost:8090
+node check.mjs                                 # needs Node 22+ and Chrome
+node check.mjs --shots /tmp/heldly-shots       # also saves full-page screenshots
+node check.mjs --url https://<host>/           # check a deployed copy
 ```
 
-`check.mjs` loads the page at 360, 768 and 1280 px in light and dark and fails on: an empty or missing heading,
-horizontal overflow, text below WCAG AA contrast, text under 13 px, a control under 44 px, a console error, a request
-to another origin, or a cookie. It also clicks through the example card.
+`check.mjs` loads the page at 360, 768 and 1280 px in light and dark, plus once with reduced motion. It fails on:
+an empty or missing heading, sideways overflow, text below WCAG AA contrast, text under 13 px, a control under 44 px,
+a console error, a request to another origin, a cookie, a broken step in the booking example, a 3D scene that draws
+nothing, or a scene that keeps moving when reduced motion is on.
+
+## The 3D scene
+
+Your network as a slowly turning cloud of about 150 contacts. Most are cold blue-grey. Every 3.4 seconds one warms
+to coral, a line draws to it from "you" at the centre, and the card underneath names the person and what changed.
+The colours are read from the CSS tokens, so the scene follows light and dark mode.
+
+- Loaded as a separate chunk (about 535 KB minified) only if the browser has WebGL 2. Without it, the stage shows
+  a still dot pattern.
+- Stops rendering when it is off screen or the tab is hidden.
+- With reduced motion, it draws one still frame with five warm contacts and never animates.
+- Drag sideways to turn it. Vertical swipes still scroll the page.
+- The figure has a text description for screen readers; the canvas and the changing card are hidden from them.
 
 ## Deploy
 
-The page runs on Railway as the `site` service of the `heldly` project. Railpack sees `index.html` and serves the
-folder as a static site.
+Railway project `heldly`, service `site`. Railpack serves `public/` as a static site.
 
 ```bash
+npm run build && node check.mjs
 railway up ./site/public --path-as-root --service site -m "what changed"
+node site/check.mjs --url https://site-production-4ef8eb52.up.railway.app/
 ```
 
 ## What the copy may claim
 
-Every statement on the page is taken from the code or the docs in this repository. If the product changes, change the
-page with it.
+The page describes the product the team is building, and the Status section says which parts work today. Keep that
+section true when the product changes.
 
-| Claim on the page | Source |
-| --- | --- |
-| Nothing is saved until approved; private by default | `backend/app/services/memory_service.py`, `docs/SECURITY.md` |
-| Invite codes last 72 hours; the inviter accepts the request | `backend/app/config.py` (`invite_ttl_hours`), `docs/ARCHITECTURE.md` |
-| Reconnection list starts at three weeks, longest gap first | `reconnection_suggestions` in `backend/app/services/social_service.py` |
-| Up to three activity ideas from interests both people shared | `suggest_activity` in the same file |
-| Text may be sent to OpenAI's API to draft suggestions | `backend/app/ai/extraction.py` (when `OPENAI_API_KEY` is set) |
-| Passwords, card numbers and API keys are refused | `contains_sensitive` in `backend/app/ai/extraction.py` |
-| Heldly never contacts anyone | `README.md`, `plugin/skills/heldly-social/SKILL.md` |
-| No cookies, nothing loaded from other sites | the CSP in `index.html`; enforced by `check.mjs` |
+| Claim | Status | Source |
+| --- | --- | --- |
+| Saves only what you approve | Works | `backend/app/services/memory_service.py` |
+| Connect by invite code | Works | `backend/app/services/social_service.py` |
+| Find who you haven't seen in a while | Works | `reconnection_suggestions` in the same file |
+| Claude support | In development | `Heldly PRD.md`, section 3 |
+| Searching your network's updates | In development | `Heldly PRD.md`, section 6.3 |
+| Booking on both calendars | In development | `Heldly PRD.md`, section 7 |
+| Visibility only between mutual connections | Design | `Heldly idea memo.md`, `Heldly PRD.md` section 8.1 |
 
-The page does not mention Claude, scheduling or communities. None of them is in the code yet.
+The people in the examples and the hero card are made up, and the footer says so.
 
 ## Design notes
 
-Colour has one job: warm means kept or recent, cold means gone quiet. Navigation, body text and the main button are
-ink on paper. Type is the widget's system stack, so the page and the widget read as one product and no font is
-downloaded. Light and dark follow the visitor's system setting.
+Colour has one job: warm is a connection that is active again, cold is one that has gone quiet. Navigation, body
+text and the main button are ink on paper. Body type is the system stack; Caveat appears once, as the handwritten
+note in the hero, and never carries information.
 
 | Token | Light | Dark | Contrast on paper (light / dark) |
 | --- | --- | --- | --- |
@@ -59,5 +84,5 @@ downloaded. Light and dark follow the visitor's system setting.
 | `--cold` (graphics) | `#647a92` | `#7f95ad` | 4.1 / 6.0 |
 | `--cold-ink` (text) | `#465a70` | `#a9bbcf` | 6.5 / 9.5 |
 
-The example card copies the wording and the flow of `widget/src/components/MemoryReview.tsx`. If that component
-changes, update the card.
+Structure follows boardy.ai's page (statement, how it works, example, trust, call to action), but the layout, copy,
+code and every asset are Heldly's own.
