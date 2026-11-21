@@ -53,7 +53,7 @@ The hero `h1` stays "Find the common ground." Everything follows the Copy rules 
 
 | Where | Text |
 | --- | --- |
-| Under the headline | You already know your next customer. (then investor, friend, gym buddy, travel buddy: T25) |
+| Under the headline | You already know your next customer. (then friend, business partner: T25) |
 | Hero subhead | Venn shows where you overlap, from what each of you approves, right inside ChatGPT. |
 | Form note, `pair` | You join with one person you know. We only email you about your invite. |
 | Form note, `open` | Founding Circle. We only email you about your invite. (unchanged) |

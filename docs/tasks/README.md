@@ -68,7 +68,7 @@ render are fixed in `CONTRACTS.md`.
 ## Order
 
 Group D is done except T23, which waits for an identity provider. The hero now says "You already
-know your next customer" and "investor", so the shortest path to making that true is
+know your next customer" and "business partner", so the shortest path to making that true is
 T08, T09, T01, T02, T03, T10, T11, then T04 and T12. T05, T06 and T07 wait.
 
 ## Keeping this folder small

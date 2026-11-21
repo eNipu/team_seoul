@@ -132,10 +132,11 @@ Compose from the kit before writing new CSS: `.panel`, `.card`, `.notice`, `.btn
 ## Motion
 
 - Ambient only in the hero: the slow orbit, or a 14s breathe in the CSS fallback, and the one
-  changing word under the headline (`NextWord`, a word every 2.4s, entering like `rise`).
+  changing word under the headline (`NextWord`: every 2.4s the word rolls out through the top
+  and the next rises from below, 0.5s, the same easing as `rise`).
   Nothing else on the page loops, and no second line of text may change on its own.
-- Text that changes keeps its neighbours still: the changing word sits on its own line, so the
-  words beside it never shift.
+- Text that changes never makes its neighbours jump: the slot is as wide as its word and that
+  width is animated, so the sentence stays centered and the words before it glide.
 - New content enters with the shared `rise` keyframes (8px, 0.4 to 0.5s,
   `cubic-bezier(0.2, 0.8, 0.2, 1)`). Control feedback is a 0.15s transition.
 - No scroll-triggered reveals, parallax, hover lifts, or animation libraries.
@@ -187,7 +188,8 @@ system setting and once with reduced motion:
 - A control under 44px in either dimension
 - A console error, an uncaught script error, a request to another origin, or a cookie
 - A hero scene that does not draw, or that loads under reduced motion
-- A word under the headline that never changes, or that changes under reduced motion
+- A word under the headline that never changes, that changes under reduced motion, or that on a
+  wide screen is off the sentence's line or leaves the sentence off center
 - A change to the preview's wording or steps. `exercisePreview` matches the signal labels,
   button text, and notes literally, and the waitlist and `/metrics` checks match theirs. When
   you change that copy on purpose, update `check.mjs` in the same change.
