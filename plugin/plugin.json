@@ -1,0 +1,37 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "heldly",
+  "version": "0.1.0",
+  "description": "Heldly is a social companion that remembers what matters to you (only what you approve) and helps you stay close to friends.",
+  "author": {
+    "name": "Heldly",
+    "url": "https://heldly.example.com"
+  },
+  "homepage": "https://heldly.example.com",
+  "license": "UNLICENSED",
+  "keywords": ["social", "friends", "memories", "relationships", "companion"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Heldly",
+        "shortDescription": "Remember what matters and stay close to friends.",
+        "longDescription": "Heldly keeps a private, user-approved memory of your interests, preferences and social goals, lets you connect with friends through invite codes, and suggests ways to reconnect. Nothing is saved without your approval, and Heldly never contacts anyone on your behalf.",
+        "developerName": "Heldly",
+        "category": "Lifestyle",
+        "capabilities": ["Interactive", "Write"],
+        "websiteURL": "https://heldly.example.com",
+        "privacyPolicyURL": "https://heldly.example.com/privacy",
+        "termsOfServiceURL": "https://heldly.example.com/terms",
+        "defaultPrompt": [
+          "Set up my Heldly profile",
+          "Show my Heldly dashboard",
+          "Who should I reconnect with this week?"
+        ],
+        "brandColor": "#E86A4A",
+        "composerIcon": "./assets/icon.svg",
+        "logo": "./assets/logo.svg"
+      },
+      "onboardingSkill": "./skills/heldly-social/SKILL.md"
+    }
+  }
+}
