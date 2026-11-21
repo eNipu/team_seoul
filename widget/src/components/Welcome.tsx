@@ -4,7 +4,7 @@ import ErrorBanner from "./ErrorBanner";
 import { ActionError, ChatFallback, useAction, type ViewProps } from "./common";
 import { Icon, Illustration } from "./icons";
 
-const SETUP_PROMPT = "Let's set up Heldly. Ask me a few questions about my interests and the people I want to stay close to.";
+const SETUP_PROMPT = "Let's set up Venn. Ask me a few questions about my interests and the people I want to stay close to.";
 
 type Phase = "choosing" | "starting" | "started" | "unavailable";
 
@@ -25,7 +25,7 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
     setPhase("starting");
     setError(null);
     if (selected.length > 0) {
-      const res = await bridge.callTool("heldly_update_profile", { social_goals: selected });
+      const res = await bridge.callTool("venn_update_profile", { social_goals: selected });
       // Not fatal: the chat set-up can still go ahead, but tell the user.
       if (!res.ok) setError(res.errorText);
     }
@@ -47,7 +47,7 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
         <Illustration name="chat" />
         <p className="empty__title">Great, tell me about yourself in the chat</p>
         {phase === "started" ? (
-          <p className="muted">Heldly will ask a few questions there. You approve everything before it's saved.</p>
+          <p className="muted">Venn will ask a few questions there. You approve everything before it's saved.</p>
         ) : (
           <ChatFallback text={SETUP_PROMPT} />
         )}
@@ -96,7 +96,7 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
           type="button"
           className="btn btn--block"
           disabled={busy}
-          onClick={() => void action.run("import", () => nav.openView("heldly_import_chatgpt_memory", {}))}
+          onClick={() => void action.run("import", () => nav.openView("venn_import_chatgpt_memory", {}))}
         >
           <Icon name="import" size={18} />
           {action.busy === "import" ? "Opening…" : "Import my ChatGPT memory"}
@@ -112,7 +112,7 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
     <section className="panel welcome">
       <div className="welcome__hero">
         <Illustration name="welcome" size="lg" />
-        <h2 className="welcome__title">{name ? `Welcome to Heldly, ${name}` : "Welcome to Heldly"}</h2>
+        <h2 className="welcome__title">{name ? `Welcome to Venn, ${name}` : "Welcome to Venn"}</h2>
         <p className="muted">A companion that helps you keep the people you care about close.</p>
       </div>
 
@@ -155,7 +155,7 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
 
       <p className="trust">
         <Icon name="shield" size={18} />
-        <span>Nothing is saved until you approve it, and Heldly never contacts anyone for you.</span>
+        <span>Nothing is saved until you approve it, and Venn never contacts anyone for you.</span>
       </p>
     </section>
   );

@@ -40,9 +40,9 @@ export default function Invite({ data, bridge }: ViewProps<InviteViewData>) {
 
   function revoke() {
     void action.run("revoke", async () => {
-      const res = await bridge.callTool("heldly_revoke_invite", { code: data.code });
+      const res = await bridge.callTool("venn_revoke_invite", { code: data.code });
       if (!res.ok) return res.errorText;
-      if (!isObj(res.data) || res.data.revoked !== true) return "Heldly couldn't revoke this code.";
+      if (!isObj(res.data) || res.data.revoked !== true) return "Venn couldn't revoke this code.";
       setRevoked(true);
       setConfirming(false);
       setManual(null);
@@ -59,7 +59,7 @@ export default function Invite({ data, bridge }: ViewProps<InviteViewData>) {
         <Illustration name="invite" size="sm" />
         <div>
           <h2>Invite a friend</h2>
-          <p className="muted small">Share this code with someone you'd like to connect with on Heldly.</p>
+          <p className="muted small">Share this code with someone you'd like to connect with on Venn.</p>
         </div>
       </div>
 
@@ -85,7 +85,7 @@ export default function Invite({ data, bridge }: ViewProps<InviteViewData>) {
 
       {!revoked && data.qr.length > 0 && (
         <figure className="qr">
-          <QrCode rows={data.qr} label="QR code that opens your Heldly invite link" />
+          <QrCode rows={data.qr} label="QR code that opens your Venn invite link" />
           <figcaption className="qr__caption">Scan to connect</figcaption>
         </figure>
       )}

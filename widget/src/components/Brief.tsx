@@ -40,9 +40,9 @@ export default function Brief({ data, bridge, nav }: ViewProps<BriefViewData>) {
 
   function metUp() {
     void action.run("log", async () => {
-      const res = await bridge.callTool("heldly_log_interaction", arg);
+      const res = await bridge.callTool("venn_log_interaction", arg);
       if (!res.ok) return res.errorText;
-      if (!parseLogInteraction(res.data).recorded) return "Heldly couldn't log that.";
+      if (!parseLogInteraction(res.data).recorded) return "Venn couldn't log that.";
       setLogged(true);
       return null;
     });
@@ -64,8 +64,8 @@ export default function Brief({ data, bridge, nav }: ViewProps<BriefViewData>) {
           <p className="eyebrow">Before you see</p>
           <h2>{data.display_name}</h2>
           <div className="row row--wrap">
-            <span className={`badge ${data.on_heldly ? "badge--on" : "badge--note"}`}>
-              {data.on_heldly ? "On Heldly" : "Private note"}
+            <span className={`badge ${data.on_venn ? "badge--on" : "badge--note"}`}>
+              {data.on_venn ? "On Venn" : "Private note"}
             </span>
             {data.relationship && <span className="badge badge--note">{data.relationship}</span>}
           </div>
@@ -182,7 +182,7 @@ export default function Brief({ data, bridge, nav }: ViewProps<BriefViewData>) {
         type="button"
         className="btn btn--primary btn--block"
         disabled={busy}
-        onClick={() => void action.run("ideas", () => nav.openView("heldly_suggest_activity", arg))}
+        onClick={() => void action.run("ideas", () => nav.openView("venn_suggest_activity", arg))}
       >
         <Icon name="bulb" size={18} />
         {action.busy === "ideas" ? "Loading…" : "Get ideas for time together"}
@@ -202,7 +202,7 @@ export default function Brief({ data, bridge, nav }: ViewProps<BriefViewData>) {
           type="button"
           className="btn"
           disabled={busy}
-          onClick={() => void action.run("open", () => nav.openView("heldly_view_friend", arg))}
+          onClick={() => void action.run("open", () => nav.openView("venn_view_friend", arg))}
         >
           <Icon name="user" size={18} />
           {action.busy === "open" ? "Opening…" : `Open ${first}`}

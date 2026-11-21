@@ -1,6 +1,6 @@
 """DEVELOPMENT-ONLY OAuth 2.1 authorization server (DCR + PKCE + simple login page).
 
-Lets you connect ChatGPT (or MCP Inspector) to a local Heldly server without an external
+Lets you connect ChatGPT (or MCP Inspector) to a local Venn server without an external
 identity provider. The "login" lets the developer choose a username, so it provides NO real
 authentication — it is refused when ENVIRONMENT=production (see app.config.Settings) and can be
 gated with DEV_AUTH_PASSCODE when exposed through a tunnel.
@@ -289,14 +289,14 @@ def _page(error: str | None, txn: str, need_passcode: bool = False) -> str:
   {passcode}
   <button type="submit">Continue to ChatGPT</button>
 </form>
-<small>Pick any username. The same username always opens the same Heldly account.</small>"""
+<small>Pick any username. The same username always opens the same Venn account.</small>"""
         if txn
         else ""
     )
     return page(
-        "Sign in to Heldly (development)",
-        f"""<h1>Sign in to Heldly</h1>
-<p>Connect ChatGPT to your Heldly account.</p>
+        "Sign in to Venn (development)",
+        f"""<h1>Sign in to Venn</h1>
+<p>Connect ChatGPT to your Venn account.</p>
 <div class="note">Development sign-in. Not for production use.</div>
 {err}{form}""",
     )

@@ -13,7 +13,7 @@ interface Props {
 
 type State = "idle" | "opening" | "opened" | "blocked";
 
-/** Inline date-time picker that opens a prefilled Google Calendar event. Heldly never creates the event itself. */
+/** Inline date-time picker that opens a prefilled Google Calendar event. Venn never creates the event itself. */
 export default function CalendarPicker({ bridge, title, details, onClose }: Props) {
   const id = useId();
   const [value, setValue] = useState(() => toLocalInputValue(nextSaturdayAt11()));

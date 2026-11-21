@@ -24,7 +24,7 @@ Canonical skill packages live in `.agents/skills/`. Relative directory links in
   of current platform behavior; verify questionable or version-specific claims against
   official documentation. Never claim a visual or accessibility check ran unless it did.
 - Do not load design skills for unrelated backend work. Do not modify the shipped
-  `plugin/skills/heldly-social/` skill as part of editor configuration.
+  `plugin/skills/venn-social/` skill as part of editor configuration.
 
 ## Validation
 

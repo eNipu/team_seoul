@@ -11,7 +11,7 @@ from app.models._base import created_at_col, updated_at_col, uuid_pk
 
 
 class Person(Base):
-    """A private note about a friend who is NOT on Heldly.
+    """A private note about a friend who is NOT on Venn.
 
     Owner-only: never shared with connections, never shown on a profile, and never used to
     contact anyone. Deleted with the owner's account.
@@ -46,7 +46,7 @@ class PersonInteraction(Base):
 class PeopleImport(Base):
     """People the assistant proposed to add, waiting for the owner to confirm on the review card.
 
-    Stored server-side so that nothing is added on the model's say-so: `heldly_import_people`
+    Stored server-side so that nothing is added on the model's say-so: `venn_import_people`
     only accepts an import the same user was shown, once, before it expires.
     """
 

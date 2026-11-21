@@ -1,4 +1,4 @@
-# Heldly data model
+# Venn data model
 
 SQLAlchemy 2 models in `backend/app/models/`, migrations in `backend/migrations/` (Alembic).
 Postgres (Supabase) in production; SQLite for local development and tests. Ids are UUIDs,
@@ -35,11 +35,11 @@ Limits: 500 memories per user, 8 items per proposal (30 for an import from ChatG
 | `blocks` | blocker_user_id*, blocked_user_id*, created_at* | Composite PK. Checked in both directions. |
 | `abuse_reports` | id*, reporter_user_id*, reported_user_id*, reason*, created_at* | For moderation review. |
 
-## People (friends who are not on Heldly)
+## People (friends who are not on Venn)
 
 | Table | Columns | Notes |
 | --- | --- | --- |
-| `people` | id*, owner_user_id* (FK cascade), name*, relationship, notes, interests* (JSON list), created_at*, updated_at* | Private note written by the owner. Never shared, never linked to a Heldly account, never used to contact the person. |
+| `people` | id*, owner_user_id* (FK cascade), name*, relationship, notes, interests* (JSON list), created_at*, updated_at* | Private note written by the owner. Never shared, never linked to a Venn account, never used to contact the person. |
 | `person_interactions` | id*, person_id* (FK cascade), activity, created_at* | Hangouts the owner logged; drives "last seen" and reconnection suggestions. |
 | `people_imports` | id*, user_id* (FK cascade), items* (JSON list of candidates), source, expires_at*, consumed_at, created_at* | Server-side record of the people shown on an import card. 24h TTL, single use; items are cleared once used. Nobody in here is a saved note. |
 | `follow_ups` | id*, owner_user_id* (FK cascade), connection_id (FK cascade), person_id (FK cascade), text*, done_at, created_at* | "Ask about this next time." Private to the owner. Exactly one of connection_id / person_id (check constraint). |
@@ -68,7 +68,7 @@ Search queries, import sources and quiz content are never recorded. Quiz scores 
 
 ## Deletion
 
-`heldly_delete_account` deletes the user row; profile, memories, proposals, invites, requests,
+`venn_delete_account` deletes the user row; profile, memories, proposals, invites, requests,
 connections (and their events), people notes (and their hangout logs), pending imports, follow-ups, blocks and consents cascade. Analytics events keep no user link
 (`user_id` set null).
 

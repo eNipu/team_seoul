@@ -1,4 +1,4 @@
-"""Resolve the authenticated Heldly user for the current MCP request.
+"""Resolve the authenticated Venn user for the current MCP request.
 
 The only identity source is the verified OAuth access token placed in the request context by
 the MCP SDK's auth middleware. Tool arguments never carry a user id.
@@ -27,10 +27,10 @@ def auth_subject_for(token: AccessToken) -> str:
 def current_token(required_scopes: Iterable[str] = ()) -> AccessToken:
     token = get_access_token()
     if token is None:
-        raise Unauthenticated("Sign in to Heldly to use this tool.")
+        raise Unauthenticated("Sign in to Venn to use this tool.")
     missing = [s for s in required_scopes if s not in token.scopes]
     if missing:
-        raise Forbidden(f"Missing permission: {', '.join(missing)}. Reconnect Heldly and grant access.")
+        raise Forbidden(f"Missing permission: {', '.join(missing)}. Reconnect Venn and grant access.")
     return token
 
 

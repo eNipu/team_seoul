@@ -6,7 +6,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 FriendKind = Literal["connection", "person"]
-"""A friend is either a mutual Heldly connection or a private note about someone not on Heldly."""
+"""A friend is either a mutual Venn connection or a private note about someone not on Venn."""
 
 
 class ConnectionRequestOut(BaseModel):
@@ -60,7 +60,7 @@ class ActivityIdeasView(BaseModel):
     match_score: float
     score_explanation: list[str]
     suggestions: list[ActivitySuggestion]
-    note: str = "Heldly never contacts anyone automatically; the user decides whether to reach out."
+    note: str = "Venn never contacts anyone automatically; the user decides whether to reach out."
 
 
 class ReconnectionCandidate(BaseModel):
@@ -80,7 +80,7 @@ class ReconnectView(BaseModel):
 
 
 class PersonOut(BaseModel):
-    """Private note about a friend who is not on Heldly. Owner-only."""
+    """Private note about a friend who is not on Venn. Owner-only."""
 
     person_id: str
     name: str
@@ -126,7 +126,7 @@ class FriendView(BaseModel):
     kind: FriendKind
     id: str
     display_name: str
-    on_heldly: bool
+    on_venn: bool
     since: datetime
     last_interaction_at: datetime | None
     bio: str | None = None
@@ -188,7 +188,7 @@ class HelpView(BaseModel):
     topics: list[HelpTopic]
     setup: list[SetupStep]
     privacy: list[str]
-    note: str = "The card lists what Heldly can do with examples to try. Do not repeat it in text."
+    note: str = "The card lists what Venn can do with examples to try. Do not repeat it in text."
 
 
 class SimpleOk(BaseModel):
@@ -267,7 +267,7 @@ class PeopleSearchResult(BaseModel):
     kind: FriendKind
     id: str
     display_name: str
-    on_heldly: bool
+    on_venn: bool
     relationship: str | None
     matched: list[str]
     snippet: str | None
@@ -302,7 +302,7 @@ class GroupPlanView(BaseModel):
     common_to_all: list[str]
     common_to_some: list[PartialOverlap]
     suggestions: list[ActivitySuggestion]
-    note: str = "Heldly never contacts anyone automatically; the user decides whether to reach out."
+    note: str = "Venn never contacts anyone automatically; the user decides whether to reach out."
 
 
 # --------------------------------------------------------------------- meetups
@@ -311,7 +311,7 @@ class BriefView(BaseModel):
     kind: FriendKind
     id: str
     display_name: str
-    on_heldly: bool
+    on_venn: bool
     relationship: str | None
     notes: str | None
     last_interaction_at: datetime | None

@@ -1,7 +1,7 @@
-# Heldly — ChatGPT plugin
+# Venn — ChatGPT plugin
 
-Heldly is a ChatGPT-native AI social companion. It remembers what matters to you — **only what
-you approve** — and helps you stay close to friends, whether or not they use Heldly:
+Venn is a ChatGPT-native AI social companion. It remembers what matters to you — **only what
+you approve** — and helps you stay close to friends, whether or not they use Venn:
 invite-code connections, private notes on friends who aren't on it (import a whole list at
 once), "who do I know who…" search, activity ideas for one friend or a group, a brief before
 you meet and a recap after, reconnection nudges, and a quiz on how well you know your friends.
@@ -11,7 +11,7 @@ This repo contains the first version of the plugin:
 
 - **MCP server** (`backend/`): Python, FastAPI + the official MCP Python SDK, streamable HTTP at `/mcp`, OAuth, SQLAlchemy 2 + Alembic (Postgres/Supabase, SQLite for dev).
 - **Widget** (`widget/`): React UI rendered inside ChatGPT via MCP Apps (memory review, ChatGPT-memory import, home, invite with QR code, friend, activity ideas, reconnect, people import, people search, group plan, meetup brief and quiz cards).
-- **Plugin package** (`plugin/`): `plugin.json`, `mcp.json`, and the `heldly-social` skill.
+- **Plugin package** (`plugin/`): `plugin.json`, `mcp.json`, and the `venn-social` skill.
 
 The one game is a quiz built from what friends chose to share; there are no other games.
 
@@ -31,7 +31,7 @@ discovery headers — that's expected.
 With Docker (Postgres + server, migrations applied on start):
 
 ```bash
-make docker-up                 # HELDLY_PORT / HELDLY_DB_PORT override 8081 / 5432
+make docker-up                 # VENN_PORT / VENN_DB_PORT override 8081 / 5432
 make test-postgres             # run the test suite against Postgres
 ```
 
@@ -89,31 +89,31 @@ curl https://abc123.ngrok-free.app/.well-known/oauth-protected-resource/mcp  # O
    - URL: `https://abc123.ngrok-free.app/mcp`
    - Authentication: **OAuth** (leave client ID/secret empty; ChatGPT registers itself)
 3. Choose **Create as plugin** and connect.
-4. A Heldly **dev sign-in** page opens. Enter any username (e.g. `alice`), a display name, and
-   your `DEV_AUTH_PASSCODE`. The username becomes your Heldly identity.
+4. A Venn **dev sign-in** page opens. Enter any username (e.g. `alice`), a display name, and
+   your `DEV_AUTH_PASSCODE`. The username becomes your Venn identity.
 
 Or install the packaged plugin from the repo marketplace: `.agents/plugins/marketplace.json`
 points at `./plugin`. Set the `url` in `plugin/mcp.json` to your tunnel's `/mcp` URL first.
 
 ### 6. Try it
 
-Start a new chat, enable Heldly, and try the prompts below. Heldly is meant to open with a
-card: any opening prompt ("open Heldly", "set up my Heldly profile") should show the home or
+Start a new chat, enable Venn, and try the prompts below. Venn is meant to open with a
+card: any opening prompt ("open Venn", "set up my Venn profile") should show the home or
 welcome card rather than a text answer. While set-up is unfinished it then goes straight into
 it without being asked: first you (import your ChatGPT memory or answer two questions), then
 your people (paste a list, upload contacts or name a few), then an invite for friends who use
 ChatGPT. Say "skip" to move on. The home card shows the same three steps as a checklist with
 buttons until they are done, and the **?** in the corner of any card (or *"help"*) opens a
-card with everything Heldly can do and examples to tap.
+card with everything Venn can do and examples to tap.
 
-- *"Set up my Heldly profile. I love bouldering and ramen, and I want to meet new people."*
+- *"Set up my Venn profile. I love bouldering and ramen, and I want to meet new people."*
   A memory review card appears; nothing is saved until you approve it.
-- *"Show my Heldly dashboard"* — a brand-new account gets a welcome card instead
-- *"Import my ChatGPT memory into Heldly"* — pick the areas on the card; ChatGPT lists what it
+- *"Show my Venn dashboard"* — a brand-new account gets a welcome card instead
+- *"Import my ChatGPT memory into Venn"* — pick the areas on the card; ChatGPT lists what it
   remembers about you in the chat, you say which to keep, and those come back as a review
   card. Needs ChatGPT's Memory to be on and to know something about you.
-- *"Create a Heldly invite code"*
-- *"Add my friend Maya to Heldly — college roommate, loves hiking, haven't seen her in two months"*
+- *"Create a Venn invite code"*
+- *"Add my friend Maya to Venn — college roommate, loves hiking, haven't seen her in two months"*
 - *"What could I do with Maya?"*
 - *"Who should I reconnect with?"*
 - *"What did I save about food?"*
@@ -123,11 +123,11 @@ card with everything Heldly can do and examples to tap.
 - *"Plan something for me, Hana and Diego"*
 - *"I'm seeing Maya tomorrow — brief me"*, and afterwards *"I had dinner with Maya, she got
   promoted; remind me to ask about Busan"*
-- *"Quiz me on Jun"* or *"Play the Heldly quiz"* (needs friends who have shared a few things)
+- *"Quiz me on Jun"* or *"Play the Venn quiz"* (needs friends who have shared a few things)
 
 **Demo data:** most of these need friends. `make seed me=<your dev username>` adds three
 demo connections (with shared memories and past hangouts), a pending request and five notes
-about people who aren't on Heldly; it adds memories of your own only if you have none.
+about people who aren't on Venn; it adds memories of your own only if you have none.
 `make seed-remove me=<your dev username>` takes the demo data out again. Start a new chat
 afterwards.
 
@@ -159,35 +159,35 @@ connect to `https://abc123.ngrok-free.app/mcp`).
 
 ```
 ChatGPT ──MCP (OAuth bearer)──▶ FastAPI /mcp ──▶ services ──▶ Postgres
-   └─ widget iframe ◀── ui://heldly/app-v4.html  (calls tools back through the host)
+   └─ widget iframe ◀── ui://venn/app-v1.html  (calls tools back through the host)
 ```
 
-- **Consent-based memories**: `heldly_propose_memories` creates a server-side proposal and
+- **Consent-based memories**: `venn_propose_memories` creates a server-side proposal and
   shows a review card — nothing is saved. Only items the user approves are saved with
-  `heldly_save_memories` (default visibility `PRIVATE`).
-- **Import from ChatGPT memory**: Heldly cannot read ChatGPT's memory, so
-  `heldly_import_chatgpt_memory` shows a card that asks ChatGPT to list what it remembers in
+  `venn_save_memories` (default visibility `PRIVATE`).
+- **Import from ChatGPT memory**: Venn cannot read ChatGPT's memory, so
+  `venn_import_chatgpt_memory` shows a card that asks ChatGPT to list what it remembers in
   the chat; only what you pick is proposed (`source: "chatgpt_memory"`) and only what you
   confirm is saved.
 - **Connections**: invite code → connection request → friend accepts. Block/report built in.
-- **Friends who aren't on Heldly**: private, owner-only notes (`heldly_add_person`) so they get
+- **Friends who aren't on Venn**: private, owner-only notes (`venn_add_person`) so they get
   activity ideas and reconnection nudges too. Never shared, never used to contact anyone.
 - **Staying close**: a friend card, activity ideas from interests *both* people chose to share
   (or from your own notes), hangout logging, reconnection suggestions.
-- **Import with review**: `heldly_propose_people_import` shows up to 50 candidates on a card;
+- **Import with review**: `venn_propose_people_import` shows up to 50 candidates on a card;
   only the ones the user ticks are added. Contact details are stripped.
-- **Find and plan**: `heldly_find_people` searches your notes and what friends shared;
-  `heldly_plan_group` finds common ground for 2–6 friends.
-- **Meetups**: `heldly_meetup_brief` before, `heldly_recap_meetup` after; follow-ups ("ask
+- **Find and plan**: `venn_find_people` searches your notes and what friends shared;
+  `venn_plan_group` finds common ground for 2–6 friends.
+- **Meetups**: `venn_meetup_brief` before, `venn_recap_meetup` after; follow-ups ("ask
   about…") carry over to the next brief. "Add to calendar" opens a prefilled Google Calendar
-  link — Heldly has no calendar access.
-- **Quiz**: `heldly_start_quiz` — "How well do you know Jun?" or "Who's who in your circle?".
+  link — Venn has no calendar access.
+- **Quiz**: `venn_start_quiz` — "How well do you know Jun?" or "Who's who in your circle?".
   Uses only what friends shared with connections; scores aren't stored.
 - **Invite link + QR**: the invite card shows a QR code for `/i/{CODE}`, a page with the code
   and how to redeem it.
 - **Set-up and help**: the home card carries a three-step set-up checklist (about you, your
   people, connect) until it is done, and the model is told to start it without being asked.
-  `heldly_help` shows what Heldly can do, with examples to tap.
+  `venn_help` shows what Venn can do, with examples to tap.
 - **Cards**: thirteen tools render an interactive card in ChatGPT; the rest return data.
 - **Identity** always comes from the OAuth token, never from tool arguments.
 
@@ -220,7 +220,7 @@ See [docs/SECURITY.md](docs/SECURITY.md) for the full checklist.
 ## Repository layout
 
 ```
-plugin/                     plugin.json, mcp.json, skills/heldly-social/SKILL.md, assets/
+plugin/                     plugin.json, mcp.json, skills/venn-social/SKILL.md, assets/
 .agents/plugins/            local marketplace entry
 backend/
   app/main.py               FastAPI app factory (uvicorn app.main:create_app --factory)

@@ -146,14 +146,14 @@ export function ChatStatus({ state, prompt }: { state: ChatState; prompt: string
   if (state === "sent") {
     return (
       <p className="hint hint--ok" role="status">
-        <Icon name="chat" size={16} /> Sent to the chat. Heldly will pick it up there.
+        <Icon name="chat" size={16} /> Sent to the chat. Venn will pick it up there.
       </p>
     );
   }
   if (state === "unavailable") {
     return (
       <p className="hint" role="status">
-        Couldn't post to the chat from here. Ask Heldly directly: “{prompt}”
+        Couldn't post to the chat from here. Ask Venn directly: “{prompt}”
       </p>
     );
   }

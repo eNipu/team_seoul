@@ -23,15 +23,15 @@ export default function PeopleSearch({ data, nav }: ViewProps<PeopleSearchViewDa
     const q = query.trim();
     if (!q) return;
     // Swap the results in place so Back still leads to where the search started.
-    void action.run("search", () => nav.replaceView("heldly_find_people", { query: q }));
+    void action.run("search", () => nav.replaceView("venn_find_people", { query: q }));
   }
 
   function open(r: SearchResult) {
-    void action.run(`open-${r.kind}:${r.id}`, () => nav.openView("heldly_view_friend", friendArg(r.kind, r.id)));
+    void action.run(`open-${r.kind}:${r.id}`, () => nav.openView("venn_view_friend", friendArg(r.kind, r.id)));
   }
 
   function planTogether() {
-    void action.run("group", () => nav.openView("heldly_plan_group", groupArgs(data.results)));
+    void action.run("group", () => nav.openView("venn_plan_group", groupArgs(data.results)));
   }
 
   return (
@@ -68,7 +68,7 @@ export default function PeopleSearch({ data, nav }: ViewProps<PeopleSearchViewDa
 
       {data.results.length === 0 ? (
         <EmptyNote art="search" title={`No one in your circle matches “${data.query}” yet`}>
-          Try another word, or add more people so Heldly has more to search.
+          Try another word, or add more people so Venn has more to search.
         </EmptyNote>
       ) : (
         <>
@@ -84,8 +84,8 @@ export default function PeopleSearch({ data, nav }: ViewProps<PeopleSearchViewDa
                   <span className="friend-row__body">
                     <span className="pick__name">
                       <strong>{r.display_name}</strong>
-                      <span className={`badge ${r.on_heldly ? "badge--on" : "badge--note"}`}>
-                        {r.on_heldly ? "On Heldly" : "Private note"}
+                      <span className={`badge ${r.on_venn ? "badge--on" : "badge--note"}`}>
+                        {r.on_venn ? "On Venn" : "Private note"}
                       </span>
                     </span>
                     <span className="muted small">

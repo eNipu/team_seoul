@@ -1,13 +1,13 @@
-"""Fill a development account with demo friends so every Heldly card has something to show.
+"""Fill a development account with demo friends so every Venn card has something to show.
 
     make seed me=<dev username>          # add (or refresh) the demo data
     make seed-remove me=<dev username>   # take it out again
 
 `<dev username>` is the name you type on the dev sign-in page (AUTH_MODE=dev). The script:
 
-- creates demo Heldly users (auth subjects `dev|demo-*`) with shared memories, connects three of
+- creates demo Venn users (auth subjects `dev|demo-*`) with shared memories, connects three of
   them to you with past hangouts and leaves one pending request;
-- adds private notes about people who are not on Heldly, with past hangouts and things to ask;
+- adds private notes about people who are not on Venn, with past hangouts and things to ask;
 - adds a few memories and social goals to YOUR account only if it has none yet.
 
 Running it again replaces the demo data; your own memories, notes and connections are untouched.
@@ -290,7 +290,7 @@ def seed(db: Session, me: User) -> dict[str, int]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Seed (or remove) Heldly demo data for one dev account.")
+    parser = argparse.ArgumentParser(description="Seed (or remove) Venn demo data for one dev account.")
     parser.add_argument("--me", required=True, help="your dev sign-in username, e.g. the one used on /dev/login")
     parser.add_argument("--remove", action="store_true", help="remove the demo data instead of adding it")
     args = parser.parse_args(argv)
@@ -318,14 +318,14 @@ def main(argv: list[str] | None = None) -> int:
 
     print(
         f"Seeded '{username}': {counts['connections']} connections, {counts['pending_requests']} pending request, "
-        f"{counts['people']} notes about people not on Heldly"
+        f"{counts['people']} notes about people not on Venn"
         + (
             f", {counts['my_memories']} memories of your own."
             if counts["my_memories"]
             else " (your memories untouched)."
         )
     )
-    print("Sign in as that username, then ask ChatGPT to open Heldly. Start a new chat to see the changes.")
+    print("Sign in as that username, then ask ChatGPT to open Venn. Start a new chat to see the changes.")
     return 0
 
 

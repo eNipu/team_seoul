@@ -34,24 +34,24 @@ class _Step:
 SETUP_STEPS: tuple[_Step, ...] = (
     _Step(
         "about_you",
-        "Tell Heldly about you",
+        "Tell Venn about you",
         "Bring over what ChatGPT already remembers, or answer a couple of questions.",
-        "About you: offer to bring over what you already remember about them (heldly_import_chatgpt_memory), "
-        "or ask what they enjoy and what they avoid and call heldly_propose_memories with their answers.",
+        "About you: offer to bring over what you already remember about them (venn_import_chatgpt_memory), "
+        "or ask what they enjoy and what they avoid and call venn_propose_memories with their answers.",
     ),
     _Step(
         "your_people",
         "Add your people",
         "Paste a list, upload your contacts, or name a few friends.",
         "Your people: ask who they want to stay close to - they can paste a list of names, upload a contacts "
-        "export or just name a few people - then call heldly_propose_people_import.",
+        "export or just name a few people - then call venn_propose_people_import.",
     ),
     _Step(
         "connect",
         "Connect with friends",
         "Share an invite so friends on ChatGPT can connect with you.",
-        "Connect: offer an invite for friends who use ChatGPT (heldly_create_invite; the user shares the code, "
-        "link or QR themselves), or redeem a code they were given (heldly_redeem_invite).",
+        "Connect: offer an invite for friends who use ChatGPT (venn_create_invite; the user shares the code, "
+        "link or QR themselves), or redeem a code they were given (venn_redeem_invite).",
     ),
 )
 
@@ -131,30 +131,30 @@ HELP_TOPICS: tuple[HelpTopic, ...] = (
     HelpTopic(
         key="setup",
         title="Getting set up",
-        description="Three short steps: tell Heldly about you, add your people, connect with friends.",
-        examples=["Set up Heldly"],
+        description="Three short steps: tell Venn about you, add your people, connect with friends.",
+        examples=["Set up Venn"],
     ),
     HelpTopic(
         key="memories",
         title="Remember what matters to you",
-        description="Heldly suggests memories from what you say; you choose what to keep and who can see it.",
+        description="Venn suggests memories from what you say; you choose what to keep and who can see it.",
         examples=[
             "Remember that I love bouldering and ramen",
-            "Import my ChatGPT memory into Heldly",
+            "Import my ChatGPT memory into Venn",
             "What did I save about food?",
         ],
     ),
     HelpTopic(
         key="people",
         title="Keep notes on your people",
-        description=("Add friends who are not on Heldly, one at a time or a whole list. Notes stay private to you."),
-        examples=["Import my friends into Heldly", "Who do I know who likes hiking?"],
+        description=("Add friends who are not on Venn, one at a time or a whole list. Notes stay private to you."),
+        examples=["Import my friends into Venn", "Who do I know who likes hiking?"],
     ),
     HelpTopic(
         key="connect",
-        title="Connect with friends on Heldly",
+        title="Connect with friends on Venn",
         description="Share an invite code, link or QR. Friends accept before you are connected.",
-        examples=["Create a Heldly invite", "I have a Heldly invite code"],
+        examples=["Create a Venn invite", "I have a Venn invite code"],
     ),
     HelpTopic(
         key="stay_close",
@@ -172,14 +172,14 @@ HELP_TOPICS: tuple[HelpTopic, ...] = (
         key="quiz",
         title="Play",
         description="A quick quiz on how well you know your friends, from what they chose to share.",
-        examples=["Play the Heldly quiz"],
+        examples=["Play the Venn quiz"],
     ),
 )
 
 HELP_PRIVACY: tuple[str, ...] = (
     "Nothing is saved until you approve it.",
     "Memories are private unless you choose to share them.",
-    "Heldly never contacts anyone for you.",
+    "Venn never contacts anyone for you.",
     "You can edit or delete anything, or delete your whole account.",
 )
 

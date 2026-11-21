@@ -78,7 +78,7 @@ export default function MemoryImport({ data, bridge }: ViewProps<MemoryImportVie
         <Illustration name="import" />
         <h2>Bring your ChatGPT memory with you</h2>
         <p className="muted small">
-          Choose what ChatGPT should look for. It lists what it remembers in the chat first — nothing reaches Heldly until you
+          Choose what ChatGPT should look for. It lists what it remembers in the chat first — nothing reaches Venn until you
           pick what to keep.
         </p>
       </div>
@@ -91,7 +91,7 @@ export default function MemoryImport({ data, bridge }: ViewProps<MemoryImportVie
 
       {data.areas.length === 0 ? (
         <EmptyNote art="search" title="Nothing to choose from">
-          Heldly didn't offer any areas to import. Ask Heldly to try again.
+          Venn didn't offer any areas to import. Ask Venn to try again.
         </EmptyNote>
       ) : phase === "sent" ? (
         <div className="handoff handoff--ok">

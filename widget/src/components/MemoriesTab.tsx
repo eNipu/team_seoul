@@ -49,7 +49,7 @@ export default function MemoriesTab({ memories, bridge, nav, action, onChange }:
 
   function deleteMemory(memoryId: string) {
     void action.run(`delete-${memoryId}`, async () => {
-      const res = await bridge.callTool("heldly_delete_memory", { memory_id: memoryId });
+      const res = await bridge.callTool("venn_delete_memory", { memory_id: memoryId });
       if (!res.ok) return res.errorText;
       const removedId = parseDeleteMemory(res.data).memory_id || memoryId;
       onChange(memories.filter((m) => m.memory_id !== removedId));
@@ -68,7 +68,7 @@ export default function MemoriesTab({ memories, bridge, nav, action, onChange }:
       return;
     }
     void action.run(`edit-${m.memory_id}`, async () => {
-      const res = await bridge.callTool("heldly_update_memory", { memory_id: m.memory_id, ...patch });
+      const res = await bridge.callTool("venn_update_memory", { memory_id: m.memory_id, ...patch });
       if (!res.ok) return res.errorText;
       const updated = hasId(res.data, "memory_id") ? { ...parseMemory(res.data), memory_id: m.memory_id } : { ...m, ...next };
       onChange(memories.map((x) => (x.memory_id === m.memory_id ? updated : x)));
@@ -93,7 +93,7 @@ export default function MemoriesTab({ memories, bridge, nav, action, onChange }:
           type="button"
           className="btn btn--small"
           disabled={busy}
-          onClick={() => void action.run("import-chatgpt", () => nav.openView("heldly_import_chatgpt_memory", {}))}
+          onClick={() => void action.run("import-chatgpt", () => nav.openView("venn_import_chatgpt_memory", {}))}
         >
           <Icon name="import" size={16} />
           {action.busy === "import-chatgpt" ? "Opening…" : importedCount > 0 ? "Import more" : "Import from ChatGPT"}
@@ -107,7 +107,7 @@ export default function MemoriesTab({ memories, bridge, nav, action, onChange }:
       <>
         {sources}
         <EmptyNote art="memories" title="No memories yet">
-          Tell Heldly something about yourself in the chat. Nothing is saved until you approve it.
+          Tell Venn something about yourself in the chat. Nothing is saved until you approve it.
         </EmptyNote>
       </>
     );

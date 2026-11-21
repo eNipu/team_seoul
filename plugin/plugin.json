@@ -1,37 +1,37 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
-  "name": "heldly",
+  "name": "venn",
   "version": "0.1.0",
-  "description": "Heldly is a social companion that remembers what matters to you (only what you approve) and helps you stay close to friends.",
+  "description": "Venn finds what you and your friends have in common. It remembers what matters to you (only what you approve) and helps you stay close.",
   "author": {
-    "name": "Heldly",
-    "url": "https://heldly.example.com"
+    "name": "Venn",
+    "url": "https://venn.example.com"
   },
-  "homepage": "https://heldly.example.com",
+  "homepage": "https://venn.example.com",
   "license": "UNLICENSED",
   "keywords": ["social", "friends", "memories", "relationships", "companion"],
   "extensions": {
     "com.openai": {
       "interface": {
-        "displayName": "Heldly",
-        "shortDescription": "Remember what matters and stay close to friends.",
-        "longDescription": "Heldly keeps a private, user-approved memory of what matters to you and the people you care about. Set up in three short steps: tell Heldly about you (or bring over what ChatGPT already remembers), add your people, and connect with friends through an invite code, link or QR. Then get ideas for time together, a brief before you meet, nudges when it has been a while, and a quiz on how well you know your friends. Nothing is saved without your approval, and Heldly never contacts anyone on your behalf.",
-        "developerName": "Heldly",
+        "displayName": "Venn",
+        "shortDescription": "Find your common ground and stay close to friends.",
+        "longDescription": "Venn keeps a private, user-approved memory of what matters to you and the people you care about. Set up in three short steps: tell Venn about you (or bring over what ChatGPT already remembers), add your people, and connect with friends through an invite code, link or QR. Then get ideas for time together, a brief before you meet, nudges when it has been a while, and a quiz on how well you know your friends. Nothing is saved without your approval, and Venn never contacts anyone on your behalf.",
+        "developerName": "Venn",
         "category": "Lifestyle",
         "capabilities": ["Interactive", "Write"],
-        "websiteURL": "https://heldly.example.com",
-        "privacyPolicyURL": "https://heldly.example.com/privacy",
-        "termsOfServiceURL": "https://heldly.example.com/terms",
+        "websiteURL": "https://venn.example.com",
+        "privacyPolicyURL": "https://venn.example.com/privacy",
+        "termsOfServiceURL": "https://venn.example.com/terms",
         "defaultPrompt": [
-          "Set up Heldly",
+          "Set up Venn",
           "Who should I reconnect with this week?",
-          "What can Heldly do?"
+          "What can Venn do?"
         ],
         "brandColor": "#E86A4A",
         "composerIcon": "./assets/icon.svg",
         "logo": "./assets/logo.svg"
       },
-      "onboardingSkill": "./skills/heldly-social/SKILL.md"
+      "onboardingSkill": "./skills/venn-social/SKILL.md"
     }
   }
 }

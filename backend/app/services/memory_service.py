@@ -57,11 +57,11 @@ IMPORT_AREAS: tuple[tuple[str, str, str, bool], ...] = (
 )
 IMPORT_ALWAYS_EXCLUDED = "Health, money, passwords and ID numbers are never imported."
 IMPORT_NOTE = (
-    "Heldly cannot read ChatGPT's memory; only you can. Nothing has been imported. When the user presses "
+    "Venn cannot read ChatGPT's memory; only you can. Nothing has been imported. When the user presses "
     "the button on this card (or asks in chat), list in the chat what you already remember about them in "
     "the areas they chose — numbered, at most 30, leaving out health, money, credentials, ID numbers and "
-    "anything you are not sure is about them — and do NOT call a Heldly tool with those items yet. Only "
-    'after the user says which ones to keep, call heldly_propose_memories with source "chatgpt_memory" '
+    "anything you are not sure is about them — and do NOT call a Venn tool with those items yet. Only "
+    'after the user says which ones to keep, call venn_propose_memories with source "chatgpt_memory" '
     "and just those items. If you remember nothing about the user, say so instead of guessing."
 )
 
@@ -177,7 +177,7 @@ def save_memories(db: Session, user: User, proposal_id: str, approvals: list[Mem
     if as_aware(proposal.expires_at) < utcnow():
         raise InvalidRequest("This proposal expired. Create a new proposal.")
     if not approvals:
-        raise InvalidRequest("No items approved. Use heldly_discard_memory_proposal to discard.")
+        raise InvalidRequest("No items approved. Use venn_discard_memory_proposal to discard.")
 
     items = {int(i["index"]): i for i in proposal.items}
     seen: set[int] = set()
@@ -198,7 +198,7 @@ def save_memories(db: Session, user: User, proposal_id: str, approvals: list[Mem
         title = (a.title or item["title"]).strip()
         description = (a.description or item["description"]).strip()
         if contains_sensitive(title) or contains_sensitive(description):
-            raise PrivacyViolation("Heldly does not store credentials or financial/ID numbers.")
+            raise PrivacyViolation("Venn does not store credentials or financial/ID numbers.")
         m = Memory(
             user_id=user.id,
             category=item["category"],
@@ -286,7 +286,7 @@ def update_memory(
     m = _owned(db, user, memory_id)
     for value in (title, description):
         if value is not None and contains_sensitive(value):
-            raise PrivacyViolation("Heldly does not store credentials or financial/ID numbers.")
+            raise PrivacyViolation("Venn does not store credentials or financial/ID numbers.")
     if title is not None:
         m.title = title.strip()[:120] or m.title
     if description is not None:

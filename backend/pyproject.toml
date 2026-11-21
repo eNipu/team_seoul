@@ -1,7 +1,7 @@
 [project]
 name = "heldly"
 version = "0.1.0"
-description = "Heldly MCP server: ChatGPT-native AI social companion"
+description = "Venn MCP server: ChatGPT-native AI social companion"
 authors = [
     { name = "gururise", email = "ruebsamen.gene@gmail.com" }
 ]

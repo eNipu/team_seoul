@@ -56,7 +56,7 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
           type="button"
           className="btn"
           disabled={busy}
-          onClick={() => void action.run("friends", () => nav.openView("heldly_show_dashboard", {}))}
+          onClick={() => void action.run("friends", () => nav.openView("venn_show_dashboard", {}))}
         >
           {action.busy === "friends" ? "Loading…" : "See my friends"}
         </button>
@@ -138,7 +138,7 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
                 disabled={busy}
                 onClick={() => {
                   const id = data.id;
-                  if (id) void action.run("ideas", () => nav.openView("heldly_suggest_activity", { connection_id: id }));
+                  if (id) void action.run("ideas", () => nav.openView("venn_suggest_activity", { connection_id: id }));
                 }}
               >
                 <Icon name="bulb" size={18} />
@@ -150,7 +150,7 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
                 disabled={chat.state === "sending"}
                 onClick={() =>
                   void chat.send(
-                    `I just scored ${score} out of ${total} on Heldly's "How well do you know ${name}?" quiz. ` +
+                    `I just scored ${score} out of ${total} on Venn's "How well do you know ${name}?" quiz. ` +
                       `Help me draft a short, playful message telling ${first} my score. I will send it myself.`,
                   )
                 }
@@ -167,7 +167,7 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
               type="button"
               className="btn btn--primary"
               disabled={busy}
-              onClick={() => void action.run("again", () => nav.replaceView("heldly_start_quiz", {}))}
+              onClick={() => void action.run("again", () => nav.replaceView("venn_start_quiz", {}))}
             >
               <Icon name="dice" size={18} />
               {action.busy === "again" ? "Shuffling…" : "Play again"}
@@ -176,7 +176,7 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
               type="button"
               className="btn"
               disabled={busy}
-              onClick={() => void action.run("friends", () => nav.openView("heldly_show_dashboard", {}))}
+              onClick={() => void action.run("friends", () => nav.openView("venn_show_dashboard", {}))}
             >
               {action.busy === "friends" ? "Loading…" : "See my friends"}
             </button>

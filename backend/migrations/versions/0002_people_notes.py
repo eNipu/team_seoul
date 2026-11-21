@@ -1,4 +1,4 @@
-"""people notes: private notes about friends who aren't on Heldly
+"""people notes: private notes about friends who aren't on Venn
 
 Revision ID: 0002
 Revises: 0001
