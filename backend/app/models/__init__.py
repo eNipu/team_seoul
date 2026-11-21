@@ -1,6 +1,6 @@
 """ORM models. Importing this package registers every table on Base.metadata."""
 
-from app.models.availability import Availability
+from app.models.availability import Availability, CalendarConnection
 from app.models.connection import (
     AbuseReport,
     AnalyticsEvent,
@@ -24,6 +24,7 @@ __all__ = [
     "AnalyticsEvent",
     "Availability",
     "Block",
+    "CalendarConnection",
     "Connection",
     "ConnectionRequest",
     "Consent",

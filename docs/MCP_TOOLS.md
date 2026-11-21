@@ -14,17 +14,19 @@ Errors are returned as `isError: true` with text `CODE: message`:
 | `INVALID_REQUEST` | Bad input or state (expired/used proposal, own invite, …) |
 | `RATE_LIMITED` | Daily limit hit (invites 30/day, connection requests 20/day) |
 | `PRIVACY_VIOLATION` | Attempt to store credentials, card/ID numbers, API keys |
+| `PROVIDER_ERROR` | The calendar provider failed or the grant was revoked; the message says what to do |
 
 Scopes: `venn.profile.read`, `venn.profile.write`, `venn.memories.read`,
-`venn.memories.write`, `venn.connections.manage`. The server advertises all five in its
+`venn.memories.write`, `venn.connections.manage`, `venn.calendar`. The server advertises all six in its
 protected-resource metadata and requires them at the transport level; each tool additionally
-checks the scopes it needs (defense in depth).
+checks the scopes it needs (defense in depth). Tokens issued before `venn.calendar` existed
+must reconnect once.
 
 Annotations: **R** read-only, **W** write, **D** destructive (ChatGPT asks for confirmation).
 **UI** = renders the widget (`_meta.ui.resourceUri = ui://venn/app-v2.html`); the result's
 `view` field tells the widget which card to show.
 
-54 tools, 17 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Venn) or
+56 tools, 17 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Venn) or
 `person_id` (a private note about someone who is not); results name it as `kind`
 (`"connection"` \| `"person"`) + `id`.
 
@@ -56,6 +58,8 @@ stored: each step is derived from the data it produces.
 | `venn_delete_account` | `confirmation` = `"DELETE MY VENN ACCOUNT"` | profile.write | D | `{deleted: true}` |
 | `venn_get_availability` | – | profile.read | R | `AvailabilityOut {timezone, work_days[], day_start, day_end, buffer_minutes, min_notice_minutes, default_length_minutes, is_default}` — when the user takes meetings. `work_days` uses Monday = 0; times are local `HH:MM`. `is_default` until the first save |
 | `venn_set_availability` | `timezone?` (IANA), `work_days?[]`, `day_start?`, `day_end?`, `buffer_minutes?` (0–60), `min_notice_minutes?` (0–10080), `default_length_minutes?` (15–120) | profile.write | W | `AvailabilityOut`. Only the given fields change |
+| `venn_calendar_status` | – | calendar | R | `CalendarStatusOut {connected, provider, account_email, calendar_ids[], connect_url}` — `connect_url` only when not connected: `/calendar/connect?state=…`, valid 10 minutes, opened in the browser. The callback page says "Calendar connected" |
+| `venn_disconnect_calendar` | – | calendar | D | `{disconnected}` — revokes the grant at the provider and deletes it |
 
 ## Memories
 

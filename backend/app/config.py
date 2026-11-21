@@ -11,12 +11,15 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 REPO_DIR = BACKEND_DIR.parent
 
+# All are advertised and required at the transport level, so adding one means existing users
+# reconnect once (docs/tasks/SCHEDULING.md › Scopes).
 ALL_SCOPES = [
     "venn.profile.read",
     "venn.profile.write",
     "venn.memories.read",
     "venn.memories.write",
     "venn.connections.manage",
+    "venn.calendar",
 ]
 
 
@@ -69,6 +72,14 @@ class Settings(BaseSettings):
     max_invites_per_day: int = 30
     invite_ttl_hours: int = 72
 
+    # Calendar (docs/tasks/SCHEDULING.md › Providers). "fake" keeps everything in memory.
+    calendar_provider: Literal["fake", "google"] = "fake"
+    google_client_id: str | None = None
+    google_client_secret: str | None = None
+    # Fernet key for refresh tokens; also keys the connect-link signature. Dev falls back to
+    # a key derived from DEV_AUTH_SECRET.
+    calendar_token_key: str | None = None
+
     @property
     def mcp_resource_url(self) -> str:
         return (self.mcp_base_url or f"{self.public_base_url.rstrip('/')}/mcp").rstrip("/")
@@ -85,6 +96,12 @@ class Settings(BaseSettings):
             missing = [k for k in ("oauth_issuer", "oauth_audience", "oauth_jwks_url") if not getattr(self, k)]
             if missing:
                 raise ValueError(f"Production requires {', '.join(m.upper() for m in missing)}")
+        if self.calendar_provider == "google":
+            missing = [k for k in ("google_client_id", "google_client_secret") if not getattr(self, k)]
+            if self.environment == "production" and not self.calendar_token_key:
+                missing.append("calendar_token_key")
+            if missing:
+                raise ValueError(f"CALENDAR_PROVIDER=google requires {', '.join(m.upper() for m in missing)}")
         return self
 
 

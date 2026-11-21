@@ -218,7 +218,10 @@ ChatGPT ──MCP (OAuth bearer)──▶ FastAPI /mcp ──▶ services ──
   `venn_plan_group` finds common ground for 2–6 friends.
 - **Meetups**: `venn_meetup_brief` before, `venn_recap_meetup` after; follow-ups ("ask
   about…") carry over to the next brief. "Add to calendar" opens a prefilled Google Calendar
-  link — Venn has no calendar access.
+  link.
+- **Calendar** (in progress, `docs/tasks/SCHEDULING.md`): set meeting hours with
+  `venn_set_availability`; connect Google Calendar once from the link `venn_calendar_status`
+  gives. Venn reads free/busy only.
 - **Quiz**: `venn_start_quiz` — "How well do you know Jun?" or "Who's who in your circle?".
   Uses only what friends shared with connections; scores aren't stored.
 - **Invite link + QR**: the invite card shows a QR code for `/i/{CODE}`, a page with the code
@@ -247,7 +250,7 @@ See [.env.example](.env.example). Key settings:
 
 1. Pick an OAuth IdP (Auth0, Clerk, Supabase Auth, …), create an API with audience
    `https://<host>/mcp` and scopes `venn.profile.read venn.profile.write
-   venn.memories.read venn.memories.write venn.connections.manage`, enable DCR/PKCE.
+   venn.memories.read venn.memories.write venn.connections.manage venn.calendar`, enable DCR/PKCE.
 2. Set `ENVIRONMENT=production`, `AUTH_MODE=jwt`, `OAUTH_*`, `DATABASE_URL`, `PUBLIC_BASE_URL`.
 3. Deploy the `Dockerfile` (it builds the widget, runs `alembic upgrade head`, starts uvicorn).
 4. Point `plugin/mcp.json` at `https://<host>/mcp`, fill real URLs in `plugin/plugin.json`
