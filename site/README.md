@@ -158,8 +158,11 @@ hero as a full-bleed background that ignores the pointer, under a radial veil th
 
 ## The changing word
 
-`NEXT` in `app/page.tsx` lists the words that end "You already know your next …". `NextWord` shows one every
-2.4 seconds. The first is in the HTML, so the line is whole without script. The word holds still when the
+`NEXT` in `app/page.tsx` lists the words that end "You already know your next …": customer, friend, business
+partner. It is one line, and the last word rolls upward to the next one every 2.4 seconds. The slot is as wide
+as the word in it, so the sentence stays centered, and its width is animated so the words before it glide
+rather than jump. On a phone the sentence is wider than the screen, so below 600 px the word takes the line
+underneath. The first word is in the HTML, so the line is whole without script. The word holds still when the
 visitor asks for reduced motion, while the pointer is on the line, while a form field has focus, and while the
 tab is hidden. Screen readers get one sentence with every word. There is no pause button, so the word cannot be
 stopped from the keyboard; WCAG 2.2.2 asks for that, and it should be added before a formal audit.
@@ -210,8 +213,8 @@ Keep the page true when the product changes.
 | It never contacts anyone for you | Works | `README.md`, `plugin/skills/venn-social/SKILL.md` |
 | Memory Sync card with these four signals, sensitive info off by default | Preview | The real card is the memory review card; `Looking for` and `Can help with` are T08 |
 | Common Ground Match card, "Draft warm intro" | In development | T10 to T12 |
-| "You already know your next customer", "investor" | In development | Matching what one person needs with what another offers is T08 to T12 |
-| "You already know your next friend", "gym buddy", "travel buddy" | Works for shared interests | `venn_find_people` ("who do I know who climbs?") and activity ideas |
+| "You already know your next customer", "business partner" | In development | Matching what one person needs with what another offers is T08 to T12 |
+| "You already know your next friend" | Works for shared interests | `venn_find_people` ("who do I know who climbs?") and activity ideas |
 | "Venn shows where you overlap, from what each of you approves" | Works for shared interests | Activity ideas use what both people chose to share; ChatGPT extracts, the user approves |
 | "We only email you about your invite" | A promise the team must keep | `waitlist_signups` holds the emails. Nothing is sent today |
 | "A confirmed place for both of you", "Your places in the Founding Circle are confirmed" | A promise the team must keep | `confirmed_at`. Whoever opens Venn to the list must honour it |
