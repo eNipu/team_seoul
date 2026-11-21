@@ -78,9 +78,10 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
         name="heldly_get_profile",
         title="Get Heldly profile",
         description=(
-            "Get the signed-in user's Heldly profile: display name, bio, social goals, interests and "
-            "memory count. Call this first in a Heldly conversation. If is_new is true, onboard the user: "
-            "ask 2-3 friendly questions about interests and social goals, then call heldly_propose_memories."
+            "Get the signed-in user's Heldly profile as data only (no card): display name, bio, social "
+            "goals, interests and memory count. Do NOT use this to start a conversation or to show the "
+            "user their profile; call heldly_show_dashboard for that, it returns the same profile and "
+            "shows it. Use this only when you need profile facts mid-conversation without showing a card."
         ),
         annotations=READ_ONLY,
         meta=invocation_meta("Opening your Heldly profile…", "Profile loaded"),
@@ -96,7 +97,7 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
                 f"interests: {', '.join(profile.interests[:10]) or 'none yet'}."
             )
             if profile.is_new:
-                text += " New user — start onboarding."
+                text += " New user — call heldly_show_dashboard to show the welcome card, then onboard."
             return ok(text, profile)
 
         return await guarded(body)
@@ -310,10 +311,13 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
         name="heldly_show_dashboard",
         title="Show Heldly dashboard",
         description=(
-            "Show the user's Heldly home in an interactive view: profile, memories, friends (connections "
-            "on Heldly and private notes on people who aren't) and pending requests. The user can edit "
-            "their profile and memories, open a friend, and accept/decline requests there. A brand-new "
-            "account gets a welcome card instead."
+            "Call this first in a Heldly conversation, and whenever the user opens or mentions Heldly, "
+            "says hello, asks what Heldly can do, or asks to set up or see their profile, memories or "
+            "friends. Shows the user's Heldly home in an interactive view: profile, memories, friends "
+            "(connections on Heldly and private notes on people who aren't) and pending requests. The "
+            "user can edit their profile and memories, open a friend, and accept/decline requests there. "
+            "A brand-new account gets a welcome card instead. The result includes the profile, so there "
+            "is no need to call heldly_get_profile as well."
         ),
         annotations=READ_ONLY,
     )
@@ -325,8 +329,10 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
             )
             if view.view == "welcome":
                 return ok(
-                    "Showing the welcome card: this account is empty. Help the user pick social goals, then "
-                    "ask about their interests and call heldly_propose_memories.",
+                    "Showing the welcome card: this account is empty. The card lets the user pick social "
+                    "goals and start set-up. Reply with one short line only. When the user continues, "
+                    "onboard in chat: ask 2-3 friendly questions about interests and the people they want "
+                    "to stay close to, then call heldly_propose_memories. Do not show this card again.",
                     view,
                 )
             return ok(
