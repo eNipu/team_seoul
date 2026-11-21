@@ -7,8 +7,10 @@
 // Covers: headings, horizontal overflow, the hero fitting in one screen, text contrast,
 // control sizes, console errors, third-party requests, cookies, the hero scene (it must
 // draw, and must stay on the still CSS version with reduced motion), the two-step
-// "Inside ChatGPT" preview, the /metrics password, /metrics itself, and the waitlist
-// with its rate limit: both versions, what an invited person sees, and a full link.
+// changing word under the headline (it must move on, and hold still with reduced motion),
+// the "Inside ChatGPT" preview, the /metrics password, /metrics itself, and the waitlist
+// with its rate limit: both versions, what an invited person sees, a full link, and
+// joining with the keyboard alone.
 //
 // The waitlist is only submitted against a local server started with DATABASE_URL.
 // With --url it is left alone, so checking production never adds a signup.
@@ -254,7 +256,7 @@ function auditFold() {
   if (hero.getBoundingClientRect().bottom > fold) {
     problems.push(`hero is ${Math.round(hero.getBoundingClientRect().height)}px tall, taller than the ${window.innerHeight}px screen`);
   }
-  for (const selector of [".site-header", "h1", ".hero__sub", ".waitlist"]) {
+  for (const selector of [".site-header", "h1", ".hero__next", ".hero__sub", ".waitlist"]) {
     const el = hero.querySelector(selector);
     if (!el) problems.push(`hero has no ${selector}`);
     else if (el.getBoundingClientRect().bottom > fold) problems.push(`${selector} ends below the fold`);
@@ -329,6 +331,45 @@ function sceneState() {
       if ((state === "webgl" && frames() > 1) || waited > 8000) {
         done({ state: state ?? "missing", frames: frames(), canvas: !!host?.querySelector("canvas") });
       } else setTimeout(poll, 100);
+    };
+    poll();
+  });
+}
+
+// Runs in the page. The line under the headline: the word on show, and what a screen reader gets.
+function nextWord() {
+  return {
+    shown: document.querySelector(".hero__next-word--on")?.textContent ?? "",
+    spoken: document.querySelector(".hero__next .sr-only")?.textContent ?? "",
+  };
+}
+
+// Runs in the page. Where keyboard focus is, and whether a focus ring is drawn for it.
+// The email field shows its ring on the pill around it.
+function focused() {
+  const el = document.activeElement;
+  const ringed = (node) => {
+    const style = getComputedStyle(node);
+    return style.outlineStyle !== "none" && parseFloat(style.outlineWidth) > 0;
+  };
+  const field = el.closest(".waitlist__field");
+  let what = el.tagName.toLowerCase();
+  if (el.id) what = `#${el.id}`;
+  else if (el.classList.contains("waitlist__joined")) what = ".waitlist__joined";
+  else if (el.matches("a, button")) what = el.textContent.trim();
+  return { what, ring: ringed(el) || (!!field && ringed(field)) };
+}
+
+// Runs in the page. Resolves once the waitlist has answered a submit.
+function waitlistAnswered() {
+  return new Promise((done) => {
+    const started = performance.now();
+    const poll = () => {
+      const joined = document.querySelector(".waitlist__joined");
+      const error = document.querySelector(".waitlist__note--error");
+      if (joined || error || performance.now() - started > 8000) {
+        done({ joined: !!joined, error: error?.textContent ?? "" });
+      } else setTimeout(poll, 50);
     };
     poll();
   });
@@ -480,6 +521,23 @@ async function main() {
       await shot(`${label}-fold`, false);
       await shot(label);
 
+      // The changing word, once with motion and once without. One step is 2.4s.
+      if (viewport === VIEWPORTS[3]) {
+        const before = await run(nextWord);
+        await sleep(2700);
+        const after = await run(nextWord);
+        if (before.spoken !== "You already know your next customer, investor, friend, gym buddy or travel buddy.") {
+          failures.push(`${label}: the line under the headline reads "${before.spoken}" to a screen reader`);
+        }
+        if (motion === "reduce") {
+          if (before.shown !== "customer." || after.shown !== "customer.") {
+            failures.push(`${label}: with reduced motion the word must stay "customer." (saw "${before.shown}", then "${after.shown}")`);
+          }
+        } else if (!before.shown || before.shown === after.shown) {
+          failures.push(`${label}: the word under the headline did not change ("${before.shown}")`);
+        }
+      }
+
       if (scheme === "light" && motion !== "reduce") {
         for (const problem of await run(exercisePreview)) failures.push(`${label}: ${problem}`);
       }
@@ -520,6 +578,22 @@ async function main() {
       return state;
     };
 
+    // Real key presses, for the keyboard walk.
+    const press = async (key, keyCode, text) => {
+      const base = { key, code: key, windowsVirtualKeyCode: keyCode };
+      await send("Input.dispatchKeyEvent", { ...base, type: text ? "keyDown" : "rawKeyDown", text });
+      await send("Input.dispatchKeyEvent", { ...base, type: "keyUp" });
+      await sleep(60);
+    };
+    const tab = () => press("Tab", 9);
+    const enter = () => press("Enter", 13, "\r");
+    // Focus must be on `what`, with a ring drawn unless the script itself moved focus there.
+    const focusIs = async (what, ring = true) => {
+      const now = await run(focused);
+      expect(now.what === what, `keyboard: focus is on "${now.what}", expected "${what}"`);
+      if (now.what === what) expect(now.ring === ring, `keyboard: "${what}" ${ring ? "shows no focus ring" : "should not show a ring"}`);
+    };
+
     label = "phone-small/waitlist";
     await open(pairUrl, small);
     await look("pair-form", {
@@ -545,10 +619,17 @@ async function main() {
       const stamp = Date.now();
       const actions = "Share my invite link|See it inside ChatGPT";
 
-      // Pair: joining alone holds the place.
+      // Pair: joining alone holds the place. Done with the keyboard only: the first Tab
+      // lands in the email field, Enter joins, and focus moves to the answer.
       await open(pairUrl, small);
-      const first = await run(submitWaitlist, `check+${stamp}@example.com`);
+      await tab();
+      await focusIs("#waitlist-email");
+      await send("Input.insertText", { text: `check+${stamp}@example.com` });
+      await enter();
+      const first = await run(waitlistAnswered);
       expect(first.joined, `pair signup did not answer: "${first.error}"`);
+      await sleep(100);
+      await focusIs(".waitlist__joined", false);
       const pending = await look("pending", {
         lead: "Good things come in pairs.",
         text: "Your place is held. It is confirmed when one person you know joins with your link.",
@@ -559,6 +640,14 @@ async function main() {
       });
       expect(pending.saved && !pending.saved.includes("@"), "the spot should be remembered without the email");
       const code = pending.saved ? JSON.parse(pending.saved).refCode : "";
+      // On from the answer: both actions in order, and Enter on the link goes to the preview.
+      await tab();
+      await focusIs("Share my invite link");
+      await tab();
+      await focusIs("See it inside ChatGPT");
+      await enter();
+      await sleep(300);
+      expect((await run(`() => location.hash`)) === "#inside", "keyboard: Enter on the preview link did not go to #inside");
       await run(`() => localStorage.clear()`);
 
       // The invited person: told a place is saved, not by whom, and joining confirms both.

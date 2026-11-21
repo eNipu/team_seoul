@@ -103,7 +103,7 @@ typeface, no webfont from another origin.
 
 ### The hero is exactly one screen
 
-The header, `h1`, subhead, and waitlist must all end above the fold at 360 x 640. Anything else
+The header, `h1`, the changing line, subhead, and waitlist must all end above the fold at 360 x 640. Anything else
 in the hero is optional and gated like `.collage` (shown only at 720px wide and 800px tall or
 more). The backdrop stays `position: absolute`, behind the content, with `pointer-events: none`,
 under `.hero__veil`, which is what keeps the text contrast safe. If you change how the circles
@@ -131,8 +131,11 @@ Compose from the kit before writing new CSS: `.panel`, `.card`, `.notice`, `.btn
 
 ## Motion
 
-- Ambient only in the hero: the slow orbit, or a 14s breathe in the CSS fallback. Nothing else
-  on the page loops.
+- Ambient only in the hero: the slow orbit, or a 14s breathe in the CSS fallback, and the one
+  changing word under the headline (`NextWord`, a word every 2.4s, entering like `rise`).
+  Nothing else on the page loops, and no second line of text may change on its own.
+- Text that changes keeps its neighbours still: the changing word sits on its own line, so the
+  words beside it never shift.
 - New content enters with the shared `rise` keyframes (8px, 0.4 to 0.5s,
   `cubic-bezier(0.2, 0.8, 0.2, 1)`). Control feedback is a 0.15s transition.
 - No scroll-triggered reveals, parallax, hover lifts, or animation libraries.
@@ -176,13 +179,15 @@ system setting and once with reduced motion:
   "Find the common ground." or is under 32px
 - Any sideways overflow, or any visible element crossing the viewport edge (wide tables scroll
   inside `.metrics__scroll`)
-- A hero taller than the screen, or its header, `h1`, subhead, or waitlist below the fold. This
+- A hero taller than the screen, or its header, `h1`, changing line, subhead, or waitlist below
+  the fold. This
   is checked in every waitlist state (form, held, invited, confirmed), so a new line in one of
   them has to fit at 360 x 640
 - Text under AA contrast or under 12px
 - A control under 44px in either dimension
 - A console error, an uncaught script error, a request to another origin, or a cookie
 - A hero scene that does not draw, or that loads under reduced motion
+- A word under the headline that never changes, or that changes under reduced motion
 - A change to the preview's wording or steps. `exercisePreview` matches the signal labels,
   button text, and notes literally, and the waitlist and `/metrics` checks match theirs. When
   you change that copy on purpose, update `check.mjs` in the same change.

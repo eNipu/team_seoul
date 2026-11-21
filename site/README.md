@@ -15,7 +15,8 @@ metrics page. A Next.js app (App Router) with its own small API and two tables i
 | `components/VennScene.tsx` | The 3D hero background, built with three.js (MIT) |
 | `components/HeroBackdrop.tsx` | Loads the scene lazily and holds its CSS fallback |
 | `components/HeroCollage.tsx` | Optional hero visual: two overlapping portraits and their shared ground |
-| `components/Waitlist.tsx` | The email form and its confirmation state |
+| `components/NextWord.tsx` | The line under the headline, "You already know your next customer.", whose last word changes |
+| `components/Waitlist.tsx` | The email form and its states after joining |
 | `components/ChatPreview.tsx` | The two-step preview: Memory Sync card, then Common Ground Match card |
 | `lib/db.ts`, `lib/waitlist.ts`, `lib/analytics.ts` | Postgres pool and schema, waitlist logic, events and metrics |
 | `lib/version.ts` | The two waitlist versions, `pair` and `open`, and which one is the default |
@@ -52,8 +53,10 @@ silently drop signups.
 fails on: a missing or empty heading, sideways overflow, a hero that does not fit in the first screen, text below
 WCAG AA contrast, text under 12 px, a control under 44 px, a console error, a request to another origin, a
 cookie, a broken step in the preview, a hero scene that does not draw, a scene that loads when reduced motion
-is on, a `/metrics` that opens without the password, or a waitlist that never answers 429. With `DATABASE_URL`
-it also walks the waitlist on the smallest phone: joining alone (held), arriving with that link (invited, then
+is on, a word under the headline that never changes or that changes with reduced motion, a `/metrics` that
+opens without the password, or a waitlist that never answers 429. With `DATABASE_URL`
+it also walks the waitlist on the smallest phone: joining alone with real key presses (Tab to the field,
+Enter, focus on the answer, Tab through both actions, each with a focus ring), arriving with that link (invited, then
 both confirmed), coming back as the first person, a link nobody owns, and the open version. Each state must
 read as written in `docs/tasks/WAITLIST.md` and end above the fold. It never submits the
 waitlist against `--url`, so checking production does not add a signup. To include `/metrics` in a `--url` run,
@@ -153,6 +156,17 @@ hero as a full-bleed background that ignores the pointer, under a radial veil th
   screen or the tab is hidden.
 - The colors come from the kit tokens `--venn-a`, `--venn-b` and `--venn-shared`.
 
+## The changing word
+
+`NEXT` in `app/page.tsx` lists the words that end "You already know your next …". `NextWord` shows one every
+2.4 seconds. The first is in the HTML, so the line is whole without script. The word holds still when the
+visitor asks for reduced motion, while the pointer is on the line, while a form field has focus, and while the
+tab is hidden. Screen readers get one sentence with every word. There is no pause button, so the word cannot be
+stopped from the keyboard; WCAG 2.2.2 asks for that, and it should be added before a formal audit.
+
+Each word is a claim. Change the list together with the claims table, the page description in
+`app/layout.tsx`, and the sentence `check.mjs` expects a screen reader to get.
+
 ## The hero collage
 
 `COLLAGE` in `app/page.tsx` fills the optional slot under the form. Give either person an `image` (a square
@@ -196,7 +210,8 @@ Keep the page true when the product changes.
 | It never contacts anyone for you | Works | `README.md`, `plugin/skills/venn-social/SKILL.md` |
 | Memory Sync card with these four signals, sensitive info off by default | Preview | The real card is the memory review card; `Looking for` and `Can help with` are T08 |
 | Common Ground Match card, "Draft warm intro" | In development | T10 to T12 |
-| "Your next opportunity is someone you already know" | In development | Matching needs with offers is T08 to T12 |
+| "You already know your next customer", "investor" | In development | Matching what one person needs with what another offers is T08 to T12 |
+| "You already know your next friend", "gym buddy", "travel buddy" | Works for shared interests | `venn_find_people` ("who do I know who climbs?") and activity ideas |
 | "Venn shows where you overlap, from what each of you approves" | Works for shared interests | Activity ideas use what both people chose to share; ChatGPT extracts, the user approves |
 | "We only email you about your invite" | A promise the team must keep | `waitlist_signups` holds the emails. Nothing is sent today |
 | "A confirmed place for both of you", "Your places in the Founding Circle are confirmed" | A promise the team must keep | `confirmed_at`. Whoever opens Venn to the list must honour it |

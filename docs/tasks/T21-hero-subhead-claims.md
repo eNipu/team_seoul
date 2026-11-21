@@ -16,9 +16,9 @@ is listed with its status.
 1. `page.tsx`: replace the hero subhead with the one in `WAITLIST.md`. The `h1` stays.
 2. `layout.tsx`: if the description repeats the old subhead, bring it in line.
 3. `SHARE_TEXT`: the share text in `WAITLIST.md`.
-4. Claims table: add "Your next opportunity is someone you already know" (in development,
-   T10 to T12), "A confirmed place for both of you" (a promise the team must keep) and
+4. Claims table: add "A confirmed place for both of you" (a promise the team must keep) and
    "from what each of you approves" (works). Remove "Your AI knows what you're building".
+   The line about your next opportunity became the changing word in T25.
 
 ## Done when
 
