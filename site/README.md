@@ -6,9 +6,11 @@ The public landing page for Heldly. Static files in `public/`, plus one bundled 
 | --- | --- |
 | `public/index.html`, `public/styles.css` | The page |
 | `public/js/` | Build output from `src/`. Committed, so the deploy needs no build step |
-| `public/fonts/caveat-600.woff2` | Caveat, for the one handwritten note. SIL Open Font License, see `Caveat-OFL.txt` |
-| `src/main.js` | Booking example, signal card, and loading of the 3D scene |
-| `src/scene.js` | The 3D network in the hero, built with three.js (MIT) |
+| `public/fonts/` | Bricolage Grotesque (headings) and Caveat (one handwritten note). Both SIL Open Font License; the licence texts sit beside them |
+| `public/grain.png` | The paper grain behind the page, 96 px tile |
+| `src/data.js` | The made-up interests and people used by the scene and the example |
+| `src/main.js` | The "inside ChatGPT" example, the card under the scene, and loading of the scene |
+| `src/scene.js` | The 3D picture in the hero, built with three.js (MIT) |
 | `check.mjs` | Browser checks |
 
 ## Build, preview, check
@@ -30,16 +32,19 @@ nothing, or a scene that keeps moving when reduced motion is on.
 
 ## The 3D scene
 
-Your network as a slowly turning cloud of about 150 contacts. Most are cold blue-grey. Every 3.4 seconds one warms
-to coral, a line draws to it from "you" at the centre, and the card underneath names the person and what changed.
-The colours are read from the CSS tokens, so the scene follows light and dark mode.
+The product idea as one picture. About 130 small dots, each a memory, drift in and gather into five interest
+clusters around "you". The people you know sit between the two interests they share with you. Every few seconds one
+person lights up in coral, lines draw to those interests and to you, and the card underneath gives one way to keep
+that connection alive.
 
-- Loaded as a separate chunk (about 535 KB minified) only if the browser has WebGL 2. Without it, the stage shows
-  a still dot pattern.
+- WebGL draws the dots and lines. Cluster washes and labels are HTML positioned from the same 3D points, so the
+  text stays sharp. Colours are read from the CSS tokens, so the scene follows light and dark mode.
+- Loaded as a separate chunk (about 145 KB compressed) only if the browser has WebGL 2. Without it, the stage
+  shows a still dot pattern.
 - Stops rendering when it is off screen or the tab is hidden.
-- With reduced motion, it draws one still frame with five warm contacts and never animates.
-- Drag sideways to turn it. Vertical swipes still scroll the page.
-- The figure has a text description for screen readers; the canvas and the changing card are hidden from them.
+- With reduced motion, it draws one still frame, already gathered, and never animates.
+- Drag sideways to turn it a little. Vertical swipes still scroll the page.
+- The figure has a text description for screen readers; the canvas, labels and changing card are hidden from them.
 
 ## Deploy
 
@@ -53,26 +58,32 @@ node site/check.mjs --url https://site-production-4ef8eb52.up.railway.app/
 
 ## What the copy may claim
 
-The page describes the product the team is building, and the Status section says which parts work today. Keep that
-section true when the product changes.
+The page describes the product the team is building, and the "Where it stands" section says which parts work today.
+Keep that section true when the product changes.
 
 | Claim | Status | Source |
 | --- | --- | --- |
-| Saves only what you approve | Works | `backend/app/services/memory_service.py` |
-| Connect by invite code | Works | `backend/app/services/social_service.py` |
-| Find who you haven't seen in a while | Works | `reconnection_suggestions` in the same file |
-| Claude support | In development | `Heldly PRD.md`, section 3 |
-| Searching your network's updates | In development | `Heldly PRD.md`, section 6.3 |
-| Booking on both calendars | In development | `Heldly PRD.md`, section 7 |
-| Visibility only between mutual connections | Design | `Heldly idea memo.md`, `Heldly PRD.md` section 8.1 |
+| Saves only the memories you approve | Works | `heldly_propose_memories`, `heldly_save_memories` |
+| Searching what you've saved | Works | `heldly_search_memories` |
+| Adding people, connecting by invite code | Works | `heldly_add_person`, `heldly_create_invite` |
+| Reminders to reconnect, with ideas | Works | `heldly_reconnection_suggestions`, `heldly_suggest_activity` |
+| Shows its own cards in the chat | Works | `widget/` |
+| Interest clusters | In development | Not in the code yet |
+| Suggestions for how a connection could help | In development | Not in the code yet |
+| It can't read your chats | True by design | An MCP server only receives the arguments of a tool call |
+| It never contacts anyone for you | Works | `README.md`, `plugin/skills/heldly-social/SKILL.md` |
 
-The people in the examples and the hero card are made up, and the footer says so.
+The page does not say Heldly gathers conversations. It can't, and ChatGPT's plugin rules don't allow it; it gathers
+what the user asks it to remember. The people in the examples are made up, and the footer says so.
 
 ## Design notes
 
-Colour has one job: warm is a connection that is active again, cold is one that has gone quiet. Navigation, body
-text and the main button are ink on paper. Body type is the system stack; Caveat appears once, as the handwritten
-note in the hero, and never carries information.
+Air first: one idea per section, centred, with a lot of space between sections. Texture comes from a paper grain
+and two soft colour washes behind the hero. The page is graphic rather than wordy: the scene, three small drawings
+for the three steps, and a working example.
+
+Colour has one job: warm is the connection in focus, cold is everything at rest. Headings are Bricolage Grotesque;
+body text is the system stack; Caveat appears once, as the handwritten note, and never carries information.
 
 | Token | Light | Dark | Contrast on paper (light / dark) |
 | --- | --- | --- | --- |
@@ -84,5 +95,4 @@ note in the hero, and never carries information.
 | `--cold` (graphics) | `#647a92` | `#7f95ad` | 4.1 / 6.0 |
 | `--cold-ink` (text) | `#465a70` | `#a9bbcf` | 6.5 / 9.5 |
 
-Structure follows boardy.ai's page (statement, how it works, example, trust, call to action), but the layout, copy,
-code and every asset are Heldly's own.
+The airy, centred rhythm takes its cue from boardy.ai. The layout, copy, code and every asset are Heldly's own.

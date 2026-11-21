@@ -5,7 +5,7 @@
 //   node site/check.mjs --url <url>     check a deployed copy instead of site/public
 //
 // Covers: headings, horizontal overflow, text contrast, control sizes, console
-// errors, third-party requests, cookies, the booking example, and the 3D scene
+// errors, third-party requests, cookies, the interest example, and the 3D scene
 // (it must draw, and must hold still when reduced motion is requested).
 
 import { spawn } from "node:child_process";
@@ -176,7 +176,7 @@ function audit() {
   const overflow = document.documentElement.scrollWidth - window.innerWidth;
   if (overflow > 0) problems.push(`page is ${overflow}px wider than the viewport`);
   for (const el of document.querySelectorAll("body *")) {
-    if (!visible(el) || el.closest("svg") || el.closest(".skip")) continue;
+    if (!visible(el) || el.closest("svg, .skip, .stage__washes")) continue; // washes are clipped decoration
     const box = el.getBoundingClientRect();
     if (box.right > window.innerWidth + 0.5 || box.left < -0.5) problems.push(`sticks out sideways: ${describe(el)}`);
   }
@@ -207,7 +207,7 @@ function audit() {
   }
 
   // Control sizes: 44px, matching the widget
-  for (const el of document.querySelectorAll("a[href], button, select, label.slot")) {
+  for (const el of document.querySelectorAll("a[href], button, select, label.chip")) {
     if (!visible(el) || el.closest(".skip")) continue;
     const box = el.getBoundingClientRect();
     if (box.height < 43.5 || box.width < 43.5) {
@@ -219,37 +219,30 @@ function audit() {
   return problems;
 }
 
-// Runs in the page. Exercises the booking example.
+// Runs in the page. Exercises the "inside ChatGPT" example.
 function exerciseDemo() {
   const problems = [];
-  const expect = (ok, message) => ok || problems.push(`booking example: ${message}`);
-  const $ = (selector) => document.querySelector(selector);
-  const step = (name) => $(`[data-step="${name}"]`);
-  const books = [...document.querySelectorAll("[data-book]")];
-  const title = (name) => step(name).querySelector(".card__title");
+  const expect = (ok, message) => ok || problems.push(`interest example: ${message}`);
+  const radios = [...document.querySelectorAll('[data-clusters] input[type="radio"]')];
+  const names = () => [...document.querySelectorAll("[data-cluster-panel] .person__name")].map((n) => n.textContent);
+  const rows = () => [...document.querySelectorAll("[data-cluster-panel] .person")];
 
-  expect(books.length === 3 && books.every((b) => !b.disabled), "three enabled Book buttons at start");
-  expect(!step("results").hidden && step("slots").hidden && step("sent").hidden, "starts on the results");
+  expect(radios.length === 5 && radios.every((r) => !r.disabled), "five enabled interests");
+  expect(radios[0].checked, "Climbing is selected at start");
+  expect(names().join() === "Mina Park,Jun Ito", `Climbing lists "${names().join()}"`);
 
-  books[1].click();
-  expect(step("results").hidden && !step("slots").hidden, "Book opens the time picker");
-  expect(title("slots").textContent === "Times that work for you and Mina", `slots title was "${title("slots").textContent}"`);
-  expect(document.activeElement === title("slots"), "focus moves to the time picker title");
+  radios[1].click();
+  expect(names().join() === "Mina Park,Lea Novak", `Design lists "${names().join()}"`);
+  for (const row of rows()) {
+    const labels = [...row.querySelectorAll(".person__label")].map((l) => l.textContent).join();
+    expect(labels === "Keep it alive,How it could help", `row labels were "${labels}"`);
+    expect([...row.querySelectorAll(".person__row span:last-child")].every((t) => t.textContent.length > 20), "each row has a suggestion");
+  }
 
-  step("slots").querySelector("[data-back]").click();
-  expect(!step("results").hidden && document.activeElement === books[1], "Back returns focus to the Book button");
-
-  books[0].click();
-  step("slots").querySelectorAll('input[type="radio"]')[1].click();
-  step("slots").querySelector("[data-send]").click();
-  expect(!step("sent").hidden, "Send request shows the confirmation");
-  expect(title("sent").textContent === "Request sent to Teodor Weiss", `sent title was "${title("sent").textContent}"`);
-  const text = $("[data-sent-text]").textContent;
-  expect(text.includes("Wednesday 14:30") && text.includes("both calendars"), `sent text was "${text}"`);
-
-  step("sent").querySelector("[data-restart]").click();
-  expect(!step("results").hidden && document.activeElement === books[0], "Start over returns to the results");
-  expect(step("slots").querySelectorAll('input[type="radio"]')[0].checked, "Start over resets the time");
+  radios[4].click();
+  expect(names().join() === "Sam Okafor,Jun Ito", `Retail lists "${names().join()}"`);
+  radios[0].click();
+  expect(names().join() === "Mina Park,Jun Ito", "returning to Climbing restores the first list");
   return problems;
 }
 
@@ -260,7 +253,7 @@ function sceneState() {
     const started = performance.now();
     const poll = () => {
       const state = host?.dataset.state;
-      const ready = state === "flat" || (state && Number(host.dataset.frames) > 0);
+      const ready = state === "flat" || (state && Number(host.dataset.frames) > 0 && Number(host.dataset.lit) > 0);
       if (ready || performance.now() - started > 8000) {
         done({
           state: state ?? "missing",
@@ -268,6 +261,7 @@ function sceneState() {
           lit: Number(host?.dataset.lit ?? 0),
           reason: host?.dataset.reason ?? "",
           canvas: !!host?.querySelector("canvas"),
+          labels: [...document.querySelectorAll(".tag--cluster")].map((t) => t.textContent).join(","),
         });
       } else setTimeout(poll, 100);
     };
@@ -346,6 +340,8 @@ async function main() {
           failures.push(`${label}: scene state is "${scene.state}" ${scene.reason}, expected "${wanted}"`);
         } else if (scene.lit < 50) {
           failures.push(`${label}: scene drew almost nothing (${scene.lit} lit samples)`);
+        } else if (scene.labels !== "Climbing,Design,Berlin,AI tools,Retail") {
+          failures.push(`${label}: cluster labels were "${scene.labels}"`);
         }
         if (motion === "reduce") {
           const before = scene.frames;
@@ -360,6 +356,14 @@ async function main() {
         }
 
         if (shotsDir) {
+          // Let the dots finish gathering so the picture shows the settled scene.
+          if (motion !== "reduce") {
+            await run(`() => new Promise((done) => {
+              const t0 = performance.now();
+              const wait = () => document.querySelector(".stage--ready") || performance.now() - t0 > 7000 ? setTimeout(done, 1800) : setTimeout(wait, 100);
+              wait();
+            })`);
+          }
           mkdirSync(shotsDir, { recursive: true });
           const { cssContentSize } = await send("Page.getLayoutMetrics");
           const { data } = await send("Page.captureScreenshot", {
