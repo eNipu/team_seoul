@@ -12,7 +12,8 @@ from mcp.server.transport_security import TransportSecuritySettings
 from sqlalchemy import text
 
 from app.config import Settings, get_settings
-from app.db.database import create_all, init_engine, session_scope
+from app.db.database import init_engine, session_scope
+from app.db.migrate import upgrade_to_head
 from app.mcp.server import build_mcp_server
 
 
@@ -37,8 +38,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     logging.basicConfig(level=settings.log_level.upper())
     init_engine(settings.database_url)
     if settings.database_url.startswith("sqlite"):
-        # Dev/test convenience. Postgres schemas are managed by Alembic (`make migrate`).
-        create_all()
+        # Dev convenience: keep local SQLite at Alembic head. Postgres is migrated explicitly
+        # (`make migrate`, or the Docker entrypoint).
+        upgrade_to_head(settings.database_url)
 
     mcp, dev_provider = build_mcp_server(settings)
     mcp_app = mcp.streamable_http_app(
