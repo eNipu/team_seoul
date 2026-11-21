@@ -5,7 +5,8 @@
 //   node site/check.mjs --url <url>     check a deployed copy instead of site/public
 //
 // Covers: headings, horizontal overflow, text contrast, control sizes, console
-// errors, third-party requests, cookies, and the example card's behaviour.
+// errors, third-party requests, cookies, the booking example, and the 3D scene
+// (it must draw, and must hold still when reduced motion is requested).
 
 import { spawn } from "node:child_process";
 import { createServer } from "node:http";
@@ -35,6 +36,8 @@ const TYPES = {
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".svg": "image/svg+xml",
+  ".woff2": "font/woff2",
+  ".txt": "text/plain; charset=utf-8",
 };
 
 function serve() {
@@ -73,6 +76,8 @@ function launch() {
     "--no-first-run",
     "--disable-gpu",
     "--hide-scrollbars",
+    "--use-angle=swiftshader",
+    "--enable-unsafe-swiftshader",
     `--user-data-dir=${profile}`,
     "about:blank",
   ]);
@@ -202,7 +207,7 @@ function audit() {
   }
 
   // Control sizes: 44px, matching the widget
-  for (const el of document.querySelectorAll("a[href], button, select, label.check")) {
+  for (const el of document.querySelectorAll("a[href], button, select, label.slot")) {
     if (!visible(el) || el.closest(".skip")) continue;
     const box = el.getBoundingClientRect();
     if (box.height < 43.5 || box.width < 43.5) {
@@ -214,48 +219,60 @@ function audit() {
   return problems;
 }
 
-// Runs in the page. Exercises the example card.
+// Runs in the page. Exercises the booking example.
 function exerciseDemo() {
   const problems = [];
-  const expect = (ok, message) => ok || problems.push(`example card: ${message}`);
+  const expect = (ok, message) => ok || problems.push(`booking example: ${message}`);
   const $ = (selector) => document.querySelector(selector);
-  const boxes = [...document.querySelectorAll('#review input[type="checkbox"]')];
-  const form = $("#review");
-  const outcome = $("#outcome");
-  const save = $("#save");
+  const step = (name) => $(`[data-step="${name}"]`);
+  const books = [...document.querySelectorAll("[data-book]")];
+  const title = (name) => step(name).querySelector(".card__title");
 
-  expect(boxes.length === 3 && boxes.every((b) => b.checked && !b.disabled), "three enabled, ticked items at start");
-  expect(save.textContent === "Save selected (3)" && !save.disabled, "save starts at 3");
+  expect(books.length === 3 && books.every((b) => !b.disabled), "three enabled Book buttons at start");
+  expect(!step("results").hidden && step("slots").hidden && step("sent").hidden, "starts on the results");
 
-  boxes[1].click();
-  const off = boxes[1].closest(".memory");
-  expect(save.textContent === "Save selected (2)", "count drops to 2 after unticking");
-  expect(off.querySelector(".check__state").textContent === "Skip", "unticked item reads Skip");
-  expect(off.querySelector("select").disabled, "unticked item locks its visibility choice");
+  books[1].click();
+  expect(step("results").hidden && !step("slots").hidden, "Book opens the time picker");
+  expect(title("slots").textContent === "Times that work for you and Mina", `slots title was "${title("slots").textContent}"`);
+  expect(document.activeElement === title("slots"), "focus moves to the time picker title");
 
-  boxes[0].closest(".memory").querySelector("select").selectedIndex = 1;
-  save.click();
-  expect(form.hidden && !outcome.hidden, "saving swaps to the outcome");
-  expect($("#outcome-title").textContent === "Saved 2 memories", `title was "${$("#outcome-title").textContent}"`);
-  expect(document.activeElement === $("#outcome-title"), "focus moves to the outcome title");
-  const rows = [...document.querySelectorAll("#outcome-list li")].map((li) => li.textContent);
-  expect(rows.length === 2, "two saved rows");
-  expect(rows[0] === "Bouldering, twice a weekShared with connections", `first row was "${rows[0]}"`);
-  expect(!rows.join("").includes("Mina"), "the unticked item is not in the saved list");
-  expect($("#outcome-skipped").textContent === "1 skipped. It was not added to the profile.", "skipped note");
+  step("slots").querySelector("[data-back]").click();
+  expect(!step("results").hidden && document.activeElement === books[1], "Back returns focus to the Book button");
 
-  $("#restart").click();
-  expect(!form.hidden && outcome.hidden, "start over returns to the review");
-  expect(boxes.every((b) => b.checked) && save.textContent === "Save selected (3)", "start over re-ticks everything");
+  books[0].click();
+  step("slots").querySelectorAll('input[type="radio"]')[1].click();
+  step("slots").querySelector("[data-send]").click();
+  expect(!step("sent").hidden, "Send request shows the confirmation");
+  expect(title("sent").textContent === "Request sent to Teodor Weiss", `sent title was "${title("sent").textContent}"`);
+  const text = $("[data-sent-text]").textContent;
+  expect(text.includes("Wednesday 14:30") && text.includes("both calendars"), `sent text was "${text}"`);
 
-  boxes.forEach((b) => b.click());
-  expect(save.disabled && save.textContent === "Save selected (0)", "save is disabled with nothing ticked");
-
-  $("#discard").click();
-  expect($("#outcome-title").textContent === "Discarded", "discard reports Discarded");
-  expect($("#outcome-list").hidden, "discard shows no saved rows");
-  $("#restart").click();
+  step("sent").querySelector("[data-restart]").click();
+  expect(!step("results").hidden && document.activeElement === books[0], "Start over returns to the results");
+  expect(step("slots").querySelectorAll('input[type="radio"]')[0].checked, "Start over resets the time");
   return problems;
+}
+
+// Runs in the page. Waits for the 3D scene to settle and reports its state.
+function sceneState() {
+  return new Promise((done) => {
+    const host = document.querySelector("[data-scene]");
+    const started = performance.now();
+    const poll = () => {
+      const state = host?.dataset.state;
+      const ready = state === "flat" || (state && Number(host.dataset.frames) > 0);
+      if (ready || performance.now() - started > 8000) {
+        done({
+          state: state ?? "missing",
+          frames: Number(host?.dataset.frames ?? 0),
+          lit: Number(host?.dataset.lit ?? 0),
+          reason: host?.dataset.reason ?? "",
+          canvas: !!host?.querySelector("canvas"),
+        });
+      } else setTimeout(poll, 100);
+    };
+    poll();
+  });
 }
 
 async function main() {
@@ -274,6 +291,7 @@ async function main() {
       const { result, exceptionDetails } = await send("Runtime.evaluate", {
         expression: `(${fn})()`,
         returnByValue: true,
+        awaitPromise: true,
       });
       if (exceptionDetails) throw new Error(exceptionDetails.exception?.description ?? exceptionDetails.text);
       return result.value;
@@ -293,16 +311,24 @@ async function main() {
     });
     for (const domain of ["Page", "Runtime", "Network", "Log"]) await send(`${domain}.enable`);
 
-    for (const viewport of VIEWPORTS) {
-      for (const scheme of SCHEMES) {
-        label = `${viewport.name}/${scheme}`;
+    const runs = VIEWPORTS.flatMap((viewport) => SCHEMES.map((scheme) => ({ viewport, scheme, motion: "no-preference" })));
+    runs.push({ viewport: VIEWPORTS[2], scheme: "light", motion: "reduce" });
+
+    for (const { viewport, scheme, motion } of runs) {
+      {
+        label = `${viewport.name}/${scheme}${motion === "reduce" ? "/reduced-motion" : ""}`;
         await send("Emulation.setDeviceMetricsOverride", {
           width: viewport.width,
           height: viewport.height,
           deviceScaleFactor: shotsDir ? 2 : 1,
           mobile: viewport.width < 600,
         });
-        await send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-color-scheme", value: scheme }] });
+        await send("Emulation.setEmulatedMedia", {
+          features: [
+            { name: "prefers-color-scheme", value: scheme },
+            { name: "prefers-reduced-motion", value: motion },
+          ],
+        });
         const loaded = new Promise((done) => {
           const off = cdp.on((m) => {
             if (m.sessionId === sessionId && m.method === "Page.loadEventFired") {
@@ -314,8 +340,24 @@ async function main() {
         await send("Page.navigate", { url: base });
         await loaded;
 
+        const scene = await run(sceneState);
+        const wanted = motion === "reduce" ? "static" : "running";
+        if (scene.state !== wanted) {
+          failures.push(`${label}: scene state is "${scene.state}" ${scene.reason}, expected "${wanted}"`);
+        } else if (scene.lit < 50) {
+          failures.push(`${label}: scene drew almost nothing (${scene.lit} lit samples)`);
+        }
+        if (motion === "reduce") {
+          const before = scene.frames;
+          await new Promise((r) => setTimeout(r, 1200));
+          const after = (await run(sceneState)).frames;
+          if (after !== before) failures.push(`${label}: scene kept animating with reduced motion (${before} -> ${after} frames)`);
+        }
+
         for (const problem of await run(audit)) failures.push(`${label}: ${problem}`);
-        if (scheme === "light") for (const problem of await run(exerciseDemo)) failures.push(`${label}: ${problem}`);
+        if (scheme === "light" && motion !== "reduce") {
+          for (const problem of await run(exerciseDemo)) failures.push(`${label}: ${problem}`);
+        }
 
         if (shotsDir) {
           mkdirSync(shotsDir, { recursive: true });
@@ -325,9 +367,9 @@ async function main() {
             captureBeyondViewport: true,
             clip: { x: 0, y: 0, width: cssContentSize.width, height: cssContentSize.height, scale: 1 },
           });
-          writeFileSync(join(shotsDir, `${viewport.name}-${scheme}.png`), Buffer.from(data, "base64"));
+          writeFileSync(join(shotsDir, `${label.replaceAll("/", "-")}.png`), Buffer.from(data, "base64"));
         }
-        console.log(`checked ${label}`);
+        console.log(`checked ${label} (scene: ${scene.state}, ${scene.lit} lit samples)`);
       }
     }
 
