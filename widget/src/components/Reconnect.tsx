@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { friendArg, parseLogInteraction, plural, type ReconnectCandidate, type ReconnectViewData } from "../types";
+import { Icon } from "./icons";
 import { ActionError, Avatar, ChatStatus, EmptyNote, useAction, useChatPrompt, type ViewProps } from "./common";
 
 const keyOf = (c: ReconnectCandidate) => `${c.kind}:${c.id}`;
@@ -13,6 +14,8 @@ export default function Reconnect({ data, bridge, nav }: ViewProps<ReconnectView
   const busy = action.busy !== null;
   const remaining = data.candidates.filter((c) => !logged.includes(keyOf(c)));
   const done = data.candidates.filter((c) => logged.includes(keyOf(c)));
+  // The bar under each "days since" figure is relative to the longest gap in this list.
+  const longest = Math.max(1, ...data.candidates.map((c) => c.days_since_last_interaction));
 
   function ideas(c: ReconnectCandidate) {
     void action.run(`ideas-${keyOf(c)}`, () => nav.openView("heldly_suggest_activity", friendArg(c.kind, c.id)));
@@ -50,14 +53,14 @@ export default function Reconnect({ data, bridge, nav }: ViewProps<ReconnectView
         <ul className="list list--tight" aria-label="Logged">
           {done.map((c) => (
             <li key={keyOf(c)} className="logged-row" role="status">
-              <span aria-hidden="true">✓</span> Logged. Nice that you met up with {c.display_name}.
+              <Icon name="check" size={16} /> Logged. Nice that you met up with {c.display_name}.
             </li>
           ))}
         </ul>
       )}
 
       {remaining.length === 0 ? (
-        <EmptyNote icon="🌤️" title="You're all caught up">
+        <EmptyNote art="caught_up" title="You're all caught up">
           You've seen everyone recently. Enjoy it, and check back in a while.
         </EmptyNote>
       ) : (
@@ -75,16 +78,27 @@ export default function Reconnect({ data, bridge, nav }: ViewProps<ReconnectView
                         {c.kind === "connection" ? "On Heldly" : "Private note"}
                       </span>
                     </div>
-                    <span className="muted small">
-                      {plural(c.days_since_last_interaction, "day", "days")} since you last met
-                      {c.last_activity ? ` · Last time: ${c.last_activity}` : ""}
+                    {c.last_activity && <span className="muted small">Last time: {c.last_activity}</span>}
+                  </div>
+                  <div className="since">
+                    <span className="since__value">
+                      <Icon name="clock" size={14} />
+                      <span>
+                        <strong>{c.days_since_last_interaction}</strong>{" "}
+                        {c.days_since_last_interaction === 1 ? "day" : "days"}
+                        <span className="sr-only"> since you last met</span>
+                      </span>
+                    </span>
+                    <span className="since__bar" aria-hidden="true">
+                      <span style={{ width: `${Math.max(8, Math.round((c.days_since_last_interaction / longest) * 100))}%` }} />
                     </span>
                   </div>
                 </div>
                 {c.reason && <p>{c.reason}</p>}
                 {c.suggested_activity && (
                   <p className="next-step">
-                    <span aria-hidden="true">💡 </span>Idea: {c.suggested_activity}
+                    <Icon name="bulb" size={16} />
+                    <span>Idea: {c.suggested_activity}</span>
                   </p>
                 )}
                 <div className="card__actions">

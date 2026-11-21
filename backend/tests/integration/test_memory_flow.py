@@ -163,11 +163,12 @@ def test_widget_resource_served(alice):
 
 def test_render_tools_bound_to_widget(alice):
     tools = {t["name"]: t for t in alice.rpc("tools/list").json()["result"]["tools"]}
-    assert len(tools) == 38
+    assert len(tools) == 39
     render_tools = (
         "heldly_propose_memories",
         "heldly_import_chatgpt_memory",
         "heldly_show_dashboard",
+        "heldly_help",
         "heldly_create_invite",
         "heldly_propose_people_import",
         "heldly_view_friend",
@@ -199,7 +200,7 @@ def test_render_tools_bound_to_widget(alice):
     ):
         assert tools[name]["_meta"]["openai/widgetAccessible"] is True, name
     assert "ui" not in (tools["heldly_list_memories"].get("_meta") or {})
-    assert sum("ui" in (t.get("_meta") or {}) for t in tools.values()) == 12
+    assert sum("ui" in (t.get("_meta") or {}) for t in tools.values()) == 13
 
 
 # ---------------------------------------------------------------- import from ChatGPT memory

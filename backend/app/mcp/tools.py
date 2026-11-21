@@ -5,7 +5,7 @@ Conventions
 - Data tools return compact text + structuredContent. Render tools are bound to the widget
   resource and return a `view` discriminator the widget switches on: heldly_propose_memories
   (memory_review), heldly_import_chatgpt_memory (memory_import), heldly_show_dashboard
-  (dashboard | welcome), heldly_create_invite (invite),
+  (dashboard | welcome), heldly_help (help), heldly_create_invite (invite),
   heldly_propose_people_import (people_import), heldly_view_friend (friend),
   heldly_suggest_activity (activity_ideas), heldly_reconnection_suggestions (reconnect),
   heldly_find_people (people_search), heldly_plan_group (group_plan), heldly_meetup_brief (brief)
@@ -111,7 +111,7 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
                 f"interests: {', '.join(profile.interests[:10]) or 'none yet'}."
             )
             if profile.is_new:
-                text += " New user — call heldly_show_dashboard to show the welcome card, then onboard."
+                text += " New user — call heldly_show_dashboard now: it shows the welcome card and starts set-up."
             return ok(text, profile)
 
         return await guarded(body)
@@ -383,12 +383,15 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
         title="Show Heldly dashboard",
         description=(
             "Call this first in a Heldly conversation, and whenever the user opens or mentions Heldly, "
-            "says hello, asks what Heldly can do, or asks to set up or see their profile, memories or "
-            "friends. Shows the user's Heldly home in an interactive view: profile, memories, friends "
+            'says hello, or asks to set up or see their profile, memories or friends (for "what can '
+            'you do?" or "help" use heldly_help instead). Shows the user\'s Heldly home in an interactive '
+            "view: profile, memories, friends "
             "(connections on Heldly and private notes on people who aren't) and pending requests. The "
             "user can edit their profile and memories, open a friend, and accept/decline requests there. "
-            "A brand-new account gets a welcome card instead. The result includes the profile, so there "
-            "is no need to call heldly_get_profile as well."
+            "A brand-new account gets a welcome card instead. The result also tells you which set-up "
+            "steps are still open (about you, your people, connect); when any are, start the first one "
+            "right away in the same reply instead of waiting for the user to ask. The result includes "
+            "the profile, so there is no need to call heldly_get_profile as well."
         ),
         annotations=READ_ONLY,
     )
@@ -398,17 +401,49 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
                 [PROFILE_READ, MEMORIES_READ, CONNECTIONS],
                 lambda db, user, _: dashboard_service.build_home(db, user),
             )
+            guidance = dashboard_service.setup_guidance(view.setup)
             if view.view == "welcome":
                 return ok(
                     "Showing the welcome card: this account is empty. The card lets the user pick social "
-                    "goals and start set-up. Reply with one short line only. When the user continues, "
-                    "onboard in chat: ask 2-3 friendly questions about interests and the people they want "
-                    "to stay close to, then call heldly_propose_memories. Do not show this card again.",
+                    "goals, import their ChatGPT memory or start set-up. Do not describe the card and do "
+                    f"not show it again. {guidance}",
                     view,
                 )
             return ok(
                 f"Dashboard: {len(view.memories)} memories, {len(view.connections)} connections, "
-                f"{len(view.people)} people notes, {len(view.pending_requests)} pending requests.",
+                f"{len(view.people)} people notes, {len(view.pending_requests)} pending requests. "
+                + (guidance or "Set-up is complete."),
+                view,
+            )
+
+        return await guarded(body)
+
+    @apps.tool(
+        resource_uri=WIDGET_URI,
+        visibility=["model", "app"],
+        meta=ui_meta("Opening Heldly help…", "Here's what Heldly can do"),
+        name="heldly_help",
+        title="Heldly help",
+        description=(
+            "Show what Heldly can do, on a card with things to try. Call this when the user asks for help, "
+            "what Heldly is, what it can do, how something works, or what to say - instead of explaining in "
+            "text. The card lists each area with example requests the user can tap, the set-up steps that "
+            "are still open, and how their data is handled. It changes nothing. If the question is about "
+            "one specific thing, answer it in a sentence or two as well."
+        ),
+        annotations=READ_ONLY,
+    )
+    async def heldly_help() -> CallToolResult:
+        async def body():
+            view = await run_as_user(
+                [PROFILE_READ, MEMORIES_READ, CONNECTIONS],
+                lambda db, user, _: dashboard_service.build_help(db, user),
+            )
+            topics = "; ".join(t.title for t in view.topics)
+            guidance = dashboard_service.setup_guidance(view.setup, start=False)
+            return ok(
+                f"Showing the help card ({topics}), with examples the user can tap. Do not list them again "
+                "in text; add one short line at most. " + (guidance or "Set-up is complete."),
                 view,
             )
 
@@ -1099,6 +1134,7 @@ ToolName = Literal[
     "heldly_update_memory",
     "heldly_delete_memory",
     "heldly_show_dashboard",
+    "heldly_help",
     "heldly_create_invite",
     "heldly_list_invites",
     "heldly_revoke_invite",

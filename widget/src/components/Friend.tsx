@@ -1,6 +1,5 @@
 import { useId, useState, type FormEvent } from "react";
 import {
-  CATEGORY_ICONS,
   CATEGORY_LABELS,
   LIMITS,
   formatDate,
@@ -15,6 +14,7 @@ import {
 } from "../types";
 import { ActionError, Avatar, ChatStatus, SectionTitle, useAction, useChatPrompt, type ViewProps } from "./common";
 import FollowUps from "./FollowUps";
+import { CategoryIcon, Icon, Illustration } from "./icons";
 import PersonForm, { type PersonValues } from "./PersonForm";
 
 type Mode = "view" | "log" | "edit" | "confirm-remove";
@@ -128,7 +128,7 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
   if (gone) {
     return (
       <section className="panel empty">
-        <div className="empty__art" aria-hidden="true">{isPerson ? "🗑️" : "👋"}</div>
+        <Illustration name="done" />
         <p className="empty__title">{isPerson ? "Deleted" : "Connection removed"}</p>
         <p className="muted">
           {isPerson
@@ -158,7 +158,10 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
           </p>
           <div className="row row--wrap">
             {details.relationship && <span className="badge badge--note">{details.relationship}</span>}
-            <span className="badge">{lastAt ? `Last met ${formatRelative(lastAt)}` : "No hangouts yet"}</span>
+            <span className="badge">
+              <Icon name="clock" size={12} />
+              {lastAt ? `Last met ${formatRelative(lastAt)}` : "No hangouts yet"}
+            </span>
           </div>
         </div>
       </div>
@@ -192,38 +195,39 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
             </div>
           )}
 
-          <div className="button-row">
-            <button type="button" className="btn btn--primary" disabled={busy} onClick={ideas}>
-              {action.busy === "ideas" ? "Loading…" : "Get ideas"}
-            </button>
+          <button type="button" className="btn btn--primary btn--block" disabled={busy} onClick={ideas}>
+            <Icon name="bulb" size={18} />
+            {action.busy === "ideas" ? "Loading…" : "Get ideas for time together"}
+          </button>
+          <div className="tool-grid" role="group" aria-label={`More with ${details.name}`}>
             <button
               type="button"
-              className="btn"
+              className="tool"
               disabled={busy}
               aria-expanded={mode === "log"}
               onClick={() => setMode(mode === "log" ? "view" : "log")}
             >
+              <Icon name="check-circle" />
               Log a hangout
             </button>
             <button
               type="button"
-              className="btn"
+              className="tool"
               disabled={chat.state === "sending"}
               onClick={() =>
                 void chat.send(`Help me draft a short, warm message to reconnect with ${details.name}. I will send it myself.`)
               }
             >
+              <Icon name="pencil" />
               {chat.state === "sending" ? "Asking…" : "Draft a message"}
             </button>
-          </div>
-          <div className="button-row button-row--quiet">
-            <button type="button" className="btn btn--small" disabled={busy} onClick={prep}>
-              <span aria-hidden="true">📝 </span>
+            <button type="button" className="tool" disabled={busy} onClick={prep}>
+              <Icon name="note" />
               {action.busy === "prep" ? "Loading…" : "Prep for a meetup"}
             </button>
             {!isPerson && (
-              <button type="button" className="btn btn--small" disabled={busy} onClick={quiz}>
-                <span aria-hidden="true">🎲 </span>
+              <button type="button" className="tool" disabled={busy} onClick={quiz}>
+                <Icon name="dice" />
                 {action.busy === "quiz" ? "Loading…" : "Quiz"}
               </button>
             )}
@@ -266,6 +270,7 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
                   const isShared = shared.has(it.toLowerCase());
                   return (
                     <span key={`${it}-${i}`} className={`chip ${isShared ? "chip--shared" : "chip--plain"}`}>
+                      {isShared && <Icon name="star" size={12} />}
                       {isShared && <span className="sr-only">Shared: </span>}
                       {it}
                     </span>
@@ -274,7 +279,7 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
               </div>
               {chips.some((c) => shared.has(c.toLowerCase())) && (
                 <p className="muted small legend">
-                  <span aria-hidden="true">★</span> Interests you have in common
+                  <Icon name="star" size={14} /> Interests you have in common
                 </p>
               )}
             </>
@@ -293,9 +298,7 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
                 <ul className="list list--tight">
                   {data.shared_memories.map((m, i) => (
                     <li key={i} className="shared-memory">
-                      <span className={`cat-icon cat--${m.category.toLowerCase()}`} title={CATEGORY_LABELS[m.category]} aria-hidden="true">
-                        {CATEGORY_ICONS[m.category]}
-                      </span>
+                      <CategoryIcon category={m.category} />
                       <div>
                         <strong>{m.title}</strong>
                         <span className="sr-only"> ({CATEGORY_LABELS[m.category]})</span>
@@ -311,7 +314,7 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
           <SectionTitle count={interactions.length}>Recent hangouts</SectionTitle>
           {justLogged && (
             <p className="hint hint--ok" role="status">
-              ✓ Hangout logged
+              <Icon name="check" size={16} /> Hangout logged
             </p>
           )}
           {interactions.length === 0 ? (
@@ -346,6 +349,7 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
               <>
                 {isPerson && (
                   <button type="button" className="btn btn--small" disabled={busy} onClick={() => setMode("edit")}>
+                    <Icon name="pencil" size={16} />
                     Edit
                   </button>
                 )}

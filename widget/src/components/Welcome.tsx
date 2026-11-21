@@ -1,15 +1,10 @@
 import { useState } from "react";
 import { LIMITS, type WelcomeViewData } from "../types";
 import ErrorBanner from "./ErrorBanner";
-import { ActionError, useAction, type ViewProps } from "./common";
+import { ActionError, ChatFallback, useAction, type ViewProps } from "./common";
+import { Icon, Illustration } from "./icons";
 
 const SETUP_PROMPT = "Let's set up Heldly. Ask me a few questions about my interests and the people I want to stay close to.";
-
-const POINTS: { icon: string; title: string; text: string }[] = [
-  { icon: "🔒", title: "Remembers only what you approve", text: "Nothing is saved until you say yes." },
-  { icon: "🤝", title: "Helps you stay close to friends", text: "Gentle nudges and ideas for time together." },
-  { icon: "✋", title: "Never contacts anyone for you", text: "You always reach out yourself." },
-];
 
 type Phase = "choosing" | "starting" | "started" | "unavailable";
 
@@ -34,7 +29,12 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
       // Not fatal: the chat set-up can still go ahead, but tell the user.
       if (!res.ok) setError(res.errorText);
     }
-    const sent = await bridge.sendMessage(SETUP_PROMPT);
+    let sent = false;
+    try {
+      sent = await bridge.sendMessage(SETUP_PROMPT);
+    } catch {
+      sent = false;
+    }
     setPhase(sent ? "started" : "unavailable");
   }
 
@@ -44,12 +44,12 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
     return (
       <section className="panel empty">
         {error && <ErrorBanner message={error} onDismiss={() => setError(null)} />}
-        <div className="empty__art" aria-hidden="true">💬</div>
+        <Illustration name="chat" />
         <p className="empty__title">Great, tell me about yourself in the chat</p>
         {phase === "started" ? (
           <p className="muted">Heldly will ask a few questions there. You approve everything before it's saved.</p>
         ) : (
-          <p className="muted">Start by typing in the chat: “{SETUP_PROMPT}”</p>
+          <ChatFallback text={SETUP_PROMPT} />
         )}
       </section>
     );
@@ -57,43 +57,12 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
 
   const busy = phase === "starting" || action.busy !== null;
 
-  return (
-    <section className="panel welcome">
-      <div className="welcome__hero">
-        <span className="welcome__art" aria-hidden="true">♡</span>
-        <h2>{name ? `Welcome to Heldly, ${name}` : "Welcome to Heldly"}</h2>
-        <p className="muted">A companion that helps you keep the people you care about close.</p>
-      </div>
+  // The first open step is where the user is; on a brand-new account that is step 1.
+  const steps = data.setup;
+  const current = steps.find((s) => !s.done) ?? null;
 
-      <ul className="points">
-        {POINTS.map((p) => (
-          <li key={p.title} className="point">
-            <span className="point__icon" aria-hidden="true">{p.icon}</span>
-            <div>
-              <strong>{p.title}</strong>
-              <p className="muted small">{p.text}</p>
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      <ActionError action={action} />
-
-      <div className="offer">
-        <div className="offer__body">
-          <strong>Already told ChatGPT about yourself?</strong>
-          <p className="muted small">Start with what ChatGPT already knows about you. You choose what comes over.</p>
-        </div>
-        <button
-          type="button"
-          className="btn btn--block"
-          disabled={busy}
-          onClick={() => void action.run("import", () => nav.openView("heldly_import_chatgpt_memory", {}))}
-        >
-          {action.busy === "import" ? "Opening…" : "Import my ChatGPT memory"}
-        </button>
-      </div>
-
+  const startHere = (
+    <div className="welcome__start">
       {data.goal_options.length > 0 && (
         <fieldset className="goal-picker" disabled={busy}>
           <legend>What brings you here?</legend>
@@ -110,7 +79,7 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
                   disabled={!on && atLimit}
                   onClick={() => toggle(g.value)}
                 >
-                  <span aria-hidden="true">{on ? "✓" : "+"}</span>
+                  <Icon name={on ? "check" : "plus"} size={14} />
                   {g.label}
                 </button>
               );
@@ -118,12 +87,76 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
           </div>
         </fieldset>
       )}
-
-      <div className="actions">
+      <div className="welcome__actions">
         <button type="button" className="btn btn--primary btn--block" disabled={busy} onClick={() => void start()}>
           {phase === "starting" ? "Getting started…" : "Get started"}
+          {phase !== "starting" && <Icon name="arrow-right" size={18} />}
+        </button>
+        <button
+          type="button"
+          className="btn btn--block"
+          disabled={busy}
+          onClick={() => void action.run("import", () => nav.openView("heldly_import_chatgpt_memory", {}))}
+        >
+          <Icon name="import" size={18} />
+          {action.busy === "import" ? "Opening…" : "Import my ChatGPT memory"}
         </button>
       </div>
+      <p className="muted small welcome__alt">
+        Get started asks a few questions in the chat. Importing brings over what ChatGPT already knows; you choose what comes over.
+      </p>
+    </div>
+  );
+
+  return (
+    <section className="panel welcome">
+      <div className="welcome__hero">
+        <Illustration name="welcome" size="lg" />
+        <h2 className="welcome__title">{name ? `Welcome to Heldly, ${name}` : "Welcome to Heldly"}</h2>
+        <p className="muted">A companion that helps you keep the people you care about close.</p>
+      </div>
+
+      <ActionError action={action} />
+
+      {steps.length > 0 ? (
+        <>
+          <h3 className="section-title">
+            <span>Set up in {steps.length === 3 ? "three" : steps.length} short steps</span>
+          </h3>
+          <ol className="setup-steps setup-steps--path">
+            {steps.map((step, i) => {
+              const here = step === current;
+              return (
+                <li
+                  key={step.key}
+                  className={`setup-step ${step.done ? "setup-step--done" : ""} ${here ? "setup-step--current" : ""}`}
+                  aria-current={here ? "step" : undefined}
+                >
+                  <span className="setup-step__marker" aria-hidden="true">
+                    {step.done ? <Icon name="check" size={16} /> : i + 1}
+                  </span>
+                  <div className="setup-step__body">
+                    <p className="setup-step__title">
+                      {step.title}
+                      {step.done && <span className="sr-only"> (done)</span>}
+                    </p>
+                    {step.description && <p className="muted small">{step.description}</p>}
+                    {here && step.key === "about_you" && startHere}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+          {current?.key !== "about_you" && startHere}
+        </>
+      ) : (
+        startHere
+      )}
+
+      <p className="trust">
+        <Icon name="shield" size={18} />
+        <span>Nothing is saved until you approve it, and Heldly never contacts anyone for you.</span>
+      </p>
     </section>
   );
 }
