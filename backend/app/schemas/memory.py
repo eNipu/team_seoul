@@ -24,6 +24,16 @@ class MemoryVisibility(StrEnum):
     PUBLIC_PROFILE = "PUBLIC_PROFILE"
 
 
+def clean_names(names: list[str] | None) -> list[str]:
+    """People a memory is about: trimmed, de-duplicated (case-insensitive), at most five."""
+    out: list[str] = []
+    for name in names or []:
+        name = " ".join(str(name).split())[:80]
+        if name and name.lower() not in {n.lower() for n in out}:
+            out.append(name)
+    return out[:5]
+
+
 def _clean_tags(tags: list[str]) -> list[str]:
     out: list[str] = []
     for t in tags:
@@ -40,11 +50,21 @@ class MemoryCandidate(BaseModel):
     title: str = Field(min_length=1, max_length=120)
     description: str = Field(min_length=1, max_length=500)
     tags: list[str] = Field(default_factory=list, max_length=8)
+    people: list[str] = Field(
+        default_factory=list,
+        max_length=5,
+        description="Names of the friends this memory is about, e.g. ['Maya']. Empty when it is only about the user.",
+    )
 
     @field_validator("tags")
     @classmethod
     def _normalize_tags(cls, v: list[str]) -> list[str]:
         return _clean_tags(v)
+
+    @field_validator("people")
+    @classmethod
+    def _normalize_people(cls, v: list[str]) -> list[str]:
+        return clean_names(v)
 
 
 class ProposedMemory(MemoryCandidate):
@@ -52,6 +72,8 @@ class ProposedMemory(MemoryCandidate):
     suggested_visibility: MemoryVisibility = MemoryVisibility.PRIVATE
     # The user already has a memory with this title (e.g. a repeated import).
     already_saved: bool = False
+    # The part of `people` that is not in the user's circle yet. Approving the item adds them as private notes.
+    new_people: list[str] = []
 
 
 # Where proposed memories come from: what the user said in this conversation, or what ChatGPT
@@ -81,13 +103,16 @@ class MemoryOut(BaseModel):
     description: str
     tags: list[str]
     visibility: MemoryVisibility
-    source: Literal["chatgpt_memory"] | None = None
+    source: Literal["chatgpt_memory", "sample"] | None = None
+    people: list[str] = []
     created_at: datetime
 
 
 class SaveMemoriesOut(BaseModel):
     saved: list[MemoryOut]
     count: int
+    # Private notes created for people the approved memories are about (PersonOut as dicts).
+    people_added: list[dict] = []
 
 
 class MemoryListOut(BaseModel):

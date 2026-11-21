@@ -16,7 +16,7 @@ import {
   type PendingRequest,
   type Person,
 } from "../types";
-import { Avatar, ChatStatus, EmptyNote, SectionTitle, Spinner, useChatPrompt, type Action, type Nav } from "./common";
+import { Avatar, ChatStatus, EmptyNote, SampleTag, SectionTitle, Spinner, useChatPrompt, type Action, type Nav } from "./common";
 import { Icon } from "./icons";
 import { SearchIcon } from "./PeopleSearch";
 import PersonForm, { type PersonValues } from "./PersonForm";
@@ -32,6 +32,7 @@ interface Props {
   onPeople: (next: Person[]) => void;
   onPending: (next: PendingRequest[]) => void;
   onDashboard: (d: DashboardViewData) => void;
+  sampleLoaded: boolean;
 }
 
 export default function FriendsTab(props: Props) {
@@ -52,6 +53,23 @@ export default function FriendsTab(props: Props) {
     const q = query.trim();
     if (!q) return;
     void action.run("search", () => nav.openView("venn_find_people", { query: q }));
+  }
+
+  function trySample() {
+    void action.run("sample", async () => {
+      const res = await bridge.callTool("venn_load_sample_circle", {});
+      if (!res.ok) return res.errorText;
+      const fresh = await bridge.callTool("venn_show_dashboard", {});
+      if (!fresh.ok) return fresh.errorText;
+      const parsed = parseView(fresh.data);
+      if (!parsed || parsed.view !== "dashboard") return "Venn couldn't refresh the dashboard.";
+      props.onDashboard(parsed);
+      return null;
+    });
+  }
+
+  function compare(kind: FriendKind, id: string) {
+    void action.run(`compare-${kind}:${id}`, () => nav.openView("venn_compare", friendArg(kind, id)));
   }
 
   function togglePick(kind: FriendKind, id: string) {
@@ -103,6 +121,7 @@ export default function FriendsTab(props: Props) {
             display_name: req.sender_display_name,
             since: new Date().toISOString(),
             last_interaction_at: null,
+            is_sample: false,
           },
         ]);
       }
@@ -182,7 +201,16 @@ export default function FriendsTab(props: Props) {
           <Icon name="import" size={18} />
           {chat.state === "sending" ? "Asking…" : "Import friends"}
         </button>
-        {connections.length > 0 && (
+        <button
+          type="button"
+          className="quick-action"
+          disabled={busy}
+          onClick={() => void action.run("ask", () => nav.openView("venn_create_question_link", {}))}
+        >
+          <Icon name="link" size={18} />
+          {action.busy === "ask" ? "Creating…" : "Ask a friend"}
+        </button>
+        {friendCount >= 2 && (
           <button
             type="button"
             className="quick-action"
@@ -263,6 +291,15 @@ export default function FriendsTab(props: Props) {
           Invite a friend who uses ChatGPT, or add a private note about someone you want to stay close to.
         </EmptyNote>
       )}
+      {friendCount === 0 && !props.sampleLoaded && (
+        <div className="sample-offer">
+          <button type="button" className="btn btn--block" disabled={busy} onClick={trySample}>
+            <Icon name="sparkle" size={18} />
+            {action.busy === "sample" ? "Loading sample friends…" : "Try with sample friends"}
+          </button>
+          <p className="muted small">See every card with a made-up circle. Remove it with one tap.</p>
+        </div>
+      )}
 
       {friendCount > 0 && <SectionTitle count={connections.length}>On Venn</SectionTitle>}
       {friendCount === 0 ? null : connections.length === 0 ? (
@@ -277,6 +314,9 @@ export default function FriendsTab(props: Props) {
               opening={action.busy === `open-connection:${c.connection_id}`}
               disabled={busy}
               onOpen={() => open("connection", c.connection_id)}
+              sample={c.is_sample}
+              comparing={action.busy === `compare-connection:${c.connection_id}`}
+              onCompare={() => compare("connection", c.connection_id)}
               {...pickProps("connection", c.connection_id)}
             />
           ))}
@@ -301,6 +341,9 @@ export default function FriendsTab(props: Props) {
               opening={action.busy === `open-person:${p.person_id}`}
               disabled={busy}
               onOpen={() => open("person", p.person_id)}
+              sample={p.is_sample}
+              comparing={action.busy === `compare-person:${p.person_id}`}
+              onCompare={() => compare("person", p.person_id)}
               {...pickProps("person", p.person_id)}
             />
           ))}
@@ -337,13 +380,16 @@ interface RowProps {
   opening: boolean;
   disabled: boolean;
   onOpen: () => void;
+  sample: boolean;
+  comparing: boolean;
+  onCompare: () => void;
   /** Set while picking friends for a group hangout: the row becomes a checkbox. */
   picked?: boolean;
   pickDisabled?: boolean;
   onPick?: () => void;
 }
 
-function FriendRow({ name, detail, opening, disabled, onOpen, picked, pickDisabled, onPick }: RowProps) {
+function FriendRow({ name, detail, opening, disabled, onOpen, sample, comparing, onCompare, picked, pickDisabled, onPick }: RowProps) {
   if (onPick) {
     return (
       <li>
@@ -351,7 +397,10 @@ function FriendRow({ name, detail, opening, disabled, onOpen, picked, pickDisabl
           <input type="checkbox" checked={picked === true} disabled={pickDisabled} onChange={onPick} />
           <Avatar name={name} />
           <span className="pick__body">
-            <strong>{name}</strong>
+            <span className="name-line">
+              <strong>{name}</strong>
+              {sample && <SampleTag />}
+            </span>
             <span className="muted small">{detail}</span>
           </span>
         </label>
@@ -359,16 +408,35 @@ function FriendRow({ name, detail, opening, disabled, onOpen, picked, pickDisabl
     );
   }
   return (
-    <li>
-      <button type="button" className="friend-row" disabled={disabled} aria-label={`Open ${name}`} onClick={onOpen}>
+    <li className="friend-line">
+      <button
+        type="button"
+        className="friend-row"
+        disabled={disabled}
+        aria-label={`Open ${name}${sample ? " (sample)" : ""}`}
+        onClick={onOpen}
+      >
         <Avatar name={name} />
         <span className="friend-row__body">
-          <strong>{name}</strong>
+          <span className="name-line">
+            <strong>{name}</strong>
+            {sample && <SampleTag />}
+          </span>
           <span className="muted small">{detail}</span>
         </span>
         <span className="friend-row__open" aria-hidden="true">
           {opening ? <Spinner /> : <Icon name="chevron-right" size={18} />}
         </span>
+      </button>
+      <button
+        type="button"
+        className="friend-line__compare"
+        disabled={disabled}
+        aria-label={`Common ground with ${name}`}
+        title="Common ground"
+        onClick={onCompare}
+      >
+        {comparing ? <Spinner /> : <Icon name="venn" size={20} />}
       </button>
     </li>
   );

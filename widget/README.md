@@ -14,7 +14,7 @@ npm run dev        # local demo harness
 ```
 
 The Python server reads `widget/dist/index.html` and serves it as MCP resource
-`ui://venn/app-v1.html` with mimeType `text/html;profile=mcp-app`.
+`ui://venn/app-v2.html` with mimeType `text/html;profile=mcp-app`.
 
 ### Demo mode
 
@@ -29,6 +29,15 @@ mock bridge (`src/mock.ts`) instead of the ext-apps connection. It also works st
   `source: "chatgpt_memory"`, two of them already saved, `help` is the help card, `dashboard_setup` is a
   dashboard with memories but no people or connections, so the set-up card shows "1 of 3 done"; the plain
   `dashboard` demo has every step done and shows no set-up card); no `view` → empty state with links to every demo view
+- `?view=venn|venn_empty|venn_full|this_week|this_week_empty|ask_link|answers|answers_empty|`
+  `dashboard_sample|dashboard_plans|memory_review_people`
+  (`venn` compares you with Jun: two shared interests; `venn_empty` is a person with no overlap;
+  `venn_full` has 8 labels in every region, for layout checks; `this_week` has one action of each type,
+  `this_week_empty` has no friends; `ask_link` is a question link for Maya Chen; `answers` has two
+  responses, one for an existing person and one from someone new, plus three links; `answers_empty` has
+  neither; `dashboard_sample` has the sample circle loaded (banner, Sample tags, sample memories);
+  `dashboard_plans` has two saved plans; `memory_review_people` is a review card whose items name people,
+  two of them adding new people)
 - `&tab=profile|memories|friends` opens a dashboard tab
 - `&theme=dark|light` forces a theme (default: `prefers-color-scheme`)
 - `&flaky=1` makes every other tool call fail, so you can test the error banner and Retry
@@ -37,7 +46,11 @@ mock bridge (`src/mock.ts`) instead of the ext-apps connection. It also works st
 The mock bridge implements every tool listed below against one in-memory store, so the demo stays
 coherent while navigating (a person added on the dashboard is still there after opening a friend
 and going back; imported people show up on the dashboard, in search and in the circle quiz;
-follow-ups persist). `updateModelContext` and `sendMessage` are logged to the console; `openLink`
+follow-ups persist; loading and removing the sample circle adds and removes tagged friends and
+memories; saved plans show up on the dashboard until they are done or deleted; saving answers creates
+or updates the person; completing a follow-up on This week removes it). The demo story includes
+Maya Chen (college roommate; photography, pottery, trail running) and the memory "Photo walks with
+Maya", so searching "photography" finds her through that memory. `updateModelContext` and `sendMessage` are logged to the console; `openLink`
 uses `window.open`. Demo invites get a real QR code from a tiny demo-only encoder
 (`src/mockQr.ts`); in production the server sends the `qr` rows.
 
@@ -66,7 +79,22 @@ roughly matches the incoming view. A tool result with `isError` shows an error b
 | `group_plan` | `venn_plan_group` | Avatar stack, "Everyone's into", partial overlaps, group ideas with **Plan it** / **Add to calendar**. |
 | `brief` | `venn_meetup_brief` | "Before you see <name>": last time, common ground, things to ask about, copyable conversation starters, notes or shared memories. |
 | `quiz` | `venn_start_quiz` | One question at a time with instant feedback, then score, verdict and (friend mode) common-ground reveal. All state is client-side. |
+| `venn` | `venn_compare` | The Venn card: `summary` as the headline, two overlapping circles (you / the friend) with a count per region and, from about 390 px of width, up to three labels per region ("+N more" beyond that); the complete lists as chip groups **In common**, **Only you**, **Only <name>**; **Get more ideas**, **Open <name>**; the 0–2 suggestions with **Add to calendar** / **Save plan**. With nothing shared the lens is drawn dashed and the group says so. |
+| `this_week` | `venn_this_week` | Up to three action rows (reach out / follow up / make a plan) with the friend, `title`, `reason` and, depending on the row: a draft message with **Copy message** / **Ask ChatGPT to rewrite**; the follow-up with **Done**; the suggestion with **Add to calendar** / **Save plan**. Every row has **We talked**, **We met up** and **Open <name>**. Ends with "Venn never sends anything for you." Empty state shows `empty_reason` with **Add people** and **Try with sample friends**. |
+| `ask_link` | `venn_create_question_link` | Question link as a ticket, QR code ("Scan to answer"), **Copy link** / **Copy message**, the questions the friend will be asked, expiry, the no-account note, **See answers**, **Revoke link** (inline confirm). |
+| `answers` | `venn_review_answers` | One card per response: who answered and when, a name field (new person) or "Updates your note on <name>", each answer as a checkbox (on by default) with its question and a "Saves as" tag, **Save selected** / **Discard** (inline confirm); after saving, what was added and **Open <name>**. Below, the question links with Active / Expired, **Copy link**, **Revoke**, and **Create a link**. Answer text is rendered as plain text. |
 | anything else | | Empty state |
+
+The `dashboard` view also shows, above the tabs: the sample banner ("You're looking at sample friends." with
+**Remove sample data**, inline confirm) while `sample_loaded` is true; a **This week** tile; a highlighted
+"N answers waiting for your review" tile when `pending_answers > 0`; and a **Plans** section when `plans`
+is non-empty (title, date or "No date yet", members, **Done**, delete with inline confirm). The Friends tab
+adds **Ask a friend**, a Common ground shortcut on every friend row, "Sample" tags, and **Try with sample
+friends** in its empty state; **Play a quiz** shows when connections + people ≥ 2. `welcome` offers **Try
+with sample friends**. `memory_review` shows "About: <names>" and "Also adds <names> to your people";
+`people_search` shows each result's `why` (in place of the matched labels and snippet, which remain the
+fallback when `why` is empty) and a "From your memories" group. The friend view adds **Common ground** and,
+for private notes, **Ask them a few questions**.
 
 ### Navigation
 
@@ -75,7 +103,9 @@ roughly matches the incoming view. A tool result with `isError` shows an error b
 stack to that one view. After going back, the revealed view is refreshed in the background
 (`dashboard` → `venn_show_dashboard {}`, `reconnect` → `venn_reconnection_suggestions {}`,
 `friend` → `venn_view_friend`, `brief` → `venn_meetup_brief`, `people_search` →
-`venn_find_people {query}`, `help` → `venn_help {}`); the stale view stays visible, and is kept if the refresh fails.
+`venn_find_people {query}`, `help` → `venn_help {}`, `venn` → `venn_compare`, `this_week` →
+`venn_this_week {}`, `answers` → `venn_review_answers {}`; `ask_link` is not refreshed, because
+calling `venn_create_question_link` again would mint a second link); the stale view stays visible, and is kept if the refresh fails.
 `replaceView(tool, args)` swaps the current view without adding a Back step (search re-runs,
 quiz **Play again**).
 
@@ -178,6 +208,19 @@ or after an action that returns a dashboard).
 | Prep for a meetup | `venn_meetup_brief` | friendArg | `brief` view |
 | Quiz (friend); Play a quiz / Play again | `venn_start_quiz` | `{ connection_id }` or `{}` | `quiz` view |
 | Tick off a thing to ask | `venn_complete_follow_up` | `{ follow_up_id }` | `{ done: true, follow_up_id }` |
+| Common ground (friend view, friend rows) | `venn_compare` | friendArg | `venn` view |
+| Dashboard → This week | `venn_this_week` | `{}` | `this_week` view |
+| Try with sample friends (welcome, Friends tab empty state, This week empty state) | `venn_load_sample_circle` | `{}` | `{ loaded: true, … }`, then `venn_show_dashboard` |
+| Remove sample data | `venn_remove_sample_circle` | `{}` | `{ removed: true, … }`, then `venn_show_dashboard` |
+| Ask a friend; Ask them a few questions; Create a link | `venn_create_question_link` | `{}` or `{ person_id }` | `ask_link` view |
+| N answers waiting for your review; See answers | `venn_review_answers` | `{}` | `answers` view |
+| Save selected (answers) | `venn_save_answers` | `{ response_id, keys: string[], name? }` (`name` only for a new person) | `{ saved: true, response_id, person, added_interests, follow_up }` |
+| Discard (answers) | `venn_discard_answers` | `{ response_id }` | `{ discarded: true, response_id }` |
+| Revoke link | `venn_revoke_question_link` | `{ link_id }` | `{ revoked: true, link_id }` |
+| Save plan | `venn_save_plan` | `{ title, details?, planned_for?, connection_ids?, person_ids? }` (`planned_for` only when the user picked a time in the calendar picker) | Plan |
+| Plans → Done | `venn_complete_plan` | `{ plan_id }` | `{ done: true, plan_id, logged }`, then `venn_show_dashboard` |
+| Plans → delete | `venn_delete_plan` | `{ plan_id }` | `{ deleted: true, plan_id }`, then `venn_show_dashboard` |
+| We talked / We met up (This week) | `venn_log_interaction` | `{ ...friendArg, activity: "Talked" \| "Met up" }` | `{ recorded: true, … }` |
 | Add a thing to ask | `venn_add_follow_up` | `{ ...friendArg, text }` (max 200 chars) | FollowUp |
 
 `venn_propose_people_import` and `venn_propose_memories` are called by the model, not by the widget.
@@ -215,12 +258,14 @@ the local state and show a banner with **Retry**. Buttons are disabled while a c
   Set-up **Answer a few questions** (`Let's set up Venn. Ask me a few questions about what I enjoy and what I like to avoid.`)
   and **Add your people** (`I'd like to add my friends to Venn. I'll paste a list, upload a contacts file, or just tell you about them.`);
   a help example sends its own text unchanged.
+  This week **Ask ChatGPT to rewrite** (`Rewrite this message to <name> in my voice, keep it short: “<draft>”`);
+  the button disappears when the host refuses the message.
   **Preview my ChatGPT memory** sends the import prompt described under "Importing ChatGPT memory".
   If the host doesn't support `message`, the widget shows the text to type in chat instead.
 - `openLink` (`app.openLink({ url })`, needs the host's `openLinks` capability): **Add to calendar**
   opens a prefilled Google Calendar link built by `buildCalendarUrl` in `src/calendar.ts`
   (default next Saturday 11:00 local, 2 hours). If the host refuses, the widget shows the link itself.
-- Clipboard (invite, conversation starters, import prompt): `navigator.clipboard.writeText`, then a hidden textarea + `execCommand("copy")`,
+- Clipboard (invite, conversation starters, import prompt, question link, draft messages): `navigator.clipboard.writeText`, then a hidden textarea + `execCommand("copy")`,
   then the text is selected with a "Press Ctrl/Cmd+C to copy" hint.
 - Theme: `hostContext.theme` is applied with `applyDocumentTheme` (`data-theme` on `<html>`). Without
   it, the widget follows `prefers-color-scheme`.
@@ -240,6 +285,12 @@ src/components/common.tsx  Avatar, useAction (busy / retry), chat prompts, copyT
 src/components/icons.tsx   the icon set (Icon), category icons, the Venn mark (BrandMark) and spot illustrations (Illustration); all inline SVG
 src/components/Setup.tsx   "Finish setting up" card and the per-step actions (shared by Dashboard, Welcome and Help)
 src/components/Help.tsx    help card
+src/components/VennCard.tsx      the Venn card (inline SVG diagram + chip groups)
+src/components/ThisWeek.tsx      this week's action rows
+src/components/AskLink.tsx       question link card
+src/components/Answers.tsx       answers review + question links
+src/components/DashboardHome.tsx sample banner, This week / answers tiles, Plans section
+src/components/PlanTools.tsx     "Add to calendar" + "Save plan" for suggestion cards, SuggestionBody
 src/components/            MemoryReview, MemoryImport, Dashboard (+ MemoriesTab, FriendsTab), Friend, PersonForm,
                            Invite (+ QrCode), ActivityIdeas, Reconnect, Welcome, ErrorBanner,
                            PeopleImport, PeopleSearch, GroupPlan, Brief, Quiz,

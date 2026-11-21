@@ -61,6 +61,14 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
   const steps = data.setup;
   const current = steps.find((s) => !s.done) ?? null;
 
+  function trySample() {
+    void action.run("sample", async () => {
+      const res = await bridge.callTool("venn_load_sample_circle", {});
+      if (!res.ok) return res.errorText;
+      return nav.openView("venn_show_dashboard", {});
+    });
+  }
+
   const startHere = (
     <div className="welcome__start">
       {data.goal_options.length > 0 && (
@@ -105,6 +113,15 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
       <p className="muted small welcome__alt">
         Get started asks a few questions in the chat. Importing brings over what ChatGPT already knows; you choose what comes over.
       </p>
+      {!data.sample_loaded && (
+        <div className="sample-offer">
+          <button type="button" className="btn btn--ghost btn--block" disabled={busy} onClick={trySample}>
+            <Icon name="sparkle" size={18} />
+            {action.busy === "sample" ? "Loading sample friends…" : "Try with sample friends"}
+          </button>
+          <p className="muted small">See every card with a made-up circle. Remove it with one tap.</p>
+        </div>
+      )}
     </div>
   );
 
@@ -156,6 +173,9 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
       <p className="trust">
         <Icon name="shield" size={18} />
         <span>Nothing is saved until you approve it, and Venn never contacts anyone for you.</span>
+      </p>
+      <p className="muted small welcome__privacy">
+        Saved Venn records are available in ChatGPT and on the Venn website. Your ChatGPT chats and ChatGPT's own memory are not synced.
       </p>
     </section>
   );

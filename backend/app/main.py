@@ -1,4 +1,10 @@
-"""FastAPI entrypoint: health endpoints, the invite landing page and the Venn MCP server (/mcp)."""
+"""FastAPI entrypoint: one backend, two ways in.
+
+- /mcp (plus OAuth routes): the Venn MCP server that ChatGPT talks to.
+- /api/v1: the website's API. Same services, same account, same rules (see docs/WEB_API.md).
+- /app: the website itself (the build of web/).
+- /i/{code} and /q/{token}: small public pages for invites and for a friend's answers.
+"""
 
 from __future__ import annotations
 
@@ -7,16 +13,25 @@ import logging
 from collections.abc import AsyncIterator
 from urllib.parse import urlparse
 
-from fastapi import FastAPI
+import anyio
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from mcp.server.transport_security import TransportSecuritySettings
 from sqlalchemy import text
 
-from app.config import Settings, get_settings
+from app import question_page
+from app.config import Settings, get_settings, use_settings
 from app.db.database import init_engine, session_scope
 from app.db.migrate import upgrade_to_head
 from app.invite_page import render_invite_page
 from app.mcp.server import build_mcp_server
+from app.services import question_service
+from app.services.errors import VennError
+from app.web.api import build_api, install_error_handlers
+from app.web.site import install_site
+
+# A friend's answers are four short lines; anything much larger is not that form.
+MAX_ANSWER_FORM_BYTES = 16_000
 
 
 def _transport_security(settings: Settings) -> TransportSecuritySettings:
@@ -37,6 +52,7 @@ def _transport_security(settings: Settings) -> TransportSecuritySettings:
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
+    use_settings(settings)
     logging.basicConfig(level=settings.log_level.upper())
     init_engine(settings.database_url)
     if settings.database_url.startswith("sqlite"):
@@ -86,6 +102,55 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if html is None:
             return HTMLResponse("<!doctype html><title>Not found</title><p>Not found.</p>", 404, headers)
         return HTMLResponse(html, headers=headers)
+
+    @app.get("/q/{token}", include_in_schema=False)
+    def question_form(token: str) -> HTMLResponse:
+        with session_scope() as db:
+            link = question_service.public_link(db, token)
+        if link is None:
+            return HTMLResponse(question_page.render_unavailable(), 404, question_page.HEADERS)
+        return HTMLResponse(question_page.render_form(link), headers=question_page.HEADERS)
+
+    @app.post("/q/{token}", include_in_schema=False)
+    async def question_submit(token: str, request: Request) -> HTMLResponse:
+        try:
+            size = int(request.headers.get("content-length", "0"))
+        except ValueError:
+            size = MAX_ANSWER_FORM_BYTES + 1
+        if size > MAX_ANSWER_FORM_BYTES:
+            return HTMLResponse(question_page.render_unavailable(), 413, question_page.HEADERS)
+        form = await request.form()
+        values = {key: str(form.get(key, ""))[:400] for key in ("name", *question_service.QUESTION_KEYS)}
+        consent = str(form.get("consent", "")) == "yes"
+        bot = bool(str(form.get("website", "")).strip())
+
+        def work() -> tuple[int, str]:
+            with session_scope() as db:
+                link = question_service.public_link(db, token)
+                if link is None:
+                    return 404, question_page.render_unavailable()
+                if bot:
+                    # Filled-in honeypot: say thanks, store nothing.
+                    return 200, question_page.render_thanks(link.asker)
+                if not consent:
+                    error = f"Please tick the box so {link.asker} can see your answers."
+                    return 400, question_page.render_form(link, error, values)
+                try:
+                    stored = question_service.submit(
+                        db, token, values["name"], {k: values[k] for k in question_service.QUESTION_KEYS}
+                    )
+                except VennError as exc:
+                    return 400, question_page.render_form(link, exc.message, values)
+                if not stored:
+                    return 404, question_page.render_unavailable()
+                return 200, question_page.render_thanks(link.asker)
+
+        status, html = await anyio.to_thread.run_sync(work)
+        return HTMLResponse(html, status, question_page.HEADERS)
+
+    install_error_handlers(app)
+    app.include_router(build_api(settings))
+    install_site(app, settings)
 
     # The MCP Starlette app owns /mcp, OAuth metadata (/.well-known/*), and (dev) /authorize,/token,/register.
     app.mount("/", mcp_app)

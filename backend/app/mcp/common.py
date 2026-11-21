@@ -21,7 +21,7 @@ log = logging.getLogger("venn.mcp")
 
 T = TypeVar("T")
 
-WIDGET_URI = "ui://venn/app-v1.html"
+WIDGET_URI = "ui://venn/app-v2.html"
 
 # Scopes
 PROFILE_READ = "venn.profile.read"

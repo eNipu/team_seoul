@@ -26,13 +26,17 @@ from app.schemas.social import (
     ActivitySuggestion,
     BriefView,
     CompleteFollowUpOut,
+    FollowUpListOut,
     FollowUpOut,
     FriendKind,
+    FriendListOut,
+    FriendSummary,
     FriendView,
     GroupMember,
     GroupPlanView,
     InteractionOut,
     LogInteractionOut,
+    OpenFollowUpOut,
     PartialOverlap,
     PeopleSearchResult,
     PeopleSearchView,
@@ -40,10 +44,13 @@ from app.schemas.social import (
     ReconnectionCandidate,
     ReconnectView,
     SharedMemory,
+    ThisWeekAction,
+    ThisWeekView,
+    VennView,
 )
 from app.services import analytics, memory_service, people_service, social_service
 from app.services.errors import InvalidRequest, NotFound
-from app.services.user_service import display_name
+from app.services.user_service import display_name, is_sample_user
 
 DEFAULT_RECONNECT_DAYS = 21
 _INTEREST_CATEGORIES = {"INTEREST", "PREFERENCE", "EXPERIENCE"}
@@ -56,7 +63,7 @@ _STOPWORDS = frozenset(
     from going have having into just like likes liked love loves loved enjoy enjoys enjoyed
     prefer prefers preferred really some than that their them then there these they thing things
     this those very want wants went were what when where which while with would your yours
-    more most much many favorite favourite tried trying time times
+    more most much many favorite favourite tried trying time times used take took together
     """.split()  # noqa: SIM905 - a word list reads better than 70 quoted literals
 )
 
@@ -78,6 +85,30 @@ _ACTIVITY_IDEAS: dict[str, tuple[str, str]] = {
     "travel": ("Plan a day trip", "Somewhere reachable by train, there and back in a day."),
     "photo": ("Photo walk", "Walk a neighbourhood with your cameras or phones."),
     "yoga": ("Take a class together", "Book the same yoga class and get tea after."),
+    "boulder": ("Go climbing", "Book a session at a climbing gym."),
+    "ramen": ("Try a new place to eat", "Pick a cuisine you both like and book a table."),
+    "noodle": ("Try a new place to eat", "Pick a cuisine you both like and book a table."),
+    "sushi": ("Try a new place to eat", "Pick a cuisine you both like and book a table."),
+    "pizza": ("Try a new place to eat", "Pick a cuisine you both like and book a table."),
+    "brunch": ("Try a new place to eat", "Pick a cuisine you both like and book a table."),
+    "bak": ("Bake together", "Pick one recipe, split the shopping and share what comes out."),
+    "board": ("Game night", "Board games or co-op video games, snacks included."),
+    "potter": ("Make something together", "Book a pottery or craft class and take home what you make."),
+    "ceramic": ("Make something together", "Book a pottery or craft class and take home what you make."),
+    "craft": ("Make something together", "Book a pottery or craft class and take home what you make."),
+    "museum": ("Visit an exhibition", "Pick a gallery or museum show and wander through it."),
+    "galler": ("Visit an exhibition", "Pick a gallery or museum show and wander through it."),
+    "concert": ("See live music", "Find a small gig or swap playlists over a drink."),
+    "jazz": ("See live music", "Find a small gig or swap playlists over a drink."),
+    "walk": ("Go for a walk", "Pick a route with a good stop halfway."),
+    "cycl": ("Go for a ride", "An easy route with somewhere to stop for a snack."),
+    "bik": ("Go for a ride", "An easy route with somewhere to stop for a snack."),
+    "swim": ("Go for a swim", "A pool or a lake, then something warm to drink."),
+    "tennis": ("Play a match", "Book a court for an hour; loser buys the drinks."),
+    "badminton": ("Play a match", "Book a court for an hour; loser buys the drinks."),
+    "danc": ("Go dancing", "A class or a night out, whichever feels easier."),
+    "garden": ("Visit a garden", "A botanical garden or a plant market, at a slow pace."),
+    "karaoke": ("Karaoke night", "Book a room for an hour and take turns picking songs."),
 }
 _DEFAULT_IDEAS: list[tuple[str, str]] = [
     ("Quick call", "A 15-minute call to catch up on what's new."),
@@ -113,6 +144,10 @@ class Friend:
     terms: set[str] = field(default_factory=set)
     # Connections only: the memories the friend chose to share (never PRIVATE ones).
     memories: list[Memory] = field(default_factory=list)
+    # The user's own saved memories that are about this friend ("Photo walks with Maya").
+    about: list[Memory] = field(default_factory=list)
+    about_terms: set[str] = field(default_factory=set)
+    is_sample: bool = False
     connection: Connection | None = None
     friend_user: User | None = None
     person: Person | None = None
@@ -130,17 +165,57 @@ def terms_of(*texts: str) -> set[str]:
     return out
 
 
+_CONNECTIVES = frozenset({"with", "and", "my", "our", "the", "to", "for", "of", "me", "i", "a"})
+
+
+def _name_words(*names: str) -> set[str]:
+    return {w for name in names for w in _WORD.findall((name or "").lower())}
+
+
+def _topic(m: Memory, *names: str) -> str:
+    """A memory's title without the people it is about: "Photo walks with Maya" -> "photo walks"."""
+    drop = _name_words(*(m.people or []), *names) | _CONNECTIVES
+    return " ".join(w for w in _WORD.findall(m.title.lower()) if w not in drop)
+
+
 def _memory_terms(memories: list[Memory]) -> set[str]:
     out: set[str] = set()
     for m in memories:
         if m.category in _INTEREST_CATEGORIES:
-            out |= terms_of(m.title, *(m.tags or []))
+            out |= terms_of(_topic(m), *(m.tags or []))
     return out
 
 
+def own_memories(db: Session, user: User) -> list[Memory]:
+    return list(db.scalars(select(Memory).where(Memory.user_id == user.id).order_by(Memory.created_at.desc())).all())
+
+
 def my_terms(db: Session, user: User) -> set[str]:
-    rows = db.scalars(select(Memory).where(Memory.user_id == user.id)).all()
-    return _memory_terms(list(rows))
+    return _memory_terms(own_memories(db, user))
+
+
+def _is_about(m: Memory, name: str) -> bool:
+    """Is this memory of the user's about the friend called `name`?
+
+    Yes when the memory names them ("Maya" also stands for "Maya Chen"). A memory saved without
+    names still counts when the friend's first name appears in its text, capitalised as a name.
+    """
+    if m.people:
+        return any(memory_service.same_person(n, name) for n in m.people)
+    first = name.split()[0] if name.split() else ""
+    if len(first) < 3 or not first[0].isupper():
+        return False
+    return re.search(rf"\b{re.escape(first)}\b", f"{m.title} {m.description}") is not None
+
+
+def _link_own_memories(friend: Friend, mine: list[Memory]) -> Friend:
+    """Attach the user's memories about this friend; what they did together counts as common ground."""
+    friend.about = [m for m in mine if _is_about(m, friend.display_name)]
+    for m in friend.about:
+        if m.category != "DISLIKE":
+            friend.about_terms |= terms_of(_topic(m, friend.display_name), *(m.tags or []))
+    friend.terms |= friend.about_terms
+    return friend
 
 
 def _connection_events(db: Session, connection_id: uuid.UUID, limit: int = 10) -> list[InteractionOut]:
@@ -171,6 +246,7 @@ def _connection_friend(db: Session, user: User, conn: Connection, friend_id: uui
         memories=list(visible),
         connection=conn,
         friend_user=friend,
+        is_sample=is_sample_user(friend),
     )
 
 
@@ -187,6 +263,7 @@ def _person_friend(db: Session, person: Person) -> Friend:
         interest_labels=labels,
         terms=terms_of(*labels),
         person=person,
+        is_sample=bool(person.is_sample),
     )
 
 
@@ -194,11 +271,11 @@ def resolve(db: Session, user: User, connection_id: str | None, person_id: str |
     if bool(connection_id) == bool(person_id):
         raise InvalidRequest("Provide exactly one of connection_id or person_id.")
     if person_id:
-        return _person_friend(db, people_service.owned(db, user, person_id))
+        return _link_own_memories(_person_friend(db, people_service.owned(db, user, person_id)), own_memories(db, user))
     conn, friend_id = social_service.own_connection(db, user, connection_id or "")
     if social_service.is_blocked(db, user.id, friend_id):
         raise NotFound("connection not found")
-    return _connection_friend(db, user, conn, friend_id)
+    return _link_own_memories(_connection_friend(db, user, conn, friend_id), own_memories(db, user))
 
 
 def all_friends(db: Session, user: User) -> list[Friend]:
@@ -212,7 +289,8 @@ def all_friends(db: Session, user: User) -> list[Friend]:
             out.append(_connection_friend(db, user, c, friend_id))
     for p in db.scalars(select(Person).where(Person.owner_user_id == user.id)).all():
         out.append(_person_friend(db, p))
-    return out
+    mine = own_memories(db, user)
+    return [_link_own_memories(friend, mine) for friend in out]
 
 
 def compact(terms: set[str]) -> list[str]:
@@ -226,7 +304,8 @@ def compact(terms: set[str]) -> list[str]:
 
 
 def shared_terms(mine: set[str], friend: Friend) -> list[str]:
-    return compact(mine & friend.terms)
+    """Common ground: interests both have, plus what the user's own memories say they did together."""
+    return compact((mine & friend.terms) | friend.about_terms)
 
 
 def days_since(friend: Friend) -> int:
@@ -591,7 +670,10 @@ def _matches(query_stem: str, stems: set[str]) -> bool:
     if query_stem in stems:
         return True
     # "photo" finds "photography"; short stems must match exactly so "art" doesn't find "party".
-    return len(query_stem) >= 4 and any(s.startswith(query_stem) for s in stems)
+    if len(query_stem) >= 4 and any(s.startswith(query_stem) for s in stems):
+        return True
+    # ...and "photography" finds "photo walks".
+    return any(len(s) >= 5 and query_stem.startswith(s) for s in stems)
 
 
 def _snippet(text: str, query_stems: list[str], width: int = 140) -> str:
@@ -606,34 +688,86 @@ def _snippet(text: str, query_stems: list[str], width: int = 140) -> str:
 
 
 def _matches_any(word_stem: str, query_stems: list[str]) -> bool:
-    return any(word_stem == q or (len(q) >= 4 and word_stem.startswith(q)) for q in query_stems)
+    return any(_matches(q, {word_stem}) for q in query_stems)
 
 
-def _searchable(friend: Friend) -> list[tuple[int, str, str, str | None]]:
-    """(weight, text, label shown as "matched", text to quote) for everything searchable about a friend."""
-    fields: list[tuple[int, str, str, str | None]] = [(3, friend.display_name, "name", None)]
+def _searchable(friend: Friend) -> list[tuple[int, str, str, str | None, str]]:
+    """(weight, text, label shown as "matched", text to quote, origin) for everything searchable about a friend.
+
+    The user's own memories about the friend come first, so they win a tie when explaining a match.
+    """
+    fields: list[tuple[int, str, str, str | None, str]] = []
+    for m in friend.about:
+        fields.append((3, m.title, m.title, m.description, "own_memory"))
+        fields += [(3, tag, m.title, m.description, "own_memory") for tag in m.tags or []]
+        fields.append((2, m.description, m.title, m.description, "own_memory"))
+    fields.append((3, friend.display_name, "name", None, "name"))
     if friend.person is not None:
         person = friend.person
-        fields += [(3, label, label, None) for label in person.interests or []]
+        fields += [(3, label, label, None, "interest") for label in person.interests or []]
         if person.relationship:
-            fields.append((2, person.relationship, person.relationship, None))
+            fields.append((2, person.relationship, person.relationship, None, "relationship"))
         if person.notes:
-            fields.append((1, person.notes, "notes", person.notes))
+            fields.append((1, person.notes, "notes", person.notes, "notes"))
         return fields
     for m in friend.memories:
-        fields.append((3, m.title, m.title, m.description))
-        fields += [(2, tag, m.title, m.description) for tag in m.tags or []]
-        fields.append((1, m.description, m.title, m.description))
+        fields.append((3, m.title, m.title, m.description, "shared"))
+        fields += [(2, tag, m.title, m.description, "shared") for tag in m.tags or []]
+        fields.append((1, m.description, m.title, m.description, "shared"))
     profile = friend.friend_user.profile if friend.friend_user else None
     if profile and profile.bio and profile.visibility in ("CONNECTIONS", "PUBLIC"):
-        fields.append((1, profile.bio, "bio", profile.bio))
+        fields.append((1, profile.bio, "bio", profile.bio, "bio"))
     return fields
+
+
+_NAME_TITLES = {"aunt", "auntie", "uncle", "grandma", "grandpa", "dr", "dr.", "mr", "mr.", "mrs", "mrs.", "ms", "ms."}
+
+
+def first_name(name: str) -> str:
+    """What to call someone in a sentence: "Maya Chen" → "Maya", but "Aunt Yuna" stays whole."""
+    parts = name.split()
+    if not parts:
+        return name
+    return name.strip() if parts[0].lower() in _NAME_TITLES else parts[0]
+
+
+def _why(friend: Friend, origin: str, label: str, snippet: str | None) -> str:
+    """One plain sentence saying why this person came up."""
+    first = first_name(friend.display_name)
+    if origin == "own_memory":
+        return f"From your memory “{label}”."
+    if origin == "interest":
+        return f"Your notes list “{label}”."
+    if origin == "relationship":
+        return f"Your notes describe {first} as “{label}”."
+    if origin == "notes":
+        return f"From your notes: “{snippet}”" if snippet else "Your notes mention it."
+    if origin == "shared":
+        return f"{first} shared “{label}”."
+    if origin == "bio":
+        return f"{first}'s profile mentions it."
+    return "The name matches."
+
+
+def _matching_memories(mine: list[Memory], query_stems: list[str], limit: int = 5) -> list[Memory]:
+    """The user's own memories that match the query, best first."""
+    scored: list[tuple[int, Memory]] = []
+    for m in mine:
+        fields = [(3, m.title), *((2, tag) for tag in m.tags or []), *((2, n) for n in m.people or [])]
+        fields.append((1, m.description))
+        stems = [(weight, _stems(text)) for weight, text in fields]
+        score = sum(max((w for w, st in stems if _matches(q, st)), default=0) for q in query_stems)
+        if score:
+            scored.append((score, m))
+    scored.sort(key=lambda pair: pair[0], reverse=True)  # stable: newest first within a score
+    return [m for _, m in scored[:limit]]
 
 
 def find_people(db: Session, user: User, query: str, limit: int = 8) -> PeopleSearchView:
     """Who in the user's circle matches a topic ("climbing", "works in design")?
 
-    Searches the user's private person notes and, for connections, only what they chose to share.
+    Searches the user's saved memories about their friends, their private person notes and,
+    for connections, only what they chose to share. Every result says why it came up.
     """
     clean_query = " ".join((query or "").split())[:120]
     words = [w for w in _WORD.findall(clean_query.lower()) if len(w) > 1 and w not in _QUERY_STOPWORDS]
@@ -644,14 +778,17 @@ def find_people(db: Session, user: User, query: str, limit: int = 8) -> PeopleSe
     friends = all_friends(db, user)
     ranked: list[tuple[int, int, PeopleSearchResult]] = []
     for friend in friends:
-        fields = [(weight, _stems(text), label, quote) for weight, text, label, quote in _searchable(friend)]
+        fields = [
+            (weight, _stems(text), label, quote, origin) for weight, text, label, quote, origin in _searchable(friend)
+        ]
         score = 0
         hits = 0
         matched: list[str] = []
         snippet: str | None = None
+        reason: tuple[int, str, str, str | None] | None = None  # weight, origin, label, quote
         for q in query_stems:
             best = 0
-            for weight, stems, label, quote in fields:
+            for weight, stems, label, quote, origin in fields:
                 if not _matches(q, stems):
                     continue
                 best = max(best, weight)
@@ -659,10 +796,13 @@ def find_people(db: Session, user: User, query: str, limit: int = 8) -> PeopleSe
                     matched.append(label)
                 if snippet is None and quote:
                     snippet = _snippet(quote, query_stems)
+                if reason is None or weight > reason[0]:
+                    reason = (weight, origin, label, quote)
             score += best
             hits += 1 if best else 0
-        if not hits:
+        if not hits or reason is None:
             continue
+        _, origin, label, quote = reason
         ranked.append(
             (
                 hits,
@@ -676,13 +816,17 @@ def find_people(db: Session, user: User, query: str, limit: int = 8) -> PeopleSe
                     matched=matched[:5],
                     snippet=snippet,
                     last_interaction_at=friend.last_interaction_at,
+                    why=_why(friend, origin, label, _snippet(quote, query_stems, width=100) if quote else None),
                 ),
             )
         )
     ranked.sort(key=lambda r: (-r[0], -r[1], r[2].display_name.lower()))
     results = [r[2] for r in ranked[: min(max(limit, 1), 20)]]
+    memories = [memory_service.to_out(m) for m in _matching_memories(own_memories(db, user), query_stems)]
     analytics.track(db, "people_searched", user.id, count=len(results))
-    return PeopleSearchView(query=clean_query, results=results, count=len(results), searched=len(friends))
+    return PeopleSearchView(
+        query=clean_query, results=results, count=len(results), searched=len(friends), memories=memories
+    )
 
 
 # ------------------------------------------------------------------- group plan
@@ -723,3 +867,230 @@ def plan_group(
         common_to_some=[PartialOverlap(interest=t, members=holders[t]) for t in partial],
         suggestions=suggestions,
     )
+
+
+# -------------------------------------------------------------------- venn card
+MAX_VENN_ITEMS = 8
+
+
+def _pretty(term: str, labels: list[str]) -> str:
+    """Show a shared term the way the user (or the friend) wrote it, when one of them did."""
+    for label in labels:
+        if " ".join(_WORD.findall(label.lower())) == term:
+            return label
+    return term[:1].upper() + term[1:]
+
+
+def _own_labels(mine: list[Memory]) -> list[tuple[str, set[str]]]:
+    """(label, terms) of what the user is into, interests first."""
+    rows = sorted(
+        (m for m in mine if m.category in _INTEREST_CATEGORIES and not m.people),
+        key=lambda m: m.category != "INTEREST",
+    )
+    return [(m.title, terms_of(_topic(m), *(m.tags or []))) for m in rows]
+
+
+def compare(db: Session, user: User, connection_id: str | None = None, person_id: str | None = None) -> VennView:
+    """The Venn card: what only the user is into, what only the friend is into, and the overlap."""
+    friend = resolve(db, user, connection_id, person_id)
+    mine = own_memories(db, user)
+    my = _memory_terms(mine)
+    shared = shared_terms(my, friend)
+    shared_set = set(shared) | (my & friend.terms)
+
+    own = _own_labels(mine)
+    their_labels = list(friend.interest_labels)
+    if friend.kind == "connection":
+        their_labels += [m.title for m in friend.memories if m.category in ("PREFERENCE", "EXPERIENCE")]
+    you_only = [label for label, terms in own if not terms & friend.terms]
+    them_only = [label for label in dict.fromkeys(their_labels) if not terms_of(label) & (my | shared_set)]
+
+    first = first_name(friend.display_name)
+    if shared:
+        things = "1 thing" if len(shared) == 1 else f"{len(shared)} things"
+        summary = f"You and {first} have {things} in common."
+    elif them_only or you_only:
+        summary = f"Nothing in common on record yet. Add what you know about {first} to find the overlap."
+    else:
+        summary = f"Nothing saved about you or {first} yet."
+
+    suggestions = [
+        ActivitySuggestion(title=title, description=description, grounded_in=grounded, suggested_action=_NO_CONTACT)
+        for title, description, grounded in ideas_for(shared, friend)
+        if grounded
+    ][:2]
+    all_labels = [label for label, _ in own] + their_labels
+    analytics.track(db, "venn_compared", user.id, count=len(shared))
+    return VennView(
+        kind=friend.kind,
+        id=friend.id,
+        display_name=friend.display_name,
+        on_venn=friend.kind == "connection",
+        you_only=you_only[:MAX_VENN_ITEMS],
+        shared=[_pretty(term, all_labels) for term in shared[:MAX_VENN_ITEMS]],
+        them_only=them_only[:MAX_VENN_ITEMS],
+        summary=summary,
+        suggestions=suggestions,
+    )
+
+
+# ----------------------------------------------------------------- friend list
+def _open_follow_up_rows(db: Session, user: User) -> list[FollowUp]:
+    return list(
+        db.scalars(
+            select(FollowUp)
+            .where(FollowUp.owner_user_id == user.id, FollowUp.done_at.is_(None))
+            .order_by(FollowUp.created_at, FollowUp.id)
+        ).all()
+    )
+
+
+def _follow_up_key(row: FollowUp) -> tuple[str, str]:
+    return ("person", str(row.person_id)) if row.person_id else ("connection", str(row.connection_id))
+
+
+def list_friends(db: Session, user: User) -> FriendListOut:
+    """Everyone in the user's circle in one list: connections and private notes, by name."""
+    counts: dict[tuple[str, str], int] = {}
+    for row in _open_follow_up_rows(db, user):
+        counts[_follow_up_key(row)] = counts.get(_follow_up_key(row), 0) + 1
+    friends = [
+        FriendSummary(
+            kind=f.kind,
+            id=f.id,
+            display_name=f.display_name,
+            on_venn=f.kind == "connection",
+            relationship=f.person.relationship if f.person else None,
+            interests=f.interest_labels,
+            last_interaction_at=f.last_interaction_at,
+            since=f.since,
+            is_sample=f.is_sample,
+            open_follow_ups=counts.get((f.kind, f.id), 0),
+        )
+        for f in all_friends(db, user)
+    ]
+    friends.sort(key=lambda f: f.display_name.lower())
+    return FriendListOut(friends=friends, count=len(friends))
+
+
+def list_open_follow_ups(db: Session, user: User) -> FollowUpListOut:
+    """Every open follow-up across the circle, oldest first, with the friend it is about."""
+    by_key = {(f.kind, f.id): f for f in all_friends(db, user)}
+    out: list[OpenFollowUpOut] = []
+    for row in _open_follow_up_rows(db, user):
+        friend = by_key.get(_follow_up_key(row))
+        if friend is None:
+            continue  # e.g. a blocked connection
+        out.append(
+            OpenFollowUpOut(
+                follow_up_id=str(row.id),
+                text=row.text,
+                created_at=as_aware(row.created_at),
+                kind=friend.kind,
+                id=friend.id,
+                display_name=friend.display_name,
+            )
+        )
+    return FollowUpListOut(follow_ups=out, count=len(out))
+
+
+# -------------------------------------------------------------------- this week
+THIS_WEEK_MIN_DAYS = 14
+
+
+def _reach_out_draft(friend: Friend, shared: list[str]) -> str:
+    first = first_name(friend.display_name)
+    if shared:
+        hook = f"I was just thinking about {shared[0]} and it made me think of you."
+    elif friend.last_activity:
+        hook = f"I was thinking about last time (“{friend.last_activity}”)."
+    elif friend.interest_labels:
+        hook = f"How is the {friend.interest_labels[0].lower()} going?"
+    else:
+        hook = "How have you been?"
+    return f"Hi {first}, it's been too long! {hook} Want to catch up this week?"
+
+
+def this_week(db: Session, user: User) -> ThisWeekView:
+    """Up to three concrete things to do this week: reach out, follow up, plan something."""
+    friends = all_friends(db, user)
+    if not friends:
+        return ThisWeekView(
+            actions=[], empty_reason="Add a few people first, then Venn can suggest who to reach out to."
+        )
+    mine = my_terms(db, user)
+    by_key = {(f.kind, f.id): f for f in friends}
+    actions: list[ThisWeekAction] = []
+    used: set[tuple[str, str]] = set()
+
+    def ref(friend: Friend) -> dict:
+        return {"kind": friend.kind, "id": friend.id, "display_name": friend.display_name}
+
+    # 1. Reach out: whoever the user has not seen for the longest time.
+    overdue = sorted((f for f in friends if days_since(f) >= THIS_WEEK_MIN_DAYS), key=days_since, reverse=True)
+    if overdue:
+        friend = overdue[0]
+        days = days_since(friend)
+        first = first_name(friend.display_name)
+        reason = (
+            f"No logged hangout in {days} days."
+            if friend.last_interaction_at
+            else f"No hangout logged since you added {first} {days} days ago."
+        )
+        actions.append(
+            ThisWeekAction(
+                type="reach_out",
+                title=f"Reach out to {first}",
+                reason=reason,
+                draft_message=_reach_out_draft(friend, shared_terms(mine, friend)),
+                **ref(friend),
+            )
+        )
+        used.add((friend.kind, friend.id))
+
+    # 2. Follow up: the oldest thing the user wanted to ask someone, preferably someone else.
+    rows = [r for r in _open_follow_up_rows(db, user) if _follow_up_key(r) in by_key]
+    row = next((r for r in rows if _follow_up_key(r) not in used), rows[0] if rows else None)
+    if row is not None:
+        friend = by_key[_follow_up_key(row)]
+        actions.append(
+            ThisWeekAction(
+                type="follow_up",
+                title=f"Follow up with {first_name(friend.display_name)}",
+                reason=f"You wanted to: {row.text}",
+                follow_up=_follow_up_out(row),
+                **ref(friend),
+            )
+        )
+        used.add((friend.kind, friend.id))
+
+    # 3. Plan: the friend with the most common ground, preferably someone not mentioned yet.
+    best: tuple[int, Friend, tuple[str, str, list[str]]] | None = None
+    for friend in sorted(friends, key=lambda f: ((f.kind, f.id) in used, f.display_name.lower())):
+        shared = shared_terms(mine, friend)
+        idea = next((i for i in ideas_for(shared, friend) if i[2]), None)
+        if idea is None:
+            continue
+        score = len(shared) * 2 + (0 if (friend.kind, friend.id) in used else 1)
+        if best is None or score > best[0]:
+            best = (score, friend, idea)
+    if best is not None:
+        _, friend, (title, description, grounded) = best
+        first = first_name(friend.display_name)
+        shared = shared_terms(mine, friend)
+        reason = f"You're both into {grounded[0]}." if grounded[0] in shared else f"{first} is into {grounded[0]}."
+        actions.append(
+            ThisWeekAction(
+                type="plan",
+                title=f"Plan something with {first}",
+                reason=reason,
+                suggestion=ActivitySuggestion(
+                    title=title, description=description, grounded_in=grounded, suggested_action=_NO_CONTACT
+                ),
+                **ref(friend),
+            )
+        )
+
+    analytics.track(db, "this_week", user.id, count=len(actions))
+    empty = None if actions else "Nothing needs your attention this week. You're all caught up."
+    return ThisWeekView(actions=actions, empty_reason=empty)

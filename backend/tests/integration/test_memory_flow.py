@@ -155,7 +155,7 @@ def test_search_memories(alice):
 
 
 def test_widget_resource_served(alice):
-    body = alice.rpc("resources/read", {"uri": "ui://venn/app-v1.html"}).json()
+    body = alice.rpc("resources/read", {"uri": "ui://venn/app-v2.html"}).json()
     content = body["result"]["contents"][0]
     assert content["mimeType"] == "text/html;profile=mcp-app"
     assert "<html" in content["text"]
@@ -163,7 +163,7 @@ def test_widget_resource_served(alice):
 
 def test_render_tools_bound_to_widget(alice):
     tools = {t["name"]: t for t in alice.rpc("tools/list").json()["result"]["tools"]}
-    assert len(tools) == 39
+    assert len(tools) == 52
     render_tools = (
         "venn_propose_memories",
         "venn_import_chatgpt_memory",
@@ -178,9 +178,13 @@ def test_render_tools_bound_to_widget(alice):
         "venn_plan_group",
         "venn_meetup_brief",
         "venn_start_quiz",
+        "venn_compare",
+        "venn_this_week",
+        "venn_create_question_link",
+        "venn_review_answers",
     )
     for name in render_tools:
-        assert tools[name]["_meta"]["ui"]["resourceUri"] == "ui://venn/app-v1.html"
+        assert tools[name]["_meta"]["ui"]["resourceUri"] == "ui://venn/app-v2.html"
     # Tools the widget calls directly must be callable from the app.
     for name in (
         "venn_save_memories",
@@ -197,10 +201,18 @@ def test_render_tools_bound_to_widget(alice):
         "venn_import_people",
         "venn_add_follow_up",
         "venn_complete_follow_up",
+        "venn_save_plan",
+        "venn_complete_plan",
+        "venn_delete_plan",
+        "venn_save_answers",
+        "venn_discard_answers",
+        "venn_revoke_question_link",
+        "venn_load_sample_circle",
+        "venn_remove_sample_circle",
     ):
         assert tools[name]["_meta"]["openai/widgetAccessible"] is True, name
     assert "ui" not in (tools["venn_list_memories"].get("_meta") or {})
-    assert sum("ui" in (t.get("_meta") or {}) for t in tools.values()) == 13
+    assert sum("ui" in (t.get("_meta") or {}) for t in tools.values()) == 17
 
 
 # ---------------------------------------------------------------- import from ChatGPT memory

@@ -21,10 +21,10 @@ protected-resource metadata and requires them at the transport level; each tool 
 checks the scopes it needs (defense in depth).
 
 Annotations: **R** read-only, **W** write, **D** destructive (ChatGPT asks for confirmation).
-**UI** = renders the widget (`_meta.ui.resourceUri = ui://venn/app-v1.html`); the result's
+**UI** = renders the widget (`_meta.ui.resourceUri = ui://venn/app-v2.html`); the result's
 `view` field tells the widget which card to show.
 
-39 tools, 13 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Venn) or
+52 tools, 17 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Venn) or
 `person_id` (a private note about someone who is not); results name it as `kind`
 (`"connection"` \| `"person"`) + `id`.
 
@@ -211,11 +211,46 @@ people notes. Both need at least three questions' worth of material, otherwise
 `INVALID_REQUEST`. Private memories are never used. The widget keeps score; nothing is stored.
 The answers are in the payload, so the model is told not to reveal them before the user plays.
 
+## Common ground, this week, plans
+
+| Tool | Scope | Kind | Notes |
+| --- | --- | --- | --- |
+| `venn_compare {connection_id \| person_id}` | connections + memories.read | R, UI | `view: "venn"`: `you_only`, `shared`, `them_only`, `summary`, up to two grounded `suggestions`. Built from the user's memories and what they know about the friend (their notes, or what a connection chose to share). |
+| `venn_this_week {}` | connections + memories.read | R, UI | `view: "this_week"`: up to three `actions` (`reach_out` with a `draft_message`, `follow_up`, `plan`). Drafts are for the user to copy; nothing is sent. |
+| `venn_save_plan {title, details?, planned_for?, connection_ids?, person_ids?}` | connections | W | → `Plan`. Up to 6 members, all of them the user's own friends. |
+| `venn_list_plans {}` | connections | R | open plans |
+| `venn_complete_plan {plan_id}` | connections | W | marks it done and logs a hangout with every member |
+| `venn_delete_plan {plan_id}` | connections | D | |
+
+`venn_find_people` results carry `why` (e.g. `From your memory “Photo walks with Maya”.`) and the user's own
+matching `memories`. A memory names who it is about in `people`; approving it adds unknown names as private notes,
+and the review card says so (`new_people`) before the user approves.
+
+## Answers from a friend without an account
+
+| Tool | Scope | Kind | Notes |
+| --- | --- | --- | --- |
+| `venn_create_question_link {person_id?, name?}` | connections | W, UI | `view: "ask_link"`: a link (and QR) to four short questions. Expires after 14 days; one response when made for a person, otherwise up to 10. |
+| `venn_review_answers {}` | connections | R, UI | `view: "answers"`: responses waiting for review, and the active links |
+| `venn_save_answers {response_id, keys, name?}` | connections | W | saves the chosen answers to that person's note (interests, note lines, a thing to ask); creates the person if needed |
+| `venn_discard_answers {response_id}` | connections | D | |
+| `venn_revoke_question_link {link_id}` | connections | D | |
+
+The friend's page is `GET /q/{token}`: no account, no scripts, a required consent box. Answers are stored for the
+owner's review only; nothing reaches the owner's notes until they approve it.
+
+## Sample friends
+
+| Tool | Scope | Kind | Notes |
+| --- | --- | --- | --- |
+| `venn_load_sample_circle {}` | connections + memories.write | W | adds made-up friends, notes and (if the account has none) memories, all marked as samples |
+| `venn_remove_sample_circle {}` | connections + memories.write | D | removes exactly those; the user's own data is untouched |
+
 ## Resource
 
 | URI | MIME | Content |
 | --- | --- | --- |
-| `ui://venn/app-v1.html` | `text/html;profile=mcp-app` | The widget bundle (`widget/dist/index.html`) |
+| `ui://venn/app-v2.html` | `text/html;profile=mcp-app` | The widget bundle (`widget/dist/index.html`) |
 
 ## Trying it locally
 

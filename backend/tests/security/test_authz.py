@@ -243,8 +243,14 @@ def test_full_dev_oauth_flow(client, settings):
     txn = parse_qs(login_url.query)["txn"][0]
     assert client.get("/dev/login", params={"txn": txn}).status_code == 200
 
+    # A username without an account is not signed in silently: the page asks first.
+    ask = client.post("/dev/login", data={"txn": txn, "username": "dana"}, follow_redirects=False)
+    assert ask.status_code == 200
+    assert "No Venn account called" in ask.text
     login = client.post(
-        "/dev/login", data={"txn": txn, "username": "dana", "display_name": "Dana"}, follow_redirects=False
+        "/dev/login",
+        data={"txn": txn, "username": "dana", "display_name": "Dana", "create": "1"},
+        follow_redirects=False,
     )
     assert login.status_code == 302
     redirect = urlparse(login.headers["location"])

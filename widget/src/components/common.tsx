@@ -12,6 +12,8 @@ export interface Nav {
   openView(tool: string, args: Record<string, unknown>): Promise<string | null>;
   /** Like openView, but swaps the current view in place (no new Back step). */
   replaceView(tool: string, args: Record<string, unknown>): Promise<string | null>;
+  /** Open the dashboard on a given tab. Resolves like openView. */
+  openDashboard(tab: "profile" | "memories" | "friends"): Promise<string | null>;
   back(): void;
   canGoBack: boolean;
 }
@@ -320,5 +322,68 @@ export function Ring({ ratio, label, size = 52 }: { ratio: number; label: string
       </svg>
       <span className="ring-gauge__label">{label}</span>
     </span>
+  );
+}
+
+/**
+ * Copy several different texts from one view. `copied` names the button that last
+ * succeeded (for a short "Copied" state); `manual` holds the text to select by hand
+ * when the clipboard is blocked.
+ */
+export function useCopy() {
+  const [copied, setCopied] = useState<string | null>(null);
+  const [manual, setManual] = useState<string | null>(null);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  const copy = useCallback(async (id: string, text: string) => {
+    const ok = await copyText(text);
+    window.clearTimeout(timer.current);
+    if (ok) {
+      setManual(null);
+      setCopied(id);
+      timer.current = window.setTimeout(() => setCopied(null), 2000);
+    } else {
+      setCopied(null);
+      setManual(text);
+    }
+  }, []);
+
+  return { copied, manual, copy };
+}
+
+/** Read-only field with the text selected, for when the clipboard is blocked. */
+export function ManualCopy({ text }: { text: string }) {
+  const ref = useRef<HTMLTextAreaElement | null>(null);
+  useEffect(() => {
+    ref.current?.focus();
+    ref.current?.select();
+  }, [text]);
+  return (
+    <label className="field manual-copy">
+      <span className="field__label">Press Ctrl/Cmd+C to copy</span>
+      <textarea ref={ref} readOnly rows={text.length > 40 ? 4 : 1} value={text} onFocus={(e) => e.target.select()} />
+    </label>
+  );
+}
+
+/** Marks a made-up friend, person or memory from the sample circle. */
+export function SampleTag() {
+  return <span className="badge badge--sample">Sample</span>;
+}
+
+/** The people a memory is about, as small chips. Renders nothing for an empty list. */
+export function PeopleChips({ people, label = "About" }: { people: string[]; label?: string }) {
+  if (people.length === 0) return null;
+  return (
+    <div className="chips people-chips">
+      <span className="people-chips__label">{label}:</span>
+      {people.map((name, i) => (
+        <span key={`${name}-${i}`} className="chip chip--small chip--person">
+          <Icon name="user" size={12} />
+          {name}
+        </span>
+      ))}
+    </div>
   );
 }

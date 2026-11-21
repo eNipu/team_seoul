@@ -96,6 +96,37 @@ _PATTERNS: list[tuple[MemoryCategory, re.Pattern[str]]] = [
     (MemoryCategory.PERSONAL_MEMORY, re.compile(r"\bi (?:remember|still remember|grew up)\s+(.+)", re.I)),
 ]
 
+# "Maya and I used to take photo walks": something the user does with a named person.
+_TOGETHER = re.compile(
+    r"^(?:me and |i and )?([A-Z][a-z]{1,20}) and (?:I|me)\s+"
+    r"(?:used to |often |always |sometimes |usually |still |love to |like to |loved to |liked to )*(.+)"
+)
+_NAME = r"([A-Z][a-z]{1,20})"
+_PEOPLE_PATTERNS = [
+    # Only at the start of a sentence: "…in May and I loved it" is not about a person.
+    re.compile(rf"(?:^|[.!?;\n]\s*){_NAME} and (?:I|me)\b"),
+    re.compile(rf"\b(?:[Mm]e|I) and {_NAME}\b"),
+    re.compile(
+        rf"\b[Mm]y (?:best |old |close )?(?:friend|roommate|coworker|colleague|neighbou?r|cousin|partner) {_NAME}\b"
+    ),
+]
+_NOT_NAMES = {"He", "She", "They", "We", "You", "It", "This", "That", "My", "Then", "Today", "Yesterday", "Me"}
+
+
+def mentioned_people(text: str) -> list[str]:
+    """First names the text says the user does things with ("Maya and I…", "my friend Tom…").
+
+    Deliberately narrow: a name is only picked up from a phrase that makes it a person. The user
+    sees the result on the review card before anything is saved.
+    """
+    found: list[str] = []
+    for pattern in _PEOPLE_PATTERNS:
+        for name in pattern.findall(text or ""):
+            if name not in _NOT_NAMES and name not in found:
+                found.append(name)
+    return found[:5]
+
+
 _TITLE_PREFIX = {
     MemoryCategory.INTEREST: "Enjoys",
     MemoryCategory.DISLIKE: "Dislikes",
@@ -121,6 +152,21 @@ def heuristic_extract(text: str) -> list[MemoryCandidate]:
         sentence = raw.strip().strip(".!?;")
         if not sentence or len(sentence) < 6:
             continue
+        together = _TOGETHER.match(sentence)
+        if together and together.group(1) not in _NOT_NAMES:
+            name, phrase = together.group(1), together.group(2).strip().strip(".!?,;")[:80]
+            if phrase:
+                title = f"{phrase[0].upper()}{phrase[1:]} with {name}"
+                candidates.append(
+                    MemoryCandidate(
+                        category=MemoryCategory.EXPERIENCE,
+                        title=title[:80],
+                        description=sentence[:300],
+                        tags=_tags(phrase),
+                        people=[name],
+                    )
+                )
+                continue
         for category, pattern in _PATTERNS:
             m = pattern.search(sentence)
             if not m:
