@@ -179,7 +179,7 @@ export default function Waitlist({ version, invite }: Props) {
               Invite a connection to move up
             </button>
             <a className="btn" href="#inside">
-              Try the onboarding
+              See how it works
             </a>
           </div>
           <p className="waitlist__note" aria-live="polite">
@@ -221,7 +221,7 @@ export default function Waitlist({ version, invite }: Props) {
               Share my invite link
             </button>
             <a className="btn" href="#inside">
-              Try the onboarding
+              See how it works
             </a>
           </div>
           <p className="waitlist__note" aria-live="polite">
@@ -267,7 +267,7 @@ export default function Waitlist({ version, invite }: Props) {
             onChange={(event) => setEmail(event.target.value)}
           />
           <button type="submit" className="btn btn--primary waitlist__submit" disabled={state.busy}>
-            {state.busy ? "Joining…" : invite === "open" ? "Accept the invite" : "Join the Waitlist"}
+            {state.busy ? "Joining…" : invite === "open" ? "Accept the invite" : "Build your inner circle"}
           </button>
         </div>
         <p
@@ -278,7 +278,6 @@ export default function Waitlist({ version, invite }: Props) {
           {state.error ?? formNote(version, invite)}
         </p>
       </form>
-      <a className="btn btn--ghost waitlist__preview" href="#inside">Try the onboarding</a>
     </div>
   );
 }
