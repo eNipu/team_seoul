@@ -28,11 +28,16 @@ Annotations: **R** read-only, **W** write, **D** destructive (ChatGPT asks for c
 `person_id` (a private note about someone who is not); results name it as `kind`
 (`"connection"` \| `"person"`) + `id`.
 
+**UI first.** The server instructions, the tool descriptions and the skill tell the model that the
+first Heldly call in a conversation must render a card: the specific card if the request maps
+to one, otherwise `heldly_show_dashboard` (home, or the welcome card for an empty account).
+This is guidance to the model, not something the server can enforce.
+
 ## Profile
 
 | Tool | Args | Scope | | Returns |
 | --- | --- | --- | --- | --- |
-| `heldly_get_profile` | – | profile.read | R | `ProfileOut {user_id, display_name, bio, social_goals, interests, memory_count, profile_visibility, is_new}` — `is_new` until the first memory is approved |
+| `heldly_get_profile` | – | profile.read | R | `ProfileOut {user_id, display_name, bio, social_goals, interests, memory_count, profile_visibility, is_new}` — `is_new` until the first memory is approved. Data only: the model is told not to open a conversation with it |
 | `heldly_update_profile` | `display_name?`, `bio?`, `social_goals?[]`, `profile_visibility?` | profile.write | W | `ProfileOut` |
 | `heldly_delete_account` | `confirmation` = `"DELETE MY HELDLY ACCOUNT"` | profile.write | D | `{deleted: true}` |
 

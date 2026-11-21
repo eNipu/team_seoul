@@ -95,7 +95,9 @@ points at `./plugin`. Set the `url` in `plugin/mcp.json` to your tunnel's `/mcp`
 
 ### 6. Try it
 
-Start a new chat, enable Heldly, and try:
+Start a new chat, enable Heldly, and try the prompts below. Heldly is meant to open with a
+card: any opening prompt ("open Heldly", "set up my Heldly profile") should show the home or
+welcome card rather than a text answer.
 
 - *"Set up my Heldly profile. I love bouldering and ramen, and I want to meet new people."*
   A memory review card appears; nothing is saved until you approve it.
