@@ -29,6 +29,7 @@ PROFILE_WRITE = "venn.profile.write"
 MEMORIES_READ = "venn.memories.read"
 MEMORIES_WRITE = "venn.memories.write"
 CONNECTIONS = "venn.connections.manage"
+CALENDAR = "venn.calendar"
 
 READ_ONLY = ToolAnnotations(read_only_hint=True, destructive_hint=False, open_world_hint=False)
 WRITE = ToolAnnotations(read_only_hint=False, destructive_hint=False, open_world_hint=False)

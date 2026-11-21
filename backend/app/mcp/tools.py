@@ -29,6 +29,7 @@ from mcp_types import CallToolResult
 from pydantic import Field
 
 from app.mcp.common import (
+    CALENDAR,
     CONNECTIONS,
     DESTRUCTIVE,
     MEMORIES_READ,
@@ -56,6 +57,7 @@ from app.schemas.profile import ProfileUpdate, ProfileVisibility, SocialGoal
 from app.schemas.social import PersonCandidate
 from app.services import (
     availability_service,
+    calendar_service,
     dashboard_service,
     memory_service,
     people_service,
@@ -211,6 +213,43 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
                 ),
             )
             return ok(f"Meeting hours saved: {result.day_start}–{result.day_end} {result.timezone}.", result)
+
+        return await guarded(body)
+
+    @mcp.tool(
+        name="venn_calendar_status",
+        title="Calendar connection",
+        description=(
+            "Whether the user's calendar is connected. If not, returns connect_url: give the user that link "
+            "to open in their browser (valid 10 minutes). Venn reads free/busy only, never event contents. "
+            "Call this before finding meeting times. Data only (no card)."
+        ),
+        annotations=READ_ONLY,
+        meta=invocation_meta("Checking your calendar…", "Calendar checked", widget_accessible=True),
+    )
+    async def venn_calendar_status() -> CallToolResult:
+        async def body():
+            result = await run_as_user([CALENDAR], lambda db, user, _: calendar_service.status(db, user))
+            if result.connected:
+                text = f"Calendar connected ({result.provider}, {result.account_email})."
+            else:
+                text = f"No calendar connected. Give the user this link to connect it: {result.connect_url}"
+            return ok(text, result)
+
+        return await guarded(body)
+
+    @mcp.tool(
+        name="venn_disconnect_calendar",
+        title="Disconnect calendar",
+        description="Disconnect the user's calendar: revokes Venn's access and deletes the stored grant.",
+        annotations=DESTRUCTIVE,
+        meta=invocation_meta("Disconnecting your calendar…", "Calendar disconnected", widget_accessible=True),
+    )
+    async def venn_disconnect_calendar() -> CallToolResult:
+        async def body():
+            result = await run_as_user([CALENDAR], lambda db, user, _: calendar_service.disconnect(db, user))
+            text = "Calendar disconnected." if result.disconnected else "No calendar was connected."
+            return ok(text, result)
 
         return await guarded(body)
 
@@ -1509,6 +1548,8 @@ ToolName = Literal[
     "venn_update_profile",
     "venn_get_availability",
     "venn_set_availability",
+    "venn_calendar_status",
+    "venn_disconnect_calendar",
     "venn_propose_memories",
     "venn_import_chatgpt_memory",
     "venn_save_memories",

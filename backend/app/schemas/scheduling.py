@@ -14,3 +14,16 @@ class AvailabilityOut(BaseModel):
     min_notice_minutes: int
     default_length_minutes: int
     is_default: bool
+
+
+class CalendarStatusOut(BaseModel):
+    connected: bool
+    provider: str | None = None
+    account_email: str | None = None
+    calendar_ids: list[str] = []
+    # Only when not connected: the link the user opens to connect. Valid for 10 minutes.
+    connect_url: str | None = None
+
+
+class CalendarDisconnectOut(BaseModel):
+    disconnected: bool

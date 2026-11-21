@@ -78,8 +78,14 @@
   never writes anything about another Venn user beyond the user's own follow-ups.
 - Quizzes are built only from what friends chose to share with connections. Scores stay in the
   widget and are not stored; "Tell <name> my score" only drafts a message for the user to send.
-- "Add to calendar" opens a prefilled Google Calendar link in the user's browser. Venn has no
-  calendar access and sends nothing to Google itself.
+- "Add to calendar" opens a prefilled Google Calendar link in the user's browser; it sends
+  nothing to Google itself.
+- A user may connect Google Calendar (`venn_calendar_status` gives a link). The link's `state`
+  is signed, names the user and expires in 10 minutes. Venn asks for `calendar.freebusy` and
+  `calendar.events` only, reads free/busy live and never stores it or any event contents. The
+  refresh token is Fernet-encrypted (`CALENDAR_TOKEN_KEY`); access tokens are never stored.
+  `venn_disconnect_calendar` revokes the grant at Google and deletes it. Without
+  `CALENDAR_PROVIDER=google`, an in-memory fake is used. See `docs/tasks/SCHEDULING.md`.
 - Analytics events use an allow-list of event names and metadata keys (`count`, `source`,
   `category`) and never contain memory text, names or messages.
 - When `OPENAI_API_KEY` is set, the user's text passed to `venn_propose_memories` is sent to

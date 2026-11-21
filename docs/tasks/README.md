@@ -71,7 +71,7 @@ Read `SCHEDULING.md` before any task in this group.
 | [T26](T26-scheduling-rules.md) | Rules for acting on the user's behalf | docs | S | – | done |
 | [T27](T27-availability.md) | Working hours, buffers and notice | backend | S | T26 | done |
 | [T28](T28-slot-finder.md) | Find free slots for two people | backend | S | T26 | done |
-| [T29](T29-calendar-connect.md) | Connect Google Calendar | backend | M | T26 | todo |
+| [T29](T29-calendar-connect.md) | Connect Google Calendar | backend | M | T26 | done |
 | [T30](T30-find-meeting-times.md) | Tool `venn_find_meeting_times` | backend | M | T27, T28, T29 | todo |
 | [T31](T31-propose-and-respond.md) | Propose times, accept or decline, standing rules | backend | M | T30 | todo |
 | [T32](T32-book-and-cancel.md) | Book on the calendar, cancel | backend | M | T31 | todo |

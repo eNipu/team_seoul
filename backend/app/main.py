@@ -4,6 +4,7 @@
 - /api/v1: the website's API. Same services, same account, same rules (see docs/WEB_API.md).
 - /app: the website itself (the build of web/).
 - /i/{code} and /q/{token}: small public pages for invites and for a friend's answers.
+- /calendar/connect and /calendar/callback: connect a calendar from a link Venn gives in chat.
 """
 
 from __future__ import annotations
@@ -15,17 +16,17 @@ from urllib.parse import urlparse
 
 import anyio
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from mcp.server.transport_security import TransportSecuritySettings
 from sqlalchemy import text
 
-from app import question_page
+from app import calendar_page, question_page
 from app.config import Settings, get_settings, use_settings
 from app.db.database import init_engine, session_scope
 from app.db.migrate import upgrade_to_head
 from app.invite_page import render_invite_page
 from app.mcp.server import build_mcp_server
-from app.services import question_service
+from app.services import calendar_service, question_service
 from app.services.errors import VennError
 from app.web.api import build_api, install_error_handlers
 from app.web.site import install_site
@@ -147,6 +148,27 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
         status, html = await anyio.to_thread.run_sync(work)
         return HTMLResponse(html, status, question_page.HEADERS)
+
+    @app.get("/calendar/connect", include_in_schema=False)
+    def calendar_connect(state: str = "") -> Response:
+        try:
+            url = calendar_service.authorize_redirect(state)
+        except VennError as exc:
+            return HTMLResponse(calendar_page.render_failed(exc.message), 400, calendar_page.HEADERS)
+        return RedirectResponse(url, 302, headers={"Referrer-Policy": "no-referrer", "Cache-Control": "no-store"})
+
+    @app.get("/calendar/callback", include_in_schema=False)
+    def calendar_callback(state: str = "", code: str = "", error: str = "") -> HTMLResponse:
+        if error or not code:
+            return HTMLResponse(
+                calendar_page.render_failed("Calendar access was not granted."), 400, calendar_page.HEADERS
+            )
+        try:
+            with session_scope() as db:
+                email = calendar_service.finish(db, state, code[:2048])
+        except VennError as exc:
+            return HTMLResponse(calendar_page.render_failed(exc.message), 400, calendar_page.HEADERS)
+        return HTMLResponse(calendar_page.render_connected(email), headers=calendar_page.HEADERS)
 
     install_error_handlers(app)
     app.include_router(build_api(settings))

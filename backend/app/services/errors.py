@@ -44,5 +44,11 @@ class PrivacyViolation(VennError):
     code = "PRIVACY_VIOLATION"
 
 
+class ProviderError(VennError):
+    """An outside service (calendar, messaging) failed or refused. Safe to show; no provider details."""
+
+    code = "PROVIDER_ERROR"
+
+
 class Unauthenticated(VennError):
     code = "UNAUTHENTICATED"

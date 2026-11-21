@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, Integer, String, Uuid
+from sqlalchemy import ForeignKey, Integer, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.database import Base, JSONType
@@ -28,5 +28,23 @@ class Availability(Base):
     buffer_minutes: Mapped[int] = mapped_column(Integer, nullable=False)
     min_notice_minutes: Mapped[int] = mapped_column(Integer, nullable=False)
     default_length_minutes: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = created_at_col()
+    updated_at: Mapped[datetime] = updated_at_col()
+
+
+class CalendarConnection(Base):
+    """The owner's calendar grant. The refresh token is encrypted; access tokens are never stored."""
+
+    __tablename__ = "calendar_connections"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid, ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False
+    )
+    provider: Mapped[str] = mapped_column(String(20), nullable=False)
+    account_email: Mapped[str] = mapped_column(String(254), nullable=False)
+    refresh_token_enc: Mapped[str] = mapped_column(Text, nullable=False)
+    # Calendars that count as busy.
+    calendar_ids: Mapped[list] = mapped_column(JSONType, default=list, nullable=False)
     created_at: Mapped[datetime] = created_at_col()
     updated_at: Mapped[datetime] = updated_at_col()
