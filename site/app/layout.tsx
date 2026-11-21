@@ -4,14 +4,14 @@ import type { ReactNode } from "react";
 import "./venn-kit.css";
 import "./globals.css";
 
-const TITLE = "Venn. Connect your AI memories.";
-const DESCRIPTION = "Build your inner circle.";
+const DESCRIPTION =
+  "Venn connects your AI with the AIs of people you know. They choose what to share. Join the waitlist for early access.";
 
 export const metadata: Metadata = {
-  title: TITLE,
+  title: "Venn: Connect your AI memories.",
   description: DESCRIPTION,
   openGraph: {
-    title: TITLE,
+    title: "Venn: Connect your AI memories.",
     description: DESCRIPTION,
     type: "website",
     siteName: "Venn",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#ffffff",
+  themeColor: "#F8F8F8",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
