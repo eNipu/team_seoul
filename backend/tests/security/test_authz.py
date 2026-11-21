@@ -551,3 +551,14 @@ def test_prompt_injection_in_an_import_is_stored_as_data(alice):
     assert card["proposals"][0]["suggested_visibility"] == "PRIVATE"
     saved = alice.ok("venn_save_memories", proposal_id=card["proposal_id"], approvals=[{"index": 0}])
     assert saved["saved"][0]["visibility"] == "PRIVATE" and saved["saved"][0]["description"] == text
+
+
+def test_availability_is_per_user(alice, bob):
+    alice.ok("venn_set_availability", timezone="Europe/Berlin")
+    assert bob.ok("venn_get_availability")["timezone"] == "UTC"
+
+
+def test_setting_availability_needs_profile_write(client):
+    token = mint_token(client, "alice", scopes=["venn.profile.read"])
+    resp = MCPUser(client, token).rpc("tools/call", {"name": "venn_set_availability", "arguments": {}})
+    assert resp.status_code == 403

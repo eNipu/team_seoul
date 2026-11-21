@@ -24,7 +24,7 @@ Annotations: **R** read-only, **W** write, **D** destructive (ChatGPT asks for c
 **UI** = renders the widget (`_meta.ui.resourceUri = ui://venn/app-v2.html`); the result's
 `view` field tells the widget which card to show.
 
-52 tools, 17 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Venn) or
+54 tools, 17 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Venn) or
 `person_id` (a private note about someone who is not); results name it as `kind`
 (`"connection"` \| `"person"`) + `id`.
 
@@ -54,6 +54,8 @@ stored: each step is derived from the data it produces.
 | `venn_get_profile` | – | profile.read | R | `ProfileOut {user_id, display_name, bio, social_goals, interests, memory_count, profile_visibility, is_new}` — `is_new` until the first memory is approved. Data only: the model is told not to open a conversation with it |
 | `venn_update_profile` | `display_name?`, `bio?`, `social_goals?[]`, `profile_visibility?` | profile.write | W | `ProfileOut` |
 | `venn_delete_account` | `confirmation` = `"DELETE MY VENN ACCOUNT"` | profile.write | D | `{deleted: true}` |
+| `venn_get_availability` | – | profile.read | R | `AvailabilityOut {timezone, work_days[], day_start, day_end, buffer_minutes, min_notice_minutes, default_length_minutes, is_default}` — when the user takes meetings. `work_days` uses Monday = 0; times are local `HH:MM`. `is_default` until the first save |
+| `venn_set_availability` | `timezone?` (IANA), `work_days?[]`, `day_start?`, `day_end?`, `buffer_minutes?` (0–60), `min_notice_minutes?` (0–10080), `default_length_minutes?` (15–120) | profile.write | W | `AvailabilityOut`. Only the given fields change |
 
 ## Memories
 

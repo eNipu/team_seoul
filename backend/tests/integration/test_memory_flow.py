@@ -163,7 +163,7 @@ def test_widget_resource_served(alice):
 
 def test_render_tools_bound_to_widget(alice):
     tools = {t["name"]: t for t in alice.rpc("tools/list").json()["result"]["tools"]}
-    assert len(tools) == 52
+    assert len(tools) == 54
     render_tools = (
         "venn_propose_memories",
         "venn_import_chatgpt_memory",
