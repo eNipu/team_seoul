@@ -16,6 +16,7 @@ import secrets
 import uuid
 from datetime import timedelta
 
+import segno
 from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -135,15 +136,28 @@ def create_invite(db: Session, user: User, note: str | None = None, max_uses: in
     db.flush()
     analytics.track(db, "invite_created", user.id)
     pretty = f"{code[:4]}-{code[4:]}"
+    link = invite_link(settings.public_base_url, pretty)
     return InviteOut(
         code=pretty,
         expires_at=expires_at,
         max_uses=max_uses,
         share_text=(
             f"Let's connect on Heldly! In ChatGPT, open the Heldly plugin and say: "
-            f'"Redeem Heldly invite {pretty}". (Expires in {settings.invite_ttl_hours}h.)'
+            f'"Redeem Heldly invite {pretty}". Or open {link} (Expires in {settings.invite_ttl_hours}h.)'
         ),
+        link=link,
+        qr=qr_rows(link),
     )
+
+
+def invite_link(base_url: str, pretty_code: str) -> str:
+    """Page a friend can open (or scan) to see the code and how to redeem it."""
+    return f"{base_url.rstrip('/')}/i/{pretty_code}"
+
+
+def qr_rows(text: str) -> list[str]:
+    """QR code for `text`: one string of '0'/'1' per row ('1' = dark), without a quiet zone."""
+    return ["".join("1" if cell else "0" for cell in row) for row in segno.make(text, error="m", micro=False).matrix]
 
 
 def list_invites(db: Session, user: User) -> list[dict]:

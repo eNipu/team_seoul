@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -11,6 +12,7 @@ class MemoryCategory(StrEnum):
     DISLIKE = "DISLIKE"
     PREFERENCE = "PREFERENCE"
     EXPERIENCE = "EXPERIENCE"
+    WORK = "WORK"
     PERSONAL_MEMORY = "PERSONAL_MEMORY"
     SOCIAL_GOAL = "SOCIAL_GOAL"
     RELATIONSHIP_CONTEXT = "RELATIONSHIP_CONTEXT"
@@ -48,11 +50,19 @@ class MemoryCandidate(BaseModel):
 class ProposedMemory(MemoryCandidate):
     index: int
     suggested_visibility: MemoryVisibility = MemoryVisibility.PRIVATE
+    # The user already has a memory with this title (e.g. a repeated import).
+    already_saved: bool = False
+
+
+# Where proposed memories come from: what the user said in this conversation, or what ChatGPT
+# already remembered about them (its saved memories / past chats) and the user picked to bring over.
+MemorySource = Literal["conversation", "chatgpt_memory"]
 
 
 class MemoryProposalOut(BaseModel):
     proposal_id: str
     expires_at: datetime
+    source: MemorySource = "conversation"
     proposals: list[ProposedMemory]
     note: str = "Nothing has been saved. Show these to the user and save only the items they explicitly approve."
 
@@ -71,6 +81,7 @@ class MemoryOut(BaseModel):
     description: str
     tags: list[str]
     visibility: MemoryVisibility
+    source: Literal["chatgpt_memory"] | None = None
     created_at: datetime
 
 
@@ -87,3 +98,21 @@ class MemoryListOut(BaseModel):
 class DeleteMemoryOut(BaseModel):
     deleted: bool
     memory_id: str
+
+
+class ImportArea(BaseModel):
+    value: str
+    label: str
+    description: str
+    selected: bool
+
+
+class MemoryImportView(BaseModel):
+    """Chooser card for bringing over what ChatGPT already remembers about the user."""
+
+    view: Literal["memory_import"] = "memory_import"
+    areas: list[ImportArea]
+    always_excluded: str
+    imported_count: int
+    max_items: int
+    note: str

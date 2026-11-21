@@ -94,7 +94,7 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
             onProfile={setProfile}
           />
         )}
-        {tab === "memories" && <MemoriesTab memories={memories} bridge={bridge} action={action} onChange={setMemories} />}
+        {tab === "memories" && <MemoriesTab memories={memories} bridge={bridge} nav={nav} action={action} onChange={setMemories} />}
         {tab === "friends" && (
           <FriendsTab
             connections={connections}

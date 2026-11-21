@@ -16,13 +16,13 @@ timestamps are timezone-aware UTC, JSON columns are `JSONB` on Postgres.
 
 | Table | Columns | Notes |
 | --- | --- | --- |
-| `memory_proposals` | id*, user_id*, items* (JSON list of candidates), source* (`model`/`openai`/`heuristic`/mixed), expires_at*, consumed_at, created_at* | Server-side record of what was shown to the user. 24h TTL, single use. Nothing in here is a saved memory. |
-| `memories` | id*, user_id*, category*, title*, description*, tags* (JSON), visibility*, approved_at*, created_at*, updated_at* | Only created from an approved proposal item. |
+| `memory_proposals` | id*, user_id*, items* (JSON list of candidates), source* (`assistant`/`openai`/`heuristic`/`chatgpt_memory`), expires_at*, consumed_at, created_at* | Server-side record of what was shown to the user. 24h TTL, single use; `items` is emptied when the proposal is saved or discarded. Nothing in here is a saved memory. |
+| `memories` | id*, user_id*, category*, title*, description*, tags* (JSON), visibility*, source (`chatgpt_memory` or null), approved_at*, created_at*, updated_at* | Only created from an approved proposal item. `source` marks memories imported from ChatGPT's memory. |
 
-Categories: `INTEREST`, `DISLIKE`, `PREFERENCE`, `EXPERIENCE`, `PERSONAL_MEMORY`, `SOCIAL_GOAL`,
+Categories: `INTEREST`, `DISLIKE`, `PREFERENCE`, `EXPERIENCE`, `WORK`, `PERSONAL_MEMORY`, `SOCIAL_GOAL`,
 `RELATIONSHIP_CONTEXT`. Visibility: `PRIVATE` (default), `SHARED_WITH_CONNECTIONS`,
 `PUBLIC_PROFILE`. `PRIVATE` memories are never read on behalf of another user.
-Limits: 500 memories per user, 8 items per proposal, title ≤ 120, description ≤ 500 chars, 8 tags.
+Limits: 500 memories per user, 8 items per proposal (30 for an import from ChatGPT memory), title ≤ 120, description ≤ 500 chars, 8 tags.
 
 ## Social graph
 
@@ -38,11 +38,13 @@ Limits: 500 memories per user, 8 items per proposal, title ≤ 120, description 
 ## People (friends who are not on Heldly)
 
 | Table | Columns | Notes |
-|---|---|---|
+| --- | --- | --- |
 | `people` | id*, owner_user_id* (FK cascade), name*, relationship, notes, interests* (JSON list), created_at*, updated_at* | Private note written by the owner. Never shared, never linked to a Heldly account, never used to contact the person. |
 | `person_interactions` | id*, person_id* (FK cascade), activity, created_at* | Hangouts the owner logged; drives "last seen" and reconnection suggestions. |
+| `people_imports` | id*, user_id* (FK cascade), items* (JSON list of candidates), source, expires_at*, consumed_at, created_at* | Server-side record of the people shown on an import card. 24h TTL, single use; items are cleared once used. Nobody in here is a saved note. |
+| `follow_ups` | id*, owner_user_id* (FK cascade), connection_id (FK cascade), person_id (FK cascade), text*, done_at, created_at* | "Ask about this next time." Private to the owner. Exactly one of connection_id / person_id (check constraint). |
 
-Limits: 200 people per user, name/relationship ≤ 80, notes ≤ 1000, 12 interests of ≤ 40 chars.
+Limits: 500 people per user, 50 candidates per import, 20 open follow-ups per friend (≤ 200 chars), name/relationship ≤ 80, notes ≤ 1000, 12 interests of ≤ 40 chars.
 
 ## Consent & analytics
 
@@ -53,7 +55,9 @@ Limits: 200 people per user, name/relationship ≤ 80, notes ≤ 1000, 12 intere
 
 Events: `profile_created`, `memory_proposed`, `memory_approved`, `memory_deleted`,
 `invite_created`, `invitation_redeemed`, `connection_requested`, `connection_accepted`,
-`activity_suggested`, `reconnection_suggested`, `person_added`.
+`activity_suggested`, `reconnection_suggested`, `person_added`, `people_imported`,
+`people_searched`, `group_planned`, `meetup_brief`, `meetup_recapped`, `quiz_started`.
+Search queries, import sources and quiz content are never recorded. Quiz scores are not stored anywhere.
 
 ## Development OAuth (dev mode only)
 
@@ -65,7 +69,7 @@ Events: `profile_created`, `memory_proposed`, `memory_approved`, `memory_deleted
 ## Deletion
 
 `heldly_delete_account` deletes the user row; profile, memories, proposals, invites, requests,
-connections (and their events), people notes (and their hangout logs), blocks and consents cascade. Analytics events keep no user link
+connections (and their events), people notes (and their hangout logs), pending imports, follow-ups, blocks and consents cascade. Analytics events keep no user link
 (`user_id` set null).
 
 ## Migrations

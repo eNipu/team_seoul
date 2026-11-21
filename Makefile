@@ -1,4 +1,4 @@
-.PHONY: setup dev test test-postgres lint format build-widget migrate migration db-up db-down docker-up docker-down
+.PHONY: setup dev test test-postgres lint format build-widget migrate migration seed seed-remove db-up db-down docker-up docker-down
 
 BACKEND := backend
 WIDGET := widget
@@ -33,6 +33,14 @@ migrate: ## Apply Alembic migrations to $$DATABASE_URL
 
 migration: ## Autogenerate a migration: make migration m="describe change"
 	cd $(BACKEND) && uv run alembic revision --autogenerate -m "$(m)"
+
+seed: ## Add demo friends to a dev account: make seed me=<dev username>
+	@test -n "$(me)" || (echo "usage: make seed me=<dev username>" && exit 2)
+	cd $(BACKEND) && uv run python scripts/seed_demo.py --me "$(me)"
+
+seed-remove: ## Remove the demo friends again: make seed-remove me=<dev username>
+	@test -n "$(me)" || (echo "usage: make seed-remove me=<dev username>" && exit 2)
+	cd $(BACKEND) && uv run python scripts/seed_demo.py --me "$(me)" --remove
 
 db-up:
 	docker compose up -d --wait db

@@ -10,6 +10,10 @@
 | Prompt injection via stored memories / friends' names | Stored text is returned as data in `structuredContent`; tool descriptions and the skill tell the model it is user data. The extraction prompt wraps user text in `<user_text>` and treats it as data. Tested: injected instructions are stored verbatim and do nothing. |
 | Leaking private memories to friends | Only `SHARED_WITH_CONNECTIONS`/`PUBLIC_PROFILE` memories of a *connected* friend are used for suggestions and the friend view; a friend's bio is shown only if their profile visibility is `CONNECTIONS`/`PUBLIC`; `PRIVATE` is never read on another user's behalf. Default visibility is `PRIVATE`. |
 | Notes about third parties (people not on Heldly) | Created only when the user asks; owner-only on every query (foreign ids → `NOT_FOUND`); never shown to connections, never matched to Heldly accounts, never used to contact anyone; same sensitive-data filter as memories; deleted individually or with the account. |
+| The model bulk-adding people the user never saw | Importing requires a server-issued, owner-bound, expiring, single-use `import_id`; only indexes from that import are accepted, and only the user's choice on the card calls `heldly_import_people`. Contact details (emails, links, phone numbers) are stripped and entries with credentials or card/ID numbers are dropped before the card is shown. Max 50 per import. |
+| Search, group plans, briefs or quizzes leaking what a friend kept private | All of them read a connection through the same path as the friend view: non-`PRIVATE` memories of a *connected, unblocked* friend, and the bio only if their profile allows it. Foreign or blocked ids → `NOT_FOUND`. Quiz distractors are drawn only from the caller's own memories, other friends' *shared* memories and a fixed generic pool. Tested in `backend/tests/security/`. |
+| Follow-ups ("ask about…") seen or changed by someone else | Owner-only on every query; a recap cannot tick off a follow-up that belongs to a different friend; the friend never sees them. |
+| Invite link / QR page used to probe codes or phish | `GET /i/{code}` is static: no database lookup, no inviter name, identical for valid and invalid codes of the right shape, 404 otherwise. The code is validated against the invite alphabet and HTML-escaped. Strict CSP (`default-src 'none'`), no scripts, `X-Frame-Options: DENY`, `no-referrer`, `no-store`. Redeeming still requires signing in and the inviter's acceptance. |
 | Storing secrets | Sensitive-data filter (passwords, API keys, card/SSN-like numbers) on proposals and on user edits → `PRIVACY_VIOLATION`. |
 | Invite brute force / replay | 8-char codes from a 31-symbol alphabet (~8.5×10¹¹), 72h expiry, max uses, revocation, per-user daily rate limits; unknown/revoked/expired/used/blocked codes return an identical error. |
 | Spam connection requests | Mutual consent required; one pending request per pair; 20 requests/day; blocks in both directions; reporting. |
@@ -36,17 +40,35 @@
   `WWW-Authenticate: Bearer … resource_metadata=…`) or without the required scopes (403).
 - Tool level: each tool re-checks the scopes it needs.
 - Data level: ownership checks in services (memories, proposals, invites, requests, connections,
-  people notes).
+  people notes, imports, follow-ups).
 
 ## Privacy
 
 - Memories are created only from explicit user approval; users can edit, change visibility,
   delete individual memories, or delete their whole account (cascading delete).
+- Importing from ChatGPT memory: Heldly's server cannot read ChatGPT's memory and never
+  receives it wholesale. ChatGPT lists what it remembers in the chat; only the items the user
+  picks there are sent to `heldly_propose_memories`, and only the ones confirmed on the card are
+  saved. Picked-but-unconfirmed items sit in the proposal for at most 24 hours and are deleted
+  when the user confirms or discards. Health, money, credentials and ID numbers are not offered
+  as areas, the model is told to leave them out, and the server drops credential and card/ID
+  patterns. The "list in the chat first" step is guidance to the model, not something the server
+  can verify — the guarantee the server gives is that nothing is saved without confirmation.
 - People notes describe someone who has not agreed to anything, so they are kept deliberately
   small (name, how you know them, free-text notes, interests, hangout dates) and strictly
   private to their author. Unlike memories they are saved without a review card, because the
   user asks for them explicitly; the skill tells the model to store only what the user said and
   no contact, health or financial details.
+- Importing several people goes through a review card (the user picks who to add); the model
+  is told to leave out phone numbers, emails and addresses, and the server strips them anyway.
+  A contacts file the user uploads is read by ChatGPT, not by Heldly — Heldly only receives the
+  candidates the model extracted.
+- Follow-ups and meetup recaps are private to the user. A recap can add to a *person* note; it
+  never writes anything about another Heldly user beyond the user's own follow-ups.
+- Quizzes are built only from what friends chose to share with connections. Scores stay in the
+  widget and are not stored; "Tell <name> my score" only drafts a message for the user to send.
+- "Add to calendar" opens a prefilled Google Calendar link in the user's browser. Heldly has no
+  calendar access and sends nothing to Google itself.
 - Analytics events use an allow-list of event names and metadata keys (`count`, `source`,
   `category`) and never contain memory text, names or messages.
 - When `OPENAI_API_KEY` is set, the user's text passed to `heldly_propose_memories` is sent to
@@ -61,4 +83,5 @@
 - [ ] Least-privilege DB role (no superuser); backups enabled
 - [ ] Secrets in a secret manager, not in images
 - [ ] Monitor `RATE_LIMITED` / `abuse_reports`; review reports
+- [ ] Demo data is not present (`make seed` refuses to run outside dev auth; `make seed-remove` cleans up)
 - [ ] Privacy policy and terms URLs in `plugin/plugin.json` point at real pages

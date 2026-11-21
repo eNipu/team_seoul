@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { friendArg, parseLogInteraction, type ActivityIdeasViewData } from "../types";
 import { ActionError, ChatStatus, EmptyNote, useAction, useChatPrompt, type ViewProps } from "./common";
+import CalendarPicker from "./CalendarPicker";
 
 export default function ActivityIdeas({ data, bridge }: ViewProps<ActivityIdeasViewData>) {
   const action = useAction();
   const chat = useChatPrompt(bridge);
   const [logged, setLogged] = useState<number[]>([]);
   const [planned, setPlanned] = useState<number | null>(null);
+  const [calendar, setCalendar] = useState<number | null>(null);
 
   const percent = Math.round(data.match_score * 100);
   const busy = action.busy !== null;
@@ -110,7 +112,23 @@ export default function ActivityIdeas({ data, bridge }: ViewProps<ActivityIdeasV
                       {action.busy === `log-${i}` ? "Logging…" : "We did this"}
                     </button>
                   )}
+                  <button
+                    type="button"
+                    className="btn btn--ghost btn--small"
+                    aria-expanded={calendar === i}
+                    onClick={() => setCalendar(calendar === i ? null : i)}
+                  >
+                    <span aria-hidden="true">📅 </span>Add to calendar
+                  </button>
                 </div>
+                {calendar === i && (
+                  <CalendarPicker
+                    bridge={bridge}
+                    title={data.display_name ? `${s.title} with ${data.display_name}` : s.title}
+                    details={s.description}
+                    onClose={() => setCalendar(null)}
+                  />
+                )}
                 {planned === i && <ChatStatus state={chat.state} prompt={chat.prompt} />}
               </li>
             );

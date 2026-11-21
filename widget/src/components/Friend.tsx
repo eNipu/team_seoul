@@ -14,6 +14,7 @@ import {
   type Interaction,
 } from "../types";
 import { ActionError, Avatar, ChatStatus, SectionTitle, useAction, useChatPrompt, type ViewProps } from "./common";
+import FollowUps from "./FollowUps";
 import PersonForm, { type PersonValues } from "./PersonForm";
 
 type Mode = "view" | "log" | "edit" | "confirm-remove";
@@ -52,6 +53,14 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
 
   function ideas() {
     void action.run("ideas", () => nav.openView("heldly_suggest_activity", arg));
+  }
+
+  function prep() {
+    void action.run("prep", () => nav.openView("heldly_meetup_brief", arg));
+  }
+
+  function quiz() {
+    void action.run("quiz", () => nav.openView("heldly_start_quiz", { connection_id: data.id }));
   }
 
   function logHangout(e: FormEvent) {
@@ -207,6 +216,18 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
               {chat.state === "sending" ? "Asking…" : "Draft a message"}
             </button>
           </div>
+          <div className="button-row button-row--quiet">
+            <button type="button" className="btn btn--small" disabled={busy} onClick={prep}>
+              <span aria-hidden="true">📝 </span>
+              {action.busy === "prep" ? "Loading…" : "Prep for a meetup"}
+            </button>
+            {!isPerson && (
+              <button type="button" className="btn btn--small" disabled={busy} onClick={quiz}>
+                <span aria-hidden="true">🎲 </span>
+                {action.busy === "quiz" ? "Loading…" : "Quiz"}
+              </button>
+            )}
+          </div>
           <ChatStatus state={chat.state} prompt={chat.prompt} />
 
           {mode === "log" && (
@@ -234,6 +255,8 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
               </div>
             </form>
           )}
+
+          <FollowUps bridge={bridge} friend={arg} name={details.name} initial={data.follow_ups} />
 
           <SectionTitle>Interests</SectionTitle>
           {chips.length > 0 ? (

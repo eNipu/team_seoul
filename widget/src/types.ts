@@ -11,6 +11,7 @@ export const MEMORY_CATEGORIES = [
   "PERSONAL_MEMORY",
   "SOCIAL_GOAL",
   "RELATIONSHIP_CONTEXT",
+  "WORK",
 ] as const;
 export type MemoryCategory = (typeof MEMORY_CATEGORIES)[number];
 
@@ -38,6 +39,7 @@ export const CATEGORY_LABELS: Record<MemoryCategory, string> = {
   PERSONAL_MEMORY: "Personal memory",
   SOCIAL_GOAL: "Social goal",
   RELATIONSHIP_CONTEXT: "Relationship",
+  WORK: "Work & projects",
 };
 
 /** Plural labels used as group headings in the dashboard. */
@@ -49,6 +51,7 @@ export const CATEGORY_GROUP_LABELS: Record<MemoryCategory, string> = {
   PERSONAL_MEMORY: "Personal memories",
   SOCIAL_GOAL: "Social goals",
   RELATIONSHIP_CONTEXT: "Relationships",
+  WORK: "Work & projects",
 };
 
 export const CATEGORY_ICONS: Record<MemoryCategory, string> = {
@@ -59,6 +62,7 @@ export const CATEGORY_ICONS: Record<MemoryCategory, string> = {
   PERSONAL_MEMORY: "📷",
   SOCIAL_GOAL: "🎯",
   RELATIONSHIP_CONTEXT: "🤝",
+  WORK: "💼",
 };
 
 export const PROFILE_VISIBILITIES = ["PRIVATE", "CONNECTIONS", "PUBLIC"] as const;
@@ -83,6 +87,11 @@ export const LIMITS = {
   interestLength: 40,
   activity: 120,
   goals: 6,
+  followUp: 200,
+  searchQuery: 120,
+  groupMin: 2,
+  groupMax: 6,
+  importAreas: 10,
 } as const;
 
 /** A friend is a mutual Heldly connection or a private "person" note. */
@@ -102,7 +111,16 @@ export interface Memory {
   tags: string[];
   visibility: Visibility;
   created_at: string;
+  /** Where the memory came from; null for memories learned in conversation. */
+  source: MemorySource | null;
 }
+
+/** Sources a memory can be imported from. */
+export const MEMORY_SOURCES = ["chatgpt_memory"] as const;
+export type MemorySource = (typeof MEMORY_SOURCES)[number];
+
+export const PROPOSAL_SOURCES = ["conversation", "chatgpt_memory"] as const;
+export type ProposalSource = (typeof PROPOSAL_SOURCES)[number];
 
 export interface MemoryProposal {
   index: number;
@@ -111,6 +129,8 @@ export interface MemoryProposal {
   description: string;
   tags: string[];
   suggested_visibility: Visibility;
+  /** True when Heldly already holds this memory; it starts un-approved. */
+  already_saved: boolean;
 }
 
 export interface Profile {
@@ -151,7 +171,23 @@ export interface MemoryReviewViewData {
   view: "memory_review";
   proposal_id: string;
   expires_at: string;
+  source: ProposalSource;
   proposals: MemoryProposal[];
+}
+
+export interface MemoryImportArea {
+  value: string;
+  label: string;
+  description: string;
+  selected: boolean;
+}
+
+export interface MemoryImportViewData {
+  view: "memory_import";
+  areas: MemoryImportArea[];
+  always_excluded: string;
+  imported_count: number;
+  max_items: number;
 }
 
 export interface DashboardViewData {
@@ -170,6 +206,10 @@ export interface InviteViewData {
   max_uses: number;
   share_text: string;
   note: string;
+  /** URL the friend can open; "" when the server did not send one. */
+  link: string;
+  /** QR rows of '0'/'1' ('1' = dark). Empty when absent or malformed. */
+  qr: string[];
 }
 
 export interface ActivitySuggestion {
@@ -208,6 +248,13 @@ export interface ReconnectViewData {
   candidates: ReconnectCandidate[];
 }
 
+/** Something the user wants to ask a friend about next time. */
+export interface FollowUp {
+  follow_up_id: string;
+  text: string;
+  created_at: string;
+}
+
 export interface SharedMemory {
   category: MemoryCategory;
   title: string;
@@ -235,6 +282,7 @@ export interface FriendViewData {
   shared_interests: string[];
   shared_memories: SharedMemory[];
   recent_interactions: Interaction[];
+  follow_ups: FollowUp[];
 }
 
 export interface GoalOption {
@@ -248,14 +296,122 @@ export interface WelcomeViewData {
   goal_options: GoalOption[];
 }
 
+export interface ImportCandidate {
+  index: number;
+  name: string;
+  relationship: string | null;
+  notes: string | null;
+  interests: string[];
+  last_met_days_ago: number | null;
+  already_added: boolean;
+}
+
+export interface PeopleImportViewData {
+  view: "people_import";
+  import_id: string;
+  expires_at: string;
+  source: string | null;
+  candidates: ImportCandidate[];
+  skipped: number;
+  note: string;
+}
+
+export interface SearchResult {
+  kind: FriendKind;
+  id: string;
+  display_name: string;
+  on_heldly: boolean;
+  relationship: string | null;
+  matched: string[];
+  snippet: string | null;
+  last_interaction_at: string | null;
+}
+
+export interface PeopleSearchViewData {
+  view: "people_search";
+  query: string;
+  results: SearchResult[];
+  count: number;
+  searched: number;
+  note: string;
+}
+
+export interface GroupMember {
+  kind: FriendKind;
+  id: string;
+  display_name: string;
+  interests: string[];
+}
+
+export interface PartialOverlap {
+  interest: string;
+  /** Display names; the user appears as "You". */
+  members: string[];
+}
+
+export interface GroupPlanViewData {
+  view: "group_plan";
+  members: GroupMember[];
+  common_to_all: string[];
+  common_to_some: PartialOverlap[];
+  suggestions: ActivitySuggestion[];
+  note: string;
+}
+
+export interface BriefViewData {
+  view: "brief";
+  kind: FriendKind;
+  id: string;
+  display_name: string;
+  on_heldly: boolean;
+  relationship: string | null;
+  notes: string | null;
+  last_interaction_at: string | null;
+  last_activity: string | null;
+  days_since_last_interaction: number | null;
+  interests: string[];
+  shared_interests: string[];
+  shared_memories: SharedMemory[];
+  things_to_ask: FollowUp[];
+  conversation_starters: string[];
+  note: string;
+}
+
+export interface QuizQuestion {
+  prompt: string;
+  /** 2 to 4 options. */
+  options: string[];
+  answer_index: number;
+  explanation: string;
+}
+
+export interface QuizViewData {
+  view: "quiz";
+  mode: "friend" | "circle";
+  kind: "connection" | null;
+  id: string | null;
+  display_name: string | null;
+  title: string;
+  questions: QuizQuestion[];
+  common_ground: string[];
+  next: { title: string; description: string } | null;
+  note: string;
+}
+
 export type ViewData =
   | MemoryReviewViewData
+  | MemoryImportViewData
   | DashboardViewData
   | InviteViewData
   | ActivityIdeasViewData
   | ReconnectViewData
   | FriendViewData
-  | WelcomeViewData;
+  | WelcomeViewData
+  | PeopleImportViewData
+  | PeopleSearchViewData
+  | GroupPlanViewData
+  | BriefViewData
+  | QuizViewData;
 
 export type ViewName = ViewData["view"];
 
@@ -272,6 +428,10 @@ export interface RespondConnectionResult {
   request_id: string;
   status: "ACCEPTED" | "REJECTED" | string;
   connection_id: string | null;
+}
+export interface ImportPeopleResult {
+  imported: Person[];
+  count: number;
 }
 export interface LogInteractionResult {
   recorded: boolean;
@@ -312,6 +472,80 @@ function oneOf<T extends string>(v: unknown, options: readonly T[], fallback: T)
 function objs(v: unknown): Obj[] {
   return arr(v).filter(isObj);
 }
+function numOrNull(v: unknown): number | null {
+  return typeof v === "number" && Number.isFinite(v) ? v : null;
+}
+function daysOrNull(v: unknown): number | null {
+  const n = numOrNull(v);
+  return n === null ? null : Math.max(0, Math.floor(n));
+}
+
+const MAX_QR_MODULES = 177; // QR version 40
+
+/** Keep the QR only when it is a square grid of '0'/'1'; otherwise hide it. */
+function parseQr(v: unknown): string[] {
+  const rows = arr(v);
+  const n = rows.length;
+  if (n < 11 || n > MAX_QR_MODULES) return [];
+  const out: string[] = [];
+  for (const r of rows) {
+    if (typeof r !== "string" || r.length !== n || !/^[01]+$/.test(r)) return [];
+    out.push(r);
+  }
+  return out;
+}
+
+/** Only http(s) links are ever offered to copy or open. */
+function parseLink(v: unknown): string {
+  if (typeof v !== "string") return "";
+  const link = v.trim();
+  return /^https?:\/\/\S+$/i.test(link) ? link : "";
+}
+
+function parseSharedMemory(m: Obj): SharedMemory {
+  return {
+    category: oneOf(m.category, MEMORY_CATEGORIES, "PERSONAL_MEMORY"),
+    title: str(m.title),
+    description: str(m.description),
+    tags: strArr(m.tags),
+  };
+}
+
+function parseSuggestion(s: Obj): ActivitySuggestion {
+  return {
+    title: str(s.title),
+    description: str(s.description),
+    grounded_in: strArr(s.grounded_in),
+    suggested_action: str(s.suggested_action),
+  };
+}
+
+export function parseFollowUp(v: unknown): FollowUp {
+  const o = isObj(v) ? v : {};
+  return { follow_up_id: str(o.follow_up_id), text: str(o.text), created_at: str(o.created_at) };
+}
+
+function parseFollowUps(v: unknown): FollowUp[] {
+  return objs(v)
+    .map(parseFollowUp)
+    .filter((f) => f.follow_up_id !== "" && f.text.trim() !== "");
+}
+
+function parseQuizQuestion(q: Obj): QuizQuestion | null {
+  const raw = arr(q.options);
+  const answer = num(q.answer_index, -1);
+  // Drop blank options while keeping the answer pointing at the same option.
+  const options: string[] = [];
+  let answer_index = -1;
+  raw.forEach((o, i) => {
+    if (typeof o !== "string" || o.trim() === "" || options.length >= 4) return;
+    if (i === answer) answer_index = options.length;
+    options.push(o);
+  });
+  const prompt = str(q.prompt);
+  if (!prompt || options.length < 2 || answer_index < 0) return null;
+  return { prompt, options, answer_index, explanation: str(q.explanation) };
+}
 
 export function parseMemory(v: unknown): Memory {
   const o = isObj(v) ? v : {};
@@ -323,6 +557,7 @@ export function parseMemory(v: unknown): Memory {
     tags: strArr(o.tags),
     visibility: oneOf(o.visibility, VISIBILITIES, "PRIVATE"),
     created_at: str(o.created_at),
+    source: o.source === "chatgpt_memory" ? "chatgpt_memory" : null,
   };
 }
 
@@ -386,6 +621,7 @@ export function parseView(sc: unknown): ViewData | null {
         view: "memory_review",
         proposal_id: str(sc.proposal_id),
         expires_at: str(sc.expires_at),
+        source: oneOf(sc.source, PROPOSAL_SOURCES, "conversation"),
         proposals: objs(sc.proposals).map((p, i) => ({
           index: num(p.index, i),
           category: oneOf(p.category, MEMORY_CATEGORIES, "PERSONAL_MEMORY"),
@@ -393,8 +629,28 @@ export function parseView(sc: unknown): ViewData | null {
           description: str(p.description),
           tags: strArr(p.tags),
           suggested_visibility: oneOf(p.suggested_visibility, VISIBILITIES, "PRIVATE"),
+          already_saved: p.already_saved === true,
         })),
       };
+    case "memory_import": {
+      const seen = new Set<string>();
+      const areas: MemoryImportArea[] = [];
+      for (const a of objs(sc.areas)) {
+        const value = str(a.value).trim();
+        const label = str(a.label).trim();
+        if (!value || !label || seen.has(value)) continue;
+        seen.add(value);
+        areas.push({ value, label, description: str(a.description).trim(), selected: a.selected === true });
+        if (areas.length === LIMITS.importAreas) break;
+      }
+      return {
+        view: "memory_import",
+        areas,
+        always_excluded: str(sc.always_excluded),
+        imported_count: Math.max(0, Math.floor(num(sc.imported_count))),
+        max_items: Math.max(1, Math.floor(num(sc.max_items, 30))),
+      };
+    }
     case "dashboard":
       return parseDashboard(sc);
     case "invite":
@@ -405,6 +661,8 @@ export function parseView(sc: unknown): ViewData | null {
         max_uses: Math.max(0, Math.floor(num(sc.max_uses, 1))),
         share_text: str(sc.share_text),
         note: str(sc.note),
+        link: parseLink(sc.link),
+        qr: parseQr(sc.qr),
       };
     case "activity_ideas":
       return {
@@ -415,12 +673,7 @@ export function parseView(sc: unknown): ViewData | null {
         shared_interests: strArr(sc.shared_interests),
         match_score: Math.min(1, Math.max(0, num(sc.match_score))),
         score_explanation: strArr(sc.score_explanation),
-        suggestions: objs(sc.suggestions).map((s) => ({
-          title: str(s.title),
-          description: str(s.description),
-          grounded_in: strArr(s.grounded_in),
-          suggested_action: str(s.suggested_action),
-        })),
+        suggestions: objs(sc.suggestions).map(parseSuggestion),
         note: str(sc.note),
       };
     case "reconnect":
@@ -452,13 +705,107 @@ export function parseView(sc: unknown): ViewData | null {
         notes: strOrNull(sc.notes),
         interests: strArr(sc.interests),
         shared_interests: strArr(sc.shared_interests),
-        shared_memories: objs(sc.shared_memories).map((m) => ({
-          category: oneOf(m.category, MEMORY_CATEGORIES, "PERSONAL_MEMORY"),
-          title: str(m.title),
-          description: str(m.description),
-          tags: strArr(m.tags),
-        })),
+        shared_memories: objs(sc.shared_memories).map(parseSharedMemory),
         recent_interactions: objs(sc.recent_interactions).map(parseInteraction),
+        follow_ups: parseFollowUps(sc.follow_ups),
+      };
+    }
+    case "people_import":
+      return {
+        view: "people_import",
+        import_id: str(sc.import_id),
+        expires_at: str(sc.expires_at),
+        source: strOrNull(sc.source),
+        candidates: objs(sc.candidates).map((c, i) => ({
+          index: Math.floor(num(c.index, i)),
+          name: str(c.name, "Someone") || "Someone",
+          relationship: strOrNull(c.relationship),
+          notes: strOrNull(c.notes),
+          interests: strArr(c.interests),
+          last_met_days_ago: daysOrNull(c.last_met_days_ago),
+          already_added: c.already_added === true,
+        })),
+        skipped: Math.max(0, Math.floor(num(sc.skipped))),
+        note: str(sc.note),
+      };
+    case "people_search": {
+      const results = objs(sc.results)
+        .map((r): SearchResult => {
+          const kind = oneOf(r.kind, FRIEND_KINDS, "connection");
+          return {
+            kind,
+            id: str(r.id),
+            display_name: str(r.display_name, "Friend") || "Friend",
+            on_heldly: typeof r.on_heldly === "boolean" ? r.on_heldly : kind === "connection",
+            relationship: strOrNull(r.relationship),
+            matched: strArr(r.matched),
+            snippet: strOrNull(r.snippet),
+            last_interaction_at: strOrNull(r.last_interaction_at),
+          };
+        })
+        .filter((r) => r.id !== "");
+      return {
+        view: "people_search",
+        query: str(sc.query),
+        results,
+        count: Math.max(0, Math.floor(num(sc.count, results.length))),
+        searched: Math.max(0, Math.floor(num(sc.searched))),
+        note: str(sc.note),
+      };
+    }
+    case "group_plan":
+      return {
+        view: "group_plan",
+        members: objs(sc.members).map((m) => ({
+          kind: oneOf(m.kind, FRIEND_KINDS, "connection"),
+          id: str(m.id),
+          display_name: str(m.display_name, "Friend") || "Friend",
+          interests: strArr(m.interests),
+        })),
+        common_to_all: strArr(sc.common_to_all),
+        common_to_some: objs(sc.common_to_some)
+          .map((o) => ({ interest: str(o.interest), members: strArr(o.members) }))
+          .filter((o) => o.interest !== ""),
+        suggestions: objs(sc.suggestions).map(parseSuggestion),
+        note: str(sc.note),
+      };
+    case "brief": {
+      const kind = oneOf(sc.kind, FRIEND_KINDS, "connection");
+      return {
+        view: "brief",
+        kind,
+        id: str(sc.id),
+        display_name: str(sc.display_name, "your friend") || "your friend",
+        on_heldly: typeof sc.on_heldly === "boolean" ? sc.on_heldly : kind === "connection",
+        relationship: strOrNull(sc.relationship),
+        notes: strOrNull(sc.notes),
+        last_interaction_at: strOrNull(sc.last_interaction_at),
+        last_activity: strOrNull(sc.last_activity),
+        days_since_last_interaction: daysOrNull(sc.days_since_last_interaction),
+        interests: strArr(sc.interests),
+        shared_interests: strArr(sc.shared_interests),
+        shared_memories: objs(sc.shared_memories).map(parseSharedMemory),
+        things_to_ask: parseFollowUps(sc.things_to_ask),
+        conversation_starters: strArr(sc.conversation_starters),
+        note: str(sc.note),
+      };
+    }
+    case "quiz": {
+      const mode = sc.mode === "friend" ? "friend" : "circle";
+      const next = isObj(sc.next) && str(sc.next.title) !== "" ? sc.next : null;
+      return {
+        view: "quiz",
+        mode,
+        kind: sc.kind === "connection" ? "connection" : null,
+        id: strOrNull(sc.id),
+        display_name: strOrNull(sc.display_name),
+        title: str(sc.title) || (mode === "friend" ? "How well do you know them?" : "Who's who in your circle?"),
+        questions: objs(sc.questions)
+          .map(parseQuizQuestion)
+          .filter((q): q is QuizQuestion => q !== null),
+        common_ground: strArr(sc.common_ground),
+        next: next ? { title: str(next.title), description: str(next.description) } : null,
+        note: str(sc.note),
       };
     }
     case "welcome":
@@ -499,6 +846,12 @@ export function parseRespondConnection(v: unknown): RespondConnectionResult {
     status: str(o.status),
     connection_id: strOrNull(o.connection_id),
   };
+}
+
+export function parseImportPeople(v: unknown): ImportPeopleResult {
+  const o = isObj(v) ? v : {};
+  const imported = objs(o.imported).map(parsePerson);
+  return { imported, count: Math.max(0, Math.floor(num(o.count, imported.length))) };
 }
 
 export function parseLogInteraction(v: unknown): LogInteractionResult {
@@ -544,6 +897,30 @@ export function humanize(value: string): string {
   if (!/^[A-Za-z0-9]+(_[A-Za-z0-9]+)*$/.test(value) || !/[_]|^[a-z0-9]+$|^[A-Z0-9]+$/.test(value)) return value;
   const words = value.toLowerCase().split("_").join(" ");
   return words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+/** "today", "yesterday", "12 days ago", "about 3 months ago", "over a year ago". */
+export function formatDaysAgo(days: number): string {
+  if (days <= 0) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 60) return `${days} days ago`;
+  if (days < 365) return `about ${Math.round(days / 30)} months ago`;
+  return days < 730 ? "over a year ago" : `about ${Math.round(days / 365)} years ago`;
+}
+
+/** "Jun", "Jun and Hana", "Jun, Hana and Taeyang". */
+export function joinNames(names: string[]): string {
+  if (names.length <= 1) return names[0] ?? "";
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
+
+/** Split friends into the `{connection_ids, person_ids}` argument of heldly_plan_group. */
+export function groupArgs(friends: { kind: FriendKind; id: string }[]): { connection_ids: string[]; person_ids: string[] } {
+  const picked = friends.slice(0, LIMITS.groupMax);
+  return {
+    connection_ids: picked.filter((f) => f.kind === "connection").map((f) => f.id),
+    person_ids: picked.filter((f) => f.kind === "person").map((f) => f.id),
+  };
 }
 
 export function plural(n: number, one: string, many: string): string {

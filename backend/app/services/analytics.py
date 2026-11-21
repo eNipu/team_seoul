@@ -23,6 +23,12 @@ EVENT_TYPES = {
     "activity_suggested",
     "reconnection_suggested",
     "person_added",
+    "people_imported",
+    "people_searched",
+    "group_planned",
+    "meetup_brief",
+    "meetup_recapped",
+    "quiz_started",
 }
 
 _ALLOWED_METADATA_KEYS = {"count", "source", "category"}

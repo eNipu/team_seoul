@@ -21,10 +21,10 @@ protected-resource metadata and requires them at the transport level; each tool 
 checks the scopes it needs (defense in depth).
 
 Annotations: **R** read-only, **W** write, **D** destructive (ChatGPT asks for confirmation).
-**UI** = renders the widget (`_meta.ui.resourceUri = ui://heldly/app-v2.html`); the result's
+**UI** = renders the widget (`_meta.ui.resourceUri = ui://heldly/app-v4.html`); the result's
 `view` field tells the widget which card to show.
 
-28 tools. A **friend** is addressed by exactly one of `connection_id` (someone on Heldly) or
+38 tools, 12 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Heldly) or
 `person_id` (a private note about someone who is not); results name it as `kind`
 (`"connection"` \| `"person"`) + `id`.
 
@@ -45,7 +45,8 @@ This is guidance to the model, not something the server can enforce.
 
 | Tool | Args | Scope | | Returns |
 | --- | --- | --- | --- | --- |
-| `heldly_propose_memories` | `text?` (≤4000), `suggested?[]` (≤8 `{category, title, description, tags}`) | memories.write | W, UI | `{view: "memory_review", proposal_id, expires_at, proposals[{index, category, title, description, tags, suggested_visibility}], note}` — **saves nothing** |
+| `heldly_propose_memories` | `text?` (≤4000), `suggested?[]` (`{category, title, description, tags}`; ≤8, or ≤30 for an import), `source?` (`conversation` default \| `chatgpt_memory`) | memories.write | W, UI | `{view: "memory_review", proposal_id, expires_at, source, proposals[{index, category, title, description, tags, suggested_visibility, already_saved}], note}` — **saves nothing**. `already_saved`: the user already has a memory with that title |
+| `heldly_import_chatgpt_memory` | – | memories.read | R, UI | `{view: "memory_import", areas[{value, label, description, selected}], always_excluded, imported_count, max_items, note}` — a chooser card; takes no data and saves nothing (see below) |
 | `heldly_save_memories` | `proposal_id`, `approvals[{index, visibility?, title?, description?}]` | memories.write | W | `{saved: MemoryOut[], count}` |
 | `heldly_discard_memory_proposal` | `proposal_id` | memories.write | W | `{discarded, proposal_id}` |
 | `heldly_list_memories` | `category?`, `limit?` (≤200) | memories.read | R | `{memories: MemoryOut[], count}` |
@@ -53,7 +54,31 @@ This is guidance to the model, not something the server can enforce.
 | `heldly_update_memory` | `memory_id`, `title?`, `description?`, `visibility?` | memories.write | W | `MemoryOut` |
 | `heldly_delete_memory` | `memory_id` | memories.write | D | `{deleted, memory_id}` |
 
-`MemoryOut = {memory_id, category, title, description, tags, visibility, created_at}`.
+`MemoryOut = {memory_id, category, title, description, tags, visibility, source, created_at}`;
+`source` is `"chatgpt_memory"` for imported memories, otherwise `null`. Categories: `INTEREST`,
+`DISLIKE`, `PREFERENCE`, `EXPERIENCE`, `WORK`, `PERSONAL_MEMORY`, `SOCIAL_GOAL`,
+`RELATIONSHIP_CONTEXT`.
+
+### Importing from ChatGPT memory
+
+An MCP server cannot read ChatGPT's saved memories or other chats; only the model can see what
+it remembers. So the import is a conversation, with Heldly's cards at both ends:
+
+1. `heldly_import_chatgpt_memory` shows a card with six areas (interests, preferences, work,
+   goals, experiences ticked; personal life unticked). Health, money, passwords and ID numbers
+   are not offered.
+2. "Preview my ChatGPT memory" posts a message into the chat (`ui/message`) asking ChatGPT to
+   **list in the chat** what it remembers in those areas — numbered, at most 30 — and to send
+   nothing to Heldly yet.
+3. The user says which ones to keep ("all except 3 and 7").
+4. ChatGPT calls `heldly_propose_memories` with `source: "chatgpt_memory"` and only those items.
+   The usual review card appears, labelled as an import.
+5. The user confirms; `heldly_save_memories` stores them with `source = "chatgpt_memory"`.
+   Items left unticked are deleted with the proposal.
+
+Steps 2–4 are instructions to the model (tool descriptions, server instructions, skill, and the
+message the card sends). The server cannot verify that the list was shown in the chat first; what
+it does enforce is that nothing is saved without the user's confirmation on the card or in chat.
 
 ## Home
 
@@ -65,7 +90,7 @@ This is guidance to the model, not something the server can enforce.
 
 | Tool | Args | Scope | | Returns |
 | --- | --- | --- | --- | --- |
-| `heldly_create_invite` | `max_uses?` (1–20, default 5), `note?` | connections | W, UI | `{view: "invite", code, expires_at, max_uses, share_text, note}` |
+| `heldly_create_invite` | `max_uses?` (1–20, default 5), `note?` | connections | W, UI | `{view: "invite", code, expires_at, max_uses, share_text, note, link, qr[]}` — `link` is `{PUBLIC_BASE_URL}/i/{CODE}`; `qr` is that link as a QR code, one string of `0`/`1` per row (`1` = dark, no quiet zone) |
 | `heldly_list_invites` | – | connections | R | `{invites[]}` |
 | `heldly_revoke_invite` | `code` | connections | W | `{revoked}` |
 | `heldly_redeem_invite` | `code` | connections | W | `{status: PENDING\|ALREADY_PENDING\|ALREADY_CONNECTED, request_id, inviter_display_name, message}` |
@@ -78,26 +103,47 @@ This is guidance to the model, not something the server can enforce.
 Unknown, revoked, expired, exhausted and blocked invite codes all return the same
 `NOT_FOUND: invite code is invalid or expired`.
 
+`GET /i/{CODE}` is a small public page for the person who receives a link or scans the QR code:
+it shows the code, how to redeem it, and a button that opens ChatGPT with the redeem prompt
+filled in. It is static — it never looks the code up, so it shows no inviter name and cannot be
+used to test whether a code is valid. Malformed codes get a 404.
+
 ## People who are not on Heldly
 
 Private, owner-only notes about friends who don't use Heldly, so they can get activity ideas
 and reconnection nudges too. Never shared with anyone, never used to contact the person.
 
 | Tool | Args | Scope | | Returns |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | `heldly_list_people` | – | connections | R | `{people: Person[], count}` |
 | `heldly_add_person` | `name` (≤80), `relationship?` (≤80), `notes?` (≤1000), `interests?[]` (≤12 × ≤40), `last_met_days_ago?` | connections | W | `Person` |
 | `heldly_update_person` | `person_id`, `name?`, `relationship?`, `notes?`, `interests?[]` — omitted = unchanged, `""`/`[]` clears | connections | W | `Person` |
 | `heldly_delete_person` | `person_id` | connections | D | `{deleted, person_id}` |
 
 `Person = {person_id, name, relationship, notes, interests[], last_interaction_at, created_at}`.
-Limit: 200 people per user. Credentials and card/ID numbers are refused (`PRIVACY_VIOLATION`).
+Limit: 500 people per user. Credentials and card/ID numbers are refused (`PRIVACY_VIOLATION`).
+
+### Importing several people at once
+
+The user pastes a list, uploads a contacts file or just talks; the model turns that into
+candidates and the user picks who to add on a card. Same shape as the memory flow: the
+candidates are stored server-side, so nothing can be added that the user was not shown.
+
+| Tool | Args | Scope | | Returns |
+| --- | --- | --- | --- | --- |
+| `heldly_propose_people_import` | `people[]` (1–50 `{name, relationship?, notes?, interests?[], last_met_days_ago?}`), `source?` (≤60) | connections | W, UI | `{view: "people_import", import_id, expires_at, source, candidates[{index, name, relationship, notes, interests[], last_met_days_ago, already_added}], skipped, note}` — **adds nobody** |
+| `heldly_import_people` | `import_id`, `indexes[]` | connections | W | `{imported: Person[], count}` |
+
+Emails, links and phone numbers are stripped from names, relationships and notes; entries
+containing credentials or card/ID numbers are dropped and counted in `skipped`. `already_added`
+marks a name the user already has a note for. An import is owner-only, single-use and expires
+after 24 hours.
 
 ## Relationship maintenance
 
 | Tool | Args | Scope | | Returns |
 | --- | --- | --- | --- | --- |
-| `heldly_view_friend` | `connection_id` \| `person_id` | connections, memories.read | R, UI | `{view: "friend", kind, id, display_name, on_heldly, since, last_interaction_at, bio, relationship, notes, interests[], shared_interests[], shared_memories[{category, title, description, tags}], recent_interactions[{occurred_at, activity}], note}` |
+| `heldly_view_friend` | `connection_id` \| `person_id` | connections, memories.read | R, UI | `{view: "friend", kind, id, display_name, on_heldly, since, last_interaction_at, bio, relationship, notes, interests[], shared_interests[], shared_memories[{category, title, description, tags}], recent_interactions[{occurred_at, activity}], follow_ups[FollowUp], note}` |
 | `heldly_suggest_activity` | `connection_id` \| `person_id` | connections, memories.read | R, UI | `{view: "activity_ideas", kind, id, display_name, shared_interests, match_score, score_explanation, suggestions[{title, description, grounded_in, suggested_action}], note}` |
 | `heldly_log_interaction` | `connection_id` \| `person_id`, `activity?` (≤120) | connections | W | `{recorded, kind, id, last_interaction_at}` |
 | `heldly_reconnection_suggestions` | `min_days?` (default 21), `limit?` (default 5) | connections, memories.read | R, UI | `{view: "reconnect", min_days, candidates[{kind, id, display_name, days_since_last_interaction, last_activity, reason, suggested_activity}]}` — connections and people together, longest gap first |
@@ -107,11 +153,54 @@ For a connection, the friend view and suggestions only use their `SHARED_WITH_CO
 `PUBLIC`) plus the caller's own memories. For a person, they use the caller's own note. Shared
 interests ignore filler words ("loves", "really", …). Heldly never contacts anyone.
 
+## Finding people and planning for a group
+
+| Tool | Args | Scope | | Returns |
+| --- | --- | --- | --- | --- |
+| `heldly_find_people` | `query` (2–120), `limit?` (≤20, default 8) | connections, memories.read | R, UI | `{view: "people_search", query, results[{kind, id, display_name, on_heldly, relationship, matched[], snippet, last_interaction_at}], count, searched, note}` |
+| `heldly_plan_group` | `connection_ids?[]`, `person_ids?[]` (2–6 friends in total) | connections, memories.read | R, UI | `{view: "group_plan", members[{kind, id, display_name, interests[]}], common_to_all[], common_to_some[{interest, members[]}], suggestions[{title, description, grounded_in, suggested_action}], note}` |
+
+"Who do I know who…" searches the caller's own notes (name, relationship, notes, interests)
+and what each connection chose to share (non-private memories, and the bio if their profile
+allows it). Any query word may match; results that match more words come first. Matching is
+by word stem ("climbs" finds "climbing"), with no model call. `searched` is how many friends
+were looked at. In a group plan the caller counts as a member, named `You`.
+
+## Before and after a meetup
+
+| Tool | Args | Scope | | Returns |
+| --- | --- | --- | --- | --- |
+| `heldly_meetup_brief` | `connection_id` \| `person_id` | connections, memories.read | R, UI | `{view: "brief", kind, id, display_name, on_heldly, relationship, notes, last_interaction_at, last_activity, days_since_last_interaction, interests[], shared_interests[], shared_memories[], things_to_ask[FollowUp], conversation_starters[], note}` |
+| `heldly_recap_meetup` | `connection_id` \| `person_id`, `activity?` (≤120), `follow_ups?[]` (≤5 × ≤200), `notes_to_add?` (≤500), `new_interests?[]`, `done_follow_up_ids?[]` | connections | W | `{recorded, kind, id, last_interaction_at, follow_ups[FollowUp], notes_updated}` |
+| `heldly_add_follow_up` | `text` (≤200), `connection_id` \| `person_id` | connections | W | `FollowUp` |
+| `heldly_complete_follow_up` | `follow_up_id` | connections | W | `{done, follow_up_id}` |
+
+`FollowUp = {follow_up_id, text, created_at}` — something the user wants to ask about next time.
+Follow-ups are private to the user (up to 20 open per friend). A recap logs the hangout, ticks
+off `done_follow_up_ids`, adds new follow-ups and, for a person, appends `notes_to_add` to the
+note and merges `new_interests`. It is all-or-nothing: if the note would pass 1000 characters,
+nothing is recorded. For a connection `notes_to_add` and `new_interests` are ignored
+(`notes_updated: false`), because Heldly keeps no private notes about other users.
+
+## Quiz
+
+| Tool | Args | Scope | | Returns |
+| --- | --- | --- | --- | --- |
+| `heldly_start_quiz` | `connection_id?` | connections, memories.read | R, UI | `{view: "quiz", mode: "friend"\|"circle", kind, id, display_name, title, questions[{prompt, options[], answer_index, explanation}], common_ground[], next{title, description}, note}` |
+
+With `connection_id`: "How well do you know …?" — up to five questions built from what that
+friend shares with connections; wrong options come from the caller's own memories, other
+friends' shared memories and a generic pool, and never overlap the right answer. Without
+arguments: "Who's who in your circle?" — which friend is into what, across connections and
+people notes. Both need at least three questions' worth of material, otherwise
+`INVALID_REQUEST`. Private memories are never used. The widget keeps score; nothing is stored.
+The answers are in the payload, so the model is told not to reveal them before the user plays.
+
 ## Resource
 
 | URI | MIME | Content |
 | --- | --- | --- |
-| `ui://heldly/app-v2.html` | `text/html;profile=mcp-app` | The widget bundle (`widget/dist/index.html`) |
+| `ui://heldly/app-v4.html` | `text/html;profile=mcp-app` | The widget bundle (`widget/dist/index.html`) |
 
 ## Trying it locally
 

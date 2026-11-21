@@ -22,6 +22,8 @@ class Memory(Base):
     tags: Mapped[list] = mapped_column(JSONType, default=list, nullable=False)
     visibility: Mapped[str] = mapped_column(String(32), default="PRIVATE", nullable=False)
     approved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    # Where the approved memory came from: NULL = this conversation, "chatgpt_memory" = imported.
+    source: Mapped[str | None] = mapped_column(String(32))
     created_at: Mapped[datetime] = created_at_col()
     updated_at: Mapped[datetime] = updated_at_col()
 
@@ -38,7 +40,7 @@ class MemoryProposal(Base):
     id: Mapped[uuid.UUID] = uuid_pk()
     user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     items: Mapped[list] = mapped_column(JSONType, nullable=False)
-    source: Mapped[str] = mapped_column(String(32), nullable=False)  # openai | heuristic | assistant
+    source: Mapped[str] = mapped_column(String(32), nullable=False)  # openai | heuristic | assistant | chatgpt_memory
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = created_at_col()

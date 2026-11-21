@@ -1,4 +1,4 @@
-"""FastAPI entrypoint: health endpoints + the Heldly MCP server (mounted at /mcp)."""
+"""FastAPI entrypoint: health endpoints, the invite landing page and the Heldly MCP server (/mcp)."""
 
 from __future__ import annotations
 
@@ -8,12 +8,14 @@ from collections.abc import AsyncIterator
 from urllib.parse import urlparse
 
 from fastapi import FastAPI
+from fastapi.responses import HTMLResponse
 from mcp.server.transport_security import TransportSecuritySettings
 from sqlalchemy import text
 
 from app.config import Settings, get_settings
 from app.db.database import init_engine, session_scope
 from app.db.migrate import upgrade_to_head
+from app.invite_page import render_invite_page
 from app.mcp.server import build_mcp_server
 
 
@@ -69,6 +71,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         with session_scope() as db:
             db.execute(text("SELECT 1"))
         return {"status": "ready", "environment": settings.environment, "auth_mode": settings.auth_mode}
+
+    @app.get("/i/{code}", include_in_schema=False)
+    def invite_page(code: str) -> HTMLResponse:
+        # Static page: it never looks the code up, so it cannot be used to test whether a code is valid.
+        html = render_invite_page(code)
+        headers = {
+            "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'",
+            "Referrer-Policy": "no-referrer",
+            "X-Content-Type-Options": "nosniff",
+            "X-Frame-Options": "DENY",
+            "Cache-Control": "no-store",
+        }
+        if html is None:
+            return HTMLResponse("<!doctype html><title>Not found</title><p>Not found.</p>", 404, headers)
+        return HTMLResponse(html, headers=headers)
 
     # The MCP Starlette app owns /mcp, OAuth metadata (/.well-known/*), and (dev) /authorize,/token,/register.
     app.mount("/", mcp_app)

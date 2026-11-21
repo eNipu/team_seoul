@@ -155,7 +155,7 @@ def test_search_memories(alice):
 
 
 def test_widget_resource_served(alice):
-    body = alice.rpc("resources/read", {"uri": "ui://heldly/app-v2.html"}).json()
+    body = alice.rpc("resources/read", {"uri": "ui://heldly/app-v4.html"}).json()
     content = body["result"]["contents"][0]
     assert content["mimeType"] == "text/html;profile=mcp-app"
     assert "<html" in content["text"]
@@ -163,17 +163,23 @@ def test_widget_resource_served(alice):
 
 def test_render_tools_bound_to_widget(alice):
     tools = {t["name"]: t for t in alice.rpc("tools/list").json()["result"]["tools"]}
-    assert len(tools) == 28
+    assert len(tools) == 38
     render_tools = (
         "heldly_propose_memories",
+        "heldly_import_chatgpt_memory",
         "heldly_show_dashboard",
         "heldly_create_invite",
+        "heldly_propose_people_import",
         "heldly_view_friend",
         "heldly_suggest_activity",
         "heldly_reconnection_suggestions",
+        "heldly_find_people",
+        "heldly_plan_group",
+        "heldly_meetup_brief",
+        "heldly_start_quiz",
     )
     for name in render_tools:
-        assert tools[name]["_meta"]["ui"]["resourceUri"] == "ui://heldly/app-v2.html"
+        assert tools[name]["_meta"]["ui"]["resourceUri"] == "ui://heldly/app-v4.html"
     # Tools the widget calls directly must be callable from the app.
     for name in (
         "heldly_save_memories",
@@ -187,7 +193,103 @@ def test_render_tools_bound_to_widget(alice):
         "heldly_add_person",
         "heldly_update_person",
         "heldly_delete_person",
+        "heldly_import_people",
+        "heldly_add_follow_up",
+        "heldly_complete_follow_up",
     ):
         assert tools[name]["_meta"]["openai/widgetAccessible"] is True, name
     assert "ui" not in (tools["heldly_list_memories"].get("_meta") or {})
-    assert not any("game" in n for n in tools)
+    assert sum("ui" in (t.get("_meta") or {}) for t in tools.values()) == 12
+
+
+# ---------------------------------------------------------------- import from ChatGPT memory
+def _remembered(n: int) -> list[dict]:
+    return [{"category": "INTEREST", "title": f"Hobby {i}", "description": f"Enjoys hobby {i}"} for i in range(n)]
+
+
+def test_import_card_takes_no_data_and_saves_nothing(alice):
+    result = alice.call("heldly_import_chatgpt_memory")
+    assert not result["isError"]
+    card = result["structuredContent"]
+    assert card["view"] == "memory_import"
+    assert [a["value"] for a in card["areas"]] == [
+        "interests",
+        "preferences",
+        "work",
+        "goals",
+        "experiences",
+        "personal",
+    ]
+    # Personal life is opt-in; sensitive areas are not offered at all.
+    assert [a["value"] for a in card["areas"] if not a["selected"]] == ["personal"]
+    assert "never imported" in card["always_excluded"]
+    assert card["imported_count"] == 0 and card["max_items"] == 30
+    # The model is told the order: list in chat first, send only what the user picked.
+    assert "heldly_propose_memories" in result["content"][0]["text"]
+    assert alice.ok("heldly_list_memories")["count"] == 0
+
+
+def test_import_from_chatgpt_memory_is_reviewed_then_saved_with_its_source(alice):
+    remembered = [
+        {"category": "WORK", "title": "Runs a merch studio", "description": "Building a small merchandise company"},
+        {"category": "INTEREST", "title": "Bouldering", "description": "Climbs twice a week", "tags": ["climbing"]},
+        {"category": "SOCIAL_GOAL", "title": "Meet AI founders", "description": "Wants to meet people building AI"},
+    ]
+    card = alice.ok("heldly_propose_memories", suggested=remembered, source="chatgpt_memory")
+    assert card["view"] == "memory_review" and card["source"] == "chatgpt_memory"
+    assert all(p["suggested_visibility"] == "PRIVATE" and not p["already_saved"] for p in card["proposals"])
+    assert alice.ok("heldly_list_memories")["count"] == 0  # proposing is not saving
+
+    saved = alice.ok(
+        "heldly_save_memories",
+        proposal_id=card["proposal_id"],
+        approvals=[{"index": 0}, {"index": 2, "visibility": "SHARED_WITH_CONNECTIONS"}],
+    )
+    assert saved["count"] == 2
+    assert {m["source"] for m in saved["saved"]} == {"chatgpt_memory"}
+    memories = alice.ok("heldly_list_memories")["memories"]
+    # The one the user left unticked is not stored.
+    assert sorted(m["title"] for m in memories) == ["Meet AI founders", "Runs a merch studio"]
+    assert {m["category"] for m in memories} == {"WORK", "SOCIAL_GOAL"}
+    assert alice.ok("heldly_import_chatgpt_memory")["imported_count"] == 2
+    dashboard = alice.ok("heldly_show_dashboard")
+    assert {m["source"] for m in dashboard["memories"]} == {"chatgpt_memory"}
+
+
+def test_memories_from_the_conversation_have_no_source(alice):
+    card = alice.ok("heldly_propose_memories", suggested=_remembered(1))
+    assert card["source"] == "conversation"
+    saved = alice.ok("heldly_save_memories", proposal_id=card["proposal_id"], approvals=[{"index": 0}])
+    assert saved["saved"][0]["source"] is None
+    assert alice.ok("heldly_import_chatgpt_memory")["imported_count"] == 0
+
+
+def test_import_allows_thirty_items_but_a_conversation_only_eight(alice):
+    assert len(alice.ok("heldly_propose_memories", suggested=_remembered(12))["proposals"]) == 8
+    card = alice.ok("heldly_propose_memories", suggested=_remembered(30), source="chatgpt_memory")
+    assert len(card["proposals"]) == 30
+    saved = alice.ok(
+        "heldly_save_memories",
+        proposal_id=card["proposal_id"],
+        approvals=[{"index": i} for i in range(30)],
+    )
+    assert saved["count"] == 30
+    assert alice.call("heldly_propose_memories", suggested=_remembered(31), source="chatgpt_memory")["isError"]
+
+
+def test_repeated_import_marks_what_is_already_saved(alice):
+    first = alice.ok("heldly_propose_memories", suggested=_remembered(2), source="chatgpt_memory")
+    alice.ok("heldly_save_memories", proposal_id=first["proposal_id"], approvals=[{"index": 0}])
+    again = alice.ok(
+        "heldly_propose_memories",
+        suggested=[
+            {"category": "INTEREST", "title": "  hobby 0 ", "description": "Same thing, different spacing and case"},
+            {"category": "INTEREST", "title": "Hobby 1", "description": "Was not kept last time"},
+        ],
+        source="chatgpt_memory",
+    )
+    assert [p["already_saved"] for p in again["proposals"]] == [True, False]
+
+
+def test_unknown_source_is_rejected(alice):
+    assert alice.call("heldly_propose_memories", suggested=_remembered(1), source="claude")["isError"]

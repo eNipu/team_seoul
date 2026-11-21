@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useId, useState, type FormEvent } from "react";
 import type { HostBridge } from "../mcp/client";
 import {
+  LIMITS,
   formatDate,
   formatRelative,
   friendArg,
+  groupArgs,
   hasId,
   parsePerson,
   parseRespondConnection,
@@ -14,7 +16,8 @@ import {
   type PendingRequest,
   type Person,
 } from "../types";
-import { Avatar, SectionTitle, Spinner, type Action, type Nav } from "./common";
+import { Avatar, ChatStatus, SectionTitle, Spinner, useChatPrompt, type Action, type Nav } from "./common";
+import { SearchIcon } from "./PeopleSearch";
 import PersonForm, { type PersonValues } from "./PersonForm";
 
 interface Props {
@@ -32,8 +35,46 @@ interface Props {
 
 export default function FriendsTab(props: Props) {
   const { connections, people, pending, bridge, nav, action } = props;
+  const searchId = useId();
+  const chat = useChatPrompt(bridge);
   const [adding, setAdding] = useState(false);
+  const [query, setQuery] = useState("");
+  /** `null` = not picking; otherwise the `${kind}:${id}` keys chosen for a group hangout. */
+  const [group, setGroup] = useState<string[] | null>(null);
   const busy = action.busy !== null;
+  const picking = group !== null;
+  const friendCount = connections.length + people.length;
+  const groupFull = picking && group.length >= LIMITS.groupMax;
+
+  function search(e: FormEvent) {
+    e.preventDefault();
+    const q = query.trim();
+    if (!q) return;
+    void action.run("search", () => nav.openView("heldly_find_people", { query: q }));
+  }
+
+  function togglePick(kind: FriendKind, id: string) {
+    const k = `${kind}:${id}`;
+    setGroup((g) => (g === null ? g : g.includes(k) ? g.filter((x) => x !== k) : g.length >= LIMITS.groupMax ? g : [...g, k]));
+  }
+
+  function planGroup() {
+    if (group === null || group.length < LIMITS.groupMin) return;
+    const friends = group.map((k) => {
+      const cut = k.indexOf(":");
+      return { kind: k.slice(0, cut) as FriendKind, id: k.slice(cut + 1) };
+    });
+    void action.run("group", async () => {
+      const failure = await nav.openView("heldly_plan_group", groupArgs(friends));
+      if (failure === null) setGroup(null);
+      return failure;
+    });
+  }
+
+  const pickProps = (kind: FriendKind, id: string) =>
+    picking
+      ? { picked: group.includes(`${kind}:${id}`), pickDisabled: busy || (groupFull && !group.includes(`${kind}:${id}`)), onPick: () => togglePick(kind, id) }
+      : {};
 
   function open(kind: FriendKind, id: string) {
     void action.run(`open-${kind}:${id}`, () => nav.openView("heldly_view_friend", friendArg(kind, id)));
@@ -85,6 +126,31 @@ export default function FriendsTab(props: Props) {
 
   return (
     <>
+      <form className="search-form" role="search" onSubmit={search}>
+        <label className="sr-only" htmlFor={searchId}>
+          Search your circle
+        </label>
+        <div className="search">
+          <SearchIcon />
+          <input
+            id={searchId}
+            type="search"
+            value={query}
+            maxLength={LIMITS.searchQuery}
+            placeholder="Who do I know who…"
+            autoComplete="off"
+            enterKeyHint="search"
+            disabled={busy}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
+        {query.trim() !== "" && (
+          <button type="submit" className="btn btn--primary" disabled={busy}>
+            {action.busy === "search" ? "Searching…" : "Search"}
+          </button>
+        )}
+      </form>
+
       <div className="button-row">
         <button
           type="button"
@@ -103,6 +169,63 @@ export default function FriendsTab(props: Props) {
           {action.busy === "reconnect" ? "Looking…" : "Who should I reconnect with?"}
         </button>
       </div>
+
+      <div className="quick-actions" role="group" aria-label="More things to do">
+        <button
+          type="button"
+          className="quick-action"
+          disabled={chat.state === "sending"}
+          onClick={() => void chat.send(IMPORT_PROMPT)}
+        >
+          <span aria-hidden="true">📥</span>
+          {chat.state === "sending" ? "Asking…" : "Import friends"}
+        </button>
+        {connections.length > 0 && (
+          <button
+            type="button"
+            className="quick-action"
+            disabled={busy}
+            onClick={() => void action.run("quiz", () => nav.openView("heldly_start_quiz", {}))}
+          >
+            <span aria-hidden="true">🎲</span>
+            {action.busy === "quiz" ? "Loading…" : "Play a quiz"}
+          </button>
+        )}
+        {friendCount >= LIMITS.groupMin && (
+          <button
+            type="button"
+            className="quick-action"
+            disabled={busy}
+            aria-pressed={picking}
+            onClick={() => setGroup(picking ? null : [])}
+          >
+            <span aria-hidden="true">🧑‍🤝‍🧑</span>
+            Plan a group hangout
+          </button>
+        )}
+      </div>
+      <ChatStatus state={chat.state} prompt={chat.prompt} />
+
+      {picking && (
+        <div className="group-bar">
+          <span className="group-bar__text" role="status">
+            {group.length === 0
+              ? `Pick ${LIMITS.groupMin} to ${LIMITS.groupMax} friends below`
+              : `${group.length} picked${groupFull ? ` (the most for one plan)` : group.length < LIMITS.groupMin ? " · pick one more" : ""}`}
+          </span>
+          <button type="button" className="btn btn--ghost btn--small" disabled={busy} onClick={() => setGroup(null)}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="btn btn--primary btn--small"
+            disabled={busy || group.length < LIMITS.groupMin}
+            onClick={planGroup}
+          >
+            {action.busy === "group" ? "Planning…" : "Plan hangout"}
+          </button>
+        </div>
+      )}
 
       {pending.length > 0 && (
         <>
@@ -146,6 +269,7 @@ export default function FriendsTab(props: Props) {
               opening={action.busy === `open-connection:${c.connection_id}`}
               disabled={busy}
               onOpen={() => open("connection", c.connection_id)}
+              {...pickProps("connection", c.connection_id)}
             />
           ))}
         </ul>
@@ -165,6 +289,7 @@ export default function FriendsTab(props: Props) {
               opening={action.busy === `open-person:${p.person_id}`}
               disabled={busy}
               onOpen={() => open("person", p.person_id)}
+              {...pickProps("person", p.person_id)}
             />
           ))}
         </ul>
@@ -190,15 +315,36 @@ export default function FriendsTab(props: Props) {
   );
 }
 
+const IMPORT_PROMPT =
+  "I'd like to import my friends into Heldly. I'll paste a list, upload a contacts file, or just tell you about them.";
+
 interface RowProps {
   name: string;
   detail: string;
   opening: boolean;
   disabled: boolean;
   onOpen: () => void;
+  /** Set while picking friends for a group hangout: the row becomes a checkbox. */
+  picked?: boolean;
+  pickDisabled?: boolean;
+  onPick?: () => void;
 }
 
-function FriendRow({ name, detail, opening, disabled, onOpen }: RowProps) {
+function FriendRow({ name, detail, opening, disabled, onOpen, picked, pickDisabled, onPick }: RowProps) {
+  if (onPick) {
+    return (
+      <li>
+        <label className={`pick pick--row ${picked ? "pick--on" : ""}`}>
+          <input type="checkbox" checked={picked === true} disabled={pickDisabled} onChange={onPick} />
+          <Avatar name={name} />
+          <span className="pick__body">
+            <strong>{name}</strong>
+            <span className="muted small">{detail}</span>
+          </span>
+        </label>
+      </li>
+    );
+  }
   return (
     <li>
       <button type="button" className="friend-row" disabled={disabled} aria-label={`Open ${name}`} onClick={onOpen}>

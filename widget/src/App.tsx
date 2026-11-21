@@ -3,12 +3,18 @@ import { applyTheme, connectToHost, extractText, type HostBridge } from "./mcp/c
 import { DEMO_VIEWS, createMockBridge, demoParam, mockInitialView } from "./mock";
 import { friendArg, parseView, type ViewData } from "./types";
 import MemoryReview from "./components/MemoryReview";
+import MemoryImport from "./components/MemoryImport";
 import Dashboard, { type DashboardTab } from "./components/Dashboard";
 import Invite from "./components/Invite";
 import ActivityIdeas from "./components/ActivityIdeas";
 import Reconnect from "./components/Reconnect";
 import Friend from "./components/Friend";
 import Welcome from "./components/Welcome";
+import PeopleImport from "./components/PeopleImport";
+import PeopleSearch from "./components/PeopleSearch";
+import GroupPlan from "./components/GroupPlan";
+import Brief from "./components/Brief";
+import Quiz from "./components/Quiz";
 import ErrorBanner from "./components/ErrorBanner";
 import { Spinner, type Nav } from "./components/common";
 
@@ -31,6 +37,9 @@ function skeletonFor(hint: string | null | undefined): SkeletonKind {
     case "friend":
     case "friend_person":
     case "welcome":
+    case "heldly_meetup_brief":
+    case "brief":
+    case "brief_person":
       return "profile";
     case "heldly_create_invite":
     case "invite":
@@ -49,6 +58,10 @@ function refreshCall(view: ViewData): { tool: string; args: Record<string, unkno
       return { tool: "heldly_reconnection_suggestions", args: {} };
     case "friend":
       return view.id ? { tool: "heldly_view_friend", args: friendArg(view.kind, view.id) } : null;
+    case "brief":
+      return view.id ? { tool: "heldly_meetup_brief", args: friendArg(view.kind, view.id) } : null;
+    case "people_search":
+      return view.query ? { tool: "heldly_find_people", args: { query: view.query } } : null;
     default:
       return null;
   }
@@ -148,8 +161,9 @@ export default function App() {
     return undefined;
   }, [entry, setStack]);
 
-  const openView = useCallback(
-    async (tool: string, args: Record<string, unknown>): Promise<string | null> => {
+  /** Call a view-returning tool, then push its view or swap it in for the current one. */
+  const loadView = useCallback(
+    async (tool: string, args: Record<string, unknown>, replace: boolean): Promise<string | null> => {
       const b = bridgeRef.current;
       if (!b) return "Heldly isn't connected yet.";
       const gen = generation.current;
@@ -159,12 +173,15 @@ export default function App() {
       const parsed = parseView(res.data);
       if (!parsed) return "Heldly sent something this widget can't show yet.";
       setError(null);
-      setStack([...stackRef.current, entry(parsed)]);
+      const cur = stackRef.current;
+      setStack([...(replace ? cur.slice(0, -1) : cur), entry(parsed)]);
       window.scrollTo?.(0, 0);
       return null;
     },
     [entry, setStack],
   );
+  const openView = useCallback((tool: string, args: Record<string, unknown>) => loadView(tool, args, false), [loadView]);
+  const replaceView = useCallback((tool: string, args: Record<string, unknown>) => loadView(tool, args, true), [loadView]);
 
   /** Re-fetch the view at `key` (if it is refreshable) and swap it in. Keeps the stale view on failure. */
   const refresh = useCallback(
@@ -196,7 +213,10 @@ export default function App() {
   }, [refresh, setStack]);
 
   const canGoBack = stack.length > 1;
-  const nav: Nav = useMemo(() => ({ openView, back, canGoBack }), [openView, back, canGoBack]);
+  const nav: Nav = useMemo(
+    () => ({ openView, replaceView, back, canGoBack }),
+    [openView, replaceView, back, canGoBack],
+  );
   const onTabChange = useCallback((t: DashboardTab) => {
     dashboardTab.current = t;
   }, []);
@@ -243,7 +263,9 @@ function renderView(
 ) {
   switch (view.view) {
     case "memory_review":
-      return <MemoryReview key={key} data={view} bridge={bridge} />;
+      return <MemoryReview key={key} data={view} bridge={bridge} nav={nav} />;
+    case "memory_import":
+      return <MemoryImport key={key} data={view} bridge={bridge} nav={nav} />;
     case "dashboard":
       return <Dashboard key={key} data={view} bridge={bridge} nav={nav} initialTab={tab} onTabChange={onTabChange} />;
     case "invite":
@@ -256,6 +278,16 @@ function renderView(
       return <Friend key={key} data={view} bridge={bridge} nav={nav} />;
     case "welcome":
       return <Welcome key={key} data={view} bridge={bridge} nav={nav} />;
+    case "people_import":
+      return <PeopleImport key={key} data={view} bridge={bridge} nav={nav} />;
+    case "people_search":
+      return <PeopleSearch key={key} data={view} bridge={bridge} nav={nav} />;
+    case "group_plan":
+      return <GroupPlan key={key} data={view} bridge={bridge} nav={nav} />;
+    case "brief":
+      return <Brief key={key} data={view} bridge={bridge} nav={nav} />;
+    case "quiz":
+      return <Quiz key={key} data={view} bridge={bridge} nav={nav} />;
   }
 }
 
