@@ -1,6 +1,7 @@
 import ChatPreview from "@/components/ChatPreview";
 import HeroBackdrop from "@/components/HeroBackdrop";
 import HeroCollage, { type CollageProps } from "@/components/HeroCollage";
+import NextWord from "@/components/NextWord";
 import PageView from "@/components/PageView";
 import SiteHeader from "@/components/SiteHeader";
 import Waitlist from "@/components/Waitlist";
@@ -16,6 +17,10 @@ const COLLAGE: CollageProps | null = {
   right: { name: "Teodor Marin", context: "Just moved into Berlin B2B growth" },
   shared: "Berlin",
 };
+
+// "You already know your next …": the line under the headline shows these one at a time.
+// Each one is a claim; keep "What the copy may claim" in site/README.md in step.
+const NEXT = ["customer", "investor", "friend", "gym buddy", "travel buddy"];
 
 const PRINCIPLES = [
   {
@@ -61,9 +66,9 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           <SiteHeader />
           <div className="hero__content wrap">
             <h1 id="hero-title">Find the common ground.</h1>
+            <NextWord words={NEXT} />
             <p className="hero__sub">
-              Your next opportunity is someone you already know. Venn shows where you overlap, from what each of you
-              approves, right inside ChatGPT.
+              Venn shows where you overlap, from what each of you approves, right inside ChatGPT.
             </p>
             <Waitlist version={version} invite={invite} />
             {COLLAGE && <HeroCollage {...COLLAGE} />}

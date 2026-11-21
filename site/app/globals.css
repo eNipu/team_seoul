@@ -137,6 +137,50 @@ p {
   line-height: 1.4;
   text-wrap: balance;
 }
+/* The line under the headline. Its last word changes: the words share one grid cell, the
+   current one is shown, and the one before it leaves upward (NextWord.tsx). */
+.hero__next {
+  color: var(--text-2);
+  font-size: clamp(1.1875rem, 1rem + 0.9vw, 1.625rem);
+  font-weight: 500;
+  letter-spacing: var(--tracking-tight);
+  line-height: 1.25;
+}
+.hero__next-line,
+.hero__next-words {
+  display: grid;
+  justify-items: center;
+}
+.hero__next-words {
+  color: var(--text);
+  font-weight: 600;
+}
+.hero__next-word {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: translateY(8px);
+  white-space: nowrap;
+}
+.hero__next-word--on,
+.hero__next-word--out {
+  transition:
+    opacity 0.45s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.hero__next-word--on {
+  opacity: 1;
+  transform: none;
+}
+.hero__next-word--out {
+  transform: translateY(-8px);
+}
+/* A short screen has no room to spare under the waitlist: its tallest state, the confirmed
+   circle, has to end above the fold at 360 x 640. */
+@media (max-height: 700px) {
+  .hero__content {
+    padding-bottom: 28px;
+  }
+}
 @media (max-height: 620px) {
   .hero h1 {
     font-size: clamp(2.125rem, 1rem + 5vw, 3.5rem);

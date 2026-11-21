@@ -5,7 +5,7 @@ import "./venn-kit.css";
 import "./globals.css";
 
 const DESCRIPTION =
-  "Your next opportunity is someone you already know. Venn shows where you overlap, from what each of you approves, right inside ChatGPT.";
+  "You already know your next customer, investor, friend, gym buddy or travel buddy. Venn shows where you overlap, from what each of you approves, right inside ChatGPT.";
 
 export const metadata: Metadata = {
   title: "Venn: Find the common ground.",

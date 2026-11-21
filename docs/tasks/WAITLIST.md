@@ -53,7 +53,8 @@ The hero `h1` stays "Find the common ground." Everything follows the Copy rules 
 
 | Where | Text |
 | --- | --- |
-| Hero subhead | Your next opportunity is someone you already know. Venn shows where you overlap, from what each of you approves, right inside ChatGPT. |
+| Under the headline | You already know your next customer. (then investor, friend, gym buddy, travel buddy: T25) |
+| Hero subhead | Venn shows where you overlap, from what each of you approves, right inside ChatGPT. |
 | Form note, `pair` | You join with one person you know. We only email you about your invite. |
 | Form note, `open` | Founding Circle. We only email you about your invite. (unchanged) |
 | Pending, lead | Good things come in pairs. |
@@ -79,6 +80,7 @@ The `open` version keeps "You're #104 in the Founding Circle." and "Invite a con
 | Prototype | Why not | Instead |
 | --- | --- | --- |
 | Connect your AI with the AIs of your professional network | The AIs do not talk to each other. Venn shows two connected people what each approved | The hero subhead above |
+| Your next opportunity is someone you already know | Replaced by the team's own line | You already know your next customer. |
 | Private beta · invitation only | Anyone can join without a link | The form notes above |
 | Share private invitation, Gift another invitation | A link can be forwarded, and it is one link, not several | Share my invite link |
 | Your early access is secured | No access date exists to promise | Your places in the Founding Circle are confirmed. |

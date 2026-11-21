@@ -60,14 +60,15 @@ Read `WAITLIST.md` before any task in this group.
 | [T22](T22-waitlist-metrics.md) | `/metrics` for pairs and for the two versions | site | S | T19 | done |
 | [T23](T23-waitlist-pairs-into-venn.md) | Carry waitlist pairs into Venn | backend | M | T18 | needs decision |
 | [T24](T24-people-you-know-wording.md) | Say "people you know" where Venn describes itself | both | S | – | done |
+| [T25](T25-next-word.md) | The changing word under the headline | site | S | T21 | done |
 
 T04 and T12 can start right away, in parallel with the backend tasks, because the shapes they
 render are fixed in `CONTRACTS.md`.
 
 ## Order
 
-Group D is done except T23, which waits for an identity provider. The hero now says "Your next
-opportunity is someone you already know", so the shortest path to making that true is
+Group D is done except T23, which waits for an identity provider. The hero now says "You already
+know your next customer" and "investor", so the shortest path to making that true is
 T08, T09, T01, T02, T03, T10, T11, then T04 and T12. T05, T06 and T07 wait.
 
 ## Keeping this folder small
