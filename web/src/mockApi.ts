@@ -823,8 +823,10 @@ export function createMockApi(options: MockOptions): Api {
         return {
           connections,
           count: connections.length,
-          total: 412,
+          total: null,
           truncated: true,
+          stopped:
+            "LinkedIn signed this session out (it cleared li_at) after the first pages. What was read is below.",
           details_available: true,
           max_details: 25,
           max_import: 50,
@@ -848,6 +850,7 @@ export function createMockApi(options: MockOptions): Api {
           count: connections.length,
           total: connections.length,
           truncated: false,
+          stopped: null,
           details_available: true,
           max_details: 25,
           max_import: 50,
