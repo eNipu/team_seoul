@@ -52,7 +52,7 @@ def render_invite_page(code: str) -> str | None:
         "You're invited to connect on Venn",
         f"""{_ART}
 <h1>A friend wants to connect on Venn</h1>
-<p>Venn helps friends stay close, inside ChatGPT. Use this invite code:</p>
+<p>Venn finds the common ground with the people you already know, inside ChatGPT. Use this invite code:</p>
 <div class="code" aria-label="Invite code">{code}</div>
 <ol class="steps">
   <li>Open ChatGPT with the Venn app added.</li>

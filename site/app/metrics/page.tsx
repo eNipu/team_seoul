@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import SiteHeader from "@/components/SiteHeader";
-import { type BreakdownRow, type Metrics, getMetrics } from "@/lib/analytics";
+import { type BreakdownRow, type Metrics, type VersionRow, getMetrics } from "@/lib/analytics";
 import { hasDatabase } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -79,6 +79,58 @@ function Breakdown({
   );
 }
 
+const VERSION_LABELS: Record<string, { name: string; detail: string }> = {
+  pair: { name: "pair", detail: "A place is held until a +1 joins" },
+  open: { name: "open", detail: "Confirmed on joining" },
+};
+
+function Versions({ rows }: { rows: VersionRow[] }) {
+  return (
+    <section className="panel metrics__section">
+      <h2>By waitlist version</h2>
+      <div className="metrics__scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Version</th>
+              <th scope="col" className="num">
+                Visitors
+              </th>
+              <th scope="col" className="num">
+                Signups
+              </th>
+              <th scope="col" className="num">
+                Confirmed
+              </th>
+              <th scope="col" className="num">
+                Confirmed rate
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.version}>
+                <th scope="row">
+                  {VERSION_LABELS[row.version]?.name ?? row.version}
+                  <span className="metrics__detail">{VERSION_LABELS[row.version]?.detail}</span>
+                </th>
+                <td className="num">{count.format(row.visitors)}</td>
+                <td className="num">{count.format(row.signups)}</td>
+                <td className="num">{count.format(row.confirmed)}</td>
+                <td className="num">{rate(row.confirmed, row.visitors)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="muted small">
+        Visits and signups from before the two versions existed count as open. Someone who joins with an invite link
+        is confirmed in either version.
+      </p>
+    </section>
+  );
+}
+
 async function load(): Promise<{ metrics: Metrics | null; problem: string | null }> {
   if (!hasDatabase()) return { metrics: null, problem: "DATABASE_URL is not set, so nothing is being recorded." };
   try {
@@ -126,7 +178,24 @@ export default async function MetricsPage() {
                 value={rate(metrics.activatedVisitors, metrics.uniqueVisitors)}
                 hint={`${count.format(metrics.activatedVisitors)} of ${count.format(metrics.uniqueVisitors)} visitors joined the waitlist`}
               />
+              <Tile
+                label="Confirmed Signups"
+                value={count.format(metrics.confirmedSignups)}
+                hint={`${count.format(metrics.pendingSignups)} pending, waiting for their +1`}
+              />
+              <Tile
+                label="Pairs Formed"
+                value={count.format(metrics.pairs)}
+                hint="People whose link brought in at least one person"
+              />
+              <Tile
+                label="Confirmed Rate"
+                value={rate(metrics.confirmedSignups, metrics.uniqueVisitors)}
+                hint="Confirmed signups divided by visitors"
+              />
             </div>
+
+            <Versions rows={metrics.byVersion} />
 
             <Breakdown
               title="By UTM source"

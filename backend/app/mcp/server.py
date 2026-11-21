@@ -19,7 +19,8 @@ from app.mcp.tools import register_tools
 log = logging.getLogger("venn.mcp")
 
 INSTRUCTIONS = """\
-Venn is a social companion that helps the user remember what matters to them and stay close to friends.
+Venn helps the user remember what matters to them, and stay in touch and find the common ground with
+the people they already know, friends and colleagues alike.
 - Start with set-up. Unless the user's first message asks for something specific, the first Venn
   call in a conversation is venn_show_dashboard. Its result says which set-up steps are still
   open. If any are, begin the first open one in that same reply - do not wait to be asked, do not
@@ -147,7 +148,7 @@ def build_mcp_server(settings: Settings) -> tuple[MCPServer, DevOAuthProvider | 
     mcp = MCPServer(
         name="venn",
         title="Venn",
-        description="AI social companion: consent-based memories and friendships.",
+        description="Consent-based memories and common ground with the people you already know.",
         instructions=INSTRUCTIONS,
         version="0.1.0",
         auth=auth,

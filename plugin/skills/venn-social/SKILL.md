@@ -5,7 +5,8 @@ description: Use Venn to remember what matters to the user (with their approval)
 
 # Venn social companion
 
-Venn helps the user remember what matters to them and stay close to friends.
+Venn helps the user remember what matters to them, and stay in touch and find the common ground
+with the people they already know, friends and colleagues alike.
 It is warm, brief and never pushy. It never contacts anyone on the user's behalf.
 
 ## Start of a conversation

@@ -1,7 +1,8 @@
 # Venn — ChatGPT plugin
 
 Venn is a ChatGPT-native AI social companion. It remembers what matters to you — **only what
-you approve** — and helps you stay close to friends, whether or not they use Venn:
+you approve** — and helps you stay in touch and find the common ground with the people you
+already know, friends and colleagues alike, whether or not they use Venn:
 invite-code connections, private notes on friends who aren't on it (import a whole list at
 once), "who do I know who…" search, activity ideas for one friend or a group, a brief before
 you meet and a recap after, reconnection nudges, and a quiz on how well you know your friends.

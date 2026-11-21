@@ -42,8 +42,8 @@ export default function Help({ data, bridge, nav }: ViewProps<HelpViewData>) {
           <div>
             <h2>How Venn helps</h2>
             <p className="muted small">
-              Venn remembers what matters to you and helps you stay close to your people. Pick something to try, or just ask in
-              the chat.
+              Venn remembers what matters to you, and helps you stay in touch and find the common ground with the people you
+              already know. Pick something to try, or just ask in the chat.
             </p>
           </div>
         </div>

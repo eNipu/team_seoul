@@ -343,6 +343,31 @@ p {
 .waitlist__spot strong {
   font-variant-numeric: tabular-nums;
 }
+.waitlist__text {
+  max-width: 26rem;
+  margin-inline: auto;
+  color: var(--text-2);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  text-wrap: balance;
+}
+/* What someone who arrived with an invite link reads above the field. */
+.waitlist__invite {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+/* The circle after joining as a pair: ink for the people in it, a dashed ring for each
+   invite left. Not the hero's colors; those belong to the two circles. */
+.waitlist__circle {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+.waitlist__seat {
+  border: 1.5px dashed var(--border-strong);
+  background: transparent;
+}
 .waitlist__actions {
   display: flex;
   flex-wrap: wrap;

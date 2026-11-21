@@ -5,7 +5,7 @@ metrics page. A Next.js app (App Router) with its own small API and two tables i
 
 | Path | What it is |
 | --- | --- |
-| `app/page.tsx` | The landing page: hero with the waitlist, the "Inside ChatGPT" preview, principles |
+| `app/page.tsx` | The landing page: hero with the waitlist, the "Inside ChatGPT" preview, principles. Rendered per request, because it reads `?w=` and `?ref=` |
 | `app/metrics/page.tsx` | `/metrics`: unique visitors, total waitlist signups, activation rate, UTM and referral breakdown |
 | `app/api/waitlist/route.ts` | `POST` joins the waitlist, `GET ?code=` returns the current spot for an invite code |
 | `app/api/visit/route.ts` | `POST` records one page view |
@@ -18,6 +18,7 @@ metrics page. A Next.js app (App Router) with its own small API and two tables i
 | `components/Waitlist.tsx` | The email form and its confirmation state |
 | `components/ChatPreview.tsx` | The two-step preview: Memory Sync card, then Common Ground Match card |
 | `lib/db.ts`, `lib/waitlist.ts`, `lib/analytics.ts` | Postgres pool and schema, waitlist logic, events and metrics |
+| `lib/version.ts` | The two waitlist versions, `pair` and `open`, and which one is the default |
 | `lib/rate-limit.ts` | Per-address request limit for the API routes |
 | `public/fonts/` | Inter (SIL Open Font License, text beside it), used only where SF Pro is not available |
 | `check.mjs` | Browser checks |
@@ -40,7 +41,7 @@ The waitlist and `/metrics` need Postgres. For a local database:
 ```bash
 docker run -d --rm --name venn-site-pg -e POSTGRES_PASSWORD=venn -e POSTGRES_DB=venn -p 127.0.0.1:55432:5432 postgres:16-alpine
 export DATABASE_URL=postgresql://postgres:venn@127.0.0.1:55432/venn
-npm run build && node check.mjs     # now also signs up once and checks the confirmation
+npm run build && node check.mjs     # now also joins both versions and checks every waitlist state
 ```
 
 Without `DATABASE_URL` the page still renders, the form answers "The waitlist isn't open yet", page views are
@@ -51,7 +52,10 @@ silently drop signups.
 fails on: a missing or empty heading, sideways overflow, a hero that does not fit in the first screen, text below
 WCAG AA contrast, text under 12 px, a control under 44 px, a console error, a request to another origin, a
 cookie, a broken step in the preview, a hero scene that does not draw, a scene that loads when reduced motion
-is on, a `/metrics` that opens without the password, or a waitlist that never answers 429. It never submits the
+is on, a `/metrics` that opens without the password, or a waitlist that never answers 429. With `DATABASE_URL`
+it also walks the waitlist on the smallest phone: joining alone (held), arriving with that link (invited, then
+both confirmed), coming back as the first person, a link nobody owns, and the open version. Each state must
+read as written in `docs/tasks/WAITLIST.md` and end above the fold. It never submits the
 waitlist against `--url`, so checking production does not add a signup. To include `/metrics` in a `--url` run,
 pass the password: `METRICS_PASSWORD=... node check.mjs --url https://<host>/`.
 
@@ -62,30 +66,56 @@ pass the password: `METRICS_PASSWORD=... node check.mjs --url https://<host>/`.
 | `DATABASE_URL` | Postgres connection string. Required in production |
 | `METRICS_PASSWORD` | Password for `/metrics`. Required in production: without it `/metrics` answers 503 |
 | `ANALYTICS_SALT` | Optional secret mixed into visitor hashes. Falls back to `DATABASE_URL` |
+| `WAITLIST_VERSION` | `pair` (the default) or `open`: the waitlist a visitor gets without `?w=` in the URL |
 | `PORT` | Port for `npm run start` (Railway sets it) |
 
 `.env.example` lists them; copy it to `.env.local` for local work.
 
 ## Waitlist
 
-`POST /api/waitlist` with `{ email, utm_source?, utm_content?, ref? }` stores one row in `waitlist_signups`
-(`email`, `utm_source`, `utm_content`, `ref`, `ref_code`, `created_at`) and answers
-`{ position, refCode, referrals }`. The form reads `utm_source`, `utm_content` and `ref` from the page URL.
+The rules, the response shape and every sentence a visitor reads are written once, in
+`docs/tasks/WAITLIST.md`. In short, there is one list with two versions:
 
-- Joining twice with the same email is not an error and returns the same spot. The response does not say
-  whether the email was already there.
+- `pair`: a place is held (`pending`) until one person joins with your link, then both are confirmed.
+- `open`: confirmed on joining. Inviting is optional and moves you up the list.
+
+A page shows `WAITLIST_VERSION`, or the version in its URL: `/?w=pair` or `/?w=open`. Share one link of each
+to compare them; `/metrics` splits its numbers by version. Anyone can add `?w=open` to skip the +1. That is
+accepted: nobody is turned away, and a pending signup is stored like any other.
+
+`POST /api/waitlist` with `{ email, version?, utm_source?, utm_content?, ref? }` stores one row in
+`waitlist_signups` (`email`, `utm_source`, `utm_content`, `ref`, `ref_code`, `created_at`, `version`,
+`invited_by`, `confirmed_at`) and answers
+`{ position, refCode, referrals, status, version, circle, invitesLeft }`. The form sends the page's version and
+reads `utm_source`, `utm_content` and `ref` from the page URL.
+
+- Joining twice with the same email is not an error and returns the same spot, unchanged. The response does
+  not say whether the email was already there.
 - `ref_code` is the person's own invite code; their link is `/?ref=<code>`. `ref` is the code they arrived with.
-- The number shown is `100 +` the person's place. People are ordered by how many signups their link brought in,
-  then by who joined first. So a new signup is `100 + the total count`, and inviting really does move you up.
-- The browser remembers the spot (number and invite code, never the email) in `localStorage`, and refreshes it
-  from `GET /api/waitlist?code=` on the next visit.
+- Someone who arrives with a link that has room is attached to it (`invited_by`) and confirmed in either
+  version, and a pending owner of that link is confirmed too. A link has room for 4 people, or 3 if its owner
+  was invited, so a circle is at most 5. With a full or unknown link the person joins as if they had none;
+  `ref` is still stored. The owner's row is locked while this is decided, so two people cannot both take
+  the last place.
+- `confirmed_at` is empty while a place is held. Venn sends nothing when it is filled: the first person sees
+  it the next time they open the page.
+- `app/page.tsx` looks a `?ref=` up before the page is sent, so an invited person reads "Someone saved you a
+  place." on first paint and is never told who invited them. A full or unknown link says so instead.
+- In the open version the number shown is `100 +` the person's place. People are ordered by how many signups
+  their link brought in, then by who joined first. So a new signup is `100 + the total count`, and inviting
+  really does move you up. The pair version shows no number.
+- The browser remembers the spot (the invite code and the counts, never the email) in `localStorage`, and
+  refreshes it from `GET /api/waitlist?code=` on the next visit. A spot saved before the two versions existed
+  is still read.
+- A database from before the two versions is upgraded on first use (`lib/db.ts`): everyone already on the list
+  is `open` and confirmed, and attached to the link they came with while it has room.
 - Rate limit: 10 signup tries per address per 10 minutes, then `429` with `Retry-After`. Lookups are limited to
   30 a minute. The counts live in the server process (`lib/rate-limit.ts`), which fits the single Railway
   instance; with more than one instance, move them to Postgres. The address is read from `X-Real-IP`, then
   `X-Forwarded-For`. Checked on the deployed site: Railway's edge replaces both, so a client cannot pick its
   own address.
-- Not covered: emails are not confirmed, so someone with many addresses can still add fake signups and move up
-  the list. Confirming needs an email provider.
+- Not covered: emails are not confirmed, so someone with many addresses can still add fake signups, move up
+  the list, or be their own +1. Confirming needs an email provider.
 
 The schema is created on first use (`lib/db.ts`); there is no migration step. The tables are named so they can
 live in the same database as the MCP backend, which has its own `analytics_events`.
@@ -95,11 +125,18 @@ live in the same database as the MCP backend, which has its own `analytics_event
 First-party only: no third-party scripts, no cookies, nothing stored on the device for tracking.
 
 - `lib/analytics.ts` records two events in `site_events`: `page_view` (from `components/PageView.tsx`) and
-  `core_action_completed` (fired by the server when a new email joins the waitlist).
+  `core_action_completed` (fired by the server when a new email joins the waitlist). Both carry the waitlist
+  version the page showed.
 - A visitor is a hash of IP address and user agent with a salt that changes every day. The raw IP is not stored.
   The same person on two days counts as two visitors. Page views from bots and headless browsers are not
   counted; a signup always is.
 - Activation Rate is visitors with `core_action_completed` divided by all visitors.
+- Confirmed Signups counts rows with `confirmed_at`; the rest are pending. Pairs Formed counts people whose
+  link has at least one person attached. Confirmed Rate is confirmed signups divided by all visitors.
+- "By waitlist version" takes visitors from page views and signups from the list, each by version. The two
+  are counted differently (a daily hash against a row per email), so read the rate as a comparison between
+  the versions, not as an exact share. Visits and signups from before the versions existed count as `open`,
+  under the old page copy.
 - `/metrics` asks for a password (HTTP Basic auth, any user name, `METRICS_PASSWORD`). In production it stays
   closed with a 503 until the variable is set. `next dev` opens it without one.
 - It shows counts only: no emails. Invite codes appear in the referral table.
@@ -159,8 +196,12 @@ Keep the page true when the product changes.
 | It never contacts anyone for you | Works | `README.md`, `plugin/skills/venn-social/SKILL.md` |
 | Memory Sync card with these four signals, sensitive info off by default | Preview | The real card is the memory review card; `Looking for` and `Can help with` are T08 |
 | Common Ground Match card, "Draft warm intro" | In development | T10 to T12 |
-| "Your AI knows what you're building" | True by design | ChatGPT extracts; Venn only receives what a tool call passes and the user approves |
-| "We only email you about your invite" | A promise the team must keep | `waitlist_signups` holds the emails |
+| "Your next opportunity is someone you already know" | In development | Matching needs with offers is T08 to T12 |
+| "Venn shows where you overlap, from what each of you approves" | Works for shared interests | Activity ideas use what both people chose to share; ChatGPT extracts, the user approves |
+| "We only email you about your invite" | A promise the team must keep | `waitlist_signups` holds the emails. Nothing is sent today |
+| "A confirmed place for both of you", "Your places in the Founding Circle are confirmed" | A promise the team must keep | `confirmed_at`. Whoever opens Venn to the list must honour it |
+| "Someone saved you a place" | Works | Shown only when the link exists and has room (`inviteHasRoom`) |
+| "You join with one person you know" | True of the pair version | A place stays pending until a +1 joins; `?w=open` has no such rule |
 
 The people in the examples are made up, and the footer says so. There is no privacy page yet (T17), and the
 waitlist now collects email addresses.

@@ -4,6 +4,10 @@ import HeroCollage, { type CollageProps } from "@/components/HeroCollage";
 import PageView from "@/components/PageView";
 import SiteHeader from "@/components/SiteHeader";
 import Waitlist from "@/components/Waitlist";
+import { cleanRef } from "@/lib/analytics";
+import { hasDatabase } from "@/lib/db";
+import { cleanVersion, defaultVersion } from "@/lib/version";
+import { inviteHasRoom } from "@/lib/waitlist";
 
 // Optional hero visual. Add `image: "/people/you.jpg"` to either person to show a
 // portrait instead of initials, or set this to null to remove the collage.
@@ -28,7 +32,27 @@ const PRINCIPLES = [
   },
 ];
 
-export default function Home() {
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
+
+// Someone who arrives with `?ref=` is told whether that link still holds a place for them.
+// Looked up here rather than in the browser, so the form is right when it first paints.
+async function inviteState(ref: string | null): Promise<"open" | "closed" | null> {
+  if (!ref || !hasDatabase()) return null;
+  try {
+    return (await inviteHasRoom(ref)) ? "open" : "closed";
+  } catch (error) {
+    console.error("page: could not look up the invite link", error);
+    return null;
+  }
+}
+
+export default async function Home({ searchParams }: { searchParams: SearchParams }) {
+  const params = await searchParams;
+  const version = cleanVersion(first(params.w)) ?? defaultVersion();
+  const invite = await inviteState(cleanRef(first(params.ref)));
+
   return (
     <>
       <main>
@@ -38,10 +62,10 @@ export default function Home() {
           <div className="hero__content wrap">
             <h1 id="hero-title">Find the common ground.</h1>
             <p className="hero__sub">
-              Your AI knows what you&rsquo;re building. Venn quietly surfaces the exact overlap with the people you already
-              know&mdash;right inside ChatGPT.
+              Your next opportunity is someone you already know. Venn shows where you overlap, from what each of you
+              approves, right inside ChatGPT.
             </p>
-            <Waitlist />
+            <Waitlist version={version} invite={invite} />
             {COLLAGE && <HeroCollage {...COLLAGE} />}
           </div>
         </section>
@@ -85,7 +109,7 @@ export default function Home() {
         <span>© {new Date().getFullYear()} Venn</span>
         <span>The people in the examples are made up.</span>
       </footer>
-      <PageView />
+      <PageView version={version} />
     </>
   );
 }

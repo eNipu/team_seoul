@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "venn",
   "version": "0.1.0",
-  "description": "Venn finds what you and your friends have in common. It remembers what matters to you (only what you approve) and helps you stay close.",
+  "description": "Venn finds the common ground with the people you already know, friends and colleagues alike. It remembers what matters to you (only what you approve) and helps you stay in touch.",
   "author": {
     "name": "Venn",
     "url": "https://venn.example.com"
@@ -14,8 +14,8 @@
     "com.openai": {
       "interface": {
         "displayName": "Venn",
-        "shortDescription": "Find your common ground and stay close to friends.",
-        "longDescription": "Venn keeps a private, user-approved memory of what matters to you and the people you care about. Set up in three short steps: tell Venn about you (or bring over what ChatGPT already remembers), add your people, and connect with friends through an invite code, link or QR. Then get ideas for time together, a brief before you meet, nudges when it has been a while, and a quiz on how well you know your friends. Nothing is saved without your approval, and Venn never contacts anyone on your behalf.",
+        "shortDescription": "Find the common ground with the people you already know.",
+        "longDescription": "Venn keeps a private, user-approved memory of what matters to you and the people you already know, friends and colleagues alike. Set up in three short steps: tell Venn about you (or bring over what ChatGPT already remembers), add your people, and connect with friends through an invite code, link or QR. Then get ideas for time together, a brief before you meet, nudges when it has been a while, and a quiz on how well you know your friends. Nothing is saved without your approval, and Venn never contacts anyone on your behalf.",
         "developerName": "Venn",
         "category": "Lifestyle",
         "capabilities": ["Interactive", "Write"],

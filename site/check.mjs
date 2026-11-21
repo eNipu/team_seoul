@@ -8,7 +8,7 @@
 // control sizes, console errors, third-party requests, cookies, the hero scene (it must
 // draw, and must stay on the still CSS version with reduced motion), the two-step
 // "Inside ChatGPT" preview, the /metrics password, /metrics itself, and the waitlist
-// with its rate limit.
+// with its rate limit: both versions, what an invited person sees, and a full link.
 //
 // The waitlist is only submitted against a local server started with DATABASE_URL.
 // With --url it is left alone, so checking production never adds a signup.
@@ -334,6 +334,27 @@ function sceneState() {
   });
 }
 
+// Runs in the page. What the waitlist shows right now, as a form or after joining.
+function waitlistState() {
+  const root = document.querySelector(".waitlist");
+  const joined = root.querySelector(".waitlist__joined");
+  const text = (selector) => root.querySelector(selector)?.textContent.trim() ?? "";
+  return {
+    joined: !!joined,
+    lead: text(".waitlist__spot"),
+    text: text(".waitlist__text"),
+    note: text(".waitlist__note"),
+    invite: text(".waitlist__invite"),
+    submit: text(".waitlist__submit"),
+    buttons: [...(joined?.querySelectorAll(".btn") ?? [])].map((b) => b.textContent.trim()),
+    seats: [...root.querySelectorAll(".waitlist__circle .avatar")]
+      .map((seat) => (seat.classList.contains("waitlist__seat") ? "open" : "taken"))
+      .join(","),
+    jump: joined?.querySelector('a[href="#inside"]') ? "#inside" : "",
+    saved: localStorage.getItem("venn.waitlist"),
+  };
+}
+
 // Runs in the page. Types into the waitlist form the way a person would and submits it.
 function submitWaitlist(email) {
   const input = document.querySelector("#waitlist-email");
@@ -348,14 +369,7 @@ function submitWaitlist(email) {
         const joined = document.querySelector(".waitlist__joined");
         const error = document.querySelector(".waitlist__note--error");
         if (joined || error || performance.now() - started > 8000) {
-          done({
-            joined: !!joined,
-            spot: joined?.querySelector(".waitlist__spot")?.textContent ?? "",
-            buttons: [...(joined?.querySelectorAll(".btn") ?? [])].map((b) => b.textContent.trim()),
-            jump: joined?.querySelector('a[href="#inside"]') ? "#inside" : "",
-            error: error?.textContent ?? "",
-            saved: localStorage.getItem("venn.waitlist"),
-          });
+          done({ joined: !!joined, error: error?.textContent ?? "" });
         } else setTimeout(poll, 50);
       };
       poll();
@@ -486,35 +500,116 @@ async function main() {
       await shot(label, false);
     }
 
-    // The waitlist, on a phone.
-    label = "phone/waitlist";
-    await open("/?utm_source=check&utm_content=browser", VIEWPORTS[1]);
+    // The waitlist. The pair version runs on the smallest phone, where its states are
+    // tallest and must still end above the fold; the open version on a phone, as before.
+    const small = VIEWPORTS[0];
+    const pairUrl = "/?w=pair&utm_source=check&utm_content=browser";
+    const expect = (ok, message) => ok || failures.push(`${label}: ${message}`);
+    // Checks the state now on screen: the wording, then the fold and the page audit.
+    const look = async (name, wanted) => {
+      const state = await run(waitlistState);
+      for (const [key, value] of Object.entries(wanted)) {
+        const got = Array.isArray(state[key]) ? state[key].join("|") : state[key];
+        const ok = value instanceof RegExp ? value.test(got) : got === value;
+        expect(ok, `${name}: ${key} was "${got}"`);
+      }
+      for (const problem of await run(auditFold)) failures.push(`${label}: ${name}: ${problem}`);
+      for (const problem of await run(audit)) failures.push(`${label}: ${name}: ${problem}`);
+      if (shotsDir) await sleep(700); // let a new state finish fading in
+      await shot(`${label}-${name}`, false);
+      return state;
+    };
+
+    label = "phone-small/waitlist";
+    await open(pairUrl, small);
+    await look("pair-form", {
+      submit: "Join the Waitlist",
+      note: "You join with one person you know. We only email you about your invite.",
+      invite: "",
+    });
     const invalid = await run(submitWaitlist, "not-an-email");
     if (invalid.joined || !invalid.error.includes("valid email")) {
       failures.push(`${label}: an invalid email should show an error, got "${invalid.error}"`);
     }
+    await open("/?w=open", small);
+    await look("open-form", {
+      submit: "Join the Waitlist",
+      note: "Founding Circle. We only email you about your invite.",
+    });
+
     if (remoteUrl) {
       notes.push("waitlist signup skipped: not submitted against --url");
     } else if (!process.env.DATABASE_URL) {
       notes.push("waitlist signup skipped: start the check with DATABASE_URL to exercise it");
     } else {
-      await open("/?utm_source=check&utm_content=browser", VIEWPORTS[1]); // a fresh form, without the error
-      const result = await run(submitWaitlist, `check+${Date.now()}@example.com`);
-      if (!result.joined) {
-        failures.push(`${label}: signup did not confirm: "${result.error}"`);
-      } else {
-        if (!/#\d{3,}/.test(result.spot)) failures.push(`${label}: no waitlist number in "${result.spot}"`);
-        if (result.buttons.join("|") !== "Invite a connection to move up|See it inside ChatGPT") {
-          failures.push(`${label}: confirmation buttons were "${result.buttons.join("|")}"`);
-        }
-        if (result.jump !== "#inside") failures.push(`${label}: no link to the preview`);
-        if (!result.saved || result.saved.includes("@")) failures.push(`${label}: the spot should be remembered without the email`);
-        for (const problem of await run(auditFold)) failures.push(`${label}: ${problem}`);
-        for (const problem of await run(audit)) failures.push(`${label}: ${problem}`);
-        if (shotsDir) await sleep(700); // let the confirmation finish fading in
-        await shot(`${label}-joined`, false);
-        console.log(`checked ${label} (${result.spot.trim()})`);
+      const stamp = Date.now();
+      const actions = "Share my invite link|See it inside ChatGPT";
+
+      // Pair: joining alone holds the place.
+      await open(pairUrl, small);
+      const first = await run(submitWaitlist, `check+${stamp}@example.com`);
+      expect(first.joined, `pair signup did not answer: "${first.error}"`);
+      const pending = await look("pending", {
+        lead: "Good things come in pairs.",
+        text: "Your place is held. It is confirmed when one person you know joins with your link.",
+        buttons: actions,
+        note: "One link. A confirmed place for both of you.",
+        seats: "",
+        jump: "#inside",
+      });
+      expect(pending.saved && !pending.saved.includes("@"), "the spot should be remembered without the email");
+      const code = pending.saved ? JSON.parse(pending.saved).refCode : "";
+      await run(`() => localStorage.clear()`);
+
+      // The invited person: told a place is saved, not by whom, and joining confirms both.
+      await open(`/?w=pair&ref=${code}`, small);
+      await look("invitee", {
+        invite: /^Someone saved you a place\.\s*Joining confirms a place for both of you\.$/,
+        submit: "Accept the invite",
+        note: "No +1 needed. We only email you about your invite.",
+      });
+      const second = await run(submitWaitlist, `check+${stamp}b@example.com`);
+      expect(second.joined, `invited signup did not answer: "${second.error}"`);
+      await look("confirmed", {
+        lead: "You\u2019re both in.",
+        text: "Your places in the Founding Circle are confirmed.",
+        buttons: actions,
+        note: "2 in your circle. 3 invites left.",
+        seats: "taken,taken,open,open,open",
+      });
+      await run(`() => localStorage.clear()`);
+
+      // The first person comes back. Their device remembers a spot in the shape from before
+      // pairs, which must still be read and then refreshed to "confirmed".
+      await run(`(code) => localStorage.setItem("venn.waitlist", JSON.stringify({ position: 101, refCode: code, referrals: 0 }))`, code);
+      await open(pairUrl, small);
+      for (let waited = 0; waited < 5000 && (await run(waitlistState)).lead !== "You\u2019re both in."; waited += 100) {
+        await sleep(100);
       }
+      await look("returning", { lead: "You\u2019re both in.", note: "2 in your circle. 3 invites left." });
+      await run(`() => localStorage.clear()`);
+
+      // A link nobody owns: the normal form, and a line that says what to do.
+      await open("/?w=pair&ref=zzzzzzzz", small);
+      await look("closed-link", {
+        invite: "That invite link is no longer open. You can still join.",
+        submit: "Join the Waitlist",
+      });
+      console.log(`checked ${label} (pending, invited, confirmed, returning, closed link)`);
+
+      // Open: a number at once, and inviting moves you up.
+      label = "phone/waitlist";
+      await open("/?w=open&utm_source=check&utm_content=browser", VIEWPORTS[1]);
+      const third = await run(submitWaitlist, `check+${stamp}c@example.com`);
+      expect(third.joined, `open signup did not answer: "${third.error}"`);
+      const joined = await look("joined", {
+        lead: /#\d{3,}/,
+        buttons: "Invite a connection to move up|See it inside ChatGPT",
+        note: "Everyone who joins with your link moves you up the list.",
+        jump: "#inside",
+      });
+      expect(joined.saved && !joined.saved.includes("@"), "the spot should be remembered without the email");
+      console.log(`checked ${label} (${joined.lead})`);
       await run(`() => localStorage.clear()`);
     }
 
@@ -560,7 +655,18 @@ async function main() {
       if (text.includes("DATABASE_URL is not set")) {
         notes.push("metrics tiles skipped: the site has no DATABASE_URL");
       } else {
-        for (const wanted of ["Unique Visitors", "Total Waitlist Signups", "Activation Rate", "By UTM source", "By referral"]) {
+        const wantedLabels = [
+          "Unique Visitors",
+          "Total Waitlist Signups",
+          "Activation Rate",
+          "Confirmed Signups",
+          "Pairs Formed",
+          "Confirmed Rate",
+          "By waitlist version",
+          "By UTM source",
+          "By referral",
+        ];
+        for (const wanted of wantedLabels) {
           if (!text.includes(wanted)) failures.push(`${label}: "${wanted}" is missing`);
         }
       }
