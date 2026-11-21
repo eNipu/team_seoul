@@ -8,7 +8,8 @@
 | Reading/modifying another user's rows | Every service query filters by the caller's user id; foreign ids return `NOT_FOUND` (no existence oracle). Tests in `backend/tests/security/`. |
 | The model "approving" memories on its own | Saving requires a server-issued, owner-bound, expiring, single-use `proposal_id`; only indexes from that proposal are accepted. Text like `approved: true` is meaningless to the server. |
 | Prompt injection via stored memories / friends' names | Stored text is returned as data in `structuredContent`; tool descriptions and the skill tell the model it is user data. The extraction prompt wraps user text in `<user_text>` and treats it as data. Tested: injected instructions are stored verbatim and do nothing. |
-| Leaking private memories to friends | Only `SHARED_WITH_CONNECTIONS`/`PUBLIC_PROFILE` memories of a *connected* friend are used for suggestions; `PRIVATE` is never read on another user's behalf. Default visibility is `PRIVATE`. |
+| Leaking private memories to friends | Only `SHARED_WITH_CONNECTIONS`/`PUBLIC_PROFILE` memories of a *connected* friend are used for suggestions and the friend view; a friend's bio is shown only if their profile visibility is `CONNECTIONS`/`PUBLIC`; `PRIVATE` is never read on another user's behalf. Default visibility is `PRIVATE`. |
+| Notes about third parties (people not on Heldly) | Created only when the user asks; owner-only on every query (foreign ids → `NOT_FOUND`); never shown to connections, never matched to Heldly accounts, never used to contact anyone; same sensitive-data filter as memories; deleted individually or with the account. |
 | Storing secrets | Sensitive-data filter (passwords, API keys, card/SSN-like numbers) on proposals and on user edits → `PRIVACY_VIOLATION`. |
 | Invite brute force / replay | 8-char codes from a 31-symbol alphabet (~8.5×10¹¹), 72h expiry, max uses, revocation, per-user daily rate limits; unknown/revoked/expired/used/blocked codes return an identical error. |
 | Spam connection requests | Mutual consent required; one pending request per pair; 20 requests/day; blocks in both directions; reporting. |
@@ -34,12 +35,18 @@
 - Transport level: the SDK rejects requests without a valid token (401 with
   `WWW-Authenticate: Bearer … resource_metadata=…`) or without the required scopes (403).
 - Tool level: each tool re-checks the scopes it needs.
-- Data level: ownership checks in services (memories, proposals, invites, requests, connections).
+- Data level: ownership checks in services (memories, proposals, invites, requests, connections,
+  people notes).
 
 ## Privacy
 
 - Memories are created only from explicit user approval; users can edit, change visibility,
   delete individual memories, or delete their whole account (cascading delete).
+- People notes describe someone who has not agreed to anything, so they are kept deliberately
+  small (name, how you know them, free-text notes, interests, hangout dates) and strictly
+  private to their author. Unlike memories they are saved without a review card, because the
+  user asks for them explicitly; the skill tells the model to store only what the user said and
+  no contact, health or financial details.
 - Analytics events use an allow-list of event names and metadata keys (`count`, `source`,
   `category`) and never contain memory text, names or messages.
 - When `OPENAI_API_KEY` is set, the user's text passed to `heldly_propose_memories` is sent to

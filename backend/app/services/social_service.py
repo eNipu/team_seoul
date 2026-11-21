@@ -1,10 +1,12 @@
-"""Invites, mutual connections, blocking/reporting, and relationship maintenance.
+"""Invites, mutual connections, and blocking/reporting.
+
+Relationship maintenance (friend view, activity ideas, reconnection) lives in
+`relationship_service`.
 
 Rules:
 - Connections are mutual: a request (created by redeeming an invite code) must be accepted by
   the invite creator.
-- Heldly never contacts anyone automatically; suggestions are only shown to the requesting user.
-- Only non-PRIVATE memories of a connected friend are ever used for suggestions.
+- Heldly never contacts anyone automatically.
 - Blocks are enforced in both directions.
 """
 
@@ -25,26 +27,20 @@ from app.models import (
     Connection,
     ConnectionRequest,
     Invite,
-    Memory,
     RelationshipEvent,
     User,
 )
 from app.models._base import as_aware, utcnow
 from app.schemas.social import (
-    ActivitySuggestion,
     ConnectionListOut,
     ConnectionOut,
     InviteOut,
-    LogInteractionOut,
     PendingRequestListOut,
     PendingRequestOut,
-    ReconnectionCandidate,
-    ReconnectionOut,
     RedeemInviteOut,
     RespondConnectionOut,
-    SuggestActivityOut,
 )
-from app.services import analytics, memory_service
+from app.services import analytics
 from app.services.errors import InvalidRequest, NotFound, RateLimited
 from app.services.user_service import display_name
 
@@ -89,7 +85,7 @@ def get_connection_between(db: Session, a: uuid.UUID, b: uuid.UUID) -> Connectio
     return db.scalar(select(Connection).where(Connection.user_a_id == ua, Connection.user_b_id == ub))
 
 
-def _own_connection(db: Session, user: User, connection_id: str) -> tuple[Connection, uuid.UUID]:
+def own_connection(db: Session, user: User, connection_id: str) -> tuple[Connection, uuid.UUID]:
     cid = _parse_uuid(connection_id, "connection")
     conn = db.scalar(
         select(Connection).where(
@@ -315,7 +311,7 @@ def respond_to_request(db: Session, user: User, request_id: str, accept: bool) -
     return RespondConnectionOut(request_id=str(req.id), status="ACCEPTED", connection_id=str(conn.id))
 
 
-def _last_interaction(db: Session, connection_id: uuid.UUID):
+def last_interaction(db: Session, connection_id: uuid.UUID):
     return as_aware(
         db.scalar(
             select(func.max(RelationshipEvent.created_at)).where(
@@ -343,14 +339,14 @@ def list_connections(db: Session, user: User) -> ConnectionListOut:
                 user_id=str(friend_id),
                 display_name=display_name(db.get(User, friend_id)),
                 since=as_aware(c.created_at),
-                last_interaction_at=_last_interaction(db, c.id),
+                last_interaction_at=last_interaction(db, c.id),
             )
         )
     return ConnectionListOut(connections=out)
 
 
 def remove_connection(db: Session, user: User, connection_id: str) -> None:
-    conn, _ = _own_connection(db, user, connection_id)
+    conn, _ = own_connection(db, user, connection_id)
     db.delete(conn)
     db.flush()
 
@@ -358,7 +354,7 @@ def remove_connection(db: Session, user: User, connection_id: str) -> None:
 def block_user(db: Session, user: User, connection_id: str | None = None, request_id: str | None = None) -> str:
     """Block a connected friend or the sender of a pending request. Removes the connection."""
     if connection_id:
-        conn, target = _own_connection(db, user, connection_id)
+        conn, target = own_connection(db, user, connection_id)
         db.delete(conn)
     elif request_id:
         rid = _parse_uuid(request_id, "request")
@@ -386,7 +382,7 @@ def report_user(
     if len(reason) < 3:
         raise InvalidRequest("Please describe the problem.")
     if connection_id:
-        _, target = _own_connection(db, user, connection_id)
+        _, target = own_connection(db, user, connection_id)
     elif request_id:
         rid = _parse_uuid(request_id, "request")
         req = db.scalar(
@@ -399,155 +395,3 @@ def report_user(
         raise InvalidRequest("Provide connection_id or request_id")
     db.add(AbuseReport(reporter_user_id=user.id, reported_user_id=target, reason=reason[:1000]))
     db.flush()
-
-
-# ---------------------------------------------------------------------------
-# Relationship maintenance
-# ---------------------------------------------------------------------------
-
-_ACTIVITY_IDEAS: dict[str, tuple[str, str]] = {
-    "hik": ("Weekend hike", "Pick a trail you've both wanted to try and pack snacks."),
-    "coffee": ("Coffee catch-up", "Try a new café and swap recent highlights."),
-    "food": ("Cook-off night", "Each make one dish and rate them together."),
-    "cook": ("Cook-off night", "Each make one dish and rate them together."),
-    "movie": ("Movie night", "Take turns picking a film and talk about it after."),
-    "film": ("Movie night", "Take turns picking a film and talk about it after."),
-    "music": ("Live music", "Find a small local show or share a playlist of new finds."),
-    "game": ("Game night", "Board games or a co-op video game session."),
-    "book": ("Two-person book club", "Read the same short book and meet to discuss."),
-    "read": ("Two-person book club", "Read the same short book and meet to discuss."),
-    "run": ("Run together", "A short easy run followed by breakfast."),
-    "climb": ("Climbing session", "Try a bouldering gym together."),
-    "art": ("Museum or gallery visit", "Pick an exhibit and grab a drink afterwards."),
-    "travel": ("Plan a day trip", "Choose a nearby town neither of you has explored."),
-    "photo": ("Photo walk", "Walk a neighborhood and each shoot ten photos."),
-    "yoga": ("Yoga class", "Drop into a beginner-friendly class together."),
-}
-_DEFAULT_IDEAS = [
-    ("Quick call", "A 15-minute call to catch up on what's new."),
-    ("Walk and talk", "A relaxed walk somewhere green."),
-]
-
-
-def _interest_terms(memories: list[Memory]) -> dict[str, str]:
-    """term -> human label, from INTEREST/PREFERENCE/EXPERIENCE memories."""
-    terms: dict[str, str] = {}
-    for m in memories:
-        if m.category not in ("INTEREST", "PREFERENCE", "EXPERIENCE"):
-            continue
-        for tag in m.tags or []:
-            terms.setdefault(tag.lower(), tag)
-        for word in m.title.lower().replace("enjoys", "").split():
-            w = word.strip(".,!?'\"")
-            if len(w) > 3:
-                terms.setdefault(w, w)
-    return terms
-
-
-def suggest_activity(db: Session, user: User, connection_id: str) -> SuggestActivityOut:
-    conn, friend_id = _own_connection(db, user, connection_id)
-    if is_blocked(db, user.id, friend_id):
-        raise NotFound("connection not found")
-    friend = db.get(User, friend_id)
-    mine = list(db.scalars(select(Memory).where(Memory.user_id == user.id)).all())
-    # Only memories the friend chose to share — never their PRIVATE ones.
-    theirs = memory_service.visible_memories_of(db, friend_id, connected=True)
-    my_terms, their_terms = _interest_terms(mine), _interest_terms(theirs)
-    shared = sorted(set(my_terms) & set(their_terms))
-
-    score = 0.2
-    explanation = ["You're connected on Heldly (+0.2)."]
-    if shared:
-        bonus = min(0.6, 0.15 * len(shared))
-        score += bonus
-        explanation.append(f"{len(shared)} shared interest term(s) (+{bonus:.2f}).")
-    last = _last_interaction(db, conn.id)
-    if last is None or (utcnow() - last).days > 21:
-        score += 0.2
-        explanation.append("It's been a while since you last hung out (+0.2).")
-
-    suggestions: list[ActivitySuggestion] = []
-    used: set[str] = set()
-    for term in shared:
-        for key, (title, desc) in _ACTIVITY_IDEAS.items():
-            if key in term and title not in used:
-                used.add(title)
-                suggestions.append(
-                    ActivitySuggestion(
-                        title=title,
-                        description=desc,
-                        grounded_in=[f"shared interest: {their_terms[term]}"],
-                        suggested_action="Propose a time yourself — Heldly won't contact them for you.",
-                    )
-                )
-    for title, desc in _DEFAULT_IDEAS:
-        if len(suggestions) >= 3:
-            break
-        if title not in used:
-            suggestions.append(
-                ActivitySuggestion(
-                    title=title,
-                    description=desc,
-                    grounded_in=["general relationship maintenance"],
-                    suggested_action="Send a quick message to check in.",
-                )
-            )
-    analytics.track(db, "activity_suggested", user.id)
-    return SuggestActivityOut(
-        connection_id=str(conn.id),
-        friend_display_name=display_name(friend),
-        shared_interests=[their_terms[t] for t in shared][:10],
-        match_score=round(min(score, 1.0), 2),
-        score_explanation=explanation,
-        suggestions=suggestions[:3],
-    )
-
-
-def log_interaction(db: Session, user: User, connection_id: str, activity: str | None = None) -> LogInteractionOut:
-    conn, _ = _own_connection(db, user, connection_id)
-    now = utcnow()
-    db.add(
-        RelationshipEvent(
-            connection_id=conn.id,
-            event_type="INTERACTION",
-            event_data={"by": str(user.id), "activity": (activity or "").strip()[:120] or None},
-            created_at=now,
-        )
-    )
-    db.flush()
-    return LogInteractionOut(connection_id=str(conn.id), recorded=True, last_interaction_at=now)
-
-
-def reconnection_suggestions(db: Session, user: User, min_days: int = 21, limit: int = 5) -> ReconnectionOut:
-    now = utcnow()
-    candidates: list[ReconnectionCandidate] = []
-    for c in list_connections(db, user).connections:
-        last = c.last_interaction_at or c.since
-        days = (now - last).days
-        if days < min_days:
-            continue
-        last_activity = None
-        ev = db.scalar(
-            select(RelationshipEvent)
-            .where(
-                RelationshipEvent.connection_id == uuid.UUID(c.connection_id),
-                RelationshipEvent.event_type == "INTERACTION",
-            )
-            .order_by(RelationshipEvent.created_at.desc())
-        )
-        if ev is not None:
-            last_activity = (ev.event_data or {}).get("activity")
-        candidates.append(
-            ReconnectionCandidate(
-                connection_id=c.connection_id,
-                display_name=c.display_name,
-                days_since_last_interaction=days,
-                last_activity=last_activity,
-                reason=f"No logged hangout in {days} days.",
-                suggested_activity=f"Repeat '{last_activity}'" if last_activity else "A quick call or coffee",
-            )
-        )
-    candidates.sort(key=lambda x: -x.days_since_last_interaction)
-    if candidates:
-        analytics.track(db, "reconnection_suggested", user.id, count=len(candidates[:limit]))
-    return ReconnectionOut(candidates=candidates[: min(max(limit, 1), 20)])

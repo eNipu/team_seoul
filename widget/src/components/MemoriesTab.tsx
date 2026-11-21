@@ -1,0 +1,283 @@
+import { useId, useState, type FormEvent } from "react";
+import type { HostBridge } from "../mcp/client";
+import {
+  CATEGORY_GROUP_LABELS,
+  CATEGORY_ICONS,
+  CATEGORY_LABELS,
+  LIMITS,
+  MEMORY_CATEGORIES,
+  VISIBILITIES,
+  VISIBILITY_LABELS,
+  VISIBILITY_SHORT,
+  formatDate,
+  hasId,
+  parseDeleteMemory,
+  parseMemory,
+  plural,
+  type Memory,
+  type Visibility,
+} from "../types";
+import { EmptyNote, type Action } from "./common";
+
+interface Props {
+  memories: Memory[];
+  bridge: HostBridge;
+  action: Action;
+  onChange: (next: Memory[]) => void;
+}
+
+function matches(m: Memory, q: string): boolean {
+  const hay = [m.title, m.description, ...m.tags, CATEGORY_LABELS[m.category], CATEGORY_GROUP_LABELS[m.category]]
+    .join("\n")
+    .toLowerCase();
+  return q.split(/\s+/).every((word) => hay.includes(word));
+}
+
+export default function MemoriesTab({ memories, bridge, action, onChange }: Props) {
+  const id = useId();
+  const [query, setQuery] = useState("");
+  const [editing, setEditing] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
+  const q = query.trim().toLowerCase();
+  const visible = q ? memories.filter((m) => matches(m, q)) : memories;
+  const groups = MEMORY_CATEGORIES.map((c) => ({ category: c, items: visible.filter((m) => m.category === c) })).filter(
+    (g) => g.items.length > 0,
+  );
+  const busy = action.busy !== null;
+
+  function deleteMemory(memoryId: string) {
+    void action.run(`delete-${memoryId}`, async () => {
+      const res = await bridge.callTool("heldly_delete_memory", { memory_id: memoryId });
+      if (!res.ok) return res.errorText;
+      const removedId = parseDeleteMemory(res.data).memory_id || memoryId;
+      onChange(memories.filter((m) => m.memory_id !== removedId));
+      setConfirmDelete(null);
+      return null;
+    });
+  }
+
+  function saveMemory(m: Memory, next: { title: string; description: string; visibility: Visibility }) {
+    const patch: Record<string, unknown> = {};
+    if (next.title !== m.title) patch.title = next.title;
+    if (next.description !== m.description) patch.description = next.description;
+    if (next.visibility !== m.visibility) patch.visibility = next.visibility;
+    if (Object.keys(patch).length === 0) {
+      setEditing(null);
+      return;
+    }
+    void action.run(`edit-${m.memory_id}`, async () => {
+      const res = await bridge.callTool("heldly_update_memory", { memory_id: m.memory_id, ...patch });
+      if (!res.ok) return res.errorText;
+      const updated = hasId(res.data, "memory_id") ? { ...parseMemory(res.data), memory_id: m.memory_id } : { ...m, ...next };
+      onChange(memories.map((x) => (x.memory_id === m.memory_id ? updated : x)));
+      setEditing(null);
+      return null;
+    });
+  }
+
+  if (memories.length === 0) {
+    return (
+      <EmptyNote icon="🫙" title="No memories yet">
+        Tell Heldly something about yourself in the chat. Nothing is saved until you approve it.
+      </EmptyNote>
+    );
+  }
+
+  return (
+    <>
+      <div className="search">
+        <label className="sr-only" htmlFor={`${id}-search`}>
+          Search memories
+        </label>
+        <span className="search__icon" aria-hidden="true">
+          <svg viewBox="0 0 20 20" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <circle cx="9" cy="9" r="6" />
+            <path d="m14 14 4 4" />
+          </svg>
+        </span>
+        <input
+          id={`${id}-search`}
+          type="search"
+          value={query}
+          placeholder="Search memories"
+          autoComplete="off"
+          onChange={(e) => setQuery(e.target.value)}
+        />
+      </div>
+      {q && (
+        <p className="muted small" role="status">
+          {plural(visible.length, "match", "matches")} of {memories.length}
+        </p>
+      )}
+
+      {groups.length === 0 ? (
+        <EmptyNote icon="🔎" title="No matches">
+          Nothing matches “{query.trim()}”.{" "}
+          <button type="button" className="link" onClick={() => setQuery("")}>
+            Clear search
+          </button>
+        </EmptyNote>
+      ) : (
+        groups.map((g) => (
+          <section key={g.category} className="group" aria-label={CATEGORY_GROUP_LABELS[g.category]}>
+            <h3 className="group__title">
+              <span className={`cat-icon cat--${g.category.toLowerCase()}`} aria-hidden="true">
+                {CATEGORY_ICONS[g.category]}
+              </span>
+              <span>{CATEGORY_GROUP_LABELS[g.category]}</span>
+              <span className="count">{g.items.length}</span>
+            </h3>
+            <ul className="list list--tight">
+              {g.items.map((m) => (
+                <li key={m.memory_id} className={`card card--cat cat--${m.category.toLowerCase()}`}>
+                  {editing === m.memory_id ? (
+                    <MemoryForm
+                      memory={m}
+                      busy={action.busy === `edit-${m.memory_id}`}
+                      onSave={(next) => saveMemory(m, next)}
+                      onCancel={() => setEditing(null)}
+                    />
+                  ) : (
+                    <>
+                      <div className="card__head">
+                        <strong className="card__title">{m.title}</strong>
+                        <span className={`badge badge--vis-${m.visibility.toLowerCase()}`} title={VISIBILITY_LABELS[m.visibility]}>
+                          {VISIBILITY_SHORT[m.visibility]}
+                        </span>
+                      </div>
+                      {m.description && <p className="muted small">{m.description}</p>}
+                      {m.tags.length > 0 && (
+                        <div className="chips">
+                          {m.tags.map((t, i) => (
+                            <span key={`${t}-${i}`} className="chip chip--small">
+                              #{t}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {confirmDelete === m.memory_id ? (
+                        <div className="confirm" role="group" aria-label="Confirm delete">
+                          <span className="small">Delete this memory?</span>
+                          <button
+                            type="button"
+                            className="btn btn--danger btn--small"
+                            disabled={busy}
+                            onClick={() => deleteMemory(m.memory_id)}
+                          >
+                            {action.busy === `delete-${m.memory_id}` ? "Deleting…" : "Delete"}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn--ghost btn--small"
+                            disabled={busy}
+                            onClick={() => setConfirmDelete(null)}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="card__foot">
+                          <span className="muted small">{formatDate(m.created_at)}</span>
+                          <div className="card__foot-actions">
+                            <button
+                              type="button"
+                              className="btn btn--ghost btn--small"
+                              disabled={busy}
+                              aria-label={`Edit ${m.title}`}
+                              onClick={() => {
+                                setConfirmDelete(null);
+                                setEditing(m.memory_id);
+                              }}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn--danger-quiet btn--small"
+                              disabled={busy}
+                              aria-label={`Delete ${m.title}`}
+                              onClick={() => setConfirmDelete(m.memory_id)}
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))
+      )}
+    </>
+  );
+}
+
+interface FormProps {
+  memory: Memory;
+  busy: boolean;
+  onSave: (next: { title: string; description: string; visibility: Visibility }) => void;
+  onCancel: () => void;
+}
+
+function MemoryForm({ memory, busy, onSave, onCancel }: FormProps) {
+  const id = useId();
+  const [title, setTitle] = useState(memory.title);
+  const [description, setDescription] = useState(memory.description);
+  const [visibility, setVisibility] = useState<Visibility>(memory.visibility);
+
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    if (busy || title.trim() === "") return;
+    onSave({ title: title.trim(), description: description.trim(), visibility });
+  }
+
+  return (
+    <form className="form" onSubmit={submit}>
+      <label className="field" htmlFor={`${id}-title`}>
+        <span className="field__label">Title</span>
+        <input
+          id={`${id}-title`}
+          type="text"
+          value={title}
+          maxLength={LIMITS.memoryTitle}
+          required
+          disabled={busy}
+          onChange={(e) => setTitle(e.target.value)}
+        />
+      </label>
+      <label className="field" htmlFor={`${id}-desc`}>
+        <span className="field__label">Description</span>
+        <textarea
+          id={`${id}-desc`}
+          rows={2}
+          value={description}
+          maxLength={LIMITS.memoryDescription}
+          disabled={busy}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </label>
+      <label className="field" htmlFor={`${id}-vis`}>
+        <span className="field__label">Who can see this</span>
+        <select id={`${id}-vis`} value={visibility} disabled={busy} onChange={(e) => setVisibility(e.target.value as Visibility)}>
+          {VISIBILITIES.map((v) => (
+            <option key={v} value={v}>
+              {VISIBILITY_LABELS[v]}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="actions actions--compact">
+        <button type="button" className="btn btn--ghost btn--small" disabled={busy} onClick={onCancel}>
+          Cancel
+        </button>
+        <button type="submit" className="btn btn--primary btn--small" disabled={busy || title.trim() === ""}>
+          {busy ? "Saving…" : "Save"}
+        </button>
+      </div>
+    </form>
+  );
+}

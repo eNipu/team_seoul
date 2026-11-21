@@ -13,6 +13,7 @@ from app.models.connection import (
 )
 from app.models.invite import Invite
 from app.models.memory import Memory, MemoryProposal
+from app.models.person import Person, PersonInteraction
 from app.models.user import User, UserProfile
 
 __all__ = [
@@ -27,6 +28,8 @@ __all__ = [
     "Invite",
     "Memory",
     "MemoryProposal",
+    "Person",
+    "PersonInteraction",
     "RelationshipEvent",
     "User",
     "UserProfile",

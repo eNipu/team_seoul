@@ -161,6 +161,36 @@ def list_memories(db: Session, user: User, category: MemoryCategory | None = Non
     return MemoryListOut(memories=[to_out(m) for m in rows], count=len(rows))
 
 
+def search_memories(db: Session, user: User, query: str, limit: int = 10) -> MemoryListOut:
+    """Keyword search over the caller's own memories, best match first.
+
+    Every query word must appear somewhere in the memory (title, tags, category or
+    description). Scoring favours title and tag hits over description hits.
+    """
+    words = [w for w in " ".join(query.lower().split())[:200].split() if len(w) > 1][:8]
+    if not words:
+        raise InvalidRequest("Give at least one search word of two or more characters.")
+    rows = db.scalars(select(Memory).where(Memory.user_id == user.id).order_by(Memory.created_at.desc())).all()
+    scored: list[tuple[int, Memory]] = []
+    for m in rows:
+        title = m.title.lower()
+        tags = " ".join(m.tags or []).lower()
+        category = m.category.lower().replace("_", " ")
+        description = m.description.lower()
+        score = 0
+        for w in words:
+            hit = 3 * (w in title) + 2 * (w in tags) + 2 * (w in category) + (w in description)
+            if not hit:
+                score = 0
+                break
+            score += hit
+        if score:
+            scored.append((score, m))
+    scored.sort(key=lambda pair: pair[0], reverse=True)  # stable: newest first within a score
+    top = [to_out(m) for _, m in scored[: min(max(limit, 1), 50)]]
+    return MemoryListOut(memories=top, count=len(top))
+
+
 def _owned(db: Session, user: User, memory_id: str) -> Memory:
     mid = _parse_uuid(memory_id, "memory")
     m = db.scalar(select(Memory).where(Memory.id == mid, Memory.user_id == user.id))

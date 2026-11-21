@@ -22,6 +22,7 @@ EVENT_TYPES = {
     "connection_accepted",
     "activity_suggested",
     "reconnection_suggested",
+    "person_added",
 }
 
 _ALLOWED_METADATA_KEYS = {"count", "source", "category"}
