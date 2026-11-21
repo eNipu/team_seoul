@@ -1,0 +1,127 @@
+import { useEffect, useRef, useState } from "react";
+import { formatDate, isObj, plural, type InviteViewData } from "../types";
+import { ActionError, copyText, useAction, type ViewProps } from "./common";
+
+type Copied = "code" | "message" | null;
+
+export default function Invite({ data, bridge }: ViewProps<InviteViewData>) {
+  const action = useAction();
+  const [copied, setCopied] = useState<Copied>(null);
+  const [manual, setManual] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [revoked, setRevoked] = useState(false);
+  const timer = useRef<number | undefined>(undefined);
+  const manualRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  // Clipboard blocked: select the text so Ctrl/Cmd+C works right away.
+  useEffect(() => {
+    if (manual === null) return;
+    manualRef.current?.focus();
+    manualRef.current?.select();
+  }, [manual]);
+
+  async function copy(what: Exclude<Copied, null>) {
+    const value = what === "code" ? data.code : data.share_text || data.code;
+    const ok = await copyText(value);
+    window.clearTimeout(timer.current);
+    if (ok) {
+      setManual(null);
+      setCopied(what);
+      timer.current = window.setTimeout(() => setCopied(null), 2000);
+    } else {
+      setCopied(null);
+      setManual(value);
+    }
+  }
+
+  function revoke() {
+    void action.run("revoke", async () => {
+      const res = await bridge.callTool("heldly_revoke_invite", { code: data.code });
+      if (!res.ok) return res.errorText;
+      if (!isObj(res.data) || res.data.revoked !== true) return "Heldly couldn't revoke this code.";
+      setRevoked(true);
+      setConfirming(false);
+      setManual(null);
+      return null;
+    });
+  }
+
+  const expires = formatDate(data.expires_at);
+  const busy = action.busy !== null;
+
+  return (
+    <section className="panel">
+      <h2>Invite a friend</h2>
+      <p className="muted small lead">Share this code with someone you'd like to connect with on Heldly.</p>
+
+      <ActionError action={action} />
+
+      <div className={`ticket ${revoked ? "ticket--revoked" : ""}`}>
+        <span className="ticket__label">{revoked ? "Revoked code" : "Invite code"}</span>
+        <span className="ticket__code" aria-label={`Invite code ${data.code}`}>
+          {data.code || "—"}
+        </span>
+        {revoked ? (
+          <span className="ticket__meta text-danger" role="status">
+            This code no longer works
+          </span>
+        ) : (
+          <span className="ticket__meta">
+            {expires && <span>Expires {expires}</span>}
+            {expires && data.max_uses > 0 && <span aria-hidden="true"> · </span>}
+            {data.max_uses > 0 && <span>Can be used {plural(data.max_uses, "time", "times")}</span>}
+          </span>
+        )}
+      </div>
+
+      {!revoked && (
+        <>
+          <div className="button-row">
+            <button type="button" className="btn btn--primary" onClick={() => void copy("code")}>
+              {copied === "code" ? "✓ Copied" : "Copy code"}
+            </button>
+            <button type="button" className="btn" onClick={() => void copy("message")}>
+              {copied === "message" ? "✓ Copied" : "Copy invite message"}
+            </button>
+          </div>
+          <span className="sr-only" role="status">
+            {copied ? "Copied to clipboard" : ""}
+          </span>
+
+          {manual !== null && (
+            <label className="field manual-copy">
+              <span className="field__label">Press Ctrl/Cmd+C to copy</span>
+              <textarea ref={manualRef} readOnly rows={manual.length > 40 ? 4 : 1} value={manual} onFocus={(e) => e.target.select()} />
+            </label>
+          )}
+
+          {data.share_text && manual === null && <p className="quote">{data.share_text}</p>}
+        </>
+      )}
+
+      {data.note && <p className="muted small">{data.note}</p>}
+
+      {!revoked && (
+        <div className="footer-actions">
+          {confirming ? (
+            <div className="confirm" role="group" aria-label="Confirm revoke">
+              <span className="small">Revoke this code? It will stop working right away.</span>
+              <button type="button" className="btn btn--danger btn--small" disabled={busy} onClick={revoke}>
+                {busy ? "Revoking…" : "Revoke"}
+              </button>
+              <button type="button" className="btn btn--ghost btn--small" disabled={busy} onClick={() => setConfirming(false)}>
+                Keep it
+              </button>
+            </div>
+          ) : (
+            <button type="button" className="btn btn--danger-quiet btn--small" onClick={() => setConfirming(true)}>
+              Revoke code
+            </button>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}

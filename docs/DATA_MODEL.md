@@ -35,6 +35,15 @@ Limits: 500 memories per user, 8 items per proposal, title ≤ 120, description 
 | `blocks` | blocker_user_id*, blocked_user_id*, created_at* | Composite PK. Checked in both directions. |
 | `abuse_reports` | id*, reporter_user_id*, reported_user_id*, reason*, created_at* | For moderation review. |
 
+## People (friends who are not on Heldly)
+
+| Table | Columns | Notes |
+|---|---|---|
+| `people` | id*, owner_user_id* (FK cascade), name*, relationship, notes, interests* (JSON list), created_at*, updated_at* | Private note written by the owner. Never shared, never linked to a Heldly account, never used to contact the person. |
+| `person_interactions` | id*, person_id* (FK cascade), activity, created_at* | Hangouts the owner logged; drives "last seen" and reconnection suggestions. |
+
+Limits: 200 people per user, name/relationship ≤ 80, notes ≤ 1000, 12 interests of ≤ 40 chars.
+
 ## Consent & analytics
 
 | Table | Columns | Notes |
@@ -44,7 +53,7 @@ Limits: 500 memories per user, 8 items per proposal, title ≤ 120, description 
 
 Events: `profile_created`, `memory_proposed`, `memory_approved`, `memory_deleted`,
 `invite_created`, `invitation_redeemed`, `connection_requested`, `connection_accepted`,
-`activity_suggested`, `reconnection_suggested`.
+`activity_suggested`, `reconnection_suggested`, `person_added`.
 
 ## Development OAuth (dev mode only)
 
@@ -56,7 +65,7 @@ Events: `profile_created`, `memory_proposed`, `memory_approved`, `memory_deleted
 ## Deletion
 
 `heldly_delete_account` deletes the user row; profile, memories, proposals, invites, requests,
-connections (and their events), blocks and consents cascade. Analytics events keep no user link
+connections (and their events), people notes (and their hangout logs), blocks and consents cascade. Analytics events keep no user link
 (`user_id` set null).
 
 ## Migrations

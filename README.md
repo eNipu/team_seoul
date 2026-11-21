@@ -1,13 +1,14 @@
 # Heldly — ChatGPT plugin
 
 Heldly is a ChatGPT-native AI social companion. It remembers what matters to you — **only what
-you approve** — and helps you stay close to friends: invite-code connections, activity ideas
-based on shared interests, and gentle reconnection nudges. It never contacts anyone for you.
+you approve** — and helps you stay close to friends, whether or not they use Heldly:
+invite-code connections, private notes on friends who aren't on it, activity ideas based on
+shared interests, and gentle reconnection nudges. It never contacts anyone for you.
 
 This repo contains the first version of the plugin:
 
 - **MCP server** (`backend/`): Python, FastAPI + the official MCP Python SDK, streamable HTTP at `/mcp`, OAuth, SQLAlchemy 2 + Alembic (Postgres/Supabase, SQLite for dev).
-- **Widget** (`widget/`): React UI rendered inside ChatGPT via MCP Apps (memory review, dashboard).
+- **Widget** (`widget/`): React UI rendered inside ChatGPT via MCP Apps (memory review, home, invite, friend, activity ideas and reconnect cards).
 - **Plugin package** (`plugin/`): `plugin.json`, `mcp.json`, and the `heldly-social` skill.
 
 Games are intentionally out of scope for this version.
@@ -98,9 +99,12 @@ Start a new chat, enable Heldly, and try:
 
 - *"Set up my Heldly profile. I love bouldering and ramen, and I want to meet new people."*
   A memory review card appears; nothing is saved until you approve it.
-- *"Show my Heldly dashboard"*
+- *"Show my Heldly dashboard"* — a brand-new account gets a welcome card instead
 - *"Create a Heldly invite code"*
+- *"Add my friend Maya to Heldly — college roommate, loves hiking, haven't seen her in two months"*
+- *"What could I do with Maya?"*
 - *"Who should I reconnect with?"*
+- *"What did I save about food?"*
 
 **Testing two users:** connect from a second ChatGPT account and sign in with a different
 username (e.g. `bob`). Redeem alice's invite code as bob, then accept the request as alice.
@@ -130,18 +134,21 @@ connect to `https://abc123.ngrok-free.app/mcp`).
 
 ```
 ChatGPT ──MCP (OAuth bearer)──▶ FastAPI /mcp ──▶ services ──▶ Postgres
-   └─ widget iframe ◀── ui://heldly/app-v1.html  (calls tools back through the host)
+   └─ widget iframe ◀── ui://heldly/app-v2.html  (calls tools back through the host)
 ```
 
 - **Consent-based memories**: `heldly_propose_memories` creates a server-side proposal and
   shows a review card — nothing is saved. Only items the user approves are saved with
   `heldly_save_memories` (default visibility `PRIVATE`).
 - **Connections**: invite code → connection request → friend accepts. Block/report built in.
-- **Staying close**: activity suggestions from interests *both* people chose to share,
-  hangout logging, reconnection suggestions.
+- **Friends who aren't on Heldly**: private, owner-only notes (`heldly_add_person`) so they get
+  activity ideas and reconnection nudges too. Never shared, never used to contact anyone.
+- **Staying close**: a friend card, activity ideas from interests *both* people chose to share
+  (or from your own notes), hangout logging, reconnection suggestions.
+- **Cards**: six tools render an interactive card in ChatGPT; the rest return data.
 - **Identity** always comes from the OAuth token, never from tool arguments.
 
-22 tools in total — see [docs/MCP_TOOLS.md](docs/MCP_TOOLS.md).
+28 tools in total — see [docs/MCP_TOOLS.md](docs/MCP_TOOLS.md).
 
 ## Configuration
 
@@ -176,7 +183,7 @@ backend/
   app/main.py               FastAPI app factory (uvicorn app.main:create_app --factory)
   app/mcp/                  MCP server, tools, helpers
   app/auth/                 JWT verifier (prod), dev OAuth provider, identity mapping
-  app/services/             memories, social graph, dashboard, analytics, consent
+  app/services/             memories, social graph, people notes, relationship views, dashboard, analytics, consent
   app/ai/                   memory extraction + sensitive-data filter
   app/models/, migrations/  SQLAlchemy models, Alembic
   tests/                    unit/, integration/, security/
@@ -191,5 +198,6 @@ Makefile, Dockerfile, docker-compose.yml, .env.example
 make lint            # ruff + widget typecheck
 make format
 make migration m="…" # autogenerate an Alembic revision
-cd widget && npm run dev   # widget with mock data: ?view=memory_review | ?view=dashboard
+cd widget && npm run dev   # widget with mock data: ?view=memory_review | dashboard | welcome |
+                           #   invite | friend | friend_person | activity_ideas | reconnect
 ```

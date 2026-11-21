@@ -82,7 +82,9 @@ def test_suggest_activity_uses_only_shared_memories(alice, bob):
     save(bob, "INTEREST", "Secret hobby", "Private thing", "PRIVATE", ["knitting"])
 
     out = alice.ok("heldly_suggest_activity", connection_id=connection_id)
-    assert out["friend_display_name"] == "Bob"
+    assert out["view"] == "activity_ideas"
+    assert (out["kind"], out["id"], out["display_name"]) == ("connection", connection_id, "Bob")
+    assert out["suggestions"][0]["title"] == "Go climbing"
     assert "climbing" in [s.lower() for s in out["shared_interests"]]
     blob = str(out).lower()
     assert "knitting" not in blob

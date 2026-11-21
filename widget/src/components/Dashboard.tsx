@@ -1,292 +1,257 @@
-import { useState } from "react";
-import type { HostBridge } from "../mcp/client";
+import { useId, useState, type FormEvent } from "react";
 import {
-  CATEGORY_LABELS,
-  VISIBILITY_LABELS,
-  formatDate,
-  parseDeleteMemory,
-  parseRespondConnection,
+  LIMITS,
+  PROFILE_VISIBILITY_LABELS,
+  hasId,
+  humanize,
+  parseProfile,
+  plural,
   type Connection,
   type DashboardViewData,
   type Memory,
   type PendingRequest,
+  type Person,
+  type Profile,
 } from "../types";
-import ConnectionCard from "./ConnectionCard";
-import ErrorBanner from "./ErrorBanner";
+import { ActionError, Avatar, SectionTitle, useAction, type Action, type ViewProps } from "./common";
+import type { HostBridge } from "../mcp/client";
+import MemoriesTab from "./MemoriesTab";
+import FriendsTab from "./FriendsTab";
 
-interface Props {
-  data: DashboardViewData;
-  bridge: HostBridge;
+export type DashboardTab = "profile" | "memories" | "friends";
+
+interface Props extends ViewProps<DashboardViewData> {
+  initialTab: DashboardTab | null;
+  onTabChange: (tab: DashboardTab) => void;
 }
 
-type Tab = "profile" | "memories" | "connections";
-
-interface FailedAction {
-  message: string;
-  retry: () => void;
-}
-
-export default function Dashboard({ data, bridge }: Props) {
-  const [tab, setTab] = useState<Tab>("profile");
+export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }: Props) {
+  const id = useId();
+  const action = useAction();
+  const [tab, setTabState] = useState<DashboardTab>(initialTab ?? "profile");
+  const [profile, setProfile] = useState<Profile>(data.profile);
   const [memories, setMemories] = useState<Memory[]>(data.memories);
   const [connections, setConnections] = useState<Connection[]>(data.connections);
+  const [people, setPeople] = useState<Person[]>(data.people);
   const [pending, setPending] = useState<PendingRequest[]>(data.pending_requests);
-  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const [busyId, setBusyId] = useState<string | null>(null);
-  const [failure, setFailure] = useState<FailedAction | null>(null);
-  const [inviteState, setInviteState] = useState<"idle" | "sending" | "sent" | "unavailable">("idle");
 
-  // Profile count may exceed the listed memories; subtract local deletions.
-  const memoryCount = Math.max(memories.length, data.profile.memory_count - (data.memories.length - memories.length));
+  const friendCount = connections.length + people.length;
 
-  async function deleteMemory(memoryId: string) {
-    setBusyId(memoryId);
-    setFailure(null);
-    const res = await bridge.callTool("heldly_delete_memory", { memory_id: memoryId });
-    setBusyId(null);
-    if (!res.ok) {
-      setFailure({ message: res.errorText, retry: () => void deleteMemory(memoryId) });
-      return;
-    }
-    const result = parseDeleteMemory(res.data);
-    const removedId = result.memory_id || memoryId;
-    setMemories((ms) => ms.filter((m) => m.memory_id !== removedId));
-    setConfirmDelete(null);
+  function setTab(t: DashboardTab) {
+    setTabState(t);
+    onTabChange(t);
   }
 
-  async function respond(req: PendingRequest, accept: boolean) {
-    setBusyId(req.request_id);
-    setFailure(null);
-    const res = await bridge.callTool("heldly_respond_to_connection", { request_id: req.request_id, accept });
-    setBusyId(null);
-    if (!res.ok) {
-      setFailure({ message: res.errorText, retry: () => void respond(req, accept) });
-      return;
-    }
-    const result = parseRespondConnection(res.data);
-    setPending((ps) => ps.filter((p) => p.request_id !== req.request_id));
-    if (result.status === "ACCEPTED") {
-      const today = new Date().toISOString();
-      setConnections((cs) => [
-        ...cs,
-        {
-          connection_id: result.connection_id ?? `pending-${req.request_id}`,
-          user_id: "",
-          display_name: req.sender_display_name,
-          since: today,
-          last_interaction_at: null,
-        },
-      ]);
-    }
+  /** Replace everything with a freshly fetched dashboard. */
+  function applyDashboard(d: DashboardViewData) {
+    setProfile(d.profile);
+    setMemories(d.memories);
+    setConnections(d.connections);
+    setPeople(d.people);
+    setPending(d.pending_requests);
   }
 
-  async function invite() {
-    setInviteState("sending");
-    const sent = await bridge.sendMessage("Create a Heldly invite code so a friend can connect with me.");
-    setInviteState(sent ? "sent" : "unavailable");
-  }
-
-  const tabs: { id: Tab; label: string; count?: number }[] = [
+  // Every count shown in the UI is derived from the same arrays that are listed.
+  const tabs: { id: DashboardTab; label: string; count?: number; dot?: boolean }[] = [
     { id: "profile", label: "Profile" },
     { id: "memories", label: "Memories", count: memories.length },
-    { id: "connections", label: "Connections", count: connections.length + pending.length },
+    { id: "friends", label: "Friends", count: friendCount, dot: pending.length > 0 },
   ];
 
   return (
-    <section className="panel">
-      <nav className="tabs" role="tablist" aria-label="Dashboard sections">
+    <section className="panel panel--tabs">
+      <div className="tabs" role="tablist" aria-label="Dashboard sections">
         {tabs.map((t) => (
           <button
             key={t.id}
             type="button"
             role="tab"
+            id={`${id}-tab-${t.id}`}
             aria-selected={tab === t.id}
+            aria-controls={`${id}-panel`}
             className={`tab ${tab === t.id ? "tab--active" : ""}`}
             onClick={() => setTab(t.id)}
           >
             {t.label}
             {t.count !== undefined && <span className="tab__count">{t.count}</span>}
+            {t.dot && (
+              <span className="tab__dot" role="img" aria-label={plural(pending.length, "pending request", "pending requests")} />
+            )}
           </button>
         ))}
-      </nav>
+      </div>
 
-      {failure && (
-        <ErrorBanner
-          message={failure.message}
-          onRetry={failure.retry}
-          onDismiss={() => setFailure(null)}
-          busy={busyId !== null}
-        />
-      )}
+      <div className="tab-panel" role="tabpanel" id={`${id}-panel`} aria-labelledby={`${id}-tab-${tab}`}>
+        <ActionError action={action} />
 
-      {tab === "profile" && (
-        <div className="tab-panel" role="tabpanel">
-          <div className="profile-head">
-            <span className="avatar avatar--large" aria-hidden="true">
-              {(data.profile.display_name.trim()[0] ?? "?").toUpperCase()}
-            </span>
-            <div>
-              <h2>{data.profile.display_name}</h2>
-              <p className="muted small">
-                {memoryCount} {memoryCount === 1 ? "memory" : "memories"} · {connections.length}{" "}
-                {connections.length === 1 ? "connection" : "connections"}
-              </p>
-            </div>
-          </div>
-          {data.profile.bio ? <p>{data.profile.bio}</p> : <p className="muted">No bio yet.</p>}
-
-          <h3>Social goals</h3>
-          {data.profile.social_goals.length > 0 ? (
-            <ul className="goals">
-              {data.profile.social_goals.map((g, i) => (
-                <li key={`${g}-${i}`}>{g}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="muted small">Tell Heldly what kind of connections you're looking for.</p>
-          )}
-
-          <h3>Interests</h3>
-          {data.profile.interests.length > 0 ? (
-            <div className="chips">
-              {data.profile.interests.map((it, i) => (
-                <span key={`${it}-${i}`} className="chip">
-                  {it}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <p className="muted small">No interests yet.</p>
-          )}
-        </div>
-      )}
-
-      {tab === "memories" && (
-        <div className="tab-panel" role="tabpanel">
-          {memories.length === 0 ? (
-            <p className="muted">No saved memories yet. Ask Heldly to remember something about you.</p>
-          ) : (
-            <ul className="list">
-              {memories.map((m) => (
-                <li key={m.memory_id} className="card">
-                  <div className="row row--between row--wrap">
-                    <span className={`badge badge--cat-${m.category.toLowerCase()}`}>{CATEGORY_LABELS[m.category]}</span>
-                    <span className={`badge badge--vis-${m.visibility.toLowerCase()}`}>{VISIBILITY_LABELS[m.visibility]}</span>
-                  </div>
-                  <strong className="card__title">{m.title}</strong>
-                  {m.description && <p className="muted small">{m.description}</p>}
-                  {m.tags.length > 0 && (
-                    <div className="chips">
-                      {m.tags.map((t, i) => (
-                        <span key={`${t}-${i}`} className="chip chip--small">
-                          #{t}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <div className="row row--between">
-                    <span className="muted small">{formatDate(m.created_at)}</span>
-                    {confirmDelete === m.memory_id ? (
-                      <div className="confirm">
-                        <span className="small">Delete this memory?</span>
-                        <button
-                          type="button"
-                          className="btn btn--danger btn--small"
-                          disabled={busyId === m.memory_id}
-                          onClick={() => void deleteMemory(m.memory_id)}
-                        >
-                          {busyId === m.memory_id ? "Deleting…" : "Delete"}
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn--ghost btn--small"
-                          disabled={busyId === m.memory_id}
-                          onClick={() => setConfirmDelete(null)}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        className="btn btn--ghost btn--small"
-                        disabled={busyId !== null}
-                        onClick={() => setConfirmDelete(m.memory_id)}
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
-
-      {tab === "connections" && (
-        <div className="tab-panel" role="tabpanel">
-          <div className="invite">
-            <button
-              type="button"
-              className="btn btn--primary"
-              onClick={() => void invite()}
-              disabled={inviteState === "sending"}
-            >
-              {inviteState === "sending" ? "Asking Heldly…" : "Invite a friend"}
-            </button>
-            {inviteState === "sent" && <span className="small muted">Heldly is creating an invite code in the chat.</span>}
-            {inviteState === "unavailable" && (
-              <span className="small muted">Ask Heldly in the chat: "Create an invite code for a friend."</span>
-            )}
-          </div>
-
-          {pending.length > 0 && (
-            <>
-              <h3>Pending requests</h3>
-              <ul className="list">
-                {pending.map((r) => (
-                  <li key={r.request_id} className="card request-card">
-                    <div>
-                      <strong>{r.sender_display_name}</strong>
-                      <span className="muted small"> wants to connect · {formatDate(r.created_at)}</span>
-                    </div>
-                    <div className="actions actions--compact">
-                      <button
-                        type="button"
-                        className="btn btn--ghost btn--small"
-                        disabled={busyId !== null}
-                        onClick={() => void respond(r, false)}
-                      >
-                        Decline
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn--primary btn--small"
-                        disabled={busyId !== null}
-                        onClick={() => void respond(r, true)}
-                      >
-                        {busyId === r.request_id ? "…" : "Accept"}
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-
-          <h3>Connections</h3>
-          {connections.length === 0 ? (
-            <p className="muted small">No connections yet. Invite a friend to get started.</p>
-          ) : (
-            <ul className="list">
-              {connections.map((c) => (
-                <ConnectionCard key={c.connection_id} connection={c} />
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
+        {tab === "profile" && (
+          <ProfileTab
+            profile={profile}
+            memoryCount={memories.length}
+            friendCount={friendCount}
+            bridge={bridge}
+            action={action}
+            onProfile={setProfile}
+          />
+        )}
+        {tab === "memories" && <MemoriesTab memories={memories} bridge={bridge} action={action} onChange={setMemories} />}
+        {tab === "friends" && (
+          <FriendsTab
+            connections={connections}
+            people={people}
+            pending={pending}
+            bridge={bridge}
+            nav={nav}
+            action={action}
+            onConnections={setConnections}
+            onPeople={setPeople}
+            onPending={setPending}
+            onDashboard={applyDashboard}
+          />
+        )}
+      </div>
     </section>
+  );
+}
+
+interface ProfileTabProps {
+  profile: Profile;
+  memoryCount: number;
+  friendCount: number;
+  bridge: HostBridge;
+  action: Action;
+  onProfile: (p: Profile) => void;
+}
+
+function ProfileTab({ profile, memoryCount, friendCount, bridge, action, onProfile }: ProfileTabProps) {
+  const id = useId();
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(profile.display_name);
+  const [bio, setBio] = useState(profile.bio ?? "");
+  const saving = action.busy === "profile";
+
+  function startEdit() {
+    setName(profile.display_name);
+    setBio(profile.bio ?? "");
+    setEditing(true);
+  }
+
+  function save(e: FormEvent) {
+    e.preventDefault();
+    const nextName = name.trim();
+    const nextBio = bio.trim();
+    if (!nextName) return;
+    const patch: Record<string, unknown> = {};
+    if (nextName !== profile.display_name) patch.display_name = nextName;
+    if (nextBio !== (profile.bio ?? "")) patch.bio = nextBio;
+    if (Object.keys(patch).length === 0) {
+      setEditing(false);
+      return;
+    }
+    void action.run("profile", async () => {
+      const res = await bridge.callTool("heldly_update_profile", patch);
+      if (!res.ok) return res.errorText;
+      onProfile(
+        hasId(res.data, "display_name")
+          ? parseProfile(res.data)
+          : { ...profile, display_name: nextName, bio: nextBio || null },
+      );
+      setEditing(false);
+      return null;
+    });
+  }
+
+  return (
+    <>
+      <div className="profile-head">
+        <Avatar name={profile.display_name} size="large" />
+        <div className="profile-head__body">
+          <h2>{profile.display_name}</h2>
+          <p className="muted small">
+            {plural(memoryCount, "memory", "memories")} · {plural(friendCount, "friend", "friends")}
+          </p>
+          <div className="row row--wrap">
+            <span className={`badge badge--pvis-${profile.profile_visibility.toLowerCase()}`}>
+              {PROFILE_VISIBILITY_LABELS[profile.profile_visibility]}
+            </span>
+          </div>
+        </div>
+        {!editing && (
+          <button type="button" className="btn btn--small profile-head__edit" disabled={action.busy !== null} onClick={startEdit}>
+            Edit profile
+          </button>
+        )}
+      </div>
+
+      {editing ? (
+        <form className="inline-form form" onSubmit={save}>
+          <label className="field" htmlFor={`${id}-name`}>
+            <span className="field__label">Display name</span>
+            <input
+              id={`${id}-name`}
+              type="text"
+              value={name}
+              maxLength={LIMITS.displayName}
+              required
+              autoComplete="off"
+              disabled={saving}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </label>
+          <label className="field" htmlFor={`${id}-bio`}>
+            <span className="field__label">
+              Bio <span className="field__count">{bio.length}/{LIMITS.bio}</span>
+            </span>
+            <textarea
+              id={`${id}-bio`}
+              rows={3}
+              value={bio}
+              maxLength={LIMITS.bio}
+              placeholder="A line or two about you."
+              disabled={saving}
+              onChange={(e) => setBio(e.target.value)}
+            />
+          </label>
+          <div className="actions actions--compact">
+            <button type="button" className="btn btn--ghost" disabled={saving} onClick={() => setEditing(false)}>
+              Cancel
+            </button>
+            <button type="submit" className="btn btn--primary" disabled={saving || name.trim() === ""}>
+              {saving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </form>
+      ) : profile.bio ? (
+        <p>{profile.bio}</p>
+      ) : (
+        <p className="muted small">No bio yet. Use “Edit profile” to add a line about yourself.</p>
+      )}
+
+      <SectionTitle>What you're here for</SectionTitle>
+      {profile.social_goals.length > 0 ? (
+        <div className="chips">
+          {profile.social_goals.map((g, i) => (
+            <span key={`${g}-${i}`} className="chip chip--goal">
+              {humanize(g)}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="muted small">Tell Heldly what kind of connections you're looking for.</p>
+      )}
+
+      <SectionTitle>Interests</SectionTitle>
+      {profile.interests.length > 0 ? (
+        <div className="chips">
+          {profile.interests.map((it, i) => (
+            <span key={`${it}-${i}`} className="chip">
+              {it}
+            </span>
+          ))}
+        </div>
+      ) : (
+        <p className="muted small">No interests yet. Tell Heldly what you enjoy and approve what it should remember.</p>
+      )}
+    </>
   );
 }

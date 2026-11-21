@@ -8,7 +8,7 @@ invite-code connections, relationship maintenance. (Games are out of scope for n
 ChatGPT ──(MCP over streamable HTTP, OAuth bearer)──▶ FastAPI app
    │                                                    ├── /mcp                MCP server (official Python SDK, MCPServer)
    │  renders                                           ├── /.well-known/*      OAuth protected-resource + AS metadata
-   └── widget iframe (ui://heldly/app-v1.html) ◀────────├── /authorize /token /register /dev/login   (dev auth only)
+   └── widget iframe (ui://heldly/app-v2.html) ◀────────├── /authorize /token /register /dev/login   (dev auth only)
         React, MCP Apps bridge                          ├── /healthz /readyz
         calls tools via host                            └── services ──▶ SQLAlchemy ──▶ Postgres (Supabase) / SQLite (dev)
                                                                      └─▶ OpenAI (optional memory extraction)
@@ -22,13 +22,13 @@ ChatGPT ──(MCP over streamable HTTP, OAuth bearer)──▶ FastAPI app
 | `.agents/plugins/marketplace.json` | Repo-local marketplace for installing the plugin during development |
 | `backend/app/main.py` | `create_app()` — FastAPI app, mounts the MCP Starlette app, health checks, lifespan |
 | `backend/app/mcp/server.py` | Builds `MCPServer` with the `Apps` extension, widget resource and auth |
-| `backend/app/mcp/tools.py` | All 22 MCP tools (thin: auth → service → result) |
+| `backend/app/mcp/tools.py` | All 28 MCP tools (thin: auth → service → result) |
 | `backend/app/mcp/common.py` | Scope constants, annotations, `run_as_user`, result/error shaping |
 | `backend/app/auth/` | `JWTTokenVerifier` (production), `DevOAuthProvider` (development), identity mapping |
-| `backend/app/services/` | Business logic: users, memories, social (invites/connections/suggestions), dashboard, analytics, consent |
+| `backend/app/services/` | Business logic: users, memories (+ search), social (invites/connections/blocking), people (notes on friends not on Heldly), relationship (friend view, activity ideas, reconnection), dashboard, analytics, consent |
 | `backend/app/ai/extraction.py` | Memory candidate extraction (OpenAI structured output, heuristic fallback) and sensitive-data filter |
 | `backend/app/models/` | SQLAlchemy 2 models; `backend/migrations/` Alembic |
-| `widget/` | React + Vite single-file bundle rendered by ChatGPT (memory review, dashboard) |
+| `widget/` | React + Vite single-file bundle rendered by ChatGPT (memory review, home, invite, friend, activity ideas, reconnect) |
 
 ## Request flow
 
@@ -46,14 +46,19 @@ User ids are **never** taken from tool arguments.
 
 ## Widget (MCP Apps)
 
-- One HTML resource `ui://heldly/app-v1.html` (`text/html;profile=mcp-app`), built from
+- One HTML resource `ui://heldly/app-v2.html` (`text/html;profile=mcp-app`), built from
   `widget/` into a single file and served from `widget/dist/index.html` (fallback page if missing).
-- Two *render* tools are bound to it via `_meta.ui.resourceUri`: `heldly_propose_memories`
-  (`view: "memory_review"`) and `heldly_show_dashboard` (`view: "dashboard"`). All other tools
-  are data tools without a template.
-- The widget calls tools back through the host bridge (`heldly_save_memories`,
-  `heldly_delete_memory`, `heldly_respond_to_connection`), so the same auth applies.
-- Bump the resource URI (`app-v2`) when shipping breaking widget changes; ChatGPT caches templates.
+- Six *render* tools are bound to it via `_meta.ui.resourceUri`; each result carries a `view`
+  discriminator the widget switches on: `heldly_propose_memories` (`memory_review`),
+  `heldly_show_dashboard` (`dashboard`, or `welcome` for an empty account),
+  `heldly_create_invite` (`invite`), `heldly_view_friend` (`friend`), `heldly_suggest_activity`
+  (`activity_ideas`) and `heldly_reconnection_suggestions` (`reconnect`). All other tools are
+  data tools without a template.
+- The widget calls tools back through the host bridge — both data tools (save/edit/delete
+  memories, edit profile, add/edit/delete people, respond to requests, log a hangout, revoke an
+  invite) and other render tools to move between cards — so the same auth applies. Data tools
+  the widget may call are marked `openai/widgetAccessible`.
+- Bump the resource URI (`app-v3`) when shipping breaking widget changes; ChatGPT caches templates.
 
 ## Memory consent flow
 
