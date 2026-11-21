@@ -63,6 +63,11 @@ export function LinkedInFlow({ onDone, onCancel }: { onDone: (count: number) => 
             : `${plural(list.count, "connection", "connections")} found.`}{" "}
           Choose up to {max} to import. No one is added yet.
         </p>
+        {list.stopped && (
+          <Notice icon="alert" tone="quiet">
+            {list.stopped} For the full list, use your LinkedIn connections export file instead.
+          </Notice>
+        )}
         <label className="filter filter--wide">
           <Icon name="search" size={18} />
           <span className="sr-only">Filter connections</span>
@@ -271,8 +276,9 @@ export function LinkedInFlow({ onDone, onCancel }: { onDone: (count: number) => 
       </Field>
       <Notice icon="shield" tone="quiet">
         These cookies give full access to your LinkedIn account. Venn uses them once to read your connection list
-        and does not store them. LinkedIn's terms don't allow automated access, and LinkedIn may restrict accounts
-        that use it.
+        and does not store them. LinkedIn's terms don't allow automated access: it usually signs the session out
+        after the first pages, so expect your most recent connections only, and to be signed out of LinkedIn. The
+        export file is the reliable way.
       </Notice>
       <label className="check">
         <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />

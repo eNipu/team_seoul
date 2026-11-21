@@ -434,6 +434,8 @@ export interface LinkedInConnections {
   count: number;
   total: number | null;
   truncated: boolean;
+  /** Set when LinkedIn stopped the read part-way; what was read is still usable. */
+  stopped: string | null;
   /** Whether this server can fetch company, location and skills for the people picked. */
   details_available: boolean;
   max_details: number;
@@ -1074,6 +1076,7 @@ export function parseLinkedInConnections(v: unknown): LinkedInConnections {
     count: connections.length,
     total: numOrNull(o.total),
     truncated: bool(o.truncated),
+    stopped: strOrNull(o.stopped),
     details_available: bool(o.details_available),
     max_details: num(o.max_details, 25),
     max_import: num(o.max_import, LIMITS.importPeople),

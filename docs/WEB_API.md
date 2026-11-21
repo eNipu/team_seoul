@@ -81,13 +81,16 @@ added as private notes, and the form must say so before saving.
 | Route | Body | Returns |
 |---|---|---|
 | `POST /api/v1/linkedin/connections` | `{cookies}`: the user's LinkedIn session cookies (cookie-export JSON, `li_at=…; JSESSIONID=…`, or the bare `li_at` value) | `{connections: [{public_identifier, name, headline, profile_url, connected_on, already_added}], count, total, truncated, details_available, max_details, max_import}` |
+| `POST /api/v1/linkedin/export` | `{csv}`: LinkedIn's own `Connections.csv` | the same payload as `/linkedin/connections` |
 | `POST /api/v1/linkedin/import-preview` | `{people: [{public_identifier, name, headline?}]}` (1–50) | the people-import payload plus `details_for` and `details_error`; confirm with `POST /api/v1/people/import` |
 
-The first route reads the list behind `linkedin.com/mynetwork/invite-connect/connections/` with the
+The export route is the reliable one and needs no cookies. The cookie route reads the list behind `linkedin.com/mynetwork/invite-connect/connections/` with the
 user's own session (`app/services/linkedin_service.py`) and saves nothing. The second fetches profile
 details for the picked people from the Apify actor in `APIFY_PROFILE_ACTOR` when `APIFY_TOKEN` is set
 (first 25), otherwise uses name and headline. People are added only by the normal import confirmation,
-so they are ordinary people notes: the ChatGPT plugin finds them like any other. Errors: `400` cookies
+so they are ordinary people notes: the ChatGPT plugin finds them like any other. LinkedIn signs a scraped
+session out after the first pages; what was already read is returned with a `stopped` message instead of an
+error. Errors: `400` cookies
 not accepted, `429` LinkedIn or Venn rate limit (6 reads per hour per account), `502 UPSTREAM_ERROR`.
 The same reader is available from the command line: `uv run python -m scripts.linkedin_connections`.
 
