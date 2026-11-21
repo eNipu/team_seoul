@@ -32,3 +32,10 @@ After widget code changes, run `npm --prefix widget run typecheck` and
 `npm --prefix widget run build`. Use the demo views documented in `widget/README.md`
 to inspect memory review, dashboard, errors, narrow layouts, and light/dark themes.
 Consult the `Makefile` for backend and repository-wide checks when those areas change.
+
+## Feature work
+
+Product work is cut into small tasks in `docs/tasks/`. Read `docs/tasks/README.md` (the board),
+then `docs/tasks/CONTEXT.md`, then the one task file you are doing and the files it lists.
+Do not read `Heldly PRD.md` in full; open a section only when a task or the backlog names it.
+Set the task's status on the board in the same commit as the work.
