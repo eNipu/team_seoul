@@ -9,7 +9,11 @@ import { ImportReview } from "./ImportReview";
 
 const MAX_COOKIE_CHARS = 20000;
 
+const MAX_FILE_BYTES = 4_000_000;
+
 export function LinkedInFlow({ onDone, onCancel }: { onDone: (count: number) => void; onCancel: () => void }) {
+  const [way, setWay] = useState<"file" | "cookies">("file");
+  const [fileName, setFileName] = useState<string | null>(null);
   const [cookies, setCookies] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [list, setList] = useState<LinkedInConnections | null>(null);
@@ -74,20 +78,17 @@ export function LinkedInFlow({ onDone, onCancel }: { onDone: (count: number) => 
         ) : (
           <ul className="review">
             {shown.map((c) => {
-              const on = picked.includes(c.public_identifier);
+              const key = c.public_identifier ?? c.name;
+              const on = picked.includes(key);
               const off = c.already_added || (!on && full);
               return (
-                <li key={c.public_identifier}>
+                <li key={key}>
                   <label className={`review__row ${off ? "review__row--off" : ""}`}>
                     <input
                       type="checkbox"
                       checked={on}
                       disabled={off}
-                      onChange={() =>
-                        setPicked(
-                          on ? picked.filter((p) => p !== c.public_identifier) : [...picked, c.public_identifier],
-                        )
-                      }
+                      onChange={() => setPicked(on ? picked.filter((p) => p !== key) : [...picked, key])}
                     />
                     <Avatar name={c.name} size="small" />
                     <span className="review__text">
@@ -123,7 +124,7 @@ export function LinkedInFlow({ onDone, onCancel }: { onDone: (count: number) => 
             onClick={() =>
               void action.run(async () => {
                 const people = list.connections
-                  .filter((c) => picked.includes(c.public_identifier))
+                  .filter((c) => picked.includes(c.public_identifier ?? c.name))
                   .map((c) => ({ public_identifier: c.public_identifier, name: c.name, headline: c.headline }));
                 setPreview(await api.linkedinPreview(people));
               })
@@ -136,6 +137,81 @@ export function LinkedInFlow({ onDone, onCancel }: { onDone: (count: number) => 
               : picked.length === 0
                 ? "Choose at least one"
                 : `Review ${plural(picked.length, "person", "people")}`}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const tabs = (
+    <div className="tabs" role="tablist" aria-label="How to import">
+      {(["file", "cookies"] as const).map((t) => (
+        <button
+          key={t}
+          type="button"
+          role="tab"
+          aria-selected={way === t}
+          className={`tabs__tab ${way === t ? "tabs__tab--on" : ""}`}
+          onClick={() => {
+            setWay(t);
+            action.clear();
+          }}
+        >
+          {t === "file" ? "Export file" : "Session cookies"}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (way === "file") {
+    return (
+      <div className="stack">
+        {tabs}
+        <p className="dialog__text">
+          LinkedIn can send you your connections as a file. This is the way LinkedIn allows, and it needs no
+          cookies.
+        </p>
+        <ol className="steps">
+          <li>
+            On LinkedIn: <strong>Settings &amp; Privacy → Data privacy → Get a copy of your data</strong>.
+          </li>
+          <li>
+            Pick <strong>Connections</strong> and request the archive. It arrives by email, usually within
+            minutes.
+          </li>
+          <li>
+            Upload the <code>Connections.csv</code> from it here.
+          </li>
+        </ol>
+        <Field label="Connections.csv" hint="The file is read in your browser and sent to Venn as text.">
+          {(p) => (
+            <input
+              {...p}
+              type="file"
+              accept=".csv,text/csv"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setFileName(file.name);
+                void action.run(async () => {
+                  if (file.size > MAX_FILE_BYTES) throw new Error("That file is too large.");
+                  const result = await api.linkedinExport(await file.text());
+                  setPicked([]);
+                  setFilter("");
+                  setList(result);
+                });
+              }}
+            />
+          )}
+        </Field>
+        {action.busy && <p className="muted">Reading {fileName}…</p>}
+        <Notice tone="quiet">
+          Nothing is added until you pick who to import and confirm. Email addresses in the file are ignored.
+        </Notice>
+        <InlineError message={action.error} />
+        <div className="dialog__actions">
+          <button type="button" className="btn" onClick={onCancel} disabled={action.busy}>
+            Cancel
           </button>
         </div>
       </div>
@@ -158,14 +234,16 @@ export function LinkedInFlow({ onDone, onCancel }: { onDone: (count: number) => 
         });
       }}
     >
+      {tabs}
       <p className="dialog__text">
         Venn reads your connection list with your LinkedIn session, then you choose who to import.
       </p>
       <ol className="steps">
         <li>Sign in to LinkedIn in this browser.</li>
         <li>
-          Copy your LinkedIn cookies with a cookie-export extension such as “Copy Cookies”, or copy the{" "}
-          <code>li_at</code> and <code>JSESSIONID</code> values from your browser's developer tools.
+          Copy <strong>all</strong> LinkedIn cookies with a cookie-export extension such as “Copy Cookies”.
+          LinkedIn ties <code>li_at</code> to the other cookies of the same browser, so a partial copy is
+          usually signed out at once.
         </li>
         <li>Paste them below.</li>
       </ol>

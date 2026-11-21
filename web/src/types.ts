@@ -421,7 +421,7 @@ export interface PeopleImport {
 }
 
 export interface LinkedInConnection {
-  public_identifier: string;
+  public_identifier: string | null;
   name: string;
   headline: string | null;
   profile_url: string;
@@ -441,7 +441,7 @@ export interface LinkedInConnections {
 }
 
 export interface LinkedInPick {
-  public_identifier: string;
+  public_identifier: string | null;
   name: string;
   headline: string | null;
 }
@@ -1061,14 +1061,14 @@ export function parseLinkedInConnections(v: unknown): LinkedInConnections {
   const o = obj(v);
   const connections = objs(o.connections)
     .map((c) => ({
-      public_identifier: str(c.public_identifier),
+      public_identifier: strOrNull(c.public_identifier),
       name: str(c.name),
       headline: strOrNull(c.headline),
       profile_url: str(c.profile_url),
       connected_on: strOrNull(c.connected_on),
       already_added: bool(c.already_added),
     }))
-    .filter((c) => c.public_identifier !== "" && c.name !== "");
+    .filter((c) => c.name !== "");
   return {
     connections,
     count: connections.length,

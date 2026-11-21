@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     apify_token: str | None = None
     apify_profile_actor: str = "LpVuK3Zozwuipa5bp"  # harvestapi/linkedin-profile-scraper
     apify_timeout_seconds: float = 240.0
-    linkedin_max_connections: int = 500
+    linkedin_max_connections: int = 200
     linkedin_max_enriched: int = 25
     linkedin_fetches_per_hour: int = 6
 
