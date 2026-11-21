@@ -20,7 +20,7 @@ const COLLAGE: CollageProps | null = {
 
 // "You already know your next …": the line under the headline shows these one at a time.
 // Each one is a claim; keep "What the copy may claim" in site/README.md in step.
-const NEXT = ["customer", "investor", "friend", "gym buddy", "travel buddy"];
+const NEXT = ["customer", "friend", "business partner"];
 
 const PRINCIPLES = [
   {

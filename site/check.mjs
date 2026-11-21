@@ -337,10 +337,26 @@ function sceneState() {
 }
 
 // Runs in the page. The line under the headline: the word on show, and what a screen reader gets.
-function nextWord() {
+// Waits out a roll in progress first, so the word is measured at rest.
+async function nextWord() {
+  for (let waited = 0; waited < 1500; waited += 50) {
+    const on = document.querySelector(".hero__next-word--on");
+    const style = on && getComputedStyle(on);
+    if (style && style.transform === "none" && style.opacity === "1" && !document.querySelector(".hero__next-words").getAnimations().length) break;
+    await new Promise((done) => setTimeout(done, 50));
+  }
+  const lead = document.querySelector(".hero__next-lead")?.getBoundingClientRect();
+  const word = document.querySelector(".hero__next-word--on")?.getBoundingClientRect();
+  const line = document.querySelector(".hero__next-line")?.getBoundingClientRect();
   return {
     shown: document.querySelector(".hero__next-word--on")?.textContent ?? "",
     spoken: document.querySelector(".hero__next .sr-only")?.textContent ?? "",
+    // The word starts where the sentence ends, at the same height. (The two boxes differ in
+    // height by the line's leading, so their edges are not compared.)
+    oneLine:
+      !!lead && !!word && word.left >= lead.right - 1 && Math.abs((word.top + word.bottom - lead.top - lead.bottom) / 2) < 3,
+    // How far the sentence's middle is from the middle of the page.
+    offCenter: line ? Math.round(Math.abs((line.left + line.right) / 2 - window.innerWidth / 2)) : -1,
   };
 }
 
@@ -524,10 +540,15 @@ async function main() {
       // The changing word, once with motion and once without. One step is 2.4s.
       if (viewport === VIEWPORTS[3]) {
         const before = await run(nextWord);
-        await sleep(2700);
+        await sleep(2900);
         const after = await run(nextWord);
-        if (before.spoken !== "You already know your next customer, investor, friend, gym buddy or travel buddy.") {
+        if (before.spoken !== "You already know your next customer, friend or business partner.") {
           failures.push(`${label}: the line under the headline reads "${before.spoken}" to a screen reader`);
+        }
+        // One line on a wide screen, and centered whichever word is showing.
+        for (const at of [before, after]) {
+          if (!at.oneLine) failures.push(`${label}: "${at.shown}" is not on the same line as the sentence before it`);
+          if (at.offCenter > 2) failures.push(`${label}: with "${at.shown}" the line is ${at.offCenter}px off center`);
         }
         if (motion === "reduce") {
           if (before.shown !== "customer." || after.shown !== "customer.") {
