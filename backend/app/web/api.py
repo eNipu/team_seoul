@@ -115,8 +115,14 @@ class LinkedInConnectionsBody(BaseModel):
     cookies: str = Field(min_length=1, max_length=linkedin_service.MAX_COOKIE_INPUT)
 
 
+class LinkedInExportBody(BaseModel):
+    """LinkedIn's own Connections.csv (Settings → Get a copy of your data), as text."""
+
+    csv: str = Field(min_length=1, max_length=4_000_000)
+
+
 class LinkedInPick(BaseModel):
-    public_identifier: str = Field(min_length=1, max_length=200)
+    public_identifier: str | None = Field(default=None, max_length=200)
     name: str = Field(min_length=1, max_length=120)
     headline: str | None = Field(default=None, max_length=300)
 
@@ -468,6 +474,39 @@ def build_api(settings: Settings) -> APIRouter:  # noqa: C901 - flat list of rou
                 "count": len(page.connections),
                 "total": page.total,
                 "truncated": page.truncated,
+                "stopped": page.stopped,
+                "details_available": bool(settings.apify_token),
+                "max_details": settings.linkedin_max_enriched,
+                "max_import": people_service.MAX_IMPORT_CANDIDATES,
+            }
+
+        return run(who, result)
+
+    @api.post("/linkedin/export")
+    def linkedin_export(body: LinkedInExportBody, who: Identity = Who) -> Any:
+        """Read LinkedIn's own connections export file (no cookies needed). Saves nothing."""
+        rows = linkedin_service.parse_export(body.csv, settings.linkedin_max_connections)
+
+        def result(db: Session, user: User) -> dict:
+            known = {p.name.lower() for p in people_service.list_people(db, user).people}
+            return {
+                "connections": [
+                    {
+                        **row,
+                        "profile_url": (
+                            f"https://www.linkedin.com/in/{row['public_identifier']}"
+                            if row["public_identifier"]
+                            else ""
+                        ),
+                        "connected_on": None,
+                        "already_added": row["name"].lower() in known,
+                    }
+                    for row in rows
+                ],
+                "count": len(rows),
+                "total": len(rows),
+                "truncated": False,
+                "stopped": None,
                 "details_available": bool(settings.apify_token),
                 "max_details": settings.linkedin_max_enriched,
                 "max_import": people_service.MAX_IMPORT_CANDIDATES,
@@ -480,20 +519,22 @@ def build_api(settings: Settings) -> APIRouter:  # noqa: C901 - flat list of rou
         """Turn the connections the user ticked into a people import to review. Adds nobody yet."""
         with session_scope() as db:
             account(db, who)
-        picks = list({p.public_identifier: p for p in body.people}.values())
+        picks = list({(p.public_identifier or p.name.lower()): p for p in body.people}.values())
         profiles: dict[str, dict] = {}
         details_error: str | None = None
         if settings.apify_token:
             try:
                 profiles = linkedin_service.fetch_profiles(
-                    [p.public_identifier for p in picks[: settings.linkedin_max_enriched]],
+                    [p.public_identifier for p in picks[: settings.linkedin_max_enriched] if p.public_identifier],
                     token=settings.apify_token,
                     actor=settings.apify_profile_actor,
                     timeout=settings.apify_timeout_seconds,
                 )
             except UpstreamError as exc:
                 details_error = exc.message  # still import with what the list gave us
-        candidates = [linkedin_service.candidate(p.name, p.headline, profiles.get(p.public_identifier)) for p in picks]
+        candidates = [
+            linkedin_service.candidate(p.name, p.headline, profiles.get(p.public_identifier or "")) for p in picks
+        ]
 
         def result(db: Session, user: User) -> dict:
             view = people_service.propose_import(db, user, candidates, linkedin_service.SOURCE)

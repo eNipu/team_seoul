@@ -830,6 +830,29 @@ export function createMockApi(options: MockOptions): Api {
           max_import: 50,
         };
       }),
+    linkedinExport: (csv) =>
+      wait(() => {
+        if (!/first name/i.test(csv)) {
+          fail("INVALID_REQUEST", "This file does not look like a LinkedIn connections export.", 400);
+        }
+        const connections = LINKEDIN_DEMO.slice(0, 4).map(([public_identifier, name, headline]) => ({
+          public_identifier,
+          name,
+          headline,
+          profile_url: `https://www.linkedin.com/in/${public_identifier}`,
+          connected_on: null,
+          already_added: state.friends.some((f) => same(f.name, name)),
+        }));
+        return {
+          connections,
+          count: connections.length,
+          total: connections.length,
+          truncated: false,
+          details_available: true,
+          max_details: 25,
+          max_import: 50,
+        };
+      }),
     linkedinPreview: (people) =>
       wait(() => {
         const candidates: T.ImportCandidate[] = people.map((p, index) => {

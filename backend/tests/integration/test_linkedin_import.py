@@ -96,6 +96,15 @@ def test_connections_are_read_page_by_page_with_the_session() -> None:
     assert len(short.connections) == 10 and short.truncated
 
 
+def test_what_was_already_read_survives_linkedin_cutting_us_off() -> None:
+    answers = [httpx.Response(200, json=_page([(f"p{i}", "Pat", str(i), "Engineer") for i in range(40)], 400))]
+    answers.append(httpx.Response(302, headers=[("set-cookie", "li_at=delete me; Path=/")]))
+    client = httpx.Client(transport=httpx.MockTransport(lambda _: answers.pop(0) if answers else answers[0]))
+    page = li.fetch_connections(LI_AT, 200, client=client, pause=lambda _: None)
+    assert len(page.connections) == 40 and page.truncated
+    assert page.stopped is not None and "signed this session out" in page.stopped
+
+
 def test_a_rejected_session_and_a_rate_limit_are_told_apart() -> None:
     with pytest.raises(InvalidRequest) as rejected:
         li.fetch_connections(LI_AT, 10, client=_linkedin({}, status=403))
@@ -179,3 +188,30 @@ def test_website_lists_connections_then_imports_only_the_picked_ones(web, alice,
 
     signed_out = web()
     assert signed_out.err("POST", "/linkedin/connections", {"cookies": LI_AT})[0] == 401
+
+
+EXPORT = """Notes:
+"Some email addresses may be missing."
+
+First Name,Last Name,URL,Email Address,Company,Position,Connected On
+Maya,Chen,https://www.linkedin.com/in/maya-chen,,Lens Studio,Photographer,"01 Mar 2024"
+Tom,Becker,https://www.linkedin.com/in/tom-becker/,tom@example.com,,Engineer,"02 Apr 2023"
+,,,,,,
+Sofia,Rossi,,,Tavola,,"05 May 2022"
+"""
+
+
+def test_the_linkedin_export_file_is_the_other_way_in(web) -> None:
+    me = web("alice")
+    listed = me.ok("POST", "/linkedin/export", {"csv": EXPORT})
+    assert [(c["name"], c["headline"], c["public_identifier"]) for c in listed["connections"]] == [
+        ("Maya Chen", "Photographer at Lens Studio", "maya-chen"),
+        ("Tom Becker", "Engineer", "tom-becker"),
+        ("Sofia Rossi", "Tavola", None),
+    ]
+    assert me.err("POST", "/linkedin/export", {"csv": "name;job\nx;y"}) == (400, "INVALID_REQUEST")
+
+    picked = [{k: c[k] for k in ("public_identifier", "name", "headline")} for c in listed["connections"][1:]]
+    preview = me.ok("POST", "/linkedin/import-preview", {"people": picked})
+    assert [c["name"] for c in preview["candidates"]] == ["Tom Becker", "Sofia Rossi"]
+    assert me.ok("POST", "/people/import", {"import_id": preview["import_id"], "indexes": [0, 1]})["count"] == 2

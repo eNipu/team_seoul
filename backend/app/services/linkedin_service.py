@@ -45,7 +45,8 @@ APIFY_RUN_URL = "https://api.apify.com/v2/acts/{actor}/run-sync-get-dataset-item
 APIFY_MODE = "Profile details no email ($4 per 1k)"
 
 PAGE_SIZE = 40
-PAGE_PAUSE_SECONDS = 0.6
+PAGE_PAUSE_SECONDS = 2.5
+PAGE_PAUSE_JITTER = 1.5
 MAX_COOKIE_INPUT = 20_000
 RELATIONSHIP = "LinkedIn connection"
 SOURCE = "linkedin"
@@ -60,6 +61,12 @@ _BARE_TOKEN = re.compile(r"^[A-Za-z0-9_\-=+/.]{20,2000}$")
 NO_SESSION = (
     "LinkedIn did not accept these cookies. Copy them again while you are signed in to LinkedIn "
     "(they stop working when you sign out), and include both li_at and JSESSIONID."
+)
+SESSION_ENDED = (
+    "LinkedIn signed this session out (it cleared li_at). That usually means only part of the cookie "
+    "set was pasted: LinkedIn ties li_at to the other cookies of the same browser. Copy the whole set "
+    "with a cookie-export extension (li_at, JSESSIONID, bcookie, bscookie, lidc, li_gc and the rest), "
+    "or use your LinkedIn connections export file instead."
 )
 
 
@@ -80,6 +87,8 @@ class ConnectionPage:
     connections: list[Connection]
     total: int | None
     truncated: bool
+    #: Set when LinkedIn stopped us part-way; the connections already read are still usable.
+    stopped: str | None = None
 
 
 # ------------------------------------------------------------------------ cookies
@@ -148,14 +157,22 @@ def parse_cookies(raw: str) -> dict[str, str]:
 
 
 def _headers(cookies: dict[str, str]) -> dict[str, str]:
+    """The headers the connections page itself sends, so the request is not an obvious outlier."""
     return {
         "accept": "application/vnd.linkedin.normalized+json+2.1",
         "accept-language": "en-US,en;q=0.9",
         "csrf-token": cookies["JSESSIONID"].strip('"'),
         "x-restli-protocol-version": "2.0.0",
         "x-li-lang": "en_US",
+        "x-li-track": (
+            '{"clientVersion":"1.13.0","mpVersion":"1.13.0","osName":"web","timezoneOffset":1,'
+            '"deviceFormFactor":"DESKTOP","mpName":"voyager-web"}'
+        ),
         "user-agent": _USER_AGENT,
         "referer": "https://www.linkedin.com/mynetwork/invite-connect/connections/",
+        "sec-fetch-site": "same-origin",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-dest": "empty",
         "cookie": "; ".join(f"{name}={value}" for name, value in cookies.items()),
     }
 
@@ -241,6 +258,9 @@ def _get_page(client: httpx.Client, headers: dict[str, str], start: int) -> Any:
         log.warning("linkedin connections request failed: %s", type(exc).__name__)
         raise UpstreamError("Could not reach LinkedIn. Try again in a moment.") from None
     status = response.status_code
+    if status != 200 and any(value.startswith("li_at=delete me") for value in response.headers.get_list("set-cookie")):
+        # LinkedIn answers a session it refuses by expiring li_at in the response.
+        raise InvalidRequest(SESSION_ENDED)
     if status in (429, 999):
         raise RateLimited("LinkedIn is limiting requests from this account. Wait an hour before trying again.")
     if status in (401, 403) or 300 <= status < 400:
@@ -262,19 +282,31 @@ def fetch_connections(
     pause: Callable[[float], None] = time.sleep,
 ) -> ConnectionPage:
     """The signed-in member's connections, newest first, up to ``limit``."""
-    headers = _headers(parse_cookies(raw_cookies))
+    cookies_for_jar = parse_cookies(raw_cookies)
+    headers = _headers(cookies_for_jar)
     limit = max(1, limit)
     own_client = client is None
-    client = client or httpx.Client(timeout=20.0, follow_redirects=False)
+    # One client for every page: LinkedIn expects the cookies it sets (routing, bot checks)
+    # to come back on the next request, the way a browser would.
+    client = client or httpx.Client(timeout=20.0, follow_redirects=False, cookies=dict(cookies_for_jar))
     found: list[Connection] = []
     seen: set[str] = set()
     total: int | None = None
+    stopped: str | None = None
     try:
         start = 0
         while len(found) < limit:
             if start:
-                pause(PAGE_PAUSE_SECONDS)
-            page, reported = parse_connections(_get_page(client, headers, start))
+                # LinkedIn signs a session out when pages are requested faster than a person reads them.
+                pause(PAGE_PAUSE_SECONDS + secrets.randbelow(1000) / 1000 * PAGE_PAUSE_JITTER)
+            try:
+                payload = _get_page(client, headers, start)
+            except (InvalidRequest, RateLimited, UpstreamError) as exc:
+                if not found:
+                    raise
+                stopped = exc.message  # keep what we already have
+                break
+            page, reported = parse_connections(payload)
             total = reported if reported is not None else total
             fresh = [c for c in page if c.public_identifier not in seen]
             if not fresh:
@@ -288,7 +320,7 @@ def fetch_connections(
         if own_client:
             client.close()
     truncated = len(found) > limit or (total is not None and total > len(found))
-    return ConnectionPage(found[:limit], total, truncated)
+    return ConnectionPage(found[:limit], total, truncated, stopped)
 
 
 # ------------------------------------------------------------------ profile details
@@ -416,3 +448,55 @@ class FetchLimiter:
         if len(self._seen) > 10_000:
             self._seen.clear()
         self._seen[key] = recent
+
+
+# ------------------------------------------------------- connections export file
+CSV_COLUMNS = ("first name", "last name", "url", "company", "position", "connected on")
+
+
+def _public_identifier(url: str) -> str | None:
+    match = re.search(r"linkedin\.com/in/([^/?#\s]+)", url.strip(), re.I)
+    identifier = match.group(1) if match else None
+    return identifier if identifier and _IDENTIFIER.match(identifier) else None
+
+
+def parse_export(text: str, limit: int = 1000) -> list[dict]:
+    """Rows of LinkedIn's own Connections.csv export (Settings → Get a copy of your data).
+
+    The file starts with a few "Notes:" lines before the header, so the header is searched for.
+    Returns ``{public_identifier, name, headline}`` dicts, the same shape the cookie path produces.
+    """
+    import csv as _csv
+    import io
+
+    lines = (text or "").replace("\r\n", "\n").split("\n")
+    start = next(
+        (i for i, line in enumerate(lines) if "first name" in line.lower() and "last name" in line.lower()),
+        None,
+    )
+    if start is None:
+        raise InvalidRequest(
+            "This file does not look like a LinkedIn connections export. "
+            "Use Connections.csv from LinkedIn's 'Get a copy of your data'."
+        )
+    reader = _csv.DictReader(io.StringIO("\n".join(lines[start:])))
+    rows: list[dict] = []
+    seen: set[str] = set()
+    for row in reader:
+        values = {(k or "").strip().lower(): (v or "").strip() for k, v in row.items() if isinstance(k, str)}
+        name = " ".join(p for p in (values.get("first name"), values.get("last name")) if p)[:120]
+        if not name:
+            continue
+        identifier = _public_identifier(values.get("url", ""))
+        key = identifier or name.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        position, company = values.get("position"), values.get("company")
+        headline = " at ".join(p for p in (position, company) if p) or company or position or None
+        rows.append({"public_identifier": identifier, "name": name, "headline": (headline or "")[:300] or None})
+        if len(rows) >= limit:
+            break
+    if not rows:
+        raise InvalidRequest("No connections were found in that file.")
+    return rows

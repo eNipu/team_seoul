@@ -3354,3 +3354,28 @@ input[type="radio"] {
   margin-top: 4px;
   flex: none;
 }
+
+.tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.tabs__tab {
+  padding: 7px 14px;
+  border: 0;
+  border-radius: calc(var(--radius) - 4px);
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tabs__tab--on {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-1);
+}
