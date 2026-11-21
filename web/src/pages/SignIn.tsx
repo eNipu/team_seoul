@@ -84,7 +84,10 @@ export default function SignIn({
   return (
     <AuthFrame>
       <h1>Sign in to Venn</h1>
-      <p className="auth__lead">It's the same account you use in ChatGPT.</p>
+      <p className="auth__lead">
+        Use your Venn username: the one you chose when you connected Venn in ChatGPT. This is not your
+        ChatGPT login.
+      </p>
       <form
         className="stack"
         noValidate
@@ -93,7 +96,11 @@ export default function SignIn({
           void submit(creating);
         }}
       >
-        <Field label="Username" error={nameError} hint="Lower-case letters, digits, dots, underscores and hyphens.">
+        <Field
+          label="Venn username"
+          error={nameError}
+          hint="Not an email address. Lower-case letters, digits, dots, underscores and hyphens."
+        >
           {(p) => (
             <input
               {...p}
@@ -111,7 +118,7 @@ export default function SignIn({
           )}
         </Field>
         {passcodeRequired && (
-          <Field label="Passcode">
+          <Field label="Server passcode" hint="The shared passcode for this development server, not a personal password.">
             {(p) => (
               <input
                 {...p}
