@@ -420,6 +420,37 @@ export interface PeopleImport {
   note: string;
 }
 
+export interface LinkedInConnection {
+  public_identifier: string;
+  name: string;
+  headline: string | null;
+  profile_url: string;
+  connected_on: string | null;
+  already_added: boolean;
+}
+
+export interface LinkedInConnections {
+  connections: LinkedInConnection[];
+  count: number;
+  total: number | null;
+  truncated: boolean;
+  /** Whether this server can fetch company, location and skills for the people picked. */
+  details_available: boolean;
+  max_details: number;
+  max_import: number;
+}
+
+export interface LinkedInPick {
+  public_identifier: string;
+  name: string;
+  headline: string | null;
+}
+
+export interface LinkedInImport extends PeopleImport {
+  details_for: number;
+  details_error: string | null;
+}
+
 export interface Invite {
   view: "invite";
   code: string;
@@ -1024,6 +1055,34 @@ export function parseQuiz(v: unknown): Quiz {
       .filter((q) => q.prompt !== "" && q.options.length >= 2),
     note: str(o.note),
   };
+}
+
+export function parseLinkedInConnections(v: unknown): LinkedInConnections {
+  const o = obj(v);
+  const connections = objs(o.connections)
+    .map((c) => ({
+      public_identifier: str(c.public_identifier),
+      name: str(c.name),
+      headline: strOrNull(c.headline),
+      profile_url: str(c.profile_url),
+      connected_on: strOrNull(c.connected_on),
+      already_added: bool(c.already_added),
+    }))
+    .filter((c) => c.public_identifier !== "" && c.name !== "");
+  return {
+    connections,
+    count: connections.length,
+    total: numOrNull(o.total),
+    truncated: bool(o.truncated),
+    details_available: bool(o.details_available),
+    max_details: num(o.max_details, 25),
+    max_import: num(o.max_import, LIMITS.importPeople),
+  };
+}
+
+export function parseLinkedInImport(v: unknown): LinkedInImport {
+  const o = obj(v);
+  return { ...parsePeopleImport(v), details_for: num(o.details_for), details_error: strOrNull(o.details_error) };
 }
 
 export function parsePeopleImport(v: unknown): PeopleImport {

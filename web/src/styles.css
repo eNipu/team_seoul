@@ -3318,3 +3318,39 @@ input[type="radio"] {
   fill: var(--text);
   font-style: italic;
 }
+
+/* ---------------------------------------------------------- linkedin import */
+
+.review__notes {
+  color: var(--muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.filter--wide {
+  flex: none;
+  max-width: none;
+}
+
+.steps {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 1.4em;
+  list-style: decimal;
+  color: var(--muted);
+}
+
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.check input {
+  margin-top: 4px;
+  flex: none;
+}
