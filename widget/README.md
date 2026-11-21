@@ -14,7 +14,7 @@ npm run dev        # local demo harness
 ```
 
 The Python server reads `widget/dist/index.html` and serves it as MCP resource
-`ui://venn/app-v4.html` with mimeType `text/html;profile=mcp-app`.
+`ui://venn/app-v1.html` with mimeType `text/html;profile=mcp-app`.
 
 ### Demo mode
 
@@ -23,10 +23,12 @@ mock bridge (`src/mock.ts`) instead of the ext-apps connection. It also works st
 `dist/index.html` over `file://`.
 
 - `?view=memory_review|dashboard|invite|activity_ideas|reconnect|friend|friend_person|welcome|`
-  `people_import|people_search|group_plan|brief|brief_person|quiz|quiz_circle|memory_import|memory_review_import`
+  `people_import|people_search|group_plan|brief|brief_person|quiz|quiz_circle|memory_import|memory_review_import|help|dashboard_setup`
   (`friend`/`brief`/`quiz` use a Venn connection, `friend_person`/`brief_person` a private person
   note, `quiz_circle` is the circle quiz, `memory_review_import` is a 12-item review card with
-  `source: "chatgpt_memory"`, two of them already saved); no `view` → empty state with links to every demo view
+  `source: "chatgpt_memory"`, two of them already saved, `help` is the help card, `dashboard_setup` is a
+  dashboard with memories but no people or connections, so the set-up card shows "1 of 3 done"; the plain
+  `dashboard` demo has every step done and shows no set-up card); no `view` → empty state with links to every demo view
 - `&tab=profile|memories|friends` opens a dashboard tab
 - `&theme=dark|light` forces a theme (default: `prefers-color-scheme`)
 - `&flaky=1` makes every other tool call fail, so you can test the error banner and Retry
@@ -52,11 +54,12 @@ roughly matches the incoming view. A tool result with `isError` shows an error b
 | --- | --- | --- |
 | `memory_review` | `venn_propose_memories` | Proposed memories (up to 30) with a checkbox, editable title/description, visibility select. More than 3 items adds "N of M selected", **Select all** / **None** and a sticky action bar. Items with `already_saved` start unticked with an "Already in Venn" badge. With `source: "chatgpt_memory"` the card is titled "From your ChatGPT memory" and the success state offers **Open my Venn**. Nothing is saved until **Save selected**. |
 | `memory_import` | `venn_import_chatgpt_memory` | "Bring your ChatGPT memory with you": one checkbox per area, the always-excluded note, **Preview my ChatGPT memory** (sends a prompt into the chat), then "Check the chat" with **Choose again**, or the prompt to copy when the host refuses the message. Nothing is sent to Venn from this card. |
-| `dashboard` | `venn_show_dashboard` | Tabs **Profile** (edit name/bio, goals, interests), **Memories** ("Sources" row for ChatGPT memory with **Import from ChatGPT** / **Import more**, search, grouped by category, "From ChatGPT" badge, edit, delete), **Friends** (search "Who do I know who…", invite, reconnect, quick actions **Import friends** / **Play a quiz** / **Plan a group hangout** (pick 2 to 6 friends), pending requests, "On Venn", "Private notes", add a person). |
-| `welcome` | `venn_show_dashboard` (new user) | Welcome, three points about Venn, **Import my ChatGPT memory** (secondary), goal chips (max 6), **Get started** (primary). |
+| `dashboard` | `venn_show_dashboard` | "Finish setting up" card above the tabs while a set-up step is open (see "Set-up"). Tabs **Profile** (edit name/bio, at-a-glance tiles for memories / friends / requests that open the matching tab, goals, interests), **Memories** ("Sources" row for ChatGPT memory with **Import from ChatGPT** / **Import more**, search, grouped by category, "From ChatGPT" badge, edit, delete), **Friends** (search "Who do I know who…", invite, reconnect, quick actions **Import friends** / **Play a quiz** / **Plan a group hangout** (pick 2 to 6 friends), pending requests, "On Venn", "Private notes", add a person). |
+| `welcome` | `venn_show_dashboard` (new user) | Start of set-up: hero, the three set-up steps as a numbered path, and inside step 1 the goal chips (max 6), **Get started** (primary) and **Import my ChatGPT memory** (secondary). |
+| `help` | `venn_help` | "How Venn helps": the set-up card (while a step is open), topics with an icon, a description and "try it" examples that are sent into the chat ("Sent — continue in the chat", or the text with **Copy** when the host refuses), then "Your data". `note` is model-facing and not shown. |
 | `invite` | `venn_create_invite` | Code as a ticket, QR code ("Scan to connect", when `qr` is non-empty), copy code / copy invite message / copy link (when `link` is non-empty), expiry, uses, revoke. |
-| `activity_ideas` | `venn_suggest_activity` | Shared interests, match meter with "Why this score?", suggestion cards with **Plan it** / **We did this** / **Add to calendar**. |
-| `reconnect` | `venn_reconnection_suggestions` | Friends not seen for a while, with **Get ideas** / **Draft a message** / **We met up**. |
+| `activity_ideas` | `venn_suggest_activity` | Shared interests, match ring (`match_score`) with "Why this score?", suggestion cards with **Plan it** / **We did this** / **Add to calendar**. |
+| `reconnect` | `venn_reconnection_suggestions` | Friends not seen for a while, each with a "days since" figure and a bar relative to the longest gap in the list, with **Get ideas** / **Draft a message** / **We met up**. |
 | `friend` | `venn_view_friend` | Profile of a connection or a private person note, "Things to ask about" (tick off / add), interests, shared memories, hangout timeline, actions incl. **Prep for a meetup** and (connections) **Quiz**. |
 | `people_import` | `venn_propose_people_import` | Checklist of proposed people (already-added ones unchecked), Select all / None, **Add N people**, then a success state. Nothing is saved until confirmed. |
 | `people_search` | `venn_find_people` | The query, an editable search field that re-runs in place, result rows with matched labels, **Plan something together** (2+ results). |
@@ -72,7 +75,7 @@ roughly matches the incoming view. A tool result with `isError` shows an error b
 stack to that one view. After going back, the revealed view is refreshed in the background
 (`dashboard` → `venn_show_dashboard {}`, `reconnect` → `venn_reconnection_suggestions {}`,
 `friend` → `venn_view_friend`, `brief` → `venn_meetup_brief`, `people_search` →
-`venn_find_people {query}`); the stale view stays visible, and is kept if the refresh fails.
+`venn_find_people {query}`, `help` → `venn_help {}`); the stale view stays visible, and is kept if the refresh fails.
 `replaceView(tool, args)` swaps the current view without adding a Back step (search re-runs,
 quiz **Play again**).
 
@@ -87,8 +90,12 @@ memory_review  { proposal_id, expires_at, source: "conversation" | "chatgpt_memo
                  source missing/unknown = "conversation"; already_saved missing = false
 memory_import  { areas: [{ value, label, description, selected }] (1..10), always_excluded,
                  imported_count, max_items, note }   note is model-facing and not shown
-dashboard      { profile, memories: [Memory], connections: [Connection], people: [Person], pending_requests: [PendingRequest] }
-welcome        { display_name, goal_options: [{ value, label }] }
+dashboard      { profile, memories: [Memory], connections: [Connection], people: [Person], pending_requests: [PendingRequest],
+                 setup: [SetupStep] }
+welcome        { display_name, goal_options: [{ value, label }], setup: [SetupStep] }
+help           { display_name, topics: [{ key, title, description, examples (0..4) }] (1..10),
+                 setup: [SetupStep], privacy: string[], note }   note is model-facing and not shown
+                 known topic keys: setup, memories, people, connect, stay_close, quiz, privacy (others get a generic icon)
 invite         { code, expires_at, max_uses, share_text, note, link, qr: string[] }
                qr = rows of '0'/'1' ('1' = dark); must be a square grid or it is ignored. link must be http(s).
 activity_ideas { kind, id, display_name, shared_interests, match_score (0..1), score_explanation,
@@ -118,14 +125,28 @@ Connection     { connection_id, user_id, display_name, since, last_interaction_a
 Person         { person_id, name, relationship, notes, interests, last_interaction_at, created_at }
 PendingRequest { request_id, sender_display_name, created_at }
 FollowUp       { follow_up_id, text, created_at }
+SetupStep      { key: "about_you" | "your_people" | "connect", title, description, done }
+                 missing/invalid = empty list; steps with unknown keys are dropped
 ```
 
 Memory categories: `INTEREST`, `DISLIKE`, `PREFERENCE`, `EXPERIENCE`, `PERSONAL_MEMORY`, `SOCIAL_GOAL`,
-`RELATIONSHIP_CONTEXT` and `WORK` ("Work & projects", 💼). Unknown categories fall back to
+`RELATIONSHIP_CONTEXT` and `WORK` ("Work & projects"). Unknown categories fall back to
 `PERSONAL_MEMORY`.
 
 Counts shown in the UI are derived from the arrays (`memories.length`, `connections.length +
 people.length`), not from `profile.memory_count`.
+
+### Set-up
+
+`setup` drives onboarding. The dashboard and the help card show a "Finish setting up" card (progress
+ring, "N of 3 done", the steps) while at least one step is open, and nothing once all are done; the
+welcome card shows the same steps as a numbered path. The actions are fixed per step key: `about_you`
+→ **Import from ChatGPT** (opens the import card) and **Answer a few questions** (chat prompt);
+`your_people` → **Add your people** (chat prompt); `connect` → **Invite a friend** (opens the invite
+card). The first open step gets the primary button, later open steps a secondary one, done steps none.
+After a chat prompt is accepted the step shows "Continue in the chat"; if the host refuses, the text is
+shown with **Copy**. The card is updated whenever the dashboard payload is refreshed (after **Back**,
+or after an action that returns a dashboard).
 
 ## Tool calls made by the widget
 
@@ -133,7 +154,9 @@ people.length`), not from `profile.memory_count`.
 | --- | --- | --- | --- |
 | Save selected | `venn_save_memories` | `{ proposal_id, approvals: [{ index, visibility, title, description }] }` | `{ saved: Memory[], count }` |
 | Back to dashboard; after accepting a request; **Open my Venn** (after an import) | `venn_show_dashboard` | `{}` | `dashboard` view |
-| Welcome → Import my ChatGPT memory; Memories tab → Import from ChatGPT / Import more | `venn_import_chatgpt_memory` | `{}` | `memory_import` view |
+| Header **Help** (every view except `help`) | `venn_help` | `{}` | `help` view |
+| Set-up → Invite a friend | `venn_create_invite` | `{}` | `invite` view |
+| Welcome → Import my ChatGPT memory; Set-up → Import from ChatGPT; Memories tab → Import from ChatGPT / Import more | `venn_import_chatgpt_memory` | `{}` | `memory_import` view |
 | Edit profile | `venn_update_profile` | `{ display_name?, bio? }` (changed fields only) | Profile |
 | Welcome → Get started | `venn_update_profile` | `{ social_goals: string[] }` | Profile (result ignored) |
 | Edit memory | `venn_update_memory` | `{ memory_id, title?, description?, visibility? }` | Memory |
@@ -189,6 +212,9 @@ the local state and show a banner with **Retry**. Buttons are disabled while a c
   Also **Import friends** (`I'd like to import my friends into Venn. I'll paste a list, upload a contacts file, or just tell you about them.`),
   group **Plan it** (`Help me plan "<title>" with <names>. I will reach out to everyone myself.`) and
   **Tell <name> my score** (`I just scored X out of N on Venn's "How well do you know <name>?" quiz. Help me draft a short, playful message telling <name> my score. I will send it myself.`).
+  Set-up **Answer a few questions** (`Let's set up Venn. Ask me a few questions about what I enjoy and what I like to avoid.`)
+  and **Add your people** (`I'd like to add my friends to Venn. I'll paste a list, upload a contacts file, or just tell you about them.`);
+  a help example sends its own text unchanged.
   **Preview my ChatGPT memory** sends the import prompt described under "Importing ChatGPT memory".
   If the host doesn't support `message`, the widget shows the text to type in chat instead.
 - `openLink` (`app.openLink({ url })`, needs the host's `openLinks` capability): **Add to calendar**
@@ -210,7 +236,10 @@ src/types.ts               data contract, friendArg, defensive parsers, formatte
 src/calendar.ts            pure Google Calendar URL builder + date helpers
 src/memoryImport.ts        pure prompt builder for the ChatGPT memory import
 src/mockQr.ts              demo-only QR encoder for mock invites
-src/components/common.tsx  Avatar, useAction (busy / retry), chat prompts, copyText, small UI bits
+src/components/common.tsx  Avatar, useAction (busy / retry), chat prompts, copyText, CopyButton, ChatFallback, Ring, small UI bits
+src/components/icons.tsx   the icon set (Icon), category icons, the Venn mark (BrandMark) and spot illustrations (Illustration); all inline SVG
+src/components/Setup.tsx   "Finish setting up" card and the per-step actions (shared by Dashboard, Welcome and Help)
+src/components/Help.tsx    help card
 src/components/            MemoryReview, MemoryImport, Dashboard (+ MemoriesTab, FriendsTab), Friend, PersonForm,
                            Invite (+ QrCode), ActivityIdeas, Reconnect, Welcome, ErrorBanner,
                            PeopleImport, PeopleSearch, GroupPlan, Brief, Quiz,

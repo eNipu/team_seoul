@@ -155,7 +155,7 @@ def test_search_memories(alice):
 
 
 def test_widget_resource_served(alice):
-    body = alice.rpc("resources/read", {"uri": "ui://venn/app-v4.html"}).json()
+    body = alice.rpc("resources/read", {"uri": "ui://venn/app-v1.html"}).json()
     content = body["result"]["contents"][0]
     assert content["mimeType"] == "text/html;profile=mcp-app"
     assert "<html" in content["text"]
@@ -163,11 +163,12 @@ def test_widget_resource_served(alice):
 
 def test_render_tools_bound_to_widget(alice):
     tools = {t["name"]: t for t in alice.rpc("tools/list").json()["result"]["tools"]}
-    assert len(tools) == 38
+    assert len(tools) == 39
     render_tools = (
         "venn_propose_memories",
         "venn_import_chatgpt_memory",
         "venn_show_dashboard",
+        "venn_help",
         "venn_create_invite",
         "venn_propose_people_import",
         "venn_view_friend",
@@ -179,7 +180,7 @@ def test_render_tools_bound_to_widget(alice):
         "venn_start_quiz",
     )
     for name in render_tools:
-        assert tools[name]["_meta"]["ui"]["resourceUri"] == "ui://venn/app-v4.html"
+        assert tools[name]["_meta"]["ui"]["resourceUri"] == "ui://venn/app-v1.html"
     # Tools the widget calls directly must be callable from the app.
     for name in (
         "venn_save_memories",
@@ -199,7 +200,7 @@ def test_render_tools_bound_to_widget(alice):
     ):
         assert tools[name]["_meta"]["openai/widgetAccessible"] is True, name
     assert "ui" not in (tools["venn_list_memories"].get("_meta") or {})
-    assert sum("ui" in (t.get("_meta") or {}) for t in tools.values()) == 12
+    assert sum("ui" in (t.get("_meta") or {}) for t in tools.values()) == 13
 
 
 # ---------------------------------------------------------------- import from ChatGPT memory

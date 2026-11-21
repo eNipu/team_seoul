@@ -5,7 +5,7 @@ Conventions
 - Data tools return compact text + structuredContent. Render tools are bound to the widget
   resource and return a `view` discriminator the widget switches on: venn_propose_memories
   (memory_review), venn_import_chatgpt_memory (memory_import), venn_show_dashboard
-  (dashboard | welcome), venn_create_invite (invite),
+  (dashboard | welcome), venn_help (help), venn_create_invite (invite),
   venn_propose_people_import (people_import), venn_view_friend (friend),
   venn_suggest_activity (activity_ideas), venn_reconnection_suggestions (reconnect),
   venn_find_people (people_search), venn_plan_group (group_plan), venn_meetup_brief (brief)
@@ -111,7 +111,7 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
                 f"interests: {', '.join(profile.interests[:10]) or 'none yet'}."
             )
             if profile.is_new:
-                text += " New user — call venn_show_dashboard to show the welcome card, then onboard."
+                text += " New user — call venn_show_dashboard now: it shows the welcome card and starts set-up."
             return ok(text, profile)
 
         return await guarded(body)
@@ -383,12 +383,15 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
         title="Show Venn dashboard",
         description=(
             "Call this first in a Venn conversation, and whenever the user opens or mentions Venn, "
-            "says hello, asks what Venn can do, or asks to set up or see their profile, memories or "
-            "friends. Shows the user's Venn home in an interactive view: profile, memories, friends "
+            'says hello, or asks to set up or see their profile, memories or friends (for "what can '
+            'you do?" or "help" use venn_help instead). Shows the user\'s Venn home in an interactive '
+            "view: profile, memories, friends "
             "(connections on Venn and private notes on people who aren't) and pending requests. The "
             "user can edit their profile and memories, open a friend, and accept/decline requests there. "
-            "A brand-new account gets a welcome card instead. The result includes the profile, so there "
-            "is no need to call venn_get_profile as well."
+            "A brand-new account gets a welcome card instead. The result also tells you which set-up "
+            "steps are still open (about you, your people, connect); when any are, start the first one "
+            "right away in the same reply instead of waiting for the user to ask. The result includes "
+            "the profile, so there is no need to call venn_get_profile as well."
         ),
         annotations=READ_ONLY,
     )
@@ -398,17 +401,49 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
                 [PROFILE_READ, MEMORIES_READ, CONNECTIONS],
                 lambda db, user, _: dashboard_service.build_home(db, user),
             )
+            guidance = dashboard_service.setup_guidance(view.setup)
             if view.view == "welcome":
                 return ok(
                     "Showing the welcome card: this account is empty. The card lets the user pick social "
-                    "goals and start set-up. Reply with one short line only. When the user continues, "
-                    "onboard in chat: ask 2-3 friendly questions about interests and the people they want "
-                    "to stay close to, then call venn_propose_memories. Do not show this card again.",
+                    "goals, import their ChatGPT memory or start set-up. Do not describe the card and do "
+                    f"not show it again. {guidance}",
                     view,
                 )
             return ok(
                 f"Dashboard: {len(view.memories)} memories, {len(view.connections)} connections, "
-                f"{len(view.people)} people notes, {len(view.pending_requests)} pending requests.",
+                f"{len(view.people)} people notes, {len(view.pending_requests)} pending requests. "
+                + (guidance or "Set-up is complete."),
+                view,
+            )
+
+        return await guarded(body)
+
+    @apps.tool(
+        resource_uri=WIDGET_URI,
+        visibility=["model", "app"],
+        meta=ui_meta("Opening Venn help…", "Here's what Venn can do"),
+        name="venn_help",
+        title="Venn help",
+        description=(
+            "Show what Venn can do, on a card with things to try. Call this when the user asks for help, "
+            "what Venn is, what it can do, how something works, or what to say - instead of explaining in "
+            "text. The card lists each area with example requests the user can tap, the set-up steps that "
+            "are still open, and how their data is handled. It changes nothing. If the question is about "
+            "one specific thing, answer it in a sentence or two as well."
+        ),
+        annotations=READ_ONLY,
+    )
+    async def venn_help() -> CallToolResult:
+        async def body():
+            view = await run_as_user(
+                [PROFILE_READ, MEMORIES_READ, CONNECTIONS],
+                lambda db, user, _: dashboard_service.build_help(db, user),
+            )
+            topics = "; ".join(t.title for t in view.topics)
+            guidance = dashboard_service.setup_guidance(view.setup, start=False)
+            return ok(
+                f"Showing the help card ({topics}), with examples the user can tap. Do not list them again "
+                "in text; add one short line at most. " + (guidance or "Set-up is complete."),
                 view,
             )
 
@@ -1099,6 +1134,7 @@ ToolName = Literal[
     "venn_update_memory",
     "venn_delete_memory",
     "venn_show_dashboard",
+    "venn_help",
     "venn_create_invite",
     "venn_list_invites",
     "venn_revoke_invite",

@@ -13,6 +13,7 @@ import {
 } from "../types";
 import ErrorBanner from "./ErrorBanner";
 import { ActionError, useAction, type Nav } from "./common";
+import { CATEGORY_ICONS, Icon, Illustration } from "./icons";
 
 interface Props {
   data: MemoryReviewViewData;
@@ -101,7 +102,9 @@ export default function MemoryReview({ data, bridge, nav }: Props) {
       <section className="panel">
         <ActionError action={action} />
         <div className="success">
-          <span className="success__icon" aria-hidden="true">✓</span>
+          <span className="success__icon" aria-hidden="true">
+            <Icon name="check" size={22} />
+          </span>
           <h2 role={fromChatGpt ? "status" : undefined}>
             {fromChatGpt
               ? `${plural(saved.length, "memory", "memories")} imported from ChatGPT`
@@ -139,7 +142,7 @@ export default function MemoryReview({ data, bridge, nav }: Props) {
   if (phase === "discarded") {
     return (
       <section className="panel empty">
-        <div className="empty__art" aria-hidden="true">🗑️</div>
+        <Illustration name="done" />
         <p className="empty__title">Discarded</p>
         <p className="muted">Nothing was saved to your profile.</p>
       </section>
@@ -153,12 +156,18 @@ export default function MemoryReview({ data, bridge, nav }: Props) {
       <h2>{fromChatGpt ? "From your ChatGPT memory" : "Review what Venn learned"}</h2>
       {fromChatGpt ? (
         <p className="notice">
-          ChatGPT picked these from what it remembers about you. <strong>Nothing is saved until you confirm.</strong>
+          <Icon name="shield" size={18} />
+          <span>
+            ChatGPT picked these from what it remembers about you. <strong>Nothing is saved until you confirm.</strong>
+          </span>
         </p>
       ) : (
         <p className="notice">
-          <strong>Nothing is saved until you approve it.</strong> Uncheck anything you don't want remembered, edit the
-          wording, and choose who can see each memory.
+          <Icon name="shield" size={18} />
+          <span>
+            <strong>Nothing is saved until you approve it.</strong> Uncheck anything you don't want remembered, edit the
+            wording, and choose who can see each memory.
+          </span>
         </p>
       )}
       {expiresAt && !Number.isNaN(expiresAt.getTime()) && (
@@ -204,7 +213,10 @@ export default function MemoryReview({ data, bridge, nav }: Props) {
                   </label>
                   <span className="memory-item__badges">
                     {p.already_saved && <span className="badge badge--on">Already in Venn</span>}
-                    <span className={`badge badge--cat-${p.category.toLowerCase()}`}>{CATEGORY_LABELS[p.category]}</span>
+                    <span className={`badge badge--cat cat--${p.category.toLowerCase()}`}>
+                      <Icon name={CATEGORY_ICONS[p.category]} size={14} />
+                      {CATEGORY_LABELS[p.category]}
+                    </span>
                   </span>
                 </div>
 
@@ -273,6 +285,7 @@ export default function MemoryReview({ data, bridge, nav }: Props) {
           onClick={save}
           disabled={busy || selected.length === 0 || invalid}
         >
+          <Icon name="check" size={18} />
           {busy ? "Saving…" : `Save selected (${selected.length})`}
         </button>
       </div>

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { formatDaysAgo, parseImportPeople, plural, type ImportCandidate, type PeopleImportViewData } from "../types";
 import { ActionError, Avatar, EmptyNote, useAction, type ViewProps } from "./common";
+import { Illustration } from "./icons";
 
 export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImportViewData>) {
   const action = useAction();
@@ -43,9 +44,7 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
     return (
       <section className="panel celebrate">
         <ActionError action={action} />
-        <div className="celebrate__art" aria-hidden="true">
-          🎉
-        </div>
+        <Illustration name="friends" />
         <h2 role="status">Added {plural(added.count, "person", "people")}</h2>
         <p className="muted">They're saved as private notes. Only you can see them.</p>
         {shown.length > 0 && (
@@ -90,7 +89,7 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
       <ActionError action={action} />
 
       {data.candidates.length === 0 ? (
-        <EmptyNote icon="🫥" title="No one to add">
+        <EmptyNote art="search" title="No one to add">
           Venn couldn't find any people in that. Try pasting names, one per line.
         </EmptyNote>
       ) : (

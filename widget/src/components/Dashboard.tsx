@@ -12,11 +12,14 @@ import {
   type PendingRequest,
   type Person,
   type Profile,
+  type SetupStep,
 } from "../types";
 import { ActionError, Avatar, SectionTitle, useAction, type Action, type ViewProps } from "./common";
 import type { HostBridge } from "../mcp/client";
 import MemoriesTab from "./MemoriesTab";
 import FriendsTab from "./FriendsTab";
+import SetupCard from "./Setup";
+import { Icon, type IconName } from "./icons";
 
 export type DashboardTab = "profile" | "memories" | "friends";
 
@@ -34,6 +37,7 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
   const [connections, setConnections] = useState<Connection[]>(data.connections);
   const [people, setPeople] = useState<Person[]>(data.people);
   const [pending, setPending] = useState<PendingRequest[]>(data.pending_requests);
+  const [setup, setSetup] = useState<SetupStep[]>(data.setup);
 
   const friendCount = connections.length + people.length;
 
@@ -49,6 +53,7 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
     setConnections(d.connections);
     setPeople(d.people);
     setPending(d.pending_requests);
+    setSetup(d.setup);
   }
 
   // Every count shown in the UI is derived from the same arrays that are listed.
@@ -59,6 +64,8 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
   ];
 
   return (
+    <>
+    <SetupCard steps={setup} bridge={bridge} nav={nav} />
     <section className="panel panel--tabs">
       <div className="tabs" role="tablist" aria-label="Dashboard sections">
         {tabs.map((t) => (
@@ -89,6 +96,8 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
             profile={profile}
             memoryCount={memories.length}
             friendCount={friendCount}
+            pendingCount={pending.length}
+            onOpenTab={setTab}
             bridge={bridge}
             action={action}
             onProfile={setProfile}
@@ -111,6 +120,7 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
         )}
       </div>
     </section>
+    </>
   );
 }
 
@@ -118,12 +128,14 @@ interface ProfileTabProps {
   profile: Profile;
   memoryCount: number;
   friendCount: number;
+  pendingCount: number;
+  onOpenTab: (tab: DashboardTab) => void;
   bridge: HostBridge;
   action: Action;
   onProfile: (p: Profile) => void;
 }
 
-function ProfileTab({ profile, memoryCount, friendCount, bridge, action, onProfile }: ProfileTabProps) {
+function ProfileTab({ profile, memoryCount, friendCount, pendingCount, onOpenTab, bridge, action, onProfile }: ProfileTabProps) {
   const id = useId();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(profile.display_name);
@@ -167,9 +179,6 @@ function ProfileTab({ profile, memoryCount, friendCount, bridge, action, onProfi
         <Avatar name={profile.display_name} size="large" />
         <div className="profile-head__body">
           <h2>{profile.display_name}</h2>
-          <p className="muted small">
-            {plural(memoryCount, "memory", "memories")} · {plural(friendCount, "friend", "friends")}
-          </p>
           <div className="row row--wrap">
             <span className={`badge badge--pvis-${profile.profile_visibility.toLowerCase()}`}>
               {PROFILE_VISIBILITY_LABELS[profile.profile_visibility]}
@@ -178,10 +187,32 @@ function ProfileTab({ profile, memoryCount, friendCount, bridge, action, onProfi
         </div>
         {!editing && (
           <button type="button" className="btn btn--small profile-head__edit" disabled={action.busy !== null} onClick={startEdit}>
+            <Icon name="pencil" size={16} />
             Edit profile
           </button>
         )}
       </div>
+
+      {/* Counts come from the same arrays the tabs list; each tile opens its tab. */}
+      <ul className="stats" aria-label="At a glance">
+        {(
+          [
+            { icon: "bookmark", value: memoryCount, label: memoryCount === 1 ? "Memory" : "Memories", tab: "memories" },
+            { icon: "users", value: friendCount, label: friendCount === 1 ? "Friend" : "Friends", tab: "friends" },
+            { icon: "user-plus", value: pendingCount, label: pendingCount === 1 ? "Request" : "Requests", tab: "friends" },
+          ] satisfies { icon: IconName; value: number; label: string; tab: DashboardTab }[]
+        ).map((s) => (
+          <li key={s.label}>
+            <button type="button" className="stat" onClick={() => onOpenTab(s.tab)}>
+              <span className="stat__icon">
+                <Icon name={s.icon} size={18} />
+              </span>
+              <span className="stat__value">{s.value}</span>
+              <span className="stat__label">{s.label}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
 
       {editing ? (
         <form className="inline-form form" onSubmit={save}>

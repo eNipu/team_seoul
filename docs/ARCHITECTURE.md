@@ -8,7 +8,7 @@ invite-code connections, relationship maintenance. (Games are out of scope for n
 ChatGPT ──(MCP over streamable HTTP, OAuth bearer)──▶ FastAPI app
    │                                                    ├── /mcp                MCP server (official Python SDK, MCPServer)
    │  renders                                           ├── /.well-known/*      OAuth protected-resource + AS metadata
-   └── widget iframe (ui://venn/app-v4.html) ◀────────├── /authorize /token /register /dev/login   (dev auth only)
+   └── widget iframe (ui://venn/app-v1.html) ◀────────├── /authorize /token /register /dev/login   (dev auth only)
         React, MCP Apps bridge                          ├── /healthz /readyz
         calls tools via host                            └── services ──▶ SQLAlchemy ──▶ Postgres (Supabase) / SQLite (dev)
                                                                      └─▶ OpenAI (optional memory extraction)
@@ -22,15 +22,16 @@ ChatGPT ──(MCP over streamable HTTP, OAuth bearer)──▶ FastAPI app
 | `.agents/plugins/marketplace.json` | Repo-local marketplace for installing the plugin during development |
 | `backend/app/main.py` | `create_app()` — FastAPI app, mounts the MCP Starlette app, health checks, invite landing page (`/i/{code}`), lifespan |
 | `backend/app/invite_page.py` | The static page behind an invite link / QR code |
+| `backend/app/branding.py` | Shared look (mark, CSS, page shell) of the server-rendered pages: invite page and dev sign-in. No scripts or external requests |
 | `backend/app/mcp/server.py` | Builds `MCPServer` with the `Apps` extension, widget resource and auth |
-| `backend/app/mcp/tools.py` | All 38 MCP tools (thin: auth → service → result) |
+| `backend/app/mcp/tools.py` | All 39 MCP tools (thin: auth → service → result) |
 | `backend/app/mcp/common.py` | Scope constants, annotations, `run_as_user`, result/error shaping |
 | `backend/app/auth/` | `JWTTokenVerifier` (production), `DevOAuthProvider` (development), identity mapping |
-| `backend/app/services/` | Business logic: users, memories (+ search), social (invites/connections/blocking), people (notes on friends not on Venn, import review), relationship (friend view, activity ideas, reconnection, "who do I know who…" search, group plans, meetup brief/recap, follow-ups), quiz, dashboard, analytics, consent |
+| `backend/app/services/` | Business logic: users, memories (+ search), social (invites/connections/blocking), people (notes on friends not on Venn, import review), relationship (friend view, activity ideas, reconnection, "who do I know who…" search, group plans, meetup brief/recap, follow-ups), quiz, dashboard (home, set-up steps, help), analytics, consent |
 | `backend/scripts/seed_demo.py` | `make seed me=<dev username>` — demo friends for a development account |
 | `backend/app/ai/extraction.py` | Memory candidate extraction (OpenAI structured output, heuristic fallback) and sensitive-data filter |
 | `backend/app/models/` | SQLAlchemy 2 models; `backend/migrations/` Alembic |
-| `widget/` | React + Vite single-file bundle rendered by ChatGPT (memory review, home, invite, friend, activity ideas, reconnect, people import, people search, group plan, meetup brief, quiz) |
+| `widget/` | React + Vite single-file bundle rendered by ChatGPT (memory review, home with set-up checklist, help, invite, friend, activity ideas, reconnect, people import, people search, group plan, meetup brief, quiz) |
 
 ## Request flow
 
@@ -48,12 +49,12 @@ User ids are **never** taken from tool arguments.
 
 ## Widget (MCP Apps)
 
-- One HTML resource `ui://venn/app-v4.html` (`text/html;profile=mcp-app`), built from
+- One HTML resource `ui://venn/app-v1.html` (`text/html;profile=mcp-app`), built from
   `widget/` into a single file and served from `widget/dist/index.html` (fallback page if missing).
-- Twelve *render* tools are bound to it via `_meta.ui.resourceUri`; each result carries a `view`
+- Thirteen *render* tools are bound to it via `_meta.ui.resourceUri`; each result carries a `view`
   discriminator the widget switches on: `venn_propose_memories` (`memory_review`),
   `venn_import_chatgpt_memory` (`memory_import`),
-  `venn_show_dashboard` (`dashboard`, or `welcome` for an empty account),
+  `venn_show_dashboard` (`dashboard`, or `welcome` for an empty account), `venn_help` (`help`),
   `venn_create_invite` (`invite`), `venn_view_friend` (`friend`), `venn_suggest_activity`
   (`activity_ideas`), `venn_reconnection_suggestions` (`reconnect`),
   `venn_propose_people_import` (`people_import`), `venn_find_people` (`people_search`),
@@ -66,7 +67,7 @@ User ids are **never** taken from tool arguments.
 - The invite QR code is generated on the server (`segno`) and sent as rows of `0`/`1`, so the
   widget needs no QR library. "Add to calendar" builds a Google Calendar link in the widget and
   opens it through the host; Venn itself has no calendar access.
-- Bump the resource URI (`app-v5`) when shipping breaking widget changes; ChatGPT caches templates.
+- Bump the resource URI (`app-v2`) when shipping breaking widget changes; ChatGPT caches templates.
 
 ## Memory consent flow
 

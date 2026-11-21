@@ -9,7 +9,8 @@
    Every color below comes from a variable that has a dark value.
 
    Look: white cards, #f5f5f7 recessed surfaces, hairline borders, black pill buttons.
-   Ink is the accent; color is kept for status (success, danger, info) and focus. */
+   Ink is the accent; color is kept for status (success, danger, info), focus, and the
+   brand coral of the mark and the illustrations. */
 
 :root {
   /* color */
@@ -42,6 +43,17 @@
   --venn-a: #4f9dff;
   --venn-b: #ff7aa8;
   --venn-shared: #8f6bff;
+  /* brand coral: the mark, gauges and illustration details. The same in both themes. */
+  --brand: #e86a4a;
+  --success-line: #9fd3b6;
+  /* spot illustrations */
+  --ill-blob: #ececf1;
+  --ill-paper: #ffffff;
+  --ill-edge: #d2d2d7;
+  --ill-ink: #c7c7cc;
+  --ill-ink-soft: #e5e5ea;
+  --ill-tint-a: #f9c9b8;
+  --ill-tint-b: #f3d9a8;
   /* hue-driven tints (avatars, memory categories): only the hue is set per element */
   --tint-s: 60%;
   --tint-l: 92%;
@@ -99,6 +111,15 @@
   --venn-a: #64b5ff;
   --venn-b: #ff8fb5;
   --venn-shared: #a78bff;
+  --brand: #e86a4a;
+  --success-line: #3f7a5b;
+  --ill-blob: #2a2a2d;
+  --ill-paper: #f5f5f7;
+  --ill-edge: #5a5a5f;
+  --ill-ink: #a1a1a6;
+  --ill-ink-soft: #d2d2d7;
+  --ill-tint-a: #8a4a38;
+  --ill-tint-b: #7a6234;
   --tint-s: 30%;
   --tint-l: 26%;
   --tint-fg-s: 70%;
@@ -138,6 +159,15 @@
     --venn-a: #64b5ff;
     --venn-b: #ff8fb5;
     --venn-shared: #a78bff;
+    --brand: #e86a4a;
+    --success-line: #3f7a5b;
+    --ill-blob: #2a2a2d;
+    --ill-paper: #f5f5f7;
+    --ill-edge: #5a5a5f;
+    --ill-ink: #a1a1a6;
+    --ill-ink-soft: #d2d2d7;
+    --ill-tint-a: #8a4a38;
+    --ill-tint-b: #7a6234;
     --tint-s: 30%;
     --tint-l: 26%;
     --tint-fg-s: 70%;
@@ -189,6 +219,9 @@
   gap: var(--s-2);
 }
 .notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
   background: var(--surface-2);
   color: var(--text);
   padding: 10px var(--s-3);
@@ -202,7 +235,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--s-1);
+  gap: 6px;
   border: 1px solid var(--border-strong);
   background: var(--surface);
   color: var(--text);
@@ -277,6 +310,7 @@
 .badge {
   display: inline-flex;
   align-items: center;
+  gap: 4px;
   padding: 2px 10px;
   border-radius: var(--pill);
   font-size: var(--fs-xs);
@@ -292,6 +326,7 @@
 .chip {
   display: inline-flex;
   align-items: center;
+  gap: 5px;
   padding: 4px 12px;
   border-radius: var(--pill);
   border: 1px solid transparent;

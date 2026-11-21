@@ -1,6 +1,7 @@
 import { useId, useMemo, useState, type FormEvent } from "react";
 import type { HostBridge } from "../mcp/client";
 import { buildCalendarUrl, nextSaturdayAt11, parseLocalInputValue, toLocalInputValue } from "../calendar";
+import { Icon } from "./icons";
 
 interface Props {
   bridge: HostBridge;
@@ -53,7 +54,7 @@ export default function CalendarPicker({ bridge, title, details, onClose }: Prop
       </div>
       {state === "opened" && (
         <p className="hint hint--ok" role="status">
-          <span aria-hidden="true">📅</span> Opened Google Calendar. Save the event there to keep it.
+          <Icon name="calendar" size={16} /> Opened Google Calendar. Save the event there to keep it.
         </p>
       )}
       {state === "blocked" && url && (

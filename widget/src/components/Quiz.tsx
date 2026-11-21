@@ -1,19 +1,20 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import type { QuizViewData } from "../types";
-import { ActionError, ChatStatus, EmptyNote, useAction, useChatPrompt, type ViewProps } from "./common";
+import { ActionError, Avatar, ChatStatus, EmptyNote, useAction, useChatPrompt, type ViewProps } from "./common";
+import { Icon, Illustration, type IconName } from "./icons";
 
 const LETTERS = ["A", "B", "C", "D"];
 const RING_R = 52;
 const RING_LEN = 2 * Math.PI * RING_R;
 const CONFETTI = Array.from({ length: 14 }, (_, i) => i);
 
-function verdict(score: number, total: number, name: string | null): { icon: string; line: string } {
+function verdict(score: number, total: number, name: string | null): { icon: IconName; line: string } {
   const ratio = total > 0 ? score / total : 0;
-  if (ratio === 1) return { icon: "🏆", line: name ? `Perfect score. ${name} would be impressed.` : "Perfect score. You really know your people." };
-  if (ratio >= 0.8) return { icon: "🌟", line: name ? `So close. You clearly listen when ${name} talks.` : "So close. You clearly pay attention." };
-  if (ratio >= 0.6) return { icon: "👏", line: "Solid. You know the things that matter." };
-  if (ratio >= 0.4) return { icon: "🙂", line: name ? `A decent start, and a good excuse to catch up with ${name}.` : "A decent start, and a good excuse to catch up." };
-  return { icon: "🌱", line: name ? `Plenty left to discover about ${name}. That's the fun part.` : "Plenty left to discover. That's the fun part." };
+  if (ratio === 1) return { icon: "trophy", line: name ? `Perfect score. ${name} would be impressed.` : "Perfect score. You really know your people." };
+  if (ratio >= 0.8) return { icon: "star", line: name ? `So close. You clearly listen when ${name} talks.` : "So close. You clearly pay attention." };
+  if (ratio >= 0.6) return { icon: "sparkle", line: "Solid. You know the things that matter." };
+  if (ratio >= 0.4) return { icon: "smile", line: name ? `A decent start, and a good excuse to catch up with ${name}.` : "A decent start, and a good excuse to catch up." };
+  return { icon: "sprout", line: name ? `Plenty left to discover about ${name}. That's the fun part.` : "Plenty left to discover. That's the fun part." };
 }
 
 export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
@@ -46,7 +47,7 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
       <section className="panel">
         <h2>{data.title}</h2>
         <ActionError action={action} />
-        <EmptyNote icon="🎲" title="Not enough to quiz on yet">
+        <EmptyNote art="quiz" title="Not enough to quiz on yet">
           {isFriend && first
             ? `${first} hasn't shared enough for a quiz. Check back once they add a few things.`
             : "Add a few friends and their interests, then try again."}
@@ -80,6 +81,7 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
               ))}
             </div>
           )}
+          <Illustration name="result" size="sm" />
           <p className="eyebrow">{data.title}</p>
           <div className="ring">
             <svg viewBox="0 0 120 120" aria-hidden="true">
@@ -87,7 +89,7 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
               <circle className="ring__value" cx="60" cy="60" r={RING_R} style={ringStyle} />
             </svg>
             <span className="ring__icon" aria-hidden="true">
-              {v.icon}
+              <Icon name={v.icon} size={36} />
             </span>
           </div>
           <h2 ref={headingRef} tabIndex={-1} className="quiz-result__score">
@@ -97,7 +99,7 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
           <ol className="quiz-dots" aria-label="Your answers">
             {results.map((r, i) => (
               <li key={i} className={`quiz-dot ${r ? "quiz-dot--right" : "quiz-dot--wrong"}`}>
-                <span aria-hidden="true">{r ? "✓" : "✗"}</span>
+                <Icon name={r ? "check" : "close"} size={14} />
                 <span className="sr-only">
                   Question {i + 1}: {r ? "correct" : "missed"}
                 </span>
@@ -111,7 +113,7 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
             {data.common_ground.length > 0 && (
               <div className="spotlight reveal">
                 <span className="spotlight__label">
-                  <span aria-hidden="true">✨ </span>What you two have in common
+                  <Icon name="sparkle" size={16} /> What you two have in common
                 </span>
                 <div className="chips">
                   {data.common_ground.map((s, i) => (
@@ -139,6 +141,7 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
                   if (id) void action.run("ideas", () => nav.openView("venn_suggest_activity", { connection_id: id }));
                 }}
               >
+                <Icon name="bulb" size={18} />
                 {action.busy === "ideas" ? "Loading…" : `Get ideas with ${first}`}
               </button>
               <button
@@ -152,6 +155,7 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
                   )
                 }
               >
+                <Icon name="chat" size={18} />
                 {chat.state === "sending" ? "Asking…" : `Tell ${first} my score`}
               </button>
             </div>
@@ -165,6 +169,7 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
               disabled={busy}
               onClick={() => void action.run("again", () => nav.replaceView("venn_start_quiz", {}))}
             >
+              <Icon name="dice" size={18} />
               {action.busy === "again" ? "Shuffling…" : "Play again"}
             </button>
             <button
@@ -204,8 +209,16 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
 
   return (
     <section className="panel quiz">
+      {index === 0 && !answered && (
+        <div className="quiz-intro">
+          <Illustration name="quiz" size="sm" />
+        </div>
+      )}
       <div className="quiz-top">
-        <p className="eyebrow">{data.title}</p>
+        <div className="quiz-top__who">
+          {isFriend && name && <Avatar name={name} size="small" />}
+          <p className="eyebrow">{data.title}</p>
+        </div>
         <span className="quiz-count">
           <span className="sr-only">Question </span>
           {index + 1}
@@ -239,7 +252,7 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
               <li key={i}>
                 <button type="button" className={`quiz-option ${state}`} disabled={answered} onClick={() => pick(i)}>
                   <span className="quiz-option__key" aria-hidden="true">
-                    {answered && isAnswer ? "✓" : answered && isPicked ? "✗" : LETTERS[i]}
+                    {answered && isAnswer ? <Icon name="check" size={16} /> : answered && isPicked ? <Icon name="close" size={16} /> : LETTERS[i]}
                   </span>
                   <span className="quiz-option__text">{opt}</span>
                   {answered && (isAnswer || isPicked) && (
@@ -256,7 +269,10 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
         <div role="status" aria-live="polite">
           {answered && (
             <div className={`quiz-feedback ${right ? "quiz-feedback--right" : "quiz-feedback--wrong"}`}>
-              <strong>{right ? "✓ Correct!" : `✗ Not quite. It's “${q.options[q.answer_index]}”.`}</strong>
+              <strong className="quiz-feedback__title">
+                <Icon name={right ? "check-circle" : "info"} size={18} />
+                <span>{right ? "Correct!" : `Not quite. It's “${q.options[q.answer_index]}”.`}</span>
+              </strong>
               {q.explanation && <p className="small">{q.explanation}</p>}
             </div>
           )}
@@ -265,6 +281,7 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
         {answered && (
           <button ref={nextRef} type="button" className="btn btn--primary btn--block" onClick={next}>
             {last ? "See my score" : "Next question"}
+            <Icon name="arrow-right" size={18} />
           </button>
         )}
       </div>

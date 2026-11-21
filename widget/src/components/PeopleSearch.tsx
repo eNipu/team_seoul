@@ -1,14 +1,12 @@
 import { useId, useState, type FormEvent } from "react";
 import { LIMITS, formatRelative, friendArg, groupArgs, plural, type PeopleSearchViewData, type SearchResult } from "../types";
 import { ActionError, Avatar, EmptyNote, Spinner, useAction, type ViewProps } from "./common";
+import { Icon } from "./icons";
 
 export function SearchIcon() {
   return (
     <span className="search__icon" aria-hidden="true">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-        <circle cx="7" cy="7" r="4.5" />
-        <path d="M10.5 10.5 14 14" />
-      </svg>
+      <Icon name="search" size={18} />
     </span>
   );
 }
@@ -69,7 +67,7 @@ export default function PeopleSearch({ data, nav }: ViewProps<PeopleSearchViewDa
       <ActionError action={action} />
 
       {data.results.length === 0 ? (
-        <EmptyNote icon="🔎" title={`No one in your circle matches “${data.query}” yet`}>
+        <EmptyNote art="search" title={`No one in your circle matches “${data.query}” yet`}>
           Try another word, or add more people so Venn has more to search.
         </EmptyNote>
       ) : (
@@ -100,6 +98,7 @@ export default function PeopleSearch({ data, nav }: ViewProps<PeopleSearchViewDa
                         <span className="sr-only">Matched: </span>
                         {r.matched.map((m, i) => (
                           <span key={`${m}-${i}`} className="chip chip--match">
+                            <Icon name="check" size={12} />
                             {m}
                           </span>
                         ))}
@@ -108,7 +107,7 @@ export default function PeopleSearch({ data, nav }: ViewProps<PeopleSearchViewDa
                     {r.snippet && <span className="small snippet">{r.snippet}</span>}
                   </span>
                   <span className="friend-row__open" aria-hidden="true">
-                    {action.busy === `open-${r.kind}:${r.id}` ? <Spinner /> : "›"}
+                    {action.busy === `open-${r.kind}:${r.id}` ? <Spinner /> : <Icon name="chevron-right" size={18} />}
                   </span>
                 </button>
               </li>
@@ -126,6 +125,7 @@ export default function PeopleSearch({ data, nav }: ViewProps<PeopleSearchViewDa
                 </p>
               </div>
               <button type="button" className="btn btn--small" disabled={busy} onClick={planTogether}>
+                <Icon name="users" size={16} />
                 {action.busy === "group" ? "Planning…" : "Plan something together"}
               </button>
             </div>

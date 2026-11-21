@@ -1,3 +1,5 @@
+import { Icon } from "./icons";
+
 interface Props {
   message: string;
   onRetry?: () => void;
@@ -16,7 +18,9 @@ export function displayError(message: string): string {
 export default function ErrorBanner({ message, onRetry, onDismiss, busy }: Props) {
   return (
     <div className="error-banner" role="alert">
-      <span className="error-banner__icon" aria-hidden="true">!</span>
+      <span className="error-banner__icon" aria-hidden="true">
+        <Icon name="alert" size={18} />
+      </span>
       <p className="error-banner__text">{displayError(message)}</p>
       <div className="error-banner__actions">
         {onRetry && (

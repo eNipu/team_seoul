@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { formatDate, isObj, plural, type InviteViewData } from "../types";
 import { ActionError, copyText, useAction, type ViewProps } from "./common";
+import { Icon, Illustration } from "./icons";
 import QrCode from "./QrCode";
 
 type Copied = "code" | "message" | "link" | null;
@@ -54,8 +55,13 @@ export default function Invite({ data, bridge }: ViewProps<InviteViewData>) {
 
   return (
     <section className="panel">
-      <h2>Invite a friend</h2>
-      <p className="muted small lead">Share this code with someone you'd like to connect with on Venn.</p>
+      <div className="hero hero--row">
+        <Illustration name="invite" size="sm" />
+        <div>
+          <h2>Invite a friend</h2>
+          <p className="muted small">Share this code with someone you'd like to connect with on Venn.</p>
+        </div>
+      </div>
 
       <ActionError action={action} />
 
@@ -88,14 +94,17 @@ export default function Invite({ data, bridge }: ViewProps<InviteViewData>) {
         <>
           <div className="button-row">
             <button type="button" className="btn btn--primary" onClick={() => void copy("code")}>
-              {copied === "code" ? "✓ Copied" : "Copy code"}
+              <Icon name={copied === "code" ? "check" : "copy"} size={18} />
+              {copied === "code" ? "Copied" : "Copy code"}
             </button>
             <button type="button" className="btn" onClick={() => void copy("message")}>
-              {copied === "message" ? "✓ Copied" : "Copy invite message"}
+              <Icon name={copied === "message" ? "check" : "chat"} size={18} />
+              {copied === "message" ? "Copied" : "Copy invite message"}
             </button>
             {data.link && (
               <button type="button" className="btn" onClick={() => void copy("link")}>
-                {copied === "link" ? "✓ Copied" : "Copy link"}
+                <Icon name={copied === "link" ? "check" : "link"} size={18} />
+                {copied === "link" ? "Copied" : "Copy link"}
               </button>
             )}
           </div>

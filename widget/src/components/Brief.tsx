@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  CATEGORY_ICONS,
   CATEGORY_LABELS,
   formatDate,
   formatDaysAgo,
@@ -10,6 +9,7 @@ import {
   type BriefViewData,
 } from "../types";
 import { ActionError, Avatar, SectionTitle, copyText, useAction, type ViewProps } from "./common";
+import { CategoryIcon, Icon } from "./icons";
 import FollowUps from "./FollowUps";
 
 export default function Brief({ data, bridge, nav }: ViewProps<BriefViewData>) {
@@ -76,7 +76,7 @@ export default function Brief({ data, bridge, nav }: ViewProps<BriefViewData>) {
 
       <div className="last-time">
         <span className="last-time__icon" aria-hidden="true">
-          🕰️
+          <Icon name="clock" />
         </span>
         <div>
           <span className="field__label">Last time</span>
@@ -100,6 +100,7 @@ export default function Brief({ data, bridge, nav }: ViewProps<BriefViewData>) {
         <div className="chips">
           {data.shared_interests.map((s, i) => (
             <span key={`${s}-${i}`} className="chip chip--shared">
+              <Icon name="star" size={14} />
               {s}
             </span>
           ))}
@@ -130,10 +131,13 @@ export default function Brief({ data, bridge, nav }: ViewProps<BriefViewData>) {
               <li key={i}>
                 <button type="button" className="starter" onClick={() => void copyStarter(i, s)}>
                   <span className="starter__quote" aria-hidden="true">
-                    “
+                    <Icon name="chat" size={18} />
                   </span>
                   <span className="starter__text">{s}</span>
-                  <span className="starter__copy">{copied === i ? "✓ Copied" : "Copy"}</span>
+                  <span className="starter__copy">
+                    <Icon name={copied === i ? "check" : "copy"} size={14} />
+                    {copied === i ? "Copied" : "Copy"}
+                  </span>
                 </button>
               </li>
             ))}
@@ -162,9 +166,7 @@ export default function Brief({ data, bridge, nav }: ViewProps<BriefViewData>) {
               <ul className="list list--tight">
                 {data.shared_memories.map((m, i) => (
                   <li key={i} className="shared-memory">
-                    <span className={`cat-icon cat--${m.category.toLowerCase()}`} title={CATEGORY_LABELS[m.category]} aria-hidden="true">
-                      {CATEGORY_ICONS[m.category]}
-                    </span>
+                    <CategoryIcon category={m.category} />
                     <div>
                       <strong>{m.title}</strong>
                       <span className="sr-only"> ({CATEGORY_LABELS[m.category]})</span>
@@ -176,21 +178,23 @@ export default function Brief({ data, bridge, nav }: ViewProps<BriefViewData>) {
             </>
           )}
 
+      <button
+        type="button"
+        className="btn btn--primary btn--block"
+        disabled={busy}
+        onClick={() => void action.run("ideas", () => nav.openView("venn_suggest_activity", arg))}
+      >
+        <Icon name="bulb" size={18} />
+        {action.busy === "ideas" ? "Loading…" : "Get ideas for time together"}
+      </button>
       <div className="button-row">
-        <button
-          type="button"
-          className="btn btn--primary"
-          disabled={busy}
-          onClick={() => void action.run("ideas", () => nav.openView("venn_suggest_activity", arg))}
-        >
-          {action.busy === "ideas" ? "Loading…" : "Get ideas"}
-        </button>
         {logged ? (
           <span className="status-pill status-pill--grow" role="status">
-            ✓ Hangout logged
+            <Icon name="check" size={16} /> Hangout logged
           </span>
         ) : (
           <button type="button" className="btn" disabled={busy} onClick={metUp}>
+            <Icon name="check-circle" size={18} />
             {action.busy === "log" ? "Logging…" : "We met up"}
           </button>
         )}
@@ -200,6 +204,7 @@ export default function Brief({ data, bridge, nav }: ViewProps<BriefViewData>) {
           disabled={busy}
           onClick={() => void action.run("open", () => nav.openView("venn_view_friend", arg))}
         >
+          <Icon name="user" size={18} />
           {action.busy === "open" ? "Opening…" : `Open ${first}`}
         </button>
       </div>
