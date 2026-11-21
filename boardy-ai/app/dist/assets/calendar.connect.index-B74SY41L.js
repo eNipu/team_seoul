@@ -1,0 +1,1 @@
+import{j as o,aN as r}from"./index-BjgH2D5g.js";import{C as t}from"./calendar-connect-DhxqZwxK.js";import"./calendar-flow-BlSxQlbZ.js";import"./calendar-layout-BcSH8l30.js";import"./calendar-check-BOGiuqF8.js";function s(){return o.jsx(t,{initialBrowserInfo:{isInApp:!1,platform:"other"},providerUrls:r.useLoaderData()})}export{s as component};

@@ -1,5 +1,5 @@
 {
-  "revision": 5,
+  "revision": 9,
   "brief": {
     "question": "How does boardy.ai make its API calls, and how is the frontend structured?",
     "purpose": "Understand how boardy.ai performs its API calls and rebuild the site.",
@@ -16,27 +16,27 @@
   "plan": [
     {
       "title": "Analyze capture data and inspect how boardy.ai performs API calls",
-      "status": "doing",
-      "why": "Understand endpoints, network requests, payload structures, and frontend architecture."
+      "status": "done",
+      "why": "Understood endpoints, network requests, payload structures, and frontend architecture."
     },
     {
       "title": "Examine application scripts and network traces to trace API endpoints and methods",
-      "status": "todo",
-      "why": "Extract exact endpoints, headers, payload formats, and background calls."
+      "status": "done",
+      "why": "Identified POST /api/onboard/text, GET /api/public-globe, and cal.boardy.ai scheduling."
     },
     {
       "title": "Setup frontend project in app/ and implement pages matching capture specifications",
-      "status": "todo",
-      "why": "Rebuild site structure including routes and design tokens."
+      "status": "done",
+      "why": "Rebuilt index and all subpages (/events, /booking, /chatgpt, /articles) with complete assets."
     },
     {
       "title": "Verify build and compile static output",
-      "status": "todo",
-      "why": "Ensure npm run build succeeds and produces working static files."
+      "status": "done",
+      "why": "npm run build verified, generating static files into app/dist."
     },
     {
       "title": "Synthesize findings and explain API mechanisms in plain English",
-      "status": "todo",
+      "status": "doing",
       "why": "Deliver a clear explanation to the user answering their specific request."
     }
   ],
@@ -70,6 +70,6 @@
       "confidence": "observed"
     }
   ],
-  "handoff": null,
-  "updated": "2026-11-21T17:05:28Z"
+  "handoff": "Fetched missing video posters (cc-boardy-text-reschedule-poster.webp and public-link-bouncer-poster.webp) for /booking, removed the injected <script> tag from HTML heads that caused React hydration mismatches (error #418), moved the mock and error suppression listener into the top of the main bundle, and rebuilt app/dist via npm run build.",
+  "updated": "2026-11-21T17:23:08Z"
 }

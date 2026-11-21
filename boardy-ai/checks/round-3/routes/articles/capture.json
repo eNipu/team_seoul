@@ -1,0 +1,2601 @@
+{
+  "a11y": {
+    "images_without_alt": 0,
+    "landmarks": {
+      "banner": 1,
+      "main": 1,
+      "navigation": 2
+    },
+    "lang": "en",
+    "unnamed_controls": 0,
+    "unnamed_examples": []
+  },
+  "assets": {
+    "background_images": [],
+    "fonts": [
+      "http://127.0.0.1:52767/articles/fonts/geist-latin-wght-normal.woff2",
+      "http://127.0.0.1:52767/articles/fonts/Chomsky.woff2",
+      "http://127.0.0.1:52767/articles/fonts/raleway-latin-wght-normal.woff2"
+    ],
+    "images": [
+      {
+        "alt": "",
+        "h": 128,
+        "src": "http://127.0.0.1:52767/articles/art/boardy-mark.webp",
+        "w": 119
+      },
+      {
+        "alt": "An open cream envelope with a black card and a green seal.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/outbound-note.png",
+        "w": 1280
+      },
+      {
+        "alt": "An open cream envelope with a black card and a green seal.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/outbound-note.png",
+        "w": 1280
+      },
+      {
+        "alt": "A cream bowl with a charcoal crack and one green bead rolling out.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/growth-leak.png",
+        "w": 1280
+      },
+      {
+        "alt": "A rough cream stone and a precise black cube on linen.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/founding-minimal.png",
+        "w": 1280
+      },
+      {
+        "alt": "An open cream envelope with a black card and a green seal.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/outbound-note.png",
+        "w": 1280
+      },
+      {
+        "alt": "A spreadsheet, a green note, and a card file linked by string on a dark table.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/scattered-link.png",
+        "w": 1280
+      },
+      {
+        "alt": "An open cream envelope with a black card and a green seal.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/outbound-note.png",
+        "w": 1280
+      },
+      {
+        "alt": "An open cream envelope with a black card and a green seal.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/outbound-note.png",
+        "w": 1280
+      },
+      {
+        "alt": "A spreadsheet, a green note, and a card file linked by string on a dark table.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/scattered-link.png",
+        "w": 1280
+      },
+      {
+        "alt": "A cream bowl with a charcoal crack and one green bead rolling out.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/growth-leak.png",
+        "w": 1280
+      },
+      {
+        "alt": "An empty chair, a black nameplate, and a green folder.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/sales-hire.png",
+        "w": 1280
+      },
+      {
+        "alt": "A cream bowl with a charcoal crack and one green bead rolling out.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/growth-leak.png",
+        "w": 1280
+      },
+      {
+        "alt": "A cream bowl with a charcoal crack and one green bead rolling out.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/growth-leak.png?v=6",
+        "w": 1280
+      },
+      {
+        "alt": "A cream tray of black and cream chips beside one green chip in its own dish.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/ai-workflow.png?v=6",
+        "w": 1280
+      },
+      {
+        "alt": "A stack of four cream slabs with one green slab on top.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/launch-steps.png?v=6",
+        "w": 1280
+      },
+      {
+        "alt": "A cream key, a plain black bar, and a small green window frame.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/portal-routes.png?v=6",
+        "w": 1280
+      },
+      {
+        "alt": "A worn cream sheet, a scuffed black sheet, and one crisp green square.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/creative-fatigue.png?v=6",
+        "w": 1280
+      },
+      {
+        "alt": "A cracked cream brick beside a solid green brick.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/legacy-replace.png?v=6",
+        "w": 1280
+      },
+      {
+        "alt": "A black paper airplane and a cream one, split by a charcoal line, with a green pin.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/international-engineers.png?v=5",
+        "w": 1280
+      },
+      {
+        "alt": "A balance scale with a cream block on one side and a green block on the other.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/inventory-cfo.png?v=5",
+        "w": 1280
+      },
+      {
+        "alt": "A black telephone handset beside a painted sound wave in charcoal and green.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/voice-ai-stack.png",
+        "w": 1280
+      },
+      {
+        "alt": "Four stacks of cream, black, and green blocks on a linen surface.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/acquisition-stacks.png",
+        "w": 1280
+      },
+      {
+        "alt": "A pale curved track with a thin black rail and a single green light.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/cicd-guardrails.png",
+        "w": 1280
+      },
+      {
+        "alt": "An open cream envelope with a black card and a green seal.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/outbound-note.png",
+        "w": 1280
+      },
+      {
+        "alt": "An open grid ledger, a black phone, and a calendar on a white desk.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/spreadsheet-desk.png",
+        "w": 1280
+      },
+      {
+        "alt": "A rough cream stone and a precise black cube on linen.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/founding-minimal.png",
+        "w": 1280
+      },
+      {
+        "alt": "A spreadsheet, a green note, and a card file linked by string on a dark table.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/scattered-link.png",
+        "w": 1280
+      },
+      {
+        "alt": "An empty chair, a black nameplate, and a green folder.",
+        "h": 720,
+        "src": "http://127.0.0.1:52767/articles/art/sales-hire.png",
+        "w": 1280
+      }
+    ],
+    "inline_scripts": 1,
+    "requests": [
+      {
+        "bytes": 10869,
+        "type": "link",
+        "url": "http://127.0.0.1:52767/articles/styles.css"
+      },
+      {
+        "bytes": 5884,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/articles/art/boardy-mark.webp"
+      },
+      {
+        "bytes": 355232,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/articles/art/outbound-note.png"
+      },
+      {
+        "bytes": 232216,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/articles/art/scattered-link.png"
+      },
+      {
+        "bytes": 346895,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/articles/art/founding-minimal.png"
+      },
+      {
+        "bytes": 677366,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/articles/art/growth-leak.png"
+      },
+      {
+        "bytes": 202074,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/articles/art/sales-hire.png"
+      },
+      {
+        "bytes": 677366,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/articles/art/growth-leak.png"
+      },
+      {
+        "bytes": 808415,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/articles/art/ai-workflow.png"
+      },
+      {
+        "bytes": 795570,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/articles/art/legacy-replace.png"
+      },
+      {
+        "bytes": 757895,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/articles/art/portal-routes.png"
+      },
+      {
+        "bytes": 679448,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/articles/art/launch-steps.png"
+      },
+      {
+        "bytes": 1135774,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/articles/art/creative-fatigue.png"
+      },
+      {
+        "bytes": 622610,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/articles/art/inventory-cfo.png"
+      },
+      {
+        "bytes": 742647,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/articles/art/international-engineers.png"
+      },
+      {
+        "bytes": 236182,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/articles/art/acquisition-stacks.png"
+      },
+      {
+        "bytes": 339554,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/articles/art/voice-ai-stack.png"
+      },
+      {
+        "bytes": 429556,
+        "type": "script",
+        "url": "http://127.0.0.1:52767/assets/article-analytics.js"
+      },
+      {
+        "bytes": 148243,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/articles/art/cicd-guardrails.png"
+      },
+      {
+        "bytes": 129349,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/articles/art/spreadsheet-desk.png"
+      },
+      {
+        "bytes": 28700,
+        "type": "css",
+        "url": "http://127.0.0.1:52767/articles/fonts/geist-latin-wght-normal.woff2"
+      },
+      {
+        "bytes": 60884,
+        "type": "css",
+        "url": "http://127.0.0.1:52767/articles/fonts/Chomsky.woff2"
+      },
+      {
+        "bytes": 48564,
+        "type": "css",
+        "url": "http://127.0.0.1:52767/articles/fonts/raleway-latin-wght-normal.woff2"
+      },
+      {
+        "bytes": 0,
+        "type": "script",
+        "url": "https://us-assets.i.posthog.com/array/phc_aybzGDeUsNW2jlyrBdExPD9yG2If1qgP7LAZjcmXc7/config.js"
+      },
+      {
+        "bytes": 0,
+        "type": "script",
+        "url": "https://us-assets.i.posthog.com/static/1.438.12/dead-clicks-autocapture.js"
+      },
+      {
+        "bytes": 0,
+        "type": "script",
+        "url": "https://us-assets.i.posthog.com/static/1.438.12/web-vitals-with-attribution.js"
+      },
+      {
+        "bytes": 0,
+        "type": "fetch",
+        "url": "https://us.i.posthog.com/flags/"
+      }
+    ],
+    "scripts": [
+      "https://us-assets.i.posthog.com/array/phc_aybzGDeUsNW2jlyrBdExPD9yG2If1qgP7LAZjcmXc7/config.js",
+      "https://us-assets.i.posthog.com/static/1.438.12/dead-clicks-autocapture.js",
+      "https://us-assets.i.posthog.com/static/1.438.12/web-vitals-with-attribution.js",
+      "http://127.0.0.1:52767/assets/article-analytics.js"
+    ],
+    "stylesheets": [
+      "http://127.0.0.1:52767/articles/styles.css?v=13"
+    ]
+  },
+  "breakpoints": [
+    {
+      "count": 1,
+      "px": 390,
+      "query": "max-width 390px"
+    },
+    {
+      "count": 1,
+      "px": 560,
+      "query": "max-width 560px"
+    },
+    {
+      "count": 1,
+      "px": 720,
+      "query": "max-width 720px"
+    },
+    {
+      "count": 1,
+      "px": 900,
+      "query": "max-width 900px"
+    }
+  ],
+  "design": {
+    "backgrounds": [
+      {
+        "count": 15,
+        "value": "#fffefb"
+      },
+      {
+        "count": 2,
+        "value": "#006ee6"
+      },
+      {
+        "count": 1,
+        "value": "#f5f2eb"
+      }
+    ],
+    "css_variables": {
+      "--blue": "#006ee6",
+      "--blue-hover": "#0057bc",
+      "--blue-soft": "#e3eefc",
+      "--heading-font": "'Raleway Variable', 'Geist Variable', sans-serif",
+      "--ink": "#172335",
+      "--line": "#d4dce5",
+      "--muted": "#4e5968",
+      "--white": "#fffefb"
+    },
+    "font_faces": [
+      {
+        "family": "Geist Variable",
+        "status": "loaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Raleway Variable",
+        "status": "loaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Chomsky",
+        "status": "loaded",
+        "style": "normal",
+        "weight": "400"
+      }
+    ],
+    "font_sizes": [
+      {
+        "count": 24,
+        "value": "14px"
+      },
+      {
+        "count": 12,
+        "value": "13.12px"
+      },
+      {
+        "count": 12,
+        "value": "28px"
+      },
+      {
+        "count": 12,
+        "value": "16px"
+      },
+      {
+        "count": 7,
+        "value": "15px"
+      },
+      {
+        "count": 1,
+        "value": "20px"
+      },
+      {
+        "count": 1,
+        "value": "89.6px"
+      }
+    ],
+    "font_weights": [
+      {
+        "count": 38,
+        "value": "400"
+      },
+      {
+        "count": 30,
+        "value": "500"
+      },
+      {
+        "count": 1,
+        "value": "600"
+      }
+    ],
+    "fonts": [
+      {
+        "count": 56,
+        "value": "\"Geist Variable\", system-ui, sans-serif"
+      },
+      {
+        "count": 12,
+        "value": "\"Raleway Variable\", \"Geist Variable\", sans-serif"
+      },
+      {
+        "count": 1,
+        "value": "Chomsky, \"Times New Roman\", serif"
+      }
+    ],
+    "max_widths": [
+      {
+        "count": 1,
+        "value": "640px"
+      }
+    ],
+    "radii": [
+      {
+        "count": 24,
+        "value": "20px"
+      },
+      {
+        "count": 4,
+        "value": "999px"
+      },
+      {
+        "count": 1,
+        "value": "8px"
+      },
+      {
+        "count": 1,
+        "value": "14px"
+      }
+    ],
+    "shadows": [],
+    "spacing": [
+      {
+        "count": 16,
+        "value": "10px"
+      },
+      {
+        "count": 16,
+        "value": "12px"
+      },
+      {
+        "count": 16,
+        "value": "16px"
+      },
+      {
+        "count": 12,
+        "value": "20px"
+      },
+      {
+        "count": 6,
+        "value": "14px"
+      },
+      {
+        "count": 3,
+        "value": "8px"
+      },
+      {
+        "count": 2,
+        "value": "24px"
+      },
+      {
+        "count": 2,
+        "value": "28px"
+      },
+      {
+        "count": 2,
+        "value": "22px"
+      },
+      {
+        "count": 2,
+        "value": "9px"
+      },
+      {
+        "count": 2,
+        "value": "32px"
+      },
+      {
+        "count": 2,
+        "value": "48px"
+      },
+      {
+        "count": 1,
+        "value": "64px"
+      },
+      {
+        "count": 1,
+        "value": "96px"
+      },
+      {
+        "count": 1,
+        "value": "56px"
+      }
+    ],
+    "text_colors": [
+      {
+        "count": 36,
+        "value": "#4e5968"
+      },
+      {
+        "count": 18,
+        "value": "#172335"
+      },
+      {
+        "count": 12,
+        "value": "#0057bc"
+      },
+      {
+        "count": 3,
+        "value": "#ffffff"
+      }
+    ]
+  },
+  "forms": [],
+  "headings": [
+    {
+      "level": 1,
+      "text": "The Boardy Times"
+    },
+    {
+      "level": 2,
+      "text": "How to find startup jobs through warm introductions"
+    },
+    {
+      "level": 2,
+      "text": "Alternatives to LinkedIn for founders to meet investors: targeted intros over endless scrolling"
+    },
+    {
+      "level": 2,
+      "text": "Subscription dunning and payment recovery: how to reduce involuntary churn"
+    },
+    {
+      "level": 2,
+      "text": "How to find a technical cofounder through people who know both sides"
+    },
+    {
+      "level": 2,
+      "text": "Best AI networking apps for founders 2026: what to use instead of blasting DMs"
+    },
+    {
+      "level": 2,
+      "text": "Outsourced accounting and timely financial visibility for startups: how to fix broken books"
+    },
+    {
+      "level": 2,
+      "text": "Alternatives to Cold Emailing Investors: Four Warmer Paths That Work"
+    },
+    {
+      "level": 2,
+      "text": "Find your first 10 B2B customers through warm introductions to buyers who feel the pain"
+    },
+    {
+      "level": 2,
+      "text": "Unified observability and faster incident response: how to stop chasing logs across tools"
+    },
+    {
+      "level": 2,
+      "text": "Warm intros to investors without a network: who to ask and what to say"
+    },
+    {
+      "level": 2,
+      "text": "How to hire your first engineer through warm intros instead of job boards"
+    },
+    {
+      "level": 2,
+      "text": "Customer research: jobs-to-be-done, churn, and adoption insights"
+    },
+    {
+      "level": 2,
+      "text": "Growth stalled? Diagnose the leak before buying more traffic"
+    },
+    {
+      "level": 2,
+      "text": "Which AI workflow should you automate first?"
+    },
+    {
+      "level": 2,
+      "text": "Launch marketing readiness: five investments ranked by sequence"
+    },
+    {
+      "level": 2,
+      "text": "Third-party portal automation: API, RPA, or browser agent?"
+    },
+    {
+      "level": 2,
+      "text": "Paid creative fatigue: decide what to produce and test next"
+    },
+    {
+      "level": 2,
+      "text": "Legacy modernization: incremental replacement or a full rewrite?"
+    },
+    {
+      "level": 2,
+      "text": "How to hire international engineers without creating a compliance nightmare"
+    },
+    {
+      "level": 2,
+      "text": "How to hire a CFO for an inventory-heavy startup"
+    },
+    {
+      "level": 2,
+      "text": "The 4 best ways to build a voice AI stack in 2026"
+    },
+    {
+      "level": 2,
+      "text": "4 customer acquisition stacks compared for teams spending $20k+ a month"
+    },
+    {
+      "level": 2,
+      "text": "3 CI/CD guardrails that let teams ship faster without breaking production"
+    },
+    {
+      "level": 2,
+      "text": "Startup advisory vs fractional leadership: How to pick the right operator for your stage"
+    },
+    {
+      "level": 2,
+      "text": "How to automate a spreadsheet and WhatsApp workflow without breaking it"
+    },
+    {
+      "level": 2,
+      "text": "Founding engineer vs. senior software engineer: how to choose the right hire for your stage"
+    },
+    {
+      "level": 2,
+      "text": "How to connect scattered business data across spreadsheets, messages, and CRMs"
+    },
+    {
+      "level": 2,
+      "text": "How to hire senior talent when more candidates aren't solving the problem"
+    }
+  ],
+  "health": {
+    "errors": [],
+    "failed_requests": []
+  },
+  "lang": "en",
+  "layouts": [
+    {
+      "blocks": [
+        {
+          "h": 84,
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "header",
+          "w": 1440,
+          "y": 0
+        },
+        {
+          "gap": 28,
+          "h": 44,
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "nav",
+          "w": 122,
+          "y": 20
+        },
+        {
+          "column": {
+            "max_w": 640,
+            "pad": [
+              0,
+              0
+            ],
+            "w": 602,
+            "x": 180
+          },
+          "h": 2627,
+          "heading": "The Boardy Times",
+          "pad": [
+            64,
+            0,
+            96,
+            0
+          ],
+          "per_row": 3,
+          "tag": "main",
+          "w": 1440,
+          "y": 84
+        },
+        {
+          "h": 527,
+          "heading": "How to find startup jobs through warm introductions",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 341,
+          "y": 295
+        },
+        {
+          "h": 527,
+          "heading": "Alternatives to LinkedIn for founders to meet investors: targeted intros over en",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 341,
+          "y": 295
+        },
+        {
+          "h": 527,
+          "heading": "Subscription dunning and payment recovery: how to reduce involuntary churn",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 341,
+          "y": 295
+        },
+        {
+          "h": 527,
+          "heading": "How to find a technical cofounder through people who know both sides",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 341,
+          "y": 870
+        },
+        {
+          "h": 527,
+          "heading": "Best AI networking apps for founders 2026: what to use instead of blasting DMs",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 341,
+          "y": 870
+        },
+        {
+          "h": 527,
+          "heading": "Outsourced accounting and timely financial visibility for startups: how to fix b",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 341,
+          "y": 870
+        },
+        {
+          "h": 527,
+          "heading": "Alternatives to Cold Emailing Investors: Four Warmer Paths That Work",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 341,
+          "y": 1446
+        },
+        {
+          "h": 527,
+          "heading": "Find your first 10 B2B customers through warm introductions to buyers who feel t",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 341,
+          "y": 1446
+        },
+        {
+          "h": 527,
+          "heading": "Unified observability and faster incident response: how to stop chasing logs acr",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 341,
+          "y": 1446
+        },
+        {
+          "h": 494,
+          "heading": "Warm intros to investors without a network: who to ask and what to say",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 341,
+          "y": 2021
+        },
+        {
+          "h": 494,
+          "heading": "How to hire your first engineer through warm intros instead of job boards",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 341,
+          "y": 2021
+        },
+        {
+          "h": 494,
+          "heading": "Customer research: jobs-to-be-done, churn, and adoption insights",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 341,
+          "y": 2021
+        },
+        {
+          "gap": 8,
+          "h": 44,
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "nav",
+          "w": 1080,
+          "y": 2571
+        }
+      ],
+      "page_h": 2711,
+      "page_w": 1440,
+      "type": {
+        "body": 16,
+        "h1": 90,
+        "h2": 28,
+        "h3": 0
+      },
+      "width": 1440
+    },
+    {
+      "blocks": [
+        {
+          "h": 84,
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 2,
+          "tag": "header",
+          "w": 768,
+          "y": 0
+        },
+        {
+          "gap": 28,
+          "h": 44,
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "nav",
+          "w": 122,
+          "y": 20
+        },
+        {
+          "column": {
+            "max_w": 640,
+            "pad": [
+              0,
+              0
+            ],
+            "w": 371,
+            "x": 24
+          },
+          "h": 3630,
+          "heading": "The Boardy Times",
+          "pad": [
+            64,
+            0,
+            96,
+            0
+          ],
+          "per_row": 2,
+          "tag": "main",
+          "w": 768,
+          "y": 84
+        },
+        {
+          "h": 511,
+          "heading": "How to find startup jobs through warm introductions",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 346,
+          "y": 329
+        },
+        {
+          "h": 511,
+          "heading": "Alternatives to LinkedIn for founders to meet investors: targeted intros over en",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 346,
+          "y": 329
+        },
+        {
+          "h": 482,
+          "heading": "Subscription dunning and payment recovery: how to reduce involuntary churn",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 346,
+          "y": 889
+        },
+        {
+          "h": 482,
+          "heading": "How to find a technical cofounder through people who know both sides",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 346,
+          "y": 889
+        },
+        {
+          "h": 508,
+          "heading": "Best AI networking apps for founders 2026: what to use instead of blasting DMs",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 346,
+          "y": 1419
+        },
+        {
+          "h": 508,
+          "heading": "Outsourced accounting and timely financial visibility for startups: how to fix b",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 346,
+          "y": 1419
+        },
+        {
+          "h": 482,
+          "heading": "Alternatives to Cold Emailing Investors: Four Warmer Paths That Work",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 346,
+          "y": 1975
+        },
+        {
+          "h": 482,
+          "heading": "Find your first 10 B2B customers through warm introductions to buyers who feel t",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 346,
+          "y": 1975
+        },
+        {
+          "h": 482,
+          "heading": "Unified observability and faster incident response: how to stop chasing logs acr",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 346,
+          "y": 2505
+        },
+        {
+          "h": 482,
+          "heading": "Warm intros to investors without a network: who to ask and what to say",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 346,
+          "y": 2505
+        },
+        {
+          "h": 482,
+          "heading": "How to hire your first engineer through warm intros instead of job boards",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 346,
+          "y": 3036
+        },
+        {
+          "h": 482,
+          "heading": "Customer research: jobs-to-be-done, churn, and adoption insights",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 346,
+          "y": 3036
+        },
+        {
+          "gap": 8,
+          "h": 44,
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "nav",
+          "w": 720,
+          "y": 3574
+        }
+      ],
+      "page_h": 3714,
+      "page_w": 768,
+      "type": {
+        "body": 16,
+        "h1": 55,
+        "h2": 24,
+        "h3": 0
+      },
+      "width": 768
+    },
+    {
+      "blocks": [
+        {
+          "h": 120,
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 2,
+          "tag": "header",
+          "w": 390,
+          "y": 0
+        },
+        {
+          "gap": 24,
+          "h": 44,
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "nav",
+          "w": 358,
+          "y": 64
+        },
+        {
+          "column": {
+            "max_w": 640,
+            "pad": [
+              0,
+              0
+            ],
+            "w": 301,
+            "x": 20
+          },
+          "h": 6565,
+          "heading": "The Boardy Times",
+          "pad": [
+            32,
+            0,
+            64,
+            0
+          ],
+          "per_row": 1,
+          "tag": "main",
+          "w": 390,
+          "y": 120
+        },
+        {
+          "h": 482,
+          "heading": "How to find startup jobs through warm introductions",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 350,
+          "y": 306
+        },
+        {
+          "h": 514,
+          "heading": "Alternatives to LinkedIn for founders to meet investors: targeted intros over en",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 350,
+          "y": 823
+        },
+        {
+          "h": 485,
+          "heading": "Subscription dunning and payment recovery: how to reduce involuntary churn",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 350,
+          "y": 1373
+        },
+        {
+          "h": 485,
+          "heading": "How to find a technical cofounder through people who know both sides",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 350,
+          "y": 1894
+        },
+        {
+          "h": 511,
+          "heading": "Best AI networking apps for founders 2026: what to use instead of blasting DMs",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 350,
+          "y": 2415
+        },
+        {
+          "h": 485,
+          "heading": "Outsourced accounting and timely financial visibility for startups: how to fix b",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 350,
+          "y": 2962
+        },
+        {
+          "h": 459,
+          "heading": "Alternatives to Cold Emailing Investors: Four Warmer Paths That Work",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 350,
+          "y": 3482
+        },
+        {
+          "h": 485,
+          "heading": "Find your first 10 B2B customers through warm introductions to buyers who feel t",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 350,
+          "y": 3978
+        },
+        {
+          "h": 485,
+          "heading": "Unified observability and faster incident response: how to stop chasing logs acr",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 350,
+          "y": 4499
+        },
+        {
+          "h": 459,
+          "heading": "Warm intros to investors without a network: who to ask and what to say",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 350,
+          "y": 5020
+        },
+        {
+          "h": 485,
+          "heading": "How to hire your first engineer through warm intros instead of job boards",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 350,
+          "y": 5515
+        },
+        {
+          "h": 485,
+          "heading": "Customer research: jobs-to-be-done, churn, and adoption insights",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "article",
+          "w": 350,
+          "y": 6036
+        },
+        {
+          "gap": 8,
+          "h": 44,
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "nav",
+          "w": 350,
+          "y": 6577
+        }
+      ],
+      "page_h": 6685,
+      "page_w": 390,
+      "type": {
+        "body": 16,
+        "h1": 45,
+        "h2": 24,
+        "h3": 0
+      },
+      "width": 390
+    }
+  ],
+  "links": [
+    {
+      "href": "http://127.0.0.1:52767/",
+      "text": "Boardy"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles",
+      "text": "The Boardy Times"
+    },
+    {
+      "href": "http://127.0.0.1:52767/?message=1",
+      "text": "Message Me →"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/warm-intro-startup-jobs.html",
+      "text": "LEADERSHIP How to find startup jobs through warm introductions Most startup jobs are filled through "
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/meet-investors-without-linkedin.html",
+      "text": "GROWTH Alternatives to LinkedIn for founders to meet investors: targeted intros over endless scrolli"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/subscription-dunning-payment-recovery.html",
+      "text": "LEADERSHIP Subscription dunning and payment recovery: how to reduce involuntary churn Failed payment"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/find-technical-cofounder-warm-intros.html",
+      "text": "ENGINEERING How to find a technical cofounder through people who know both sides Most technical cofo"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/best-ai-networking-apps-founders.html",
+      "text": "GROWTH Best AI networking apps for founders 2026: what to use instead of blasting DMs Most founder n"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/outsourced-accounting-for-startups.html",
+      "text": "LEADERSHIP Outsourced accounting and timely financial visibility for startups: how to fix broken boo"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/alternatives-cold-emailing-investors.html",
+      "text": "GROWTH Alternatives to Cold Emailing Investors: Four Warmer Paths That Work Cold email converts poor"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/first-10-b2b-customers.html",
+      "text": "GROWTH Find your first 10 B2B customers through warm introductions to buyers who feel the pain Getti"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/unified-observability-incident-response.html",
+      "text": "ENGINEERING Unified observability and faster incident response: how to stop chasing logs across tool"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/warm-intros-investors-no-network.html",
+      "text": "GROWTH Warm intros to investors without a network: who to ask and what to say How to get warm intros"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/hire-first-engineer-warm-intros.html",
+      "text": "ENGINEERING How to hire your first engineer through warm intros instead of job boards Job boards bri"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/customer-research-jobs-to-be-done.html",
+      "text": "GROWTH Customer research: jobs-to-be-done, churn, and adoption insights Start with interviews that u"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/growth-stalled.html",
+      "text": "Growth Growth stalled? Diagnose the leak before buying more traffic A flat chart can be weak demand,"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/ai-workflow.html",
+      "text": "Engineering Which AI workflow should you automate first? Start with work you can check, contain, and"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/launch-readiness.html",
+      "text": "Growth Launch marketing readiness: five investments ranked by sequence Buyer clarity, proof, a worki"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/portal-automation.html",
+      "text": "Engineering Third-party portal automation: API, RPA, or browser agent? The hard part is not clicking"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/paid-creative.html",
+      "text": "Growth Paid creative fatigue: decide what to produce and test next A declining chart is a hypothesis"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/legacy-modernization.html",
+      "text": "Engineering Legacy modernization: incremental replacement or a full rewrite? Keep the system serving"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/international-engineers.html",
+      "text": "Leadership How to hire international engineers without creating a compliance nightmare A wider searc"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/inventory-cfo.html",
+      "text": "Leadership How to hire a CFO for an inventory-heavy startup A strong finance résumé can still be the"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/voice-ai-stack.html",
+      "text": "Engineering The 4 best ways to build a voice AI stack in 2026 Once you spend $10k or more a month on"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/customer-acquisition.html",
+      "text": "Growth 4 customer acquisition stacks compared for teams spending $20k+ a month Getting customers is "
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/cicd-guardrails.html",
+      "text": "Engineering 3 CI/CD guardrails that let teams ship faster without breaking production Speed without "
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/advisory-vs-fractional.html",
+      "text": "Leadership Startup advisory vs fractional leadership: How to pick the right operator for your stage "
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/spreadsheet-whatsapp.html",
+      "text": "Engineering How to automate a spreadsheet and WhatsApp workflow without breaking it A spreadsheet, a"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/founding-vs-senior-engineer.html",
+      "text": "Leadership Founding engineer vs. senior software engineer: how to choose the right hire for your sta"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/scattered-business-data.html",
+      "text": "Engineering How to connect scattered business data across spreadsheets, messages, and CRMs When spre"
+    },
+    {
+      "href": "http://127.0.0.1:52767/articles/hire-senior-talent.html",
+      "text": "Leadership How to hire senior talent when more candidates aren't solving the problem When a critical"
+    }
+  ],
+  "meta": {
+    "description": "Articles from The Boardy Times.",
+    "icons": [],
+    "og_image": "https://www.boardy.ai/social/boardy-opengraph-20261018.png",
+    "og_title": "The Boardy Times",
+    "theme_color": ""
+  },
+  "outline": [
+    {
+      "box": {
+        "h": 84,
+        "w": 1440,
+        "x": 0,
+        "y": 0
+      },
+      "class": "site-header",
+      "color": "#172335",
+      "depth": 2,
+      "display": "block",
+      "font": "16px 400",
+      "tag": "header"
+    },
+    {
+      "box": {
+        "h": 44,
+        "w": 107,
+        "x": 120,
+        "y": 20
+      },
+      "class": "site-header__brand brand-mark",
+      "color": "#172335",
+      "depth": 4,
+      "font": "20px 600",
+      "href": "http://127.0.0.1:52767/",
+      "tag": "a",
+      "text": "Boardy"
+    },
+    {
+      "alt": "",
+      "box": {
+        "h": 34,
+        "w": 30,
+        "x": 121,
+        "y": 25
+      },
+      "color": "#172335",
+      "depth": 6,
+      "font": "20px 600",
+      "src": "http://127.0.0.1:52767/articles/art/boardy-mark.webp",
+      "tag": "img"
+    },
+    {
+      "box": {
+        "h": 44,
+        "w": 122,
+        "x": 1004,
+        "y": 20
+      },
+      "class": "site-header__nav",
+      "color": "#172335",
+      "depth": 4,
+      "display": "flex",
+      "flex": "row",
+      "font": "16px 400",
+      "tag": "nav"
+    },
+    {
+      "box": {
+        "h": 44,
+        "w": 122,
+        "x": 1004,
+        "y": 20
+      },
+      "color": "#172335",
+      "depth": 5,
+      "font": "15px 400",
+      "href": "http://127.0.0.1:52767/articles",
+      "tag": "a",
+      "text": "The Boardy Times"
+    },
+    {
+      "background": "#006ee6",
+      "box": {
+        "h": 48,
+        "w": 158,
+        "x": 1162,
+        "y": 18
+      },
+      "class": "button button--dark button--small",
+      "color": "#ffffff",
+      "depth": 4,
+      "font": "15px 500",
+      "href": "http://127.0.0.1:52767/?message=1",
+      "tag": "a",
+      "text": "Message Me →"
+    },
+    {
+      "box": {
+        "h": 2627,
+        "w": 1440,
+        "x": 0,
+        "y": 84
+      },
+      "class": "page",
+      "color": "#172335",
+      "depth": 2,
+      "display": "block",
+      "font": "16px 400",
+      "tag": "main"
+    },
+    {
+      "box": {
+        "h": 99,
+        "w": 602,
+        "x": 180,
+        "y": 148
+      },
+      "color": "#172335",
+      "depth": 6,
+      "font": "89.6px 400",
+      "tag": "h1",
+      "text": "The Boardy Times"
+    },
+    {
+      "background": "#fffefb",
+      "box": {
+        "h": 49,
+        "w": 152,
+        "x": 1108,
+        "y": 173
+      },
+      "class": "topic-menu__button",
+      "color": "#172335",
+      "depth": 7,
+      "font": "15px 500",
+      "tag": "button",
+      "text": "All topics"
+    },
+    {
+      "box": {
+        "h": 8,
+        "w": 12,
+        "x": 1231,
+        "y": 193
+      },
+      "color": "#172335",
+      "depth": 8,
+      "font": "15px 500",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 527,
+        "w": 341,
+        "x": 180,
+        "y": 295
+      },
+      "color": "#172335",
+      "depth": 5,
+      "display": "block",
+      "font": "16px 400",
+      "tag": "article"
+    },
+    {
+      "box": {
+        "h": 486,
+        "w": 341,
+        "x": 180,
+        "y": 295
+      },
+      "class": "card",
+      "color": "#172335",
+      "depth": 6,
+      "font": "16px 400",
+      "href": "http://127.0.0.1:52767/articles/warm-intro-startup-jobs.html",
+      "tag": "a",
+      "text": "LEADERSHIP How to find startup jobs through warm introductions Most startup jobs are filled through conversations that start with a warm introduction. Here's how to ask for one and what to say. By Boa"
+    },
+    {
+      "alt": "An open cream envelope with a black card and a green seal.",
+      "box": {
+        "h": 211,
+        "w": 339,
+        "x": 181,
+        "y": 296
+      },
+      "color": "#172335",
+      "depth": 8,
+      "font": "16px 400",
+      "src": "http://127.0.0.1:52767/articles/art/outbound-note.png",
+      "tag": "img"
+    },
+    {
+      "box": {
+        "h": 67,
+        "w": 341,
+        "x": 180,
+        "y": 562
+      },
+      "color": "#172335",
+      "depth": 7,
+      "font": "28px 500",
+      "tag": "h2",
+      "text": "How to find startup jobs through warm introductions"
+    },
+    {
+      "box": {
+        "h": 102,
+        "w": 341,
+        "x": 180,
+        "y": 641
+      },
+      "color": "#4e5968",
+      "depth": 7,
+      "font": "16px 400",
+      "tag": "p",
+      "text": "Most startup jobs are filled through conversations that start with a warm introduction. Here's how to ask for one and what to say."
+    },
+    {
+      "box": {
+        "h": 527,
+        "w": 341,
+        "x": 549,
+        "y": 295
+      },
+      "color": "#172335",
+      "depth": 5,
+      "display": "block",
+      "font": "16px 400",
+      "tag": "article"
+    },
+    {
+      "box": {
+        "h": 527,
+        "w": 341,
+        "x": 549,
+        "y": 295
+      },
+      "class": "card",
+      "color": "#172335",
+      "depth": 6,
+      "font": "16px 400",
+      "href": "http://127.0.0.1:52767/articles/meet-investors-without-linkedin.html",
+      "tag": "a",
+      "text": "GROWTH Alternatives to LinkedIn for founders to meet investors: targeted intros over endless scrolling How to meet investors without spending hours scrolling LinkedIn or cold messaging people who neve"
+    },
+    {
+      "alt": "An open cream envelope with a black card and a green seal.",
+      "box": {
+        "h": 211,
+        "w": 339,
+        "x": 550,
+        "y": 296
+      },
+      "color": "#172335",
+      "depth": 8,
+      "font": "16px 400",
+      "src": "http://127.0.0.1:52767/articles/art/outbound-note.png",
+      "tag": "img"
+    },
+    {
+      "box": {
+        "h": 134,
+        "w": 341,
+        "x": 549,
+        "y": 562
+      },
+      "color": "#172335",
+      "depth": 7,
+      "font": "28px 500",
+      "tag": "h2",
+      "text": "Alternatives to LinkedIn for founders to meet investors: targeted intros over endless scrolling"
+    },
+    {
+      "box": {
+        "h": 77,
+        "w": 341,
+        "x": 549,
+        "y": 708
+      },
+      "color": "#4e5968",
+      "depth": 7,
+      "font": "16px 400",
+      "tag": "p",
+      "text": "How to meet investors without spending hours scrolling LinkedIn or cold messaging people who never respond."
+    },
+    {
+      "box": {
+        "h": 527,
+        "w": 341,
+        "x": 919,
+        "y": 295
+      },
+      "color": "#172335",
+      "depth": 5,
+      "display": "block",
+      "font": "16px 400",
+      "tag": "article"
+    },
+    {
+      "box": {
+        "h": 494,
+        "w": 341,
+        "x": 919,
+        "y": 295
+      },
+      "class": "card",
+      "color": "#172335",
+      "depth": 6,
+      "font": "16px 400",
+      "href": "http://127.0.0.1:52767/articles/subscription-dunning-payment-recovery.html",
+      "tag": "a",
+      "text": "LEADERSHIP Subscription dunning and payment recovery: how to reduce involuntary churn Failed payments cause avoidable customer and revenue loss. Here is how to build a dunning system that recovers the"
+    },
+    {
+      "alt": "A cream bowl with a charcoal crack and one green bead rolling out.",
+      "box": {
+        "h": 211,
+        "w": 339,
+        "x": 920,
+        "y": 296
+      },
+      "color": "#172335",
+      "depth": 8,
+      "font": "16px 400",
+      "src": "http://127.0.0.1:52767/articles/art/growth-leak.png",
+      "tag": "img"
+    },
+    {
+      "box": {
+        "h": 101,
+        "w": 341,
+        "x": 919,
+        "y": 562
+      },
+      "color": "#172335",
+      "depth": 7,
+      "font": "28px 500",
+      "tag": "h2",
+      "text": "Subscription dunning and payment recovery: how to reduce involuntary churn"
+    },
+    {
+      "box": {
+        "h": 77,
+        "w": 341,
+        "x": 919,
+        "y": 675
+      },
+      "color": "#4e5968",
+      "depth": 7,
+      "font": "16px 400",
+      "tag": "p",
+      "text": "Failed payments cause avoidable customer and revenue loss. Here is how to build a dunning system that recovers them."
+    },
+    {
+      "box": {
+        "h": 527,
+        "w": 341,
+        "x": 180,
+        "y": 870
+      },
+      "color": "#172335",
+      "depth": 5,
+      "display": "block",
+      "font": "16px 400",
+      "tag": "article"
+    },
+    {
+      "box": {
+        "h": 494,
+        "w": 341,
+        "x": 180,
+        "y": 870
+      },
+      "class": "card",
+      "color": "#172335",
+      "depth": 6,
+      "font": "16px 400",
+      "href": "http://127.0.0.1:52767/articles/find-technical-cofounder-warm-intros.html",
+      "tag": "a",
+      "text": "ENGINEERING How to find a technical cofounder through people who know both sides Most technical cofounders are found through people who know both sides, not platforms. Here is how to get those introdu"
+    },
+    {
+      "alt": "A rough cream stone and a precise black cube on linen.",
+      "box": {
+        "h": 211,
+        "w": 339,
+        "x": 181,
+        "y": 871
+      },
+      "color": "#172335",
+      "depth": 8,
+      "font": "16px 400",
+      "src": "http://127.0.0.1:52767/articles/art/founding-minimal.png",
+      "tag": "img"
+    },
+    {
+      "box": {
+        "h": 101,
+        "w": 341,
+        "x": 180,
+        "y": 1137
+      },
+      "color": "#172335",
+      "depth": 7,
+      "font": "28px 500",
+      "tag": "h2",
+      "text": "How to find a technical cofounder through people who know both sides"
+    },
+    {
+      "box": {
+        "h": 77,
+        "w": 341,
+        "x": 180,
+        "y": 1250
+      },
+      "color": "#4e5968",
+      "depth": 7,
+      "font": "16px 400",
+      "tag": "p",
+      "text": "Most technical cofounders are found through people who know both sides, not platforms. Here is how to get those introductions."
+    },
+    {
+      "box": {
+        "h": 527,
+        "w": 341,
+        "x": 549,
+        "y": 870
+      },
+      "color": "#172335",
+      "depth": 5,
+      "display": "block",
+      "font": "16px 400",
+      "tag": "article"
+    },
+    {
+      "box": {
+        "h": 519,
+        "w": 341,
+        "x": 549,
+        "y": 870
+      },
+      "class": "card",
+      "color": "#172335",
+      "depth": 6,
+      "font": "16px 400",
+      "href": "http://127.0.0.1:52767/articles/best-ai-networking-apps-founders.html",
+      "tag": "a",
+      "text": "GROWTH Best AI networking apps for founders 2026: what to use instead of blasting DMs Most founder networking tools help you send more messages. The better question is who you need and whether anyone "
+    },
+    {
+      "alt": "An open cream envelope with a black card and a green seal.",
+      "box": {
+        "h": 211,
+        "w": 339,
+        "x": 550,
+        "y": 871
+      },
+      "color": "#172335",
+      "depth": 8,
+      "font": "16px 400",
+      "src": "http://127.0.0.1:52767/articles/art/outbound-note.png",
+      "tag": "img"
+    },
+    {
+      "box": {
+        "h": 101,
+        "w": 341,
+        "x": 549,
+        "y": 1137
+      },
+      "color": "#172335",
+      "depth": 7,
+      "font": "28px 500",
+      "tag": "h2",
+      "text": "Best AI networking apps for founders 2026: what to use instead of blasting DMs"
+    },
+    {
+      "box": {
+        "h": 102,
+        "w": 341,
+        "x": 549,
+        "y": 1250
+      },
+      "color": "#4e5968",
+      "depth": 7,
+      "font": "16px 400",
+      "tag": "p",
+      "text": "Most founder networking tools help you send more messages. The better question is who you need and whether anyone you know can introduce you."
+    },
+    {
+      "box": {
+        "h": 527,
+        "w": 341,
+        "x": 919,
+        "y": 870
+      },
+      "color": "#172335",
+      "depth": 5,
+      "display": "block",
+      "font": "16px 400",
+      "tag": "article"
+    },
+    {
+      "box": {
+        "h": 527,
+        "w": 341,
+        "x": 919,
+        "y": 870
+      },
+      "class": "card",
+      "color": "#172335",
+      "depth": 6,
+      "font": "16px 400",
+      "href": "http://127.0.0.1:52767/articles/outsourced-accounting-for-startups.html",
+      "tag": "a",
+      "text": "LEADERSHIP Outsourced accounting and timely financial visibility for startups: how to fix broken books When your books are broken and you can't see cash burn clearly, here's how to find the right outs"
+    },
+    {
+      "alt": "A spreadsheet, a green note, and a card file linked by string on a dark table.",
+      "box": {
+        "h": 211,
+        "w": 339,
+        "x": 920,
+        "y": 871
+      },
+      "color": "#172335",
+      "depth": 8,
+      "font": "16px 400",
+      "src": "http://127.0.0.1:52767/articles/art/scattered-link.png",
+      "tag": "img"
+    },
+    {
+      "box": {
+        "h": 134,
+        "w": 341,
+        "x": 919,
+        "y": 1137
+      },
+      "color": "#172335",
+      "depth": 7,
+      "font": "28px 500",
+      "tag": "h2",
+      "text": "Outsourced accounting and timely financial visibility for startups: how to fix broken books"
+    },
+    {
+      "box": {
+        "h": 77,
+        "w": 341,
+        "x": 919,
+        "y": 1284
+      },
+      "color": "#4e5968",
+      "depth": 7,
+      "font": "16px 400",
+      "tag": "p",
+      "text": "When your books are broken and you can't see cash burn clearly, here's how to find the right outsourced accounting partner."
+    },
+    {
+      "box": {
+        "h": 527,
+        "w": 341,
+        "x": 180,
+        "y": 1446
+      },
+      "color": "#172335",
+      "depth": 5,
+      "display": "block",
+      "font": "16px 400",
+      "tag": "article"
+    },
+    {
+      "box": {
+        "h": 468,
+        "w": 341,
+        "x": 180,
+        "y": 1446
+      },
+      "class": "card",
+      "color": "#172335",
+      "depth": 6,
+      "font": "16px 400",
+      "href": "http://127.0.0.1:52767/articles/alternatives-cold-emailing-investors.html",
+      "tag": "a",
+      "text": "GROWTH Alternatives to Cold Emailing Investors: Four Warmer Paths That Work Cold email converts poorly because it carries no trust signal. Here are four routes that do. By Boardy · 4 min read · Novemb"
+    },
+    {
+      "alt": "An open cream envelope with a black card and a green seal.",
+      "box": {
+        "h": 211,
+        "w": 339,
+        "x": 181,
+        "y": 1447
+      },
+      "color": "#172335",
+      "depth": 8,
+      "font": "16px 400",
+      "src": "http://127.0.0.1:52767/articles/art/outbound-note.png",
+      "tag": "img"
+    },
+    {
+      "box": {
+        "h": 101,
+        "w": 341,
+        "x": 180,
+        "y": 1713
+      },
+      "color": "#172335",
+      "depth": 7,
+      "font": "28px 500",
+      "tag": "h2",
+      "text": "Alternatives to Cold Emailing Investors: Four Warmer Paths That Work"
+    },
+    {
+      "box": {
+        "h": 51,
+        "w": 341,
+        "x": 180,
+        "y": 1826
+      },
+      "color": "#4e5968",
+      "depth": 7,
+      "font": "16px 400",
+      "tag": "p",
+      "text": "Cold email converts poorly because it carries no trust signal. Here are four routes that do."
+    },
+    {
+      "box": {
+        "h": 527,
+        "w": 341,
+        "x": 549,
+        "y": 1446
+      },
+      "color": "#172335",
+      "depth": 5,
+      "display": "block",
+      "font": "16px 400",
+      "tag": "article"
+    },
+    {
+      "box": {
+        "h": 527,
+        "w": 341,
+        "x": 549,
+        "y": 1446
+      },
+      "class": "card",
+      "color": "#172335",
+      "depth": 6,
+      "font": "16px 400",
+      "href": "http://127.0.0.1:52767/articles/first-10-b2b-customers.html",
+      "tag": "a",
+      "text": "GROWTH Find your first 10 B2B customers through warm introductions to buyers who feel the pain Getting your first 10 B2B customers starts with warm introductions to buyers who already feel the problem"
+    },
+    {
+      "alt": "An open cream envelope with a black card and a green seal.",
+      "box": {
+        "h": 211,
+        "w": 339,
+        "x": 550,
+        "y": 1447
+      },
+      "color": "#172335",
+      "depth": 8,
+      "font": "16px 400",
+      "src": "http://127.0.0.1:52767/articles/art/outbound-note.png",
+      "tag": "img"
+    },
+    {
+      "box": {
+        "h": 134,
+        "w": 341,
+        "x": 549,
+        "y": 1713
+      },
+      "color": "#172335",
+      "depth": 7,
+      "font": "28px 500",
+      "tag": "h2",
+      "text": "Find your first 10 B2B customers through warm introductions to buyers who feel the pain"
+    },
+    {
+      "box": {
+        "h": 77,
+        "w": 341,
+        "x": 549,
+        "y": 1859
+      },
+      "color": "#4e5968",
+      "depth": 7,
+      "font": "16px 400",
+      "tag": "p",
+      "text": "Getting your first 10 B2B customers starts with warm introductions to buyers who already feel the problem you solve."
+    },
+    {
+      "box": {
+        "h": 527,
+        "w": 341,
+        "x": 919,
+        "y": 1446
+      },
+      "color": "#172335",
+      "depth": 5,
+      "display": "block",
+      "font": "16px 400",
+      "tag": "article"
+    },
+    {
+      "box": {
+        "h": 527,
+        "w": 341,
+        "x": 919,
+        "y": 1446
+      },
+      "class": "card",
+      "color": "#172335",
+      "depth": 6,
+      "font": "16px 400",
+      "href": "http://127.0.0.1:52767/articles/unified-observability-incident-response.html",
+      "tag": "a",
+      "text": "ENGINEERING Unified observability and faster incident response: how to stop chasing logs across tools Production incidents take hours when logs, traces, and infrastructure live in separate tools. Here"
+    },
+    {
+      "alt": "A spreadsheet, a green note, and a card file linked by string on a dark table.",
+      "box": {
+        "h": 211,
+        "w": 339,
+        "x": 920,
+        "y": 1447
+      },
+      "color": "#172335",
+      "depth": 8,
+      "font": "16px 400",
+      "src": "http://127.0.0.1:52767/articles/art/scattered-link.png",
+      "tag": "img"
+    },
+    {
+      "box": {
+        "h": 134,
+        "w": 341,
+        "x": 919,
+        "y": 1713
+      },
+      "color": "#172335",
+      "depth": 7,
+      "font": "28px 500",
+      "tag": "h2",
+      "text": "Unified observability and faster incident response: how to stop chasing logs across tools"
+    },
+    {
+      "box": {
+        "h": 77,
+        "w": 341,
+        "x": 919,
+        "y": 1859
+      },
+      "color": "#4e5968",
+      "depth": 7,
+      "font": "16px 400",
+      "tag": "p",
+      "text": "Production incidents take hours when logs, traces, and infrastructure live in separate tools. Here's how to fix it."
+    },
+    {
+      "box": {
+        "h": 494,
+        "w": 341,
+        "x": 180,
+        "y": 2021
+      },
+      "color": "#172335",
+      "depth": 5,
+      "display": "block",
+      "font": "16px 400",
+      "tag": "article"
+    },
+    {
+      "box": {
+        "h": 468,
+        "w": 341,
+        "x": 180,
+        "y": 2021
+      },
+      "class": "card",
+      "color": "#172335",
+      "depth": 6,
+      "font": "16px 400",
+      "href": "http://127.0.0.1:52767/articles/warm-intros-investors-no-network.html",
+      "tag": "a",
+      "text": "GROWTH Warm intros to investors without a network: who to ask and what to say How to get warm intros to VCs when you don't know anyone yet. By Boardy · 5 min read · November 17, 2026"
+    },
+    {
+      "alt": "A cream bowl with a charcoal crack and one green bead rolling out.",
+      "box": {
+        "h": 211,
+        "w": 339,
+        "x": 181,
+        "y": 2022
+      },
+      "color": "#172335",
+      "depth": 8,
+      "font": "16px 400",
+      "src": "http://127.0.0.1:52767/articles/art/growth-leak.png",
+      "tag": "img"
+    },
+    {
+      "box": {
+        "h": 101,
+        "w": 341,
+        "x": 180,
+        "y": 2288
+      },
+      "color": "#172335",
+      "depth": 7,
+      "font": "28px 500",
+      "tag": "h2",
+      "text": "Warm intros to investors without a network: who to ask and what to say"
+    },
+    {
+      "box": {
+        "h": 51,
+        "w": 341,
+        "x": 180,
+        "y": 2401
+      },
+      "color": "#4e5968",
+      "depth": 7,
+      "font": "16px 400",
+      "tag": "p",
+      "text": "How to get warm intros to VCs when you don't know anyone yet."
+    },
+    {
+      "box": {
+        "h": 494,
+        "w": 341,
+        "x": 549,
+        "y": 2021
+      },
+      "color": "#172335",
+      "depth": 5,
+      "display": "block",
+      "font": "16px 400",
+      "tag": "article"
+    },
+    {
+      "box": {
+        "h": 494,
+        "w": 341,
+        "x": 549,
+        "y": 2021
+      },
+      "class": "card",
+      "color": "#172335",
+      "depth": 6,
+      "font": "16px 400",
+      "href": "http://127.0.0.1:52767/articles/hire-first-engineer-warm-intros.html",
+      "tag": "a",
+      "text": "ENGINEERING How to hire your first engineer through warm intros instead of job boards Job boards bring strangers. Warm intros surface judgment and working style that no screening call can reveal. By B"
+    },
+    {
+      "alt": "An empty chair, a black nameplate, and a green folder.",
+      "box": {
+        "h": 211,
+        "w": 339,
+        "x": 550,
+        "y": 2022
+      },
+      "color": "#172335",
+      "depth": 8,
+      "font": "16px 400",
+      "src": "http://127.0.0.1:52767/articles/art/sales-hire.png",
+      "tag": "img"
+    },
+    {
+      "box": {
+        "h": 101,
+        "w": 341,
+        "x": 549,
+        "y": 2288
+      },
+      "color": "#172335",
+      "depth": 7,
+      "font": "28px 500",
+      "tag": "h2",
+      "text": "How to hire your first engineer through warm intros instead of job boards"
+    },
+    {
+      "box": {
+        "h": 77,
+        "w": 341,
+        "x": 549,
+        "y": 2401
+      },
+      "color": "#4e5968",
+      "depth": 7,
+      "font": "16px 400",
+      "tag": "p",
+      "text": "Job boards bring strangers. Warm intros surface judgment and working style that no screening call can reveal."
+    },
+    {
+      "box": {
+        "h": 494,
+        "w": 341,
+        "x": 919,
+        "y": 2021
+      },
+      "color": "#172335",
+      "depth": 5,
+      "display": "block",
+      "font": "16px 400",
+      "tag": "article"
+    },
+    {
+      "box": {
+        "h": 494,
+        "w": 341,
+        "x": 919,
+        "y": 2021
+      },
+      "class": "card",
+      "color": "#172335",
+      "depth": 6,
+      "font": "16px 400",
+      "href": "http://127.0.0.1:52767/articles/customer-research-jobs-to-be-done.html",
+      "tag": "a",
+      "text": "GROWTH Customer research: jobs-to-be-done, churn, and adoption insights Start with interviews that uncover why customers buy, hesitate, or churn, not feature surveys. By Boardy · 5 min read · November"
+    },
+    {
+      "alt": "A cream bowl with a charcoal crack and one green bead rolling out.",
+      "box": {
+        "h": 211,
+        "w": 339,
+        "x": 920,
+        "y": 2022
+      },
+      "color": "#172335",
+      "depth": 8,
+      "font": "16px 400",
+      "src": "http://127.0.0.1:52767/articles/art/growth-leak.png",
+      "tag": "img"
+    },
+    {
+      "box": {
+        "h": 101,
+        "w": 341,
+        "x": 919,
+        "y": 2288
+      },
+      "color": "#172335",
+      "depth": 7,
+      "font": "28px 500",
+      "tag": "h2",
+      "text": "Customer research: jobs-to-be-done, churn, and adoption insights"
+    },
+    {
+      "box": {
+        "h": 77,
+        "w": 341,
+        "x": 919,
+        "y": 2401
+      },
+      "color": "#4e5968",
+      "depth": 7,
+      "font": "16px 400",
+      "tag": "p",
+      "text": "Start with interviews that uncover why customers buy, hesitate, or churn, not feature surveys."
+    },
+    {
+      "box": {
+        "h": 44,
+        "w": 1080,
+        "x": 180,
+        "y": 2571
+      },
+      "class": "pages",
+      "color": "#172335",
+      "depth": 4,
+      "display": "flex",
+      "flex": "row",
+      "font": "16px 400",
+      "tag": "nav"
+    },
+    {
+      "background": "#006ee6",
+      "box": {
+        "h": 44,
+        "w": 44,
+        "x": 646,
+        "y": 2571
+      },
+      "class": "pages__button",
+      "color": "#ffffff",
+      "depth": 5,
+      "font": "15px 500",
+      "tag": "button",
+      "text": "1"
+    },
+    {
+      "background": "#fffefb",
+      "box": {
+        "h": 44,
+        "w": 44,
+        "x": 698,
+        "y": 2571
+      },
+      "class": "pages__button",
+      "color": "#172335",
+      "depth": 5,
+      "font": "15px 500",
+      "tag": "button",
+      "text": "2"
+    },
+    {
+      "background": "#fffefb",
+      "box": {
+        "h": 44,
+        "w": 44,
+        "x": 750,
+        "y": 2571
+      },
+      "class": "pages__button",
+      "color": "#172335",
+      "depth": 5,
+      "font": "15px 500",
+      "tag": "button",
+      "text": "3"
+    }
+  ],
+  "page": {
+    "h": 2711,
+    "w": 1440
+  },
+  "text": "Boardy The Boardy Times Message Me → The Boardy Times All topics LEADERSHIP How to find startup jobs through warm introductions Most startup jobs are filled through conversations that start with a warm introduction. Here's how to ask for one and what to say. By Boardy · 5 min read · November 20, 2026 GROWTH Alternatives to LinkedIn for founders to meet investors: targeted intros over endless scrolling How to meet investors without spending hours scrolling LinkedIn or cold messaging people who never respond. By Boardy · 4 min read · November 20, 2026 LEADERSHIP Subscription dunning and payment recovery: how to reduce involuntary churn Failed payments cause avoidable customer and revenue loss. Here is how to build a dunning system that recovers them. By Boardy · 4 min read · November 20, 2026 ENGINEERING How to find a technical cofounder through people who know both sides Most technical cofounders are found through people who know both sides, not platforms. Here is how to get those introductions. By Boardy · 5 min read · November 19, 2026 GROWTH Best AI networking apps for founders 2026: what to use instead of blasting DMs Most founder networking tools help you send more messages. The better question is who you need and whether anyone you know can introduce you. By Boardy · 4 min read · November 19, 2026 LEADERSHIP Outsourced accounting and timely financial visibility for startups: how to fix broken books When your books are broken and you can't see cash burn clearly, here's how to find the right outsourced accounting partner. By Boardy · 5 min read · November 19, 2026 GROWTH Alternatives to Cold Emailing Investors: Four Warmer Paths That Work Cold email converts poorly because it carries no trust signal. Here are four routes that do. By Boardy · 4 min read · November 18, 2026 GROWTH Find your first 10 B2B customers through warm introductions to buyers who feel the pain Getting your first 10 B2B customers starts with warm introductions to buyers who already feel the problem you solve. By Boardy · 4 min read · November 18, 2026 ENGINEERING Unified observability and faster incident response: how to stop chasing logs across tools Production incidents take hours when logs, traces, and infrastructure live in separate tools. Here's how to fix it. By Boardy · 5 min read · November 18, 2026 GROWTH Warm intros to investors without a network: who to ask and what to say How to get warm intros to VCs when you don't know anyone yet. By Boardy · 5 min read · November 17, 2026 ENGINEERING How to hire your first engineer through warm intros instead of job boards Job boards bring strangers. Warm intros surface judgment and working style that no screening call can reveal. By Boardy · 4 min read · November 17, 2026 GROWTH Customer research: jobs-to-be-done, churn, and adoption insights Start with interviews that uncover why customers buy, hesitate, or churn, not feature surveys. By Boardy · 5 min read · November 17, 2026 1 2 3",
+  "title": "The Boardy Times",
+  "unreadable_stylesheets": 0,
+  "url": "http://127.0.0.1:52767/articles",
+  "viewport": {
+    "h": 900,
+    "w": 1440
+  }
+}

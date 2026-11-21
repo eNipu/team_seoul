@@ -3,8 +3,21 @@
  * Handles live requests for:
  *   - GET  /api/public-globe
  *   - POST /api/onboard/text
+ * Provides safe stubs for analytics and hydration objects.
  */
 (function() {
+  // Safe stubs to prevent hydration or analytics errors
+  if (!window.posthog) {
+    window.posthog = {
+      capture: function() {},
+      identify: function() {},
+      on: function() {},
+      init: function() {},
+      register: function() {},
+      people: { set: function() {} }
+    };
+  }
+
   const origFetch = window.fetch;
   window.fetch = async function(resource, config) {
     const url = typeof resource === 'string' ? resource : resource instanceof URL ? resource.toString() : (resource && resource.url ? resource.url : '');
@@ -38,8 +51,8 @@
 
       console.log('[Boardy API Mock] POST /api/onboard/text received:', body);
 
-      // Brief latency simulation (250ms)
-      await new Promise(res => setTimeout(res, 250));
+      // Brief latency simulation (200ms)
+      await new Promise(res => setTimeout(res, 200));
 
       const mockResponse = {
         success: true,

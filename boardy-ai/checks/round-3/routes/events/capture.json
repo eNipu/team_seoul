@@ -1,0 +1,3708 @@
+{
+  "a11y": {
+    "images_without_alt": 0,
+    "landmarks": {
+      "banner": 1,
+      "contentinfo": 1,
+      "form": 1,
+      "main": 1,
+      "navigation": 1
+    },
+    "lang": "en",
+    "unnamed_controls": 0,
+    "unnamed_examples": []
+  },
+  "assets": {
+    "background_images": [],
+    "fonts": [
+      "http://127.0.0.1:52767/assets/geist-latin-wght-normal-Dm3htQBi.woff2",
+      "http://127.0.0.1:52767/assets/raleway-latin-wght-normal-CSF1BaNN.woff2"
+    ],
+    "images": [
+      {
+        "alt": "",
+        "h": 128,
+        "src": "http://127.0.0.1:52767/boardy-landing-logo-mark.webp",
+        "w": 119
+      },
+      {
+        "alt": "Boardy, the cardboard-box mascot in a suit",
+        "h": 778,
+        "src": "http://127.0.0.1:52767/boardy-events-mascot.webp",
+        "w": 720
+      },
+      {
+        "alt": "JPMorgan",
+        "h": 64,
+        "src": "http://127.0.0.1:52767/logos/events/jpmorgan.svg",
+        "w": 300
+      },
+      {
+        "alt": "HF0",
+        "h": 128,
+        "src": "http://127.0.0.1:52767/hf0.webp",
+        "w": 290
+      },
+      {
+        "alt": "Tech Week by a16z",
+        "h": 128,
+        "src": "http://127.0.0.1:52767/a16z.webp",
+        "w": 290
+      },
+      {
+        "alt": "AssemblyAI",
+        "h": 128,
+        "src": "http://127.0.0.1:52767/logos/speech-apis/assemblyai.webp",
+        "w": 512
+      },
+      {
+        "alt": "",
+        "h": 64,
+        "src": "http://127.0.0.1:52767/logos/events/jpmorgan.svg",
+        "w": 300
+      },
+      {
+        "alt": "",
+        "h": 128,
+        "src": "http://127.0.0.1:52767/hf0.webp",
+        "w": 290
+      },
+      {
+        "alt": "",
+        "h": 128,
+        "src": "http://127.0.0.1:52767/a16z.webp",
+        "w": 290
+      },
+      {
+        "alt": "",
+        "h": 128,
+        "src": "http://127.0.0.1:52767/logos/speech-apis/assemblyai.webp",
+        "w": 512
+      },
+      {
+        "alt": "Meta",
+        "h": 60,
+        "src": "http://127.0.0.1:52767/logos/events/meta.svg",
+        "w": 300
+      },
+      {
+        "alt": "Microsoft",
+        "h": 64,
+        "src": "http://127.0.0.1:52767/logos/events/microsoft.svg",
+        "w": 300
+      },
+      {
+        "alt": "Accel",
+        "h": 96,
+        "src": "http://127.0.0.1:52767/logos/events/accel.svg",
+        "w": 300
+      },
+      {
+        "alt": "a16z",
+        "h": 128,
+        "src": "http://127.0.0.1:52767/a16z.webp",
+        "w": 290
+      },
+      {
+        "alt": "Scale AI",
+        "h": 57,
+        "src": "http://127.0.0.1:52767/logos/events/scale.svg",
+        "w": 300
+      },
+      {
+        "alt": "Databricks",
+        "h": 50,
+        "src": "http://127.0.0.1:52767/logos/events/databricks.svg",
+        "w": 300
+      },
+      {
+        "alt": "Ramp",
+        "h": 85,
+        "src": "http://127.0.0.1:52767/logos/events/ramp.svg",
+        "w": 300
+      },
+      {
+        "alt": "Airwallex",
+        "h": 41,
+        "src": "http://127.0.0.1:52767/logos/events/airwallex.svg",
+        "w": 300
+      },
+      {
+        "alt": "",
+        "h": 60,
+        "src": "http://127.0.0.1:52767/logos/events/meta.svg",
+        "w": 300
+      },
+      {
+        "alt": "",
+        "h": 64,
+        "src": "http://127.0.0.1:52767/logos/events/microsoft.svg",
+        "w": 300
+      },
+      {
+        "alt": "",
+        "h": 96,
+        "src": "http://127.0.0.1:52767/logos/events/accel.svg",
+        "w": 300
+      },
+      {
+        "alt": "",
+        "h": 128,
+        "src": "http://127.0.0.1:52767/a16z.webp",
+        "w": 290
+      },
+      {
+        "alt": "",
+        "h": 57,
+        "src": "http://127.0.0.1:52767/logos/events/scale.svg",
+        "w": 300
+      },
+      {
+        "alt": "",
+        "h": 50,
+        "src": "http://127.0.0.1:52767/logos/events/databricks.svg",
+        "w": 300
+      },
+      {
+        "alt": "",
+        "h": 85,
+        "src": "http://127.0.0.1:52767/logos/events/ramp.svg",
+        "w": 300
+      },
+      {
+        "alt": "",
+        "h": 41,
+        "src": "http://127.0.0.1:52767/logos/events/airwallex.svg",
+        "w": 300
+      },
+      {
+        "alt": "",
+        "h": 778,
+        "src": "http://127.0.0.1:52767/boardy-events-mascot.webp",
+        "w": 720
+      },
+      {
+        "alt": "",
+        "h": 128,
+        "src": "http://127.0.0.1:52767/boardy-landing-logo-mark.webp",
+        "w": 119
+      }
+    ],
+    "inline_scripts": 1,
+    "requests": [
+      {
+        "bytes": 5884,
+        "type": "link",
+        "url": "http://127.0.0.1:52767/boardy-landing-logo-mark.webp"
+      },
+      {
+        "bytes": 30379,
+        "type": "link",
+        "url": "http://127.0.0.1:52767/assets/site-DUR2kEe6.css"
+      },
+      {
+        "bytes": 11991,
+        "type": "link",
+        "url": "http://127.0.0.1:52767/assets/calendar-flow-Bp6hH_5n.css"
+      },
+      {
+        "bytes": 5850,
+        "type": "link",
+        "url": "http://127.0.0.1:52767/assets/overlays-Crv5kqAx.css"
+      },
+      {
+        "bytes": 39436,
+        "type": "link",
+        "url": "http://127.0.0.1:52767/assets/home-sections-BUMCjBEU.css"
+      },
+      {
+        "bytes": 53344,
+        "type": "link",
+        "url": "http://127.0.0.1:52767/boardy-events-mascot.webp"
+      },
+      {
+        "bytes": 1965,
+        "type": "link",
+        "url": "http://127.0.0.1:52767/assets/legal-x6EQ-mQt.css"
+      },
+      {
+        "bytes": 11624,
+        "type": "link",
+        "url": "http://127.0.0.1:52767/assets/subpage-DVtBcLkP.css"
+      },
+      {
+        "bytes": 18867,
+        "type": "link",
+        "url": "http://127.0.0.1:52767/assets/inference-BnscEkuJ.css"
+      },
+      {
+        "bytes": 38007,
+        "type": "link",
+        "url": "http://127.0.0.1:52767/assets/cc-boardy-CLm2sa5g.css"
+      },
+      {
+        "bytes": 15600,
+        "type": "link",
+        "url": "http://127.0.0.1:52767/assets/booking-page-DJqke4zm.css"
+      },
+      {
+        "bytes": 11155,
+        "type": "link",
+        "url": "http://127.0.0.1:52767/assets/ask-boardy-DhiQo54z.css"
+      },
+      {
+        "bytes": 9068,
+        "type": "link",
+        "url": "http://127.0.0.1:52767/assets/index-DjptN0gA.css"
+      },
+      {
+        "bytes": 20912,
+        "type": "link",
+        "url": "http://127.0.0.1:52767/assets/booking-funnel-BL-iJFKT.css"
+      },
+      {
+        "bytes": 33974,
+        "type": "link",
+        "url": "http://127.0.0.1:52767/assets/events-CP1ZOR0u.css"
+      },
+      {
+        "bytes": 939371,
+        "type": "other",
+        "url": "http://127.0.0.1:52767/assets/index-BjgH2D5g.js"
+      },
+      {
+        "bytes": 379,
+        "type": "other",
+        "url": "http://127.0.0.1:52767/assets/is-record-WdQbMeHT.js"
+      },
+      {
+        "bytes": 24945,
+        "type": "other",
+        "url": "http://127.0.0.1:52767/assets/events-DY2oXJhU.js"
+      },
+      {
+        "bytes": 28700,
+        "type": "link",
+        "url": "http://127.0.0.1:52767/assets/geist-latin-wght-normal-Dm3htQBi.woff2"
+      },
+      {
+        "bytes": 48564,
+        "type": "link",
+        "url": "http://127.0.0.1:52767/assets/raleway-latin-wght-normal-CSF1BaNN.woff2"
+      },
+      {
+        "bytes": 0,
+        "type": "script",
+        "url": "https://us-assets.i.posthog.com/array/phc_aybzGDeUsNW2jlyrBdExPD9yG2If1qgP7LAZjcmXc7/config.js"
+      },
+      {
+        "bytes": 0,
+        "type": "script",
+        "url": "https://us-assets.i.posthog.com/static/1.438.12/dead-clicks-autocapture.js"
+      },
+      {
+        "bytes": 0,
+        "type": "script",
+        "url": "https://us-assets.i.posthog.com/static/1.438.12/web-vitals-with-attribution.js"
+      },
+      {
+        "bytes": 4705,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/logos/events/jpmorgan.svg"
+      },
+      {
+        "bytes": 3878,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/hf0.webp"
+      },
+      {
+        "bytes": 13541,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/logos/events/meta.svg"
+      },
+      {
+        "bytes": 3463,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/logos/events/microsoft.svg"
+      },
+      {
+        "bytes": 4367,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/logos/events/accel.svg"
+      },
+      {
+        "bytes": 6244,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/a16z.webp"
+      },
+      {
+        "bytes": 3830,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/logos/events/scale.svg"
+      },
+      {
+        "bytes": 6244,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/a16z.webp"
+      },
+      {
+        "bytes": 4705,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/logos/events/jpmorgan.svg"
+      },
+      {
+        "bytes": 10496,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/logos/speech-apis/assemblyai.webp"
+      },
+      {
+        "bytes": 3878,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/hf0.webp"
+      },
+      {
+        "bytes": 13541,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/logos/events/meta.svg"
+      },
+      {
+        "bytes": 3463,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/logos/events/microsoft.svg"
+      },
+      {
+        "bytes": 4367,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/logos/events/accel.svg"
+      },
+      {
+        "bytes": 3948,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/logos/events/databricks.svg"
+      },
+      {
+        "bytes": 1947,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/logos/events/ramp.svg"
+      },
+      {
+        "bytes": 3830,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/logos/events/scale.svg"
+      },
+      {
+        "bytes": 4497,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/logos/events/airwallex.svg"
+      },
+      {
+        "bytes": 53344,
+        "type": "img",
+        "url": "http://127.0.0.1:52767/boardy-events-mascot.webp"
+      }
+    ],
+    "scripts": [
+      "https://us-assets.i.posthog.com/array/phc_aybzGDeUsNW2jlyrBdExPD9yG2If1qgP7LAZjcmXc7/config.js",
+      "https://us-assets.i.posthog.com/static/1.438.12/dead-clicks-autocapture.js",
+      "https://us-assets.i.posthog.com/static/1.438.12/web-vitals-with-attribution.js",
+      "http://127.0.0.1:52767/assets/index-BjgH2D5g.js"
+    ],
+    "stylesheets": [
+      "http://127.0.0.1:52767/assets/site-DUR2kEe6.css",
+      "http://127.0.0.1:52767/assets/home-sections-BUMCjBEU.css",
+      "http://127.0.0.1:52767/assets/calendar-flow-Bp6hH_5n.css",
+      "http://127.0.0.1:52767/assets/overlays-Crv5kqAx.css",
+      "http://127.0.0.1:52767/assets/legal-x6EQ-mQt.css",
+      "http://127.0.0.1:52767/assets/subpage-DVtBcLkP.css",
+      "http://127.0.0.1:52767/assets/inference-BnscEkuJ.css",
+      "http://127.0.0.1:52767/assets/ask-boardy-DhiQo54z.css",
+      "http://127.0.0.1:52767/assets/cc-boardy-CLm2sa5g.css",
+      "http://127.0.0.1:52767/assets/booking-page-DJqke4zm.css",
+      "http://127.0.0.1:52767/assets/booking-funnel-BL-iJFKT.css",
+      "http://127.0.0.1:52767/assets/index-DjptN0gA.css",
+      "http://127.0.0.1:52767/assets/events-CP1ZOR0u.css"
+    ]
+  },
+  "breakpoints": [
+    {
+      "count": 1,
+      "px": 359,
+      "query": "max-width 359px"
+    },
+    {
+      "count": 1,
+      "px": 360,
+      "query": "max-width 360px"
+    },
+    {
+      "count": 1,
+      "px": 390,
+      "query": "max-width 390px"
+    },
+    {
+      "count": 2,
+      "px": 400,
+      "query": "max-width 400px"
+    },
+    {
+      "count": 6,
+      "px": 480,
+      "query": "max-width 480px"
+    },
+    {
+      "count": 1,
+      "px": 540,
+      "query": "max-width 540px"
+    },
+    {
+      "count": 2,
+      "px": 560,
+      "query": "max-width 560px"
+    },
+    {
+      "count": 1,
+      "px": 600,
+      "query": "max-width 600px"
+    },
+    {
+      "count": 3,
+      "px": 600,
+      "query": "min-width 600px"
+    },
+    {
+      "count": 2,
+      "px": 620,
+      "query": "max-width 620px"
+    },
+    {
+      "count": 1,
+      "px": 639,
+      "query": "max-width 639px"
+    },
+    {
+      "count": 5,
+      "px": 640,
+      "query": "max-width 640px"
+    },
+    {
+      "count": 1,
+      "px": 640,
+      "query": "min-width 640px"
+    },
+    {
+      "count": 4,
+      "px": 719,
+      "query": "max-width 719px"
+    },
+    {
+      "count": 11,
+      "px": 720,
+      "query": "max-width 720px"
+    },
+    {
+      "count": 4,
+      "px": 720,
+      "query": "min-width 720px"
+    },
+    {
+      "count": 1,
+      "px": 760,
+      "query": "min-width 760px"
+    },
+    {
+      "count": 2,
+      "px": 760,
+      "query": "max-width 760px"
+    },
+    {
+      "count": 1,
+      "px": 768,
+      "query": "min-width 768px"
+    },
+    {
+      "count": 1,
+      "px": 840,
+      "query": "max-width 840px"
+    },
+    {
+      "count": 1,
+      "px": 841,
+      "query": "min-width 841px"
+    },
+    {
+      "count": 6,
+      "px": 860,
+      "query": "max-width 860px"
+    },
+    {
+      "count": 2,
+      "px": 861,
+      "query": "min-width 861px"
+    },
+    {
+      "count": 1,
+      "px": 880,
+      "query": "max-width 880px"
+    }
+  ],
+  "design": {
+    "backgrounds": [
+      {
+        "count": 7,
+        "value": "#ffffff"
+      },
+      {
+        "count": 6,
+        "value": "#006ee6"
+      },
+      {
+        "count": 6,
+        "value": "#f0f3e9"
+      },
+      {
+        "count": 5,
+        "value": "#ffffff2b"
+      },
+      {
+        "count": 5,
+        "value": "#ebf2fb"
+      },
+      {
+        "count": 3,
+        "value": "#f5f2eb"
+      },
+      {
+        "count": 3,
+        "value": "#fffdf8"
+      },
+      {
+        "count": 3,
+        "value": "#fffefaa6"
+      },
+      {
+        "count": 2,
+        "value": "#0066d6"
+      },
+      {
+        "count": 2,
+        "value": "#f3eadc"
+      },
+      {
+        "count": 2,
+        "value": "#a94c28"
+      },
+      {
+        "count": 2,
+        "value": "#fffdf8cc"
+      },
+      {
+        "count": 2,
+        "value": "#916b27"
+      },
+      {
+        "count": 2,
+        "value": "#4f6d38"
+      },
+      {
+        "count": 2,
+        "value": "#276b9f"
+      },
+      {
+        "count": 2,
+        "value": "#8b506f"
+      }
+    ],
+    "css_variables": {
+      "--card": "#fffefb",
+      "--cream": "#fffefb",
+      "--ease-in-out": "cubic-bezier(.77, 0, .175, 1)",
+      "--ease-linear": "linear",
+      "--ease-out": "cubic-bezier(.23, 1, .32, 1)",
+      "--ease-standard": "ease",
+      "--font-display": "\"Raleway Variable\", var(--font-sans)",
+      "--font-sans": "\"Geist Variable\", ui-sans-serif, system-ui, sans-serif",
+      "--font-serif": "var(--font-display)",
+      "--green": "#006ee6",
+      "--green-deep": "#0066d6",
+      "--green-soft": "#e3eefc",
+      "--ink": "#172335",
+      "--ink-soft": "#4e5968",
+      "--line": "#d4dce5",
+      "--paper": "#f5f2eb",
+      "--paper-deep": "#e0e7ee"
+    },
+    "font_faces": [
+      {
+        "family": "Twemoji Country Flags",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "normal"
+      },
+      {
+        "family": "Geist Variable",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Geist Variable",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Geist Variable",
+        "status": "loaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Raleway Variable",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Raleway Variable",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Raleway Variable",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Raleway Variable",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Raleway Variable",
+        "status": "loaded",
+        "style": "normal",
+        "weight": "100 900"
+      }
+    ],
+    "font_sizes": [
+      {
+        "count": 19,
+        "value": "26px"
+      },
+      {
+        "count": 17,
+        "value": "13px"
+      },
+      {
+        "count": 14,
+        "value": "12px"
+      },
+      {
+        "count": 9,
+        "value": "14px"
+      },
+      {
+        "count": 7,
+        "value": "16px"
+      },
+      {
+        "count": 5,
+        "value": "15px"
+      },
+      {
+        "count": 5,
+        "value": "16.5px"
+      },
+      {
+        "count": 4,
+        "value": "19px"
+      },
+      {
+        "count": 4,
+        "value": "50px"
+      },
+      {
+        "count": 4,
+        "value": "18.5px"
+      },
+      {
+        "count": 4,
+        "value": "13.5px"
+      },
+      {
+        "count": 3,
+        "value": "17px"
+      },
+      {
+        "count": 3,
+        "value": "24px"
+      },
+      {
+        "count": 2,
+        "value": "22px"
+      },
+      {
+        "count": 2,
+        "value": "84px"
+      },
+      {
+        "count": 2,
+        "value": "11px"
+      }
+    ],
+    "font_weights": [
+      {
+        "count": 35,
+        "value": "600"
+      },
+      {
+        "count": 33,
+        "value": "400"
+      },
+      {
+        "count": 19,
+        "value": "500"
+      },
+      {
+        "count": 11,
+        "value": "480"
+      },
+      {
+        "count": 11,
+        "value": "550"
+      },
+      {
+        "count": 1,
+        "value": "650"
+      }
+    ],
+    "fonts": [
+      {
+        "count": 75,
+        "value": "\"Geist Variable\", system-ui, sans-serif"
+      },
+      {
+        "count": 18,
+        "value": "\"Raleway Variable\", sans-serif"
+      },
+      {
+        "count": 11,
+        "value": "\"Raleway Variable\", \"Geist Variable\", sans-serif"
+      },
+      {
+        "count": 5,
+        "value": "\"Geist Variable\", ui-sans-serif, system-ui, sans-serif"
+      },
+      {
+        "count": 1,
+        "value": "\"Geist Variable\", sans-serif"
+      }
+    ],
+    "max_widths": [
+      {
+        "count": 7,
+        "value": "1320px"
+      },
+      {
+        "count": 7,
+        "value": "540px"
+      },
+      {
+        "count": 5,
+        "value": "494px"
+      },
+      {
+        "count": 5,
+        "value": "532px"
+      },
+      {
+        "count": 4,
+        "value": "672px"
+      },
+      {
+        "count": 1,
+        "value": "420px"
+      },
+      {
+        "count": 1,
+        "value": "1600px"
+      },
+      {
+        "count": 1,
+        "value": "800px"
+      }
+    ],
+    "radii": [
+      {
+        "count": 24,
+        "value": "50%"
+      },
+      {
+        "count": 10,
+        "value": "999px"
+      },
+      {
+        "count": 5,
+        "value": "24px"
+      },
+      {
+        "count": 3,
+        "value": "14px"
+      },
+      {
+        "count": 3,
+        "value": "8px"
+      },
+      {
+        "count": 3,
+        "value": "13px"
+      },
+      {
+        "count": 2,
+        "value": "28px"
+      },
+      {
+        "count": 1,
+        "value": "26px"
+      },
+      {
+        "count": 1,
+        "value": "18px"
+      }
+    ],
+    "shadows": [
+      {
+        "count": 5,
+        "value": "rgba(255, 255, 255, 0.25) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.12) 0px -1px 0px 0px inset, rgba(0, 102, 214, 0.6) 0px 10px 24px -10px"
+      },
+      {
+        "count": 3,
+        "value": "rgba(18, 29, 44, 0.04) 0px 1px 2px 0px"
+      },
+      {
+        "count": 1,
+        "value": "rgba(83, 55, 29, 0.03) 0px 2px 4px 0px, rgba(83, 55, 29, 0.2) 0px 16px 32px -20px, rgba(83, 55, 29, 0.2) 0px 40px 64px -40px"
+      },
+      {
+        "count": 1,
+        "value": "color(srgb 0.831373 0.784314 0.717647 / 0.45) 0px 0px 0px 1px, rgba(18, 29, 44, 0.04) 0px 1px 1px 0px, rgba(18, 29, 44, 0.06) 0px 4px 10px -4px, rgba(18, 29, 44, 0.22) 0px 24px 48px -28px"
+      },
+      {
+        "count": 1,
+        "value": "rgba(0, 102, 214, 0.7) 0px 6px 14px -6px"
+      },
+      {
+        "count": 1,
+        "value": "color(srgb 0.831373 0.784314 0.717647 / 0.55) 0px 0px 0px 1px, rgba(18, 29, 44, 0.04) 0px 1px 1px 0px, rgba(18, 29, 44, 0.06) 0px 4px 10px -4px, rgba(18, 29, 44, 0.22) 0px 24px 48px -28px"
+      },
+      {
+        "count": 1,
+        "value": "rgba(65, 55, 44, 0.16) 0px 20px 56px 0px, rgba(65, 55, 44, 0.07) 0px 2px 8px 0px"
+      }
+    ],
+    "spacing": [
+      {
+        "count": 51,
+        "value": "28px"
+      },
+      {
+        "count": 33,
+        "value": "10px"
+      },
+      {
+        "count": 31,
+        "value": "24px"
+      },
+      {
+        "count": 31,
+        "value": "12px"
+      },
+      {
+        "count": 31,
+        "value": "22px"
+      },
+      {
+        "count": 21,
+        "value": "16px"
+      },
+      {
+        "count": 20,
+        "value": "14px"
+      },
+      {
+        "count": 20,
+        "value": "30px"
+      },
+      {
+        "count": 12,
+        "value": "48px"
+      },
+      {
+        "count": 11,
+        "value": "7px"
+      },
+      {
+        "count": 10,
+        "value": "20px"
+      },
+      {
+        "count": 9,
+        "value": "18px"
+      },
+      {
+        "count": 9,
+        "value": "8px"
+      },
+      {
+        "count": 7,
+        "value": "32px"
+      },
+      {
+        "count": 7,
+        "value": "88px"
+      },
+      {
+        "count": 6,
+        "value": "128px"
+      },
+      {
+        "count": 6,
+        "value": "6px"
+      },
+      {
+        "count": 6,
+        "value": "1px"
+      },
+      {
+        "count": 5,
+        "value": "80px"
+      },
+      {
+        "count": 4,
+        "value": "9px"
+      },
+      {
+        "count": 4,
+        "value": "96px"
+      },
+      {
+        "count": 4,
+        "value": "5px"
+      },
+      {
+        "count": 4,
+        "value": "58px"
+      },
+      {
+        "count": 4,
+        "value": "44px"
+      }
+    ],
+    "text_colors": [
+      {
+        "count": 34,
+        "value": "#282d32"
+      },
+      {
+        "count": 23,
+        "value": "#6c645b"
+      },
+      {
+        "count": 15,
+        "value": "#fffdf8"
+      },
+      {
+        "count": 14,
+        "value": "#514d46"
+      },
+      {
+        "count": 7,
+        "value": "#60574e"
+      },
+      {
+        "count": 3,
+        "value": "#6e4935"
+      },
+      {
+        "count": 3,
+        "value": "#172335"
+      },
+      {
+        "count": 2,
+        "value": "#a94c28"
+      },
+      {
+        "count": 2,
+        "value": "#8b506f"
+      },
+      {
+        "count": 1,
+        "value": "#8c583e"
+      },
+      {
+        "count": 1,
+        "value": "#0066d6"
+      },
+      {
+        "count": 1,
+        "value": "#916b27"
+      },
+      {
+        "count": 1,
+        "value": "#4f6d38"
+      },
+      {
+        "count": 1,
+        "value": "#276b9f"
+      },
+      {
+        "count": 1,
+        "value": "#4e5968"
+      },
+      {
+        "count": 1,
+        "value": "#ffffff"
+      }
+    ]
+  },
+  "forms": [
+    {
+      "action": "",
+      "fields": [
+        {
+          "label": "Name",
+          "name": "fullName",
+          "placeholder": "Jane Organizer",
+          "required": true,
+          "tag": "input",
+          "type": "text"
+        },
+        {
+          "label": "Email",
+          "name": "email",
+          "placeholder": "jane@community.com",
+          "required": true,
+          "tag": "input",
+          "type": "email"
+        },
+        {
+          "label": "Event link Luma or Partiful",
+          "name": "eventUrl",
+          "placeholder": "https://lu.ma/your-event",
+          "required": true,
+          "tag": "input",
+          "type": "url"
+        },
+        {
+          "label": "",
+          "name": "",
+          "placeholder": "",
+          "required": false,
+          "tag": "fieldset",
+          "type": "fieldset"
+        },
+        {
+          "label": "Free",
+          "name": "packages",
+          "placeholder": "",
+          "required": false,
+          "tag": "input",
+          "type": "radio"
+        },
+        {
+          "label": "Partner (paid)",
+          "name": "packages",
+          "placeholder": "",
+          "required": false,
+          "tag": "input",
+          "type": "radio"
+        },
+        {
+          "label": "",
+          "name": "",
+          "placeholder": "",
+          "required": false,
+          "tag": "button",
+          "type": "submit"
+        }
+      ],
+      "method": "get"
+    },
+    {
+      "action": "",
+      "fields": [
+        {
+          "label": "Name",
+          "name": "fullName",
+          "placeholder": "Jane Organizer",
+          "required": true,
+          "tag": "input",
+          "type": "text"
+        },
+        {
+          "label": "Email",
+          "name": "email",
+          "placeholder": "jane@community.com",
+          "required": true,
+          "tag": "input",
+          "type": "email"
+        },
+        {
+          "label": "Event linkLuma or Partiful",
+          "name": "eventUrl",
+          "placeholder": "https://lu.ma/your-event",
+          "required": true,
+          "tag": "input",
+          "type": "url"
+        },
+        {
+          "label": "",
+          "name": "",
+          "placeholder": "",
+          "required": false,
+          "tag": "fieldset",
+          "type": "fieldset"
+        },
+        {
+          "label": "Free",
+          "name": "packages",
+          "placeholder": "",
+          "required": false,
+          "tag": "input",
+          "type": "radio"
+        },
+        {
+          "label": "Partner (paid)",
+          "name": "packages",
+          "placeholder": "",
+          "required": false,
+          "tag": "input",
+          "type": "radio"
+        },
+        {
+          "label": "",
+          "name": "",
+          "placeholder": "",
+          "required": false,
+          "tag": "button",
+          "type": "submit"
+        }
+      ],
+      "method": "get"
+    }
+  ],
+  "headings": [
+    {
+      "level": 1,
+      "text": "Invite me to your event"
+    },
+    {
+      "level": 2,
+      "text": "How I improve your event ROI"
+    },
+    {
+      "level": 3,
+      "text": "Promote and drive more registrations"
+    },
+    {
+      "level": 3,
+      "text": "Lower attrition"
+    },
+    {
+      "level": 3,
+      "text": "Attendee insights"
+    },
+    {
+      "level": 3,
+      "text": "Event matching"
+    },
+    {
+      "level": 3,
+      "text": "Sponsor meetings"
+    },
+    {
+      "level": 2,
+      "text": "Free vs. partner model"
+    },
+    {
+      "level": 2,
+      "text": "Questions"
+    },
+    {
+      "level": 2,
+      "text": "I want to invite Boardy"
+    },
+    {
+      "level": 2,
+      "text": "I want to invite Boardy"
+    }
+  ],
+  "health": {
+    "errors": [
+      {
+        "kind": "console",
+        "text": "THREE.WebGLRenderer: A WebGL context could not be created. Reason:  Could not create a WebGL context, VENDOR = 0xffff, DEVICE = 0xffff, GL_VENDOR = Disabled, GL_RENDERER = Disabled, Sandboxed = yes, Optimus = no, AMD switchable = no, Reset notification strategy = 0x0000, ErrorMessage = BindToCurrent",
+        "url": ""
+      },
+      {
+        "kind": "console",
+        "text": "THREE.WebGLRenderer: Error creating WebGL context.",
+        "url": ""
+      }
+    ],
+    "failed_requests": []
+  },
+  "lang": "en",
+  "layouts": [
+    {
+      "blocks": [
+        {
+          "h": 72,
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "header",
+          "w": 1440,
+          "y": 2803
+        },
+        {
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              48,
+              48
+            ],
+            "w": 1320,
+            "x": 60
+          },
+          "h": 4538,
+          "heading": "Invite me to your event",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 3,
+          "tag": "main",
+          "w": 1440,
+          "y": 72
+        },
+        {
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              48,
+              48
+            ],
+            "w": 1320,
+            "x": 60
+          },
+          "h": 708,
+          "heading": "Invite me to your event",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "section",
+          "w": 1440,
+          "y": 72
+        },
+        {
+          "background": "#f3eadc",
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              0,
+              0
+            ],
+            "w": 1320,
+            "x": 60
+          },
+          "h": 373,
+          "pad": [
+            36,
+            0,
+            32,
+            0
+          ],
+          "per_row": 2,
+          "tag": "section",
+          "w": 1440,
+          "y": 780
+        },
+        {
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              48,
+              48
+            ],
+            "w": 1320,
+            "x": 60
+          },
+          "h": 1203,
+          "heading": "How I improve your event ROI",
+          "pad": [
+            96,
+            48,
+            96,
+            48
+          ],
+          "per_row": 2,
+          "tag": "section",
+          "w": 1320,
+          "y": 1153
+        },
+        {
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              48,
+              48
+            ],
+            "w": 1320,
+            "x": 60
+          },
+          "h": 1041,
+          "heading": "Free vs. partner model",
+          "pad": [
+            0,
+            48,
+            96,
+            48
+          ],
+          "per_row": 3,
+          "tag": "section",
+          "w": 1320,
+          "y": 2356
+        },
+        {
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              48,
+              48
+            ],
+            "w": 1320,
+            "x": 60
+          },
+          "gap": 80,
+          "h": 461,
+          "heading": "Questions",
+          "pad": [
+            0,
+            48,
+            96,
+            48
+          ],
+          "per_row": 2,
+          "tag": "section",
+          "w": 1320,
+          "y": 3397
+        },
+        {
+          "background": "#f3eadc",
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              48,
+              48
+            ],
+            "w": 1320,
+            "x": 60
+          },
+          "h": 752,
+          "heading": "I want to invite Boardy",
+          "pad": [
+            80,
+            0,
+            80,
+            0
+          ],
+          "per_row": 2,
+          "tag": "section",
+          "w": 1440,
+          "y": 3858
+        },
+        {
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              48,
+              48
+            ],
+            "w": 1320,
+            "x": 60
+          },
+          "h": 97,
+          "pad": [
+            0,
+            48,
+            0,
+            48
+          ],
+          "per_row": 1,
+          "tag": "footer",
+          "w": 1320,
+          "y": 4610
+        }
+      ],
+      "page_h": 4707,
+      "page_w": 1440,
+      "type": {
+        "body": 22,
+        "h1": 84,
+        "h2": 50,
+        "h3": 26
+      },
+      "width": 1440
+    },
+    {
+      "blocks": [
+        {
+          "h": 72,
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "header",
+          "w": 768,
+          "y": 763
+        },
+        {
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              31,
+              31
+            ],
+            "w": 768,
+            "x": 0
+          },
+          "h": 5751,
+          "heading": "Invite me to your event",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 11,
+          "tag": "main",
+          "w": 768,
+          "y": 72
+        },
+        {
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              31,
+              31
+            ],
+            "w": 768,
+            "x": 0
+          },
+          "h": 1022,
+          "heading": "Invite me to your event",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "section",
+          "w": 768,
+          "y": 72
+        },
+        {
+          "background": "#f3eadc",
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              0,
+              0
+            ],
+            "w": 768,
+            "x": 0
+          },
+          "h": 373,
+          "pad": [
+            36,
+            0,
+            32,
+            0
+          ],
+          "per_row": 11,
+          "tag": "section",
+          "w": 768,
+          "y": 1094
+        },
+        {
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              31,
+              31
+            ],
+            "w": 768,
+            "x": 0
+          },
+          "h": 1554,
+          "heading": "How I improve your event ROI",
+          "pad": [
+            64,
+            31,
+            64,
+            31
+          ],
+          "per_row": 1,
+          "tag": "section",
+          "w": 768,
+          "y": 1467
+        },
+        {
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              31,
+              31
+            ],
+            "w": 768,
+            "x": 0
+          },
+          "h": 1073,
+          "heading": "Free vs. partner model",
+          "pad": [
+            0,
+            31,
+            64,
+            31
+          ],
+          "per_row": 3,
+          "tag": "section",
+          "w": 768,
+          "y": 3021
+        },
+        {
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              31,
+              31
+            ],
+            "w": 768,
+            "x": 0
+          },
+          "gap": 44,
+          "h": 512,
+          "heading": "Questions",
+          "pad": [
+            0,
+            31,
+            64,
+            31
+          ],
+          "per_row": 1,
+          "tag": "section",
+          "w": 768,
+          "y": 4094
+        },
+        {
+          "background": "#f3eadc",
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              31,
+              31
+            ],
+            "w": 768,
+            "x": 0
+          },
+          "h": 1218,
+          "heading": "I want to invite Boardy",
+          "pad": [
+            48,
+            0,
+            48,
+            0
+          ],
+          "per_row": 2,
+          "tag": "section",
+          "w": 768,
+          "y": 4606
+        },
+        {
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              31,
+              31
+            ],
+            "w": 768,
+            "x": 0
+          },
+          "h": 97,
+          "pad": [
+            0,
+            31,
+            0,
+            31
+          ],
+          "per_row": 1,
+          "tag": "footer",
+          "w": 768,
+          "y": 5823
+        }
+      ],
+      "page_h": 5920,
+      "page_w": 768,
+      "type": {
+        "body": 18,
+        "h1": 56,
+        "h2": 34,
+        "h3": 26
+      },
+      "width": 768
+    },
+    {
+      "blocks": [
+        {
+          "h": 72,
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "header",
+          "w": 390,
+          "y": 1475
+        },
+        {
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              20,
+              20
+            ],
+            "w": 390,
+            "x": 0
+          },
+          "h": 6620,
+          "heading": "Invite me to your event",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 11,
+          "tag": "main",
+          "w": 390,
+          "y": 72
+        },
+        {
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              20,
+              20
+            ],
+            "w": 390,
+            "x": 0
+          },
+          "h": 962,
+          "heading": "Invite me to your event",
+          "pad": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "per_row": 1,
+          "tag": "section",
+          "w": 390,
+          "y": 72
+        },
+        {
+          "background": "#f3eadc",
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              0,
+              0
+            ],
+            "w": 390,
+            "x": 0
+          },
+          "h": 337,
+          "pad": [
+            28,
+            0,
+            24,
+            0
+          ],
+          "per_row": 11,
+          "tag": "section",
+          "w": 390,
+          "y": 1034
+        },
+        {
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              20,
+              20
+            ],
+            "w": 390,
+            "x": 0
+          },
+          "h": 2341,
+          "heading": "How I improve your event ROI",
+          "pad": [
+            64,
+            20,
+            64,
+            20
+          ],
+          "per_row": 2,
+          "tag": "section",
+          "w": 390,
+          "y": 1371
+        },
+        {
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              20,
+              20
+            ],
+            "w": 390,
+            "x": 0
+          },
+          "h": 1283,
+          "heading": "Free vs. partner model",
+          "pad": [
+            0,
+            20,
+            64,
+            20
+          ],
+          "per_row": 3,
+          "tag": "section",
+          "w": 390,
+          "y": 3712
+        },
+        {
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              20,
+              20
+            ],
+            "w": 390,
+            "x": 0
+          },
+          "gap": 44,
+          "h": 500,
+          "heading": "Questions",
+          "pad": [
+            0,
+            20,
+            64,
+            20
+          ],
+          "per_row": 1,
+          "tag": "section",
+          "w": 390,
+          "y": 4995
+        },
+        {
+          "background": "#f3eadc",
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              20,
+              20
+            ],
+            "w": 390,
+            "x": 0
+          },
+          "h": 1197,
+          "heading": "I want to invite Boardy",
+          "pad": [
+            48,
+            0,
+            48,
+            0
+          ],
+          "per_row": 1,
+          "tag": "section",
+          "w": 390,
+          "y": 5495
+        },
+        {
+          "column": {
+            "max_w": 1320,
+            "pad": [
+              20,
+              20
+            ],
+            "w": 390,
+            "x": 0
+          },
+          "h": 142,
+          "pad": [
+            0,
+            20,
+            0,
+            20
+          ],
+          "per_row": 1,
+          "tag": "footer",
+          "w": 390,
+          "y": 6692
+        }
+      ],
+      "page_h": 6834,
+      "page_w": 390,
+      "type": {
+        "body": 18,
+        "h1": 51,
+        "h2": 34,
+        "h3": 24
+      },
+      "width": 390
+    }
+  ],
+  "links": [
+    {
+      "href": "http://127.0.0.1:52767/events#events-main",
+      "text": "Skip to content"
+    },
+    {
+      "href": "http://127.0.0.1:52767/",
+      "text": "Boardy"
+    },
+    {
+      "href": "http://127.0.0.1:52767/",
+      "text": "Boardy"
+    },
+    {
+      "href": "mailto:humans@boardy.ai",
+      "text": "humans@boardy.ai"
+    },
+    {
+      "href": "http://127.0.0.1:52767/terms-and-conditions",
+      "text": "Terms"
+    },
+    {
+      "href": "http://127.0.0.1:52767/privacy-policy",
+      "text": "Privacy"
+    },
+    {
+      "href": "https://www.boardy.ai/privacy-policy",
+      "text": "Learn more"
+    }
+  ],
+  "meta": {
+    "description": "Boardy increases your event ROI, drives more attendees, and adds value for your sponsors.",
+    "icons": [
+      "http://127.0.0.1:52767/favicon.ico",
+      "http://127.0.0.1:52767/boardy-favicon.png",
+      "http://127.0.0.1:52767/apple-touch-icon.png"
+    ],
+    "og_image": "https://www.boardy.ai/social/boardy-opengraph-20261018.png",
+    "og_title": "Invite Boardy to your event",
+    "theme_color": "#f5f2eb"
+  },
+  "outline": [
+    {
+      "box": {
+        "h": 1,
+        "w": 1,
+        "x": 0,
+        "y": 0
+      },
+      "class": "_skipLink_1eukl_1496",
+      "color": "#282d32",
+      "depth": 3,
+      "font": "17px 400",
+      "href": "http://127.0.0.1:52767/events#events-main",
+      "tag": "a",
+      "text": "Skip to content"
+    },
+    {
+      "box": {
+        "h": 72,
+        "w": 1440,
+        "x": 0,
+        "y": 2988
+      },
+      "class": "_navBar_7jyvj_93",
+      "color": "#282d32",
+      "depth": 3,
+      "display": "flex",
+      "flex": "row",
+      "font": "17px 400",
+      "tag": "header"
+    },
+    {
+      "box": {
+        "h": 32,
+        "w": 102,
+        "x": 199,
+        "y": 3014
+      },
+      "class": "_brand_7jyvj_139",
+      "color": "#282d32",
+      "depth": 5,
+      "font": "19px 600",
+      "href": "http://127.0.0.1:52767/",
+      "tag": "a",
+      "text": "Boardy"
+    },
+    {
+      "alt": "",
+      "box": {
+        "h": 32,
+        "w": 30,
+        "x": 199,
+        "y": 3014
+      },
+      "class": "_brandMark_7jyvj_151",
+      "color": "#282d32",
+      "depth": 6,
+      "font": "19px 600",
+      "src": "http://127.0.0.1:52767/boardy-landing-logo-mark.webp",
+      "tag": "img"
+    },
+    {
+      "background": "#006ee6",
+      "box": {
+        "h": 50,
+        "w": 171,
+        "x": 1081,
+        "y": 3005
+      },
+      "class": "_navCta_7jyvj_162",
+      "color": "#fffdf8",
+      "depth": 5,
+      "font": "16px 500",
+      "tag": "button",
+      "text": "Invite Boardy"
+    },
+    {
+      "box": {
+        "h": 16,
+        "w": 16,
+        "x": 1219,
+        "y": 3022
+      },
+      "color": "#fffdf8",
+      "depth": 8,
+      "font": "16px 500",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 16,
+        "w": 16,
+        "x": 1193,
+        "y": 3048
+      },
+      "color": "#fffdf8",
+      "depth": 8,
+      "font": "16px 500",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 4538,
+        "w": 1440,
+        "x": 0,
+        "y": 72
+      },
+      "color": "#282d32",
+      "depth": 3,
+      "display": "block",
+      "font": "17px 400",
+      "id": "events-main",
+      "tag": "main"
+    },
+    {
+      "box": {
+        "h": 708,
+        "w": 1440,
+        "x": 0,
+        "y": 72
+      },
+      "color": "#282d32",
+      "depth": 4,
+      "display": "block",
+      "font": "17px 400",
+      "tag": "section"
+    },
+    {
+      "box": {
+        "h": 31,
+        "w": 193,
+        "x": 108,
+        "y": 193
+      },
+      "class": "_eyebrow_1eukl_24 _heroEyebrow_1eukl_187",
+      "color": "#8c583e",
+      "depth": 7,
+      "font": "22px 600",
+      "tag": "p",
+      "text": "For event hosts"
+    },
+    {
+      "box": {
+        "h": 186,
+        "w": 654,
+        "x": 108,
+        "y": 244
+      },
+      "class": "_heroTitle_1eukl_231",
+      "color": "#282d32",
+      "depth": 7,
+      "font": "84px 480",
+      "id": "events-title",
+      "tag": "h1",
+      "text": "Invite me to your event"
+    },
+    {
+      "box": {
+        "h": 92,
+        "w": 540,
+        "x": 108,
+        "y": 447
+      },
+      "class": "_heroLede_1eukl_243",
+      "color": "#6c645b",
+      "depth": 7,
+      "font": "18px 400",
+      "tag": "p",
+      "text": "I'll increase your event ROI, drive more attendees to your event, and increase value to your sponsors so you can raise more sponsorship dollars and focus on organizing a great event."
+    },
+    {
+      "background": "#006ee6",
+      "box": {
+        "h": 80,
+        "w": 540,
+        "x": 108,
+        "y": 570
+      },
+      "class": "_primaryButton_1eukl_52 _heroCta_1eukl_257",
+      "color": "#fffdf8",
+      "depth": 8,
+      "font": "22px 600",
+      "tag": "button",
+      "text": "Invite Boardy"
+    },
+    {
+      "box": {
+        "h": 22,
+        "w": 22,
+        "x": 604,
+        "y": 599
+      },
+      "color": "#fffdf8",
+      "depth": 11,
+      "font": "22px 600",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 22,
+        "w": 22,
+        "x": 569,
+        "y": 635
+      },
+      "color": "#fffdf8",
+      "depth": 11,
+      "font": "22px 600",
+      "tag": "svg"
+    },
+    {
+      "alt": "Boardy, the cardboard-box mascot in a suit",
+      "box": {
+        "h": 402,
+        "w": 372,
+        "x": 904,
+        "y": 200
+      },
+      "color": "#282d32",
+      "depth": 9,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/boardy-events-mascot.webp",
+      "tag": "img"
+    },
+    {
+      "box": {
+        "h": 24,
+        "w": 420,
+        "x": 880,
+        "y": 668
+      },
+      "class": "_platforms_1eukl_266",
+      "color": "#282d32",
+      "depth": 7,
+      "font": "16px 400",
+      "tag": "p",
+      "text": "Works with Luma + Partiful"
+    },
+    {
+      "background": "#f3eadc",
+      "box": {
+        "h": 373,
+        "w": 1440,
+        "x": 0,
+        "y": 780
+      },
+      "class": "_proof_1eukl_332",
+      "color": "#282d32",
+      "depth": 4,
+      "display": "block",
+      "font": "17px 400",
+      "tag": "section"
+    },
+    {
+      "box": {
+        "h": 18,
+        "w": 166,
+        "x": 613,
+        "y": 824
+      },
+      "class": "_proofLabel_1eukl_346",
+      "color": "#6c645b",
+      "depth": 6,
+      "font": "12px 500",
+      "id": "event-partners",
+      "tag": "p",
+      "text": "Partners I've worked with"
+    },
+    {
+      "box": {
+        "h": 32,
+        "w": 32,
+        "x": 795,
+        "y": 817
+      },
+      "class": "_reelToggle_1eukl_354",
+      "color": "#6c645b",
+      "depth": 6,
+      "font": "17px 400",
+      "tag": "button"
+    },
+    {
+      "box": {
+        "h": 16,
+        "w": 16,
+        "x": 803,
+        "y": 825
+      },
+      "color": "#6c645b",
+      "depth": 7,
+      "font": "17px 400",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 100,
+        "w": 2948,
+        "x": -28,
+        "y": 873
+      },
+      "class": "_logoGroup_1eukl_410",
+      "color": "#282d32",
+      "depth": 7,
+      "display": "flex",
+      "flex": "row",
+      "font": "17px 400",
+      "tag": "ul"
+    },
+    {
+      "alt": "JPMorgan",
+      "box": {
+        "h": 64,
+        "w": 180,
+        "x": -28,
+        "y": 891
+      },
+      "color": "#282d32",
+      "depth": 9,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/logos/events/jpmorgan.svg",
+      "tag": "img"
+    },
+    {
+      "alt": "HF0",
+      "box": {
+        "h": 64,
+        "w": 180,
+        "x": 776,
+        "y": 891
+      },
+      "color": "#282d32",
+      "depth": 9,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/hf0.webp",
+      "tag": "img"
+    },
+    {
+      "alt": "Tech Week by a16z",
+      "box": {
+        "h": 64,
+        "w": 180,
+        "x": 1580,
+        "y": 891
+      },
+      "color": "#282d32",
+      "depth": 9,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/a16z.webp",
+      "tag": "img"
+    },
+    {
+      "alt": "AssemblyAI",
+      "box": {
+        "h": 64,
+        "w": 180,
+        "x": 2384,
+        "y": 891
+      },
+      "color": "#282d32",
+      "depth": 9,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/logos/speech-apis/assemblyai.webp",
+      "tag": "img"
+    },
+    {
+      "box": {
+        "h": 100,
+        "w": 2948,
+        "x": 2920,
+        "y": 873
+      },
+      "class": "_logoGroup_1eukl_410",
+      "color": "#282d32",
+      "depth": 7,
+      "display": "flex",
+      "flex": "row",
+      "font": "17px 400",
+      "tag": "ul"
+    },
+    {
+      "alt": "",
+      "box": {
+        "h": 64,
+        "w": 180,
+        "x": 2920,
+        "y": 891
+      },
+      "color": "#282d32",
+      "depth": 9,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/logos/events/jpmorgan.svg",
+      "tag": "img"
+    },
+    {
+      "alt": "",
+      "box": {
+        "h": 64,
+        "w": 180,
+        "x": 3724,
+        "y": 891
+      },
+      "color": "#282d32",
+      "depth": 9,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/hf0.webp",
+      "tag": "img"
+    },
+    {
+      "alt": "",
+      "box": {
+        "h": 64,
+        "w": 180,
+        "x": 4528,
+        "y": 891
+      },
+      "color": "#282d32",
+      "depth": 9,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/a16z.webp",
+      "tag": "img"
+    },
+    {
+      "alt": "",
+      "box": {
+        "h": 64,
+        "w": 180,
+        "x": 5332,
+        "y": 891
+      },
+      "color": "#282d32",
+      "depth": 9,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/logos/speech-apis/assemblyai.webp",
+      "tag": "img"
+    },
+    {
+      "box": {
+        "h": 18,
+        "w": 1440,
+        "x": 0,
+        "y": 1026
+      },
+      "class": "_proofLabel_1eukl_346",
+      "color": "#6c645b",
+      "depth": 6,
+      "font": "12px 500",
+      "id": "event-guest-companies",
+      "tag": "p",
+      "text": "Guests from"
+    },
+    {
+      "box": {
+        "h": 64,
+        "w": 2560,
+        "x": -2496,
+        "y": 1056
+      },
+      "class": "_logoGroup_1eukl_410",
+      "color": "#282d32",
+      "depth": 8,
+      "display": "flex",
+      "flex": "row",
+      "font": "17px 400",
+      "tag": "ul"
+    },
+    {
+      "alt": "Meta",
+      "box": {
+        "h": 44,
+        "w": 192,
+        "x": -2496,
+        "y": 1066
+      },
+      "color": "#282d32",
+      "depth": 10,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/logos/events/meta.svg",
+      "tag": "img"
+    },
+    {
+      "alt": "Microsoft",
+      "box": {
+        "h": 44,
+        "w": 192,
+        "x": -2176,
+        "y": 1066
+      },
+      "color": "#282d32",
+      "depth": 10,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/logos/events/microsoft.svg",
+      "tag": "img"
+    },
+    {
+      "alt": "Accel",
+      "box": {
+        "h": 44,
+        "w": 192,
+        "x": -1856,
+        "y": 1066
+      },
+      "color": "#282d32",
+      "depth": 10,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/logos/events/accel.svg",
+      "tag": "img"
+    },
+    {
+      "alt": "a16z",
+      "box": {
+        "h": 44,
+        "w": 192,
+        "x": -1536,
+        "y": 1066
+      },
+      "color": "#282d32",
+      "depth": 10,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/a16z.webp",
+      "tag": "img"
+    },
+    {
+      "alt": "Scale AI",
+      "box": {
+        "h": 44,
+        "w": 192,
+        "x": -1216,
+        "y": 1066
+      },
+      "color": "#282d32",
+      "depth": 10,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/logos/events/scale.svg",
+      "tag": "img"
+    },
+    {
+      "alt": "Databricks",
+      "box": {
+        "h": 44,
+        "w": 192,
+        "x": -896,
+        "y": 1066
+      },
+      "color": "#282d32",
+      "depth": 10,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/logos/events/databricks.svg",
+      "tag": "img"
+    },
+    {
+      "alt": "Ramp",
+      "box": {
+        "h": 44,
+        "w": 192,
+        "x": -576,
+        "y": 1066
+      },
+      "color": "#282d32",
+      "depth": 10,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/logos/events/ramp.svg",
+      "tag": "img"
+    },
+    {
+      "alt": "Airwallex",
+      "box": {
+        "h": 44,
+        "w": 192,
+        "x": -256,
+        "y": 1066
+      },
+      "color": "#282d32",
+      "depth": 10,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/logos/events/airwallex.svg",
+      "tag": "img"
+    },
+    {
+      "box": {
+        "h": 64,
+        "w": 2560,
+        "x": 64,
+        "y": 1056
+      },
+      "class": "_logoGroup_1eukl_410",
+      "color": "#282d32",
+      "depth": 8,
+      "display": "flex",
+      "flex": "row",
+      "font": "17px 400",
+      "tag": "ul"
+    },
+    {
+      "alt": "",
+      "box": {
+        "h": 44,
+        "w": 192,
+        "x": 64,
+        "y": 1066
+      },
+      "color": "#282d32",
+      "depth": 10,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/logos/events/meta.svg",
+      "tag": "img"
+    },
+    {
+      "alt": "",
+      "box": {
+        "h": 44,
+        "w": 192,
+        "x": 384,
+        "y": 1066
+      },
+      "color": "#282d32",
+      "depth": 10,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/logos/events/microsoft.svg",
+      "tag": "img"
+    },
+    {
+      "alt": "",
+      "box": {
+        "h": 44,
+        "w": 192,
+        "x": 704,
+        "y": 1066
+      },
+      "color": "#282d32",
+      "depth": 10,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/logos/events/accel.svg",
+      "tag": "img"
+    },
+    {
+      "alt": "",
+      "box": {
+        "h": 44,
+        "w": 192,
+        "x": 1024,
+        "y": 1066
+      },
+      "color": "#282d32",
+      "depth": 10,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/a16z.webp",
+      "tag": "img"
+    },
+    {
+      "alt": "",
+      "box": {
+        "h": 44,
+        "w": 192,
+        "x": 1344,
+        "y": 1066
+      },
+      "color": "#282d32",
+      "depth": 10,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/logos/events/scale.svg",
+      "tag": "img"
+    },
+    {
+      "alt": "",
+      "box": {
+        "h": 44,
+        "w": 192,
+        "x": 1664,
+        "y": 1066
+      },
+      "color": "#282d32",
+      "depth": 10,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/logos/events/databricks.svg",
+      "tag": "img"
+    },
+    {
+      "alt": "",
+      "box": {
+        "h": 44,
+        "w": 192,
+        "x": 1984,
+        "y": 1066
+      },
+      "color": "#282d32",
+      "depth": 10,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/logos/events/ramp.svg",
+      "tag": "img"
+    },
+    {
+      "alt": "",
+      "box": {
+        "h": 44,
+        "w": 192,
+        "x": 2304,
+        "y": 1066
+      },
+      "color": "#282d32",
+      "depth": 10,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/logos/events/airwallex.svg",
+      "tag": "img"
+    },
+    {
+      "box": {
+        "h": 1203,
+        "w": 1320,
+        "x": 60,
+        "y": 1153
+      },
+      "class": "_wrap_7jyvj_86 _section_1eukl_493 _how_1eukl_543",
+      "color": "#282d32",
+      "depth": 4,
+      "display": "block",
+      "font": "17px 400",
+      "id": "how-it-works",
+      "tag": "section"
+    },
+    {
+      "box": {
+        "h": 57,
+        "w": 632,
+        "x": 404,
+        "y": 1249
+      },
+      "color": "#282d32",
+      "depth": 6,
+      "font": "50px 480",
+      "id": "how-title",
+      "tag": "h2",
+      "text": "How I improve your event ROI"
+    },
+    {
+      "box": {
+        "h": 814,
+        "w": 1224,
+        "x": 108,
+        "y": 1346
+      },
+      "class": "_journey_1eukl_560",
+      "color": "#282d32",
+      "depth": 5,
+      "display": "grid",
+      "font": "17px 400",
+      "grid": "187.328px 187.328px 187.328px 187.344px 187.328px 187.328px",
+      "tag": "ol"
+    },
+    {
+      "box": {
+        "h": 18,
+        "w": 105,
+        "x": 183,
+        "y": 1384
+      },
+      "color": "#a94c28",
+      "depth": 8,
+      "font": "12px 500",
+      "tag": "p",
+      "text": "Before registration"
+    },
+    {
+      "box": {
+        "h": 31,
+        "w": 494,
+        "x": 139,
+        "y": 1433
+      },
+      "color": "#282d32",
+      "depth": 8,
+      "font": "26px 480",
+      "tag": "h3",
+      "text": "Promote and drive more registrations"
+    },
+    {
+      "box": {
+        "h": 26,
+        "w": 540,
+        "x": 139,
+        "y": 1478
+      },
+      "color": "#60574e",
+      "depth": 8,
+      "font": "15px 400",
+      "tag": "p",
+      "text": "I promote your event to my audience and drive qualified people to register."
+    },
+    {
+      "box": {
+        "h": 32,
+        "w": 540,
+        "x": 139,
+        "y": 1525
+      },
+      "class": "_stepStats_1eukl_674",
+      "color": "#282d32",
+      "depth": 8,
+      "display": "flex",
+      "flex": "row",
+      "font": "17px 400",
+      "tag": "ul"
+    },
+    {
+      "box": {
+        "h": 132,
+        "w": 540,
+        "x": 139,
+        "y": 1581
+      },
+      "color": "#a94c28",
+      "depth": 8,
+      "font": "17px 400",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 18,
+        "w": 103,
+        "x": 805,
+        "y": 1384
+      },
+      "color": "#916b27",
+      "depth": 8,
+      "font": "12px 500",
+      "tag": "p",
+      "text": "After they register"
+    },
+    {
+      "box": {
+        "h": 31,
+        "w": 494,
+        "x": 761,
+        "y": 1433
+      },
+      "color": "#282d32",
+      "depth": 8,
+      "font": "26px 480",
+      "tag": "h3",
+      "text": "Lower attrition"
+    },
+    {
+      "box": {
+        "h": 51,
+        "w": 540,
+        "x": 761,
+        "y": 1478
+      },
+      "color": "#60574e",
+      "depth": 8,
+      "font": "15px 400",
+      "tag": "p",
+      "text": "Every registrant gets a personalized welcome call. I learn why they're coming and who they want to meet, then follow up so they actually show up."
+    },
+    {
+      "box": {
+        "h": 132,
+        "w": 540,
+        "x": 761,
+        "y": 1581
+      },
+      "color": "#916b27",
+      "depth": 8,
+      "font": "17px 400",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 18,
+        "w": 147,
+        "x": 183,
+        "y": 1802
+      },
+      "color": "#4f6d38",
+      "depth": 8,
+      "font": "12px 500",
+      "tag": "p",
+      "text": "Before and after the event"
+    },
+    {
+      "box": {
+        "h": 31,
+        "w": 333,
+        "x": 139,
+        "y": 1851
+      },
+      "color": "#282d32",
+      "depth": 8,
+      "font": "26px 480",
+      "tag": "h3",
+      "text": "Attendee insights"
+    },
+    {
+      "box": {
+        "h": 51,
+        "w": 333,
+        "x": 139,
+        "y": 1896
+      },
+      "color": "#60574e",
+      "depth": 8,
+      "font": "15px 400",
+      "tag": "p",
+      "text": "You get insights and more context on who's coming to your event and why."
+    },
+    {
+      "box": {
+        "h": 132,
+        "w": 333,
+        "x": 139,
+        "y": 1997
+      },
+      "color": "#4f6d38",
+      "depth": 8,
+      "font": "17px 400",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 18,
+        "w": 93,
+        "x": 598,
+        "y": 1802
+      },
+      "color": "#276b9f",
+      "depth": 8,
+      "font": "12px 500",
+      "tag": "p",
+      "text": "Before the event"
+    },
+    {
+      "box": {
+        "h": 31,
+        "w": 333,
+        "x": 554,
+        "y": 1851
+      },
+      "color": "#282d32",
+      "depth": 8,
+      "font": "26px 480",
+      "tag": "h3",
+      "text": "Event matching"
+    },
+    {
+      "box": {
+        "h": 77,
+        "w": 333,
+        "x": 554,
+        "y": 1896
+      },
+      "color": "#60574e",
+      "depth": 8,
+      "font": "15px 400",
+      "tag": "p",
+      "text": "Curated matches and double opt-in introductions, so guests arrive with intros already lined up."
+    },
+    {
+      "box": {
+        "h": 132,
+        "w": 333,
+        "x": 554,
+        "y": 1997
+      },
+      "color": "#276b9f",
+      "depth": 8,
+      "font": "17px 400",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 18,
+        "w": 84,
+        "x": 1012,
+        "y": 1802
+      },
+      "color": "#8b506f",
+      "depth": 8,
+      "font": "12px 500",
+      "tag": "p",
+      "text": "After the event"
+    },
+    {
+      "box": {
+        "h": 31,
+        "w": 333,
+        "x": 968,
+        "y": 1851
+      },
+      "color": "#282d32",
+      "depth": 8,
+      "font": "26px 480",
+      "tag": "h3",
+      "text": "Sponsor meetings"
+    },
+    {
+      "box": {
+        "h": 77,
+        "w": 333,
+        "x": 968,
+        "y": 1896
+      },
+      "color": "#60574e",
+      "depth": 8,
+      "font": "15px 400",
+      "tag": "p",
+      "text": "Sponsors get real meetings with the guests they came to meet, which makes your sponsor package worth more."
+    },
+    {
+      "box": {
+        "h": 132,
+        "w": 333,
+        "x": 968,
+        "y": 1997
+      },
+      "color": "#8b506f",
+      "depth": 8,
+      "font": "17px 400",
+      "tag": "svg"
+    },
+    {
+      "background": "#006ee6",
+      "box": {
+        "h": 64,
+        "w": 260,
+        "x": 590,
+        "y": 2196
+      },
+      "class": "_primaryButton_1eukl_52 _sectionCta_1eukl_553",
+      "color": "#fffdf8",
+      "depth": 6,
+      "font": "19px 500",
+      "tag": "button",
+      "text": "Invite Boardy"
+    },
+    {
+      "box": {
+        "h": 19,
+        "w": 19,
+        "x": 811,
+        "y": 2218
+      },
+      "color": "#fffdf8",
+      "depth": 9,
+      "font": "19px 500",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 19,
+        "w": 19,
+        "x": 781,
+        "y": 2249
+      },
+      "color": "#fffdf8",
+      "depth": 9,
+      "font": "19px 500",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 1041,
+        "w": 1320,
+        "x": 60,
+        "y": 2356
+      },
+      "class": "_wrap_7jyvj_86 _section_1eukl_493 _packages_1eukl_717",
+      "color": "#282d32",
+      "depth": 4,
+      "display": "block",
+      "font": "17px 400",
+      "id": "packages",
+      "tag": "section"
+    },
+    {
+      "box": {
+        "h": 57,
+        "w": 478,
+        "x": 481,
+        "y": 2356
+      },
+      "color": "#282d32",
+      "depth": 6,
+      "font": "50px 480",
+      "id": "packages-title",
+      "tag": "h2",
+      "text": "Free vs. partner model"
+    },
+    {
+      "box": {
+        "h": 56,
+        "w": 578,
+        "x": 431,
+        "y": 2435
+      },
+      "color": "#6c645b",
+      "depth": 6,
+      "font": "17px 400",
+      "tag": "p",
+      "text": "Free for every approved event. Partner adds promotion and sponsor meetings."
+    },
+    {
+      "box": {
+        "h": 22,
+        "w": 532,
+        "x": 136,
+        "y": 2698
+      },
+      "class": "_featureDescription_1eukl_819",
+      "color": "#6c645b",
+      "depth": 10,
+      "font": "14px 400",
+      "tag": "p",
+      "text": "Reach Boardy's audience of 400K+ and attract qualified registrants."
+    },
+    {
+      "background": "#0066d6",
+      "box": {
+        "h": 21,
+        "w": 21,
+        "x": 1199,
+        "y": 2678
+      },
+      "class": "_included_1eukl_826",
+      "color": "#ffffff",
+      "depth": 10,
+      "font": "17px 400",
+      "role": "img",
+      "tag": "span"
+    },
+    {
+      "box": {
+        "h": 12,
+        "w": 12,
+        "x": 1204,
+        "y": 2682
+      },
+      "color": "#ffffff",
+      "depth": 11,
+      "font": "17px 400",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 45,
+        "w": 532,
+        "x": 136,
+        "y": 2807
+      },
+      "class": "_featureDescription_1eukl_819",
+      "color": "#6c645b",
+      "depth": 10,
+      "font": "14px 400",
+      "tag": "p",
+      "text": "Personalized welcome calls and follow-ups, tailored to your event, help guests show up."
+    },
+    {
+      "box": {
+        "h": 8,
+        "w": 8,
+        "x": 961,
+        "y": 2805
+      },
+      "color": "#ffffff",
+      "depth": 11,
+      "font": "17px 400",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 8,
+        "w": 8,
+        "x": 1206,
+        "y": 2805
+      },
+      "color": "#ffffff",
+      "depth": 11,
+      "font": "17px 400",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 22,
+        "w": 532,
+        "x": 136,
+        "y": 2939
+      },
+      "class": "_featureDescription_1eukl_819",
+      "color": "#6c645b",
+      "depth": 10,
+      "font": "14px 400",
+      "tag": "p",
+      "text": "Understand why guests are coming and who they want to meet."
+    },
+    {
+      "box": {
+        "h": 8,
+        "w": 8,
+        "x": 961,
+        "y": 2925
+      },
+      "color": "#ffffff",
+      "depth": 11,
+      "font": "17px 400",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 8,
+        "w": 8,
+        "x": 1206,
+        "y": 2925
+      },
+      "color": "#ffffff",
+      "depth": 11,
+      "font": "17px 400",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 22,
+        "w": 532,
+        "x": 136,
+        "y": 3048
+      },
+      "class": "_featureDescription_1eukl_819",
+      "color": "#6c645b",
+      "depth": 10,
+      "font": "14px 400",
+      "tag": "p",
+      "text": "Guests get curated matches and introductions once both people opt in."
+    },
+    {
+      "box": {
+        "h": 8,
+        "w": 8,
+        "x": 961,
+        "y": 3035
+      },
+      "color": "#ffffff",
+      "depth": 11,
+      "font": "17px 400",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 8,
+        "w": 8,
+        "x": 1206,
+        "y": 3035
+      },
+      "color": "#ffffff",
+      "depth": 11,
+      "font": "17px 400",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 22,
+        "w": 532,
+        "x": 136,
+        "y": 3158
+      },
+      "class": "_featureDescription_1eukl_819",
+      "color": "#6c645b",
+      "depth": 10,
+      "font": "14px 400",
+      "tag": "p",
+      "text": "Post-event sponsor meetings make your sponsorship packages more valuable."
+    },
+    {
+      "box": {
+        "h": 8,
+        "w": 8,
+        "x": 1206,
+        "y": 3144
+      },
+      "color": "#ffffff",
+      "depth": 11,
+      "font": "17px 400",
+      "tag": "svg"
+    },
+    {
+      "background": "#006ee6",
+      "box": {
+        "h": 64,
+        "w": 260,
+        "x": 590,
+        "y": 3237
+      },
+      "class": "_primaryButton_1eukl_52 _sectionCta_1eukl_553",
+      "color": "#fffdf8",
+      "depth": 6,
+      "font": "19px 500",
+      "tag": "button",
+      "text": "Invite Boardy"
+    },
+    {
+      "box": {
+        "h": 19,
+        "w": 19,
+        "x": 811,
+        "y": 3260
+      },
+      "color": "#fffdf8",
+      "depth": 9,
+      "font": "19px 500",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 19,
+        "w": 19,
+        "x": 781,
+        "y": 3290
+      },
+      "color": "#fffdf8",
+      "depth": 9,
+      "font": "19px 500",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 461,
+        "w": 1320,
+        "x": 60,
+        "y": 3397
+      },
+      "class": "_wrap_7jyvj_86 _section_1eukl_493 _faq_1eukl_526",
+      "color": "#282d32",
+      "depth": 4,
+      "display": "grid",
+      "font": "17px 400",
+      "grid": "457.594px 686.406px",
+      "tag": "section"
+    },
+    {
+      "box": {
+        "h": 57,
+        "w": 458,
+        "x": 108,
+        "y": 3397
+      },
+      "color": "#282d32",
+      "depth": 6,
+      "font": "50px 480",
+      "id": "faq-title",
+      "tag": "h2",
+      "text": "Questions"
+    },
+    {
+      "box": {
+        "h": 110,
+        "w": 672,
+        "x": 646,
+        "y": 3488
+      },
+      "color": "#6c645b",
+      "depth": 7,
+      "font": "16px 400",
+      "tag": "p"
+    },
+    {
+      "box": {
+        "h": 82,
+        "w": 672,
+        "x": 646,
+        "y": 3579
+      },
+      "color": "#6c645b",
+      "depth": 7,
+      "font": "16px 400",
+      "tag": "p"
+    },
+    {
+      "box": {
+        "h": 55,
+        "w": 672,
+        "x": 646,
+        "y": 3670
+      },
+      "color": "#6c645b",
+      "depth": 7,
+      "font": "16px 400",
+      "tag": "p"
+    },
+    {
+      "box": {
+        "h": 82,
+        "w": 672,
+        "x": 646,
+        "y": 3761
+      },
+      "color": "#6c645b",
+      "depth": 7,
+      "font": "16px 400",
+      "tag": "p"
+    },
+    {
+      "background": "#f3eadc",
+      "box": {
+        "h": 752,
+        "w": 1440,
+        "x": 0,
+        "y": 3858
+      },
+      "class": "_inviteBand_1eukl_877",
+      "color": "#282d32",
+      "depth": 4,
+      "display": "block",
+      "font": "17px 400",
+      "id": "invite",
+      "tag": "section"
+    },
+    {
+      "box": {
+        "h": 57,
+        "w": 562,
+        "x": 108,
+        "y": 3963
+      },
+      "color": "#282d32",
+      "depth": 7,
+      "font": "50px 480",
+      "id": "invite-title",
+      "tag": "h2",
+      "text": "I want to invite Boardy"
+    },
+    {
+      "alt": "",
+      "box": {
+        "h": 411,
+        "w": 380,
+        "x": 199,
+        "y": 4176
+      },
+      "color": "#282d32",
+      "depth": 8,
+      "font": "17px 400",
+      "src": "http://127.0.0.1:52767/boardy-events-mascot.webp",
+      "tag": "img"
+    },
+    {
+      "background": "#fffdf8",
+      "box": {
+        "h": 590,
+        "w": 562,
+        "x": 770,
+        "y": 3953
+      },
+      "class": "_form_1eukl_930 ph-no-capture",
+      "color": "#282d32",
+      "depth": 7,
+      "display": "block",
+      "font": "17px 400",
+      "tag": "form"
+    },
+    {
+      "background": "#ffffff",
+      "box": {
+        "h": 52,
+        "w": 474,
+        "x": 814,
+        "y": 4025
+      },
+      "color": "#282d32",
+      "depth": 9,
+      "font": "16px 400",
+      "id": "_R_b6kq_-fullName",
+      "name": "fullName",
+      "placeholder": "Jane Organizer",
+      "tag": "input",
+      "type": "text"
+    },
+    {
+      "background": "#ffffff",
+      "box": {
+        "h": 52,
+        "w": 474,
+        "x": 814,
+        "y": 4126
+      },
+      "color": "#282d32",
+      "depth": 9,
+      "font": "16px 400",
+      "id": "_R_b6kq_-email",
+      "name": "email",
+      "placeholder": "jane@community.com",
+      "tag": "input",
+      "type": "email"
+    },
+    {
+      "background": "#ffffff",
+      "box": {
+        "h": 52,
+        "w": 474,
+        "x": 814,
+        "y": 4226
+      },
+      "color": "#282d32",
+      "depth": 9,
+      "font": "16px 400",
+      "id": "_R_b6kq_-eventUrl",
+      "name": "eventUrl",
+      "placeholder": "https://lu.ma/your-event",
+      "tag": "input",
+      "type": "url"
+    },
+    {
+      "background": "#ffffff",
+      "box": {
+        "h": 20,
+        "w": 20,
+        "x": 829,
+        "y": 4345
+      },
+      "color": "#000000",
+      "depth": 11,
+      "font": "17px 400",
+      "name": "packages",
+      "placeholder": "",
+      "tag": "input",
+      "type": "radio"
+    },
+    {
+      "background": "#ffffff",
+      "box": {
+        "h": 20,
+        "w": 20,
+        "x": 1071,
+        "y": 4345
+      },
+      "color": "#000000",
+      "depth": 11,
+      "font": "17px 400",
+      "name": "packages",
+      "placeholder": "",
+      "tag": "input",
+      "type": "radio"
+    },
+    {
+      "background": "#006ee6",
+      "box": {
+        "h": 56,
+        "w": 474,
+        "x": 814,
+        "y": 4410
+      },
+      "class": "_primaryButton_1eukl_52 _submitButton_1eukl_1227",
+      "color": "#fffdf8",
+      "depth": 8,
+      "font": "16px 500",
+      "tag": "button",
+      "text": "Submit my event"
+    },
+    {
+      "box": {
+        "h": 16,
+        "w": 16,
+        "x": 1254,
+        "y": 4430
+      },
+      "color": "#fffdf8",
+      "depth": 11,
+      "font": "16px 500",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 16,
+        "w": 16,
+        "x": 1228,
+        "y": 4456
+      },
+      "color": "#fffdf8",
+      "depth": 11,
+      "font": "16px 500",
+      "tag": "svg"
+    },
+    {
+      "box": {
+        "h": 19,
+        "w": 474,
+        "x": 814,
+        "y": 4480
+      },
+      "class": "_formNote_1eukl_1258",
+      "color": "#6c645b",
+      "depth": 8,
+      "font": "12.5px 400",
+      "tag": "p",
+      "text": "All fields required."
+    },
+    {
+      "box": {
+        "h": 97,
+        "w": 1320,
+        "x": 60,
+        "y": 4610
+      },
+      "class": "_footWrap_7jyvj_196",
+      "color": "#282d32",
+      "depth": 3,
+      "display": "block",
+      "font": "17px 400",
+      "tag": "footer"
+    },
+    {
+      "box": {
+        "h": 32,
+        "w": 102,
+        "x": 108,
+        "y": 4643
+      },
+      "class": "_brand_7jyvj_139",
+      "color": "#282d32",
+      "depth": 5,
+      "font": "19px 600",
+      "href": "http://127.0.0.1:52767/",
+      "tag": "a",
+      "text": "Boardy"
+    },
+    {
+      "alt": "",
+      "box": {
+        "h": 32,
+        "w": 30,
+        "x": 108,
+        "y": 4643
+      },
+      "class": "_brandMark_7jyvj_151",
+      "color": "#282d32",
+      "depth": 6,
+      "font": "19px 600",
+      "src": "http://127.0.0.1:52767/boardy-landing-logo-mark.webp",
+      "tag": "img"
+    },
+    {
+      "box": {
+        "h": 21,
+        "w": 254,
+        "x": 1078,
+        "y": 4648
+      },
+      "color": "#6c645b",
+      "depth": 5,
+      "display": "flex",
+      "flex": "row",
+      "font": "14px 400",
+      "tag": "nav"
+    },
+    {
+      "box": {
+        "h": 21,
+        "w": 121,
+        "x": 1078,
+        "y": 4648
+      },
+      "color": "#6c645b",
+      "depth": 6,
+      "font": "14px 400",
+      "href": "mailto:humans@boardy.ai",
+      "tag": "a",
+      "text": "humans@boardy.ai"
+    },
+    {
+      "box": {
+        "h": 21,
+        "w": 39,
+        "x": 1223,
+        "y": 4648
+      },
+      "color": "#6c645b",
+      "depth": 6,
+      "font": "14px 400",
+      "href": "http://127.0.0.1:52767/terms-and-conditions",
+      "tag": "a",
+      "text": "Terms"
+    },
+    {
+      "box": {
+        "h": 21,
+        "w": 47,
+        "x": 1285,
+        "y": 4648
+      },
+      "color": "#6c645b",
+      "depth": 6,
+      "font": "14px 400",
+      "href": "http://127.0.0.1:52767/privacy-policy",
+      "tag": "a",
+      "text": "Privacy"
+    },
+    {
+      "box": {
+        "h": 162,
+        "w": 486,
+        "x": 16,
+        "y": 3710
+      },
+      "class": "cookie-prompt",
+      "color": "#172335",
+      "depth": 2,
+      "font": "16px 400",
+      "role": "dialog",
+      "tag": "div",
+      "text": "Allow analytics cookies? Boardy uses analytics cookies to improve your experience. Learn more Decline Allow"
+    },
+    {
+      "box": {
+        "h": 39,
+        "w": 322,
+        "x": 51,
+        "y": 3756
+      },
+      "color": "#4e5968",
+      "depth": 4,
+      "font": "13px 400",
+      "tag": "p",
+      "text": "Boardy uses analytics cookies to improve your experience. Learn more"
+    },
+    {
+      "box": {
+        "h": 17,
+        "w": 67,
+        "x": 122,
+        "y": 3777
+      },
+      "color": "#172335",
+      "depth": 5,
+      "font": "13px 400",
+      "href": "https://www.boardy.ai/privacy-policy",
+      "tag": "a",
+      "text": "Learn more"
+    },
+    {
+      "background": "#ffffff99",
+      "box": {
+        "h": 44,
+        "w": 157,
+        "x": 51,
+        "y": 3809
+      },
+      "color": "#172335",
+      "depth": 5,
+      "font": "13px 600",
+      "tag": "button",
+      "text": "Decline"
+    },
+    {
+      "background": "#006ee6",
+      "box": {
+        "h": 44,
+        "w": 157,
+        "x": 216,
+        "y": 3809
+      },
+      "color": "#ffffff",
+      "depth": 5,
+      "font": "13px 600",
+      "tag": "button",
+      "text": "Allow"
+    }
+  ],
+  "page": {
+    "h": 4707,
+    "w": 1440
+  },
+  "text": "Skip to content Boardy Invite Boardy For event hosts Invite me to your event I'll increase your event ROI, drive more attendees to your event, and increase value to your sponsors so you can raise more sponsorship dollars and focus on organizing a great event. Invite Boardy Hey, it's Boardy. Works with Luma + Partiful Partners I've worked with MongoDB HumanX Corgi Rho Tech Week by FounderX AI Collective Andrew Yeung MongoDB HumanX Corgi Rho Tech Week by FounderX AI Collective Andrew Yeung Guests from How I improve your event ROI 1 Before registration Partner only Promote and drive more registrations I promote your event to my audience and drive qualified people to register. 101K+ followers on LinkedIn 44K+ on X 240K+ network 2 After they register Lower attrition Every registrant gets a personalized welcome call. I learn why they're coming and who they want to meet, then follow up so they actually show up. 3 Before and after the event Attendee insights You get insights and more context on who's coming to your event and why. 4 Before the event Event matching Curated matches and double opt-in introductions, so guests arrive with intros already lined up. 5 After the event Partner only Sponsor meetings Sponsors get real meetings with the guests they came to meet, which makes your sponsor package worth more. Invite Boardy Free vs. partner model Free for every approved event. Partner adds promotion and sponsor meetings. Free vs. partner model Feature Free Partner Paid 1 Promote and drive more registrations Reach Boardy's audience of 400K+ and attract qualified registrants. Not included 2 Lower attrition Personalized welcome calls and follow-ups, tailored to your event, help guests show up. 3 Attendee insights Understand why guests are coming and who they want to meet. 4 Event matching Guests get curated matches and introductions once both people opt in. 5 Sponsor meetings Post-event sponsor meetings make your sponsorship packages more valuable. Not included Invite Boardy Questions What can my guests expect from Boardy? How do I invite Boardy to my event? Which event platforms do you work with? Does it work for in-person events, virtual events, and webinars? I want to invite Boardy Submit your event. We review every one, and once it's approved, we'll send next steps and how to add me to your event. Name Email Event link Luma or Partiful Interested in Pick one Free Partner (paid) Submit my event All fields required. Boardy humans@boardy.ai Terms Privacy Allow analytics cookies? Boardy uses analytics cookies to improve your experience. Learn more Decline Allow",
+  "title": "Invite Boardy to your event",
+  "unreadable_stylesheets": 0,
+  "url": "http://127.0.0.1:52767/events",
+  "viewport": {
+    "h": 900,
+    "w": 1440
+  }
+}
