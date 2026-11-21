@@ -125,6 +125,7 @@ def to_out(db: Session, person: Person) -> PersonOut:
         interests=list(person.interests or []),
         last_interaction_at=last_interaction(db, person.id),
         created_at=as_aware(person.created_at),
+        is_sample=bool(person.is_sample),
     )
 
 

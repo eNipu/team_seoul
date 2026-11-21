@@ -6,6 +6,14 @@ RUN npm ci
 COPY widget/ ./
 RUN npm run build
 
+# ---- website ----
+FROM node:22-alpine AS web
+WORKDIR /web
+COPY web/package.json web/package-lock.json ./
+RUN npm ci
+COPY web/ ./
+RUN npm run build
+
 # ---- backend ----
 FROM python:3.12-slim
 COPY --from=ghcr.io/astral-sh/uv:0.8 /uv /usr/local/bin/uv
@@ -15,6 +23,7 @@ COPY backend/pyproject.toml backend/uv.lock ./
 RUN uv sync --frozen --no-dev
 COPY backend/ ./
 COPY --from=widget /widget/dist /app/widget/dist
+COPY --from=web /web/dist /app/web/dist
 RUN useradd --create-home venn
 USER venn
 EXPOSE 8081

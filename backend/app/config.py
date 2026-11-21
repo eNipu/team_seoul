@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
@@ -62,6 +61,8 @@ class Settings(BaseSettings):
     allowed_hosts: list[str] = Field(default_factory=list)
 
     widget_path: Path = REPO_DIR / "widget" / "dist" / "index.html"
+    # Build of the website (web/); served at /app.
+    web_dist_path: Path = REPO_DIR / "web" / "dist"
 
     # Abuse protection
     max_connection_requests_per_day: int = 20
@@ -87,6 +88,19 @@ class Settings(BaseSettings):
         return self
 
 
-@lru_cache
+_current: Settings | None = None
+
+
 def get_settings() -> Settings:
-    return Settings()
+    """The settings of the running app (loaded from the environment the first time)."""
+    global _current
+    if _current is None:
+        _current = Settings()
+    return _current
+
+
+def use_settings(settings: Settings) -> None:
+    """Make `settings` the ones services see. Called once by create_app, so an app that was
+    given its settings (tests, scripts) and its services never disagree about, say, the base URL."""
+    global _current
+    _current = settings

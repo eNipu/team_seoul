@@ -1,15 +1,12 @@
 import { useState } from "react";
-import { joinNames, type GroupPlanViewData } from "../types";
+import { firstName, joinNames, type GroupPlanViewData } from "../types";
 import { Avatar, ChatStatus, EmptyNote, SectionTitle, useChatPrompt, type ViewProps } from "./common";
 import { Icon } from "./icons";
-import CalendarPicker from "./CalendarPicker";
-
-const firstName = (name: string) => name.trim().split(/\s+/)[0] || name;
+import { PlanTools } from "./PlanTools";
 
 export default function GroupPlan({ data, bridge }: ViewProps<GroupPlanViewData>) {
   const chat = useChatPrompt(bridge);
   const [planned, setPlanned] = useState<number | null>(null);
-  const [calendar, setCalendar] = useState<number | null>(null);
 
   const names = data.members.map((m) => firstName(m.display_name));
   const everyone = joinNames(names);
@@ -98,7 +95,13 @@ export default function GroupPlan({ data, bridge }: ViewProps<GroupPlanViewData>
                   <span>{s.suggested_action}</span>
                 </p>
               )}
-              <div className="card__actions">
+              <PlanTools
+                bridge={bridge}
+                title={s.title}
+                details={s.description}
+                calendarTitle={everyone ? `${s.title} with ${everyone}` : s.title}
+                friends={data.members.map((m) => ({ kind: m.kind, id: m.id }))}
+              >
                 <button
                   type="button"
                   className="btn btn--primary btn--small"
@@ -108,23 +111,7 @@ export default function GroupPlan({ data, bridge }: ViewProps<GroupPlanViewData>
                   <Icon name="chat" size={16} />
                   {chat.state === "sending" && planned === i ? "Asking…" : "Plan it"}
                 </button>
-                <button
-                  type="button"
-                  className="btn btn--small"
-                  aria-expanded={calendar === i}
-                  onClick={() => setCalendar(calendar === i ? null : i)}
-                >
-                  <Icon name="calendar" size={16} /> Add to calendar
-                </button>
-              </div>
-              {calendar === i && (
-                <CalendarPicker
-                  bridge={bridge}
-                  title={everyone ? `${s.title} with ${everyone}` : s.title}
-                  details={s.description}
-                  onClose={() => setCalendar(null)}
-                />
-              )}
+              </PlanTools>
               {planned === i && <ChatStatus state={chat.state} prompt={chat.prompt} />}
             </li>
           ))}

@@ -12,16 +12,41 @@ This repo contains the first version of the plugin:
 
 - **MCP server** (`backend/`): Python, FastAPI + the official MCP Python SDK, streamable HTTP at `/mcp`, OAuth, SQLAlchemy 2 + Alembic (Postgres/Supabase, SQLite for dev).
 - **Widget** (`widget/`): React UI rendered inside ChatGPT via MCP Apps (memory review, ChatGPT-memory import, home, invite with QR code, friend, activity ideas, reconnect, people import, people search, group plan, meetup brief and quiz cards).
+- **Website** (`web/`): the signed-in Venn web app (React + Vite), served by the backend at `/app`. Same account and same records as in ChatGPT; it works without ChatGPT. See [docs/WEB_API.md](docs/WEB_API.md).
 - **Plugin package** (`plugin/`): `plugin.json`, `mcp.json`, and the `venn-social` skill.
 - **Site** (`site/`): the public landing page, waitlist and `/metrics` (Next.js). See `site/README.md`.
 
 The product was called Heldly before it became Venn, and the rename went all the way down: tool
-names (`venn_save_memories`), OAuth scopes (`venn.profile.read`), the `ui://venn/app-v1.html`
+names (`venn_save_memories`), OAuth scopes (`venn.profile.read`), the `ui://venn/app-v2.html`
 resource, the skill folder, and the Docker and database names. Anything set up under the old name
 has to be redone once: reconnect the server in ChatGPT, use the new scopes at the IdP, and see
 "Coming from Heldly" under Dev loop and troubleshooting for a local database.
 
 The one game is a quiz built from what friends chose to share; there are no other games.
+
+## One account, two ways in
+
+Venn is one service: use it inside ChatGPT, or sign in at the website (`http://localhost:8081/app`
+in development). Both resolve to the same Venn user and call the same backend services, so the
+same approval and visibility rules apply in both places.
+
+- **In ChatGPT, start with a question**: "Who do I know who'd enjoy a photo walk?" Venn searches
+  the user's records, says why each person came up, and helps draft an invitation the user sends.
+- **On the website, start with a person or a plan**: add a friend, search the circle, review
+  saved memories, see open follow-ups and plans. No chat session needed.
+- **What carries over**: saved Venn records (approved memories, people, plans, follow-ups).
+  ChatGPT chats and ChatGPT's own memory are **not** synced.
+- **Linking**: connecting ChatGPT signs in to an existing Venn account. A username that has no
+  account yet gets an explicit "Create account" step; nothing is created silently. If the
+  browser is already signed in on the website, the connect page offers "Continue as …".
+- **Friends don't need to join**: private notes, the Venn card (what you and a friend have in
+  common), "This week", the quiz and sample friends all work with a single account. A friend
+  can also answer four questions through a link without an account; the answers wait for the
+  user's review.
+
+Demo: in ChatGPT say *Remember that Maya and I used to take photo walks* and approve the card.
+Open `/app`, sign in with the same username, search `photography`: Maya appears with
+"From your memory “Take photo walks with Maya”."
 
 ## Quick start
 
@@ -172,7 +197,7 @@ connect to `https://abc123.ngrok-free.app/mcp`).
 
 ```
 ChatGPT ──MCP (OAuth bearer)──▶ FastAPI /mcp ──▶ services ──▶ Postgres
-   └─ widget iframe ◀── ui://venn/app-v1.html  (calls tools back through the host)
+   └─ widget iframe ◀── ui://venn/app-v2.html  (calls tools back through the host)
 ```
 
 - **Consent-based memories**: `venn_propose_memories` creates a server-side proposal and
@@ -201,10 +226,10 @@ ChatGPT ──MCP (OAuth bearer)──▶ FastAPI /mcp ──▶ services ──
 - **Set-up and help**: the home card carries a three-step set-up checklist (about you, your
   people, connect) until it is done, and the model is told to start it without being asked.
   `venn_help` shows what Venn can do, with examples to tap.
-- **Cards**: thirteen tools render an interactive card in ChatGPT; the rest return data.
+- **Cards**: seventeen tools render an interactive card in ChatGPT; the rest return data.
 - **Identity** always comes from the OAuth token, never from tool arguments.
 
-39 tools in total — see [docs/MCP_TOOLS.md](docs/MCP_TOOLS.md).
+52 tools in total — see [docs/MCP_TOOLS.md](docs/MCP_TOOLS.md). The website's routes are in [docs/WEB_API.md](docs/WEB_API.md).
 
 ## Configuration
 
@@ -260,14 +285,16 @@ backend/
   app/main.py               FastAPI app factory (uvicorn app.main:create_app --factory)
   app/mcp/                  MCP server, tools, helpers
   app/auth/                 JWT verifier (prod), dev OAuth provider, identity mapping
+  app/web/                  website: session cookie, /api/v1 routes, serving web/dist at /app
   app/services/             memories, social graph, people notes + import, relationship views, quiz, dashboard, analytics, consent
   scripts/seed_demo.py      demo data for a dev account (make seed me=<username>)
   app/ai/                   memory extraction + sensitive-data filter
   app/models/, migrations/  SQLAlchemy models, Alembic
   tests/                    unit/, integration/, security/
 widget/                     React + Vite single-file MCP App
+web/                        React + Vite website for signed-in users (make build-web)
 site/                       Next.js landing page, waitlist API and /metrics
-docs/                       ARCHITECTURE, DATA_MODEL, MCP_TOOLS, SECURITY
+docs/                       ARCHITECTURE, DATA_MODEL, MCP_TOOLS, SECURITY, WEB_API
 Makefile, Dockerfile, docker-compose.yml, .env.example
 ```
 

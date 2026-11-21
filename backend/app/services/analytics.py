@@ -29,6 +29,15 @@ EVENT_TYPES = {
     "meetup_brief",
     "meetup_recapped",
     "quiz_started",
+    "sample_loaded",
+    "venn_compared",
+    "this_week",
+    "plan_saved",
+    "plan_done",
+    "question_link_created",
+    "answers_received",
+    "answers_saved",
+    "web_signed_in",
 }
 
 _ALLOWED_METADATA_KEYS = {"count", "source", "category"}

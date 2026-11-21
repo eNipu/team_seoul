@@ -29,6 +29,7 @@ def settings(tmp_path) -> Settings:
         dev_auth_secret="test-secret-test-secret-test-secret-123",  # noqa: S106
         openai_api_key=None,
         widget_path=tmp_path / "missing-widget.html",
+        web_dist_path=tmp_path / "web-dist",
     )
 
 
@@ -115,3 +116,44 @@ def bob(make_user) -> MCPUser:
 @pytest.fixture
 def carol(make_user) -> MCPUser:
     return make_user("carol", name="Carol")
+
+
+WEB_HEADERS = {"X-Venn-Request": "1"}
+
+
+class WebUser:
+    """Uses the website's API as one signed-in person (own cookie jar, same app)."""
+
+    def __init__(self, client: TestClient, username: str | None = None, name: str | None = None):
+        self.http = TestClient(client.app, base_url=BASE_URL)
+        self.username = username
+        if username:
+            body = {"username": username, "display_name": name or username.title(), "create": True}
+            resp = self.http.post("/api/v1/session", json=body, headers=WEB_HEADERS)
+            assert resp.status_code == 200, resp.text
+
+    def get(self, path: str, **params: Any) -> Any:
+        return self.http.get(f"/api/v1{path}", params=params or None)
+
+    def send(self, method: str, path: str, body: dict | None = None, headers: dict | None = None) -> Any:
+        return self.http.request(
+            method, f"/api/v1{path}", json=body, headers=WEB_HEADERS if headers is None else headers
+        )
+
+    def ok(self, method: str, path: str, body: dict | None = None, **params: Any) -> dict:
+        resp = self.get(path, **params) if method == "GET" else self.send(method, path, body)
+        assert resp.status_code == 200, resp.text
+        return resp.json()
+
+    def err(self, method: str, path: str, body: dict | None = None, **params: Any) -> tuple[int, str]:
+        resp = self.get(path, **params) if method == "GET" else self.send(method, path, body)
+        assert resp.status_code >= 400, resp.text
+        return resp.status_code, resp.json()["error"]["code"]
+
+
+@pytest.fixture
+def web(client):
+    def _make(username: str | None = None, name: str | None = None) -> WebUser:
+        return WebUser(client, username, name)
+
+    return _make

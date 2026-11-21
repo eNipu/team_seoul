@@ -4,6 +4,8 @@
 //   ?view=memory_review|dashboard|invite|activity_ideas|reconnect|friend|friend_person|welcome
 //         people_import|people_search|group_plan|brief|brief_person|quiz|quiz_circle
 //         memory_import|memory_review_import|help|dashboard_setup
+//         venn|venn_empty|venn_full|this_week|this_week_empty|ask_link|answers|answers_empty
+//         dashboard_sample|dashboard_plans|memory_review_people
 //   &tab=profile|memories|friends   initial dashboard tab
 //   &theme=light|dark               force a theme (default: prefers-color-scheme)
 //   &flaky=1                        every other tool call fails (error/retry UI)
@@ -18,6 +20,16 @@ import { mockQrRows } from "./mockQr";
 import type {
   ActivityIdeasViewData,
   ActivitySuggestion,
+  AnswerItem,
+  AnswerResponse,
+  AnswersViewData,
+  AskLinkViewData,
+  Plan,
+  PlanMember,
+  QuestionLink,
+  ThisWeekViewData,
+  VennViewData,
+  WeekAction,
   BriefViewData,
   Connection,
   DashboardViewData,
@@ -51,7 +63,7 @@ import type {
   Visibility,
   WelcomeViewData,
 } from "./types";
-import { parseView } from "./types";
+import { firstName, parseView } from "./types";
 
 export const DEMO_VIEWS = [
   "memory_review",
@@ -73,6 +85,17 @@ export const DEMO_VIEWS = [
   "memory_review_import",
   "help",
   "dashboard_setup",
+  "venn",
+  "venn_empty",
+  "venn_full",
+  "this_week",
+  "this_week_empty",
+  "ask_link",
+  "answers",
+  "answers_empty",
+  "dashboard_sample",
+  "dashboard_plans",
+  "memory_review_people",
 ] as const;
 
 export function demoParam(name: string): string | null {
@@ -116,6 +139,7 @@ let memories: Memory[] = [
     visibility: "SHARED_WITH_CONNECTIONS",
     created_at: iso(-10),
     source: "chatgpt_memory",
+    people: [],
   },
   {
     memory_id: "m4",
@@ -126,6 +150,7 @@ let memories: Memory[] = [
     visibility: "PUBLIC_PROFILE",
     created_at: iso(-8),
     source: "chatgpt_memory",
+    people: [],
   },
   {
     memory_id: "m2",
@@ -136,6 +161,7 @@ let memories: Memory[] = [
     visibility: "PUBLIC_PROFILE",
     created_at: iso(-6),
     source: null,
+    people: [],
   },
   {
     memory_id: "m5",
@@ -146,6 +172,7 @@ let memories: Memory[] = [
     visibility: "SHARED_WITH_CONNECTIONS",
     created_at: iso(-5),
     source: null,
+    people: [],
   },
   {
     memory_id: "m3",
@@ -156,8 +183,21 @@ let memories: Memory[] = [
     visibility: "PRIVATE",
     created_at: iso(-2),
     source: null,
+    people: [],
   },
 ];
+
+memories.push({
+  memory_id: "m6",
+  category: "RELATIONSHIP_CONTEXT",
+  title: "Photo walks with Maya",
+  description: "Maya and I take our cameras out for a photography walk most months, usually ending at a new cafe.",
+  tags: ["photography", "ritual"],
+  visibility: "PRIVATE",
+  created_at: iso(-20),
+  source: null,
+  people: ["Maya"],
+});
 
 let connections: MockConnection[] = [
   {
@@ -166,6 +206,7 @@ let connections: MockConnection[] = [
     display_name: "Jun Park",
     since: iso(-64),
     last_interaction_at: iso(-3),
+    is_sample: false,
     bio: "Route setter by day, film club host by night.",
     interests: ["Bouldering", "Indie films", "Ramen", "Board games"],
     shared_memories: [
@@ -189,6 +230,7 @@ let connections: MockConnection[] = [
     display_name: "Hana Lee",
     since: iso(-120),
     last_interaction_at: iso(-41),
+    is_sample: false,
     bio: "Trail runner and amateur baker.",
     interests: ["Hiking", "Baking", "Specialty coffee"],
     shared_memories: [
@@ -206,6 +248,7 @@ let connections: MockConnection[] = [
     display_name: "Mina Seo",
     since: iso(-35),
     last_interaction_at: iso(-12),
+    is_sample: false,
     bio: "Film photographer who plans her weekends around good light.",
     interests: ["Bouldering", "Specialty coffee", "Photography"],
     shared_memories: [
@@ -229,11 +272,12 @@ let people: Person[] = [
   {
     person_id: "p1",
     name: "Taeyang Kim",
-    relationship: "College roommate",
+    relationship: "Friend from university",
     notes: "Moved to Busan last year. Birthday in March. Always up for a long phone call on Sundays.",
     interests: ["Indie films", "Baseball", "Cooking"],
     last_interaction_at: iso(-62),
     created_at: iso(-90),
+    is_sample: false,
   },
   {
     person_id: "p2",
@@ -243,6 +287,7 @@ let people: Person[] = [
     interests: ["Gardening"],
     last_interaction_at: null,
     created_at: iso(-30),
+    is_sample: false,
   },
   {
     person_id: "p3",
@@ -252,6 +297,17 @@ let people: Person[] = [
     interests: ["Bouldering", "Hiking", "Craft beer"],
     last_interaction_at: iso(-27),
     created_at: iso(-200),
+    is_sample: false,
+  },
+  {
+    person_id: "p4",
+    name: "Maya Chen",
+    relationship: "College roommate",
+    notes: "Shoots film on an old Pentax. Just joined a pottery studio in Yeonnam. Training for her first trail race.",
+    interests: ["Photography", "Pottery", "Trail running"],
+    last_interaction_at: iso(-34),
+    created_at: iso(-150),
+    is_sample: false,
   },
 ];
 
@@ -374,7 +430,10 @@ const imports = new Map<string, ImportCandidate[]>();
 
 const invites = new Map<string, { max_uses: number; expires_at: string }>();
 
-type ProposalSeed = Omit<MemoryProposal, "index" | "already_saved">;
+type ProposalSeed = Omit<MemoryProposal, "index" | "already_saved" | "people" | "new_people"> & {
+  people?: string[];
+  new_people?: string[];
+};
 
 const DEMO_PROPOSALS: ProposalSeed[] = [
   {
@@ -489,6 +548,42 @@ const IMPORT_PROPOSALS: ProposalSeed[] = [
 ];
 
 /** Proposals awaiting approval, by proposal_id (what venn_save_memories looks up). */
+const PEOPLE_PROPOSALS: ProposalSeed[] = [
+  {
+    category: "RELATIONSHIP_CONTEXT",
+    title: "Maya is training for her first trail race",
+    description: "Maya signed up for a 15K trail race in spring and asked me to cheer at the finish.",
+    tags: ["running", "support"],
+    suggested_visibility: "PRIVATE",
+    people: ["Maya"],
+  },
+  {
+    category: "EXPERIENCE",
+    title: "Climbing weekend with Jun and Theo",
+    description: "Spent a weekend bouldering in Gangwon with Jun and his friend Theo. Want to do it again in autumn.",
+    tags: ["bouldering", "trip"],
+    suggested_visibility: "SHARED_WITH_CONNECTIONS",
+    people: ["Jun", "Theo"],
+    new_people: ["Theo"],
+  },
+  {
+    category: "PERSONAL_MEMORY",
+    title: "Sunday dinners at Aunt Nari's",
+    description: "Aunt Nari and cousin Ben host dinner on the first Sunday of every month.",
+    tags: ["family", "ritual"],
+    suggested_visibility: "PRIVATE",
+    people: ["Nari", "Ben"],
+    new_people: ["Nari", "Ben"],
+  },
+  {
+    category: "PREFERENCE",
+    title: "Prefers small gatherings",
+    description: "Enjoys seeing two or three friends at a time more than big parties.",
+    tags: ["social"],
+    suggested_visibility: "PRIVATE",
+  },
+];
+
 const proposalStore = new Map<string, MemoryReviewViewData>();
 
 function reviewView(source: ProposalSource, seeds: ProposalSeed[], proposalId: string): MemoryReviewViewData {
@@ -500,6 +595,8 @@ function reviewView(source: ProposalSource, seeds: ProposalSeed[], proposalId: s
     source,
     proposals: seeds.slice(0, 30).map((p, index) => ({
       ...p,
+      people: p.people ?? [],
+      new_people: (p.new_people ?? []).filter((n) => !knowsName(n)),
       index,
       already_saved: have.has(p.title.trim().toLowerCase()),
     })),
@@ -656,16 +753,20 @@ function dashboardView(): DashboardViewData {
     view: "dashboard" as const,
     profile: { ...profile, memory_count: memories.length },
     memories,
-    connections: connections.map(({ connection_id, user_id, display_name, since, last_interaction_at }) => ({
+    connections: connections.map(({ connection_id, user_id, display_name, since, last_interaction_at, is_sample }) => ({
       connection_id,
       user_id,
       display_name,
       since,
       last_interaction_at,
+      is_sample,
     })),
     people,
     pending_requests: pending,
     setup: setupSteps(),
+    plans: openPlans(),
+    pending_answers: answerInbox.length,
+    sample_loaded: sampleLoaded,
   });
 }
 
@@ -688,6 +789,7 @@ function friendView(args: Record<string, unknown>): FriendViewData | null {
       on_venn: true,
       since: f.conn.since,
       last_interaction_at: f.conn.last_interaction_at,
+      is_sample: false,
       bio: f.conn.bio,
       relationship: null,
       notes: null,
@@ -700,6 +802,7 @@ function friendView(args: Record<string, unknown>): FriendViewData | null {
     on_venn: false,
     since: f.person.created_at,
     last_interaction_at: f.person.last_interaction_at,
+    is_sample: false,
     bio: null,
     relationship: f.person.relationship,
     notes: f.person.notes,
@@ -789,6 +892,426 @@ function activityView(args: Record<string, unknown>): ActivityIdeasViewData | nu
   };
 }
 
+// --- Contract v2 demo state: sample circle, plans, question links, answers ---
+
+let sampleLoaded = false;
+let plans: Plan[] = [];
+
+/** True when a first or full name already belongs to someone in the circle. */
+function knowsName(name: string): boolean {
+  const wanted = name.trim().toLowerCase();
+  if (!wanted) return true;
+  const names = [...people.map((p) => p.name), ...connections.map((c) => c.display_name)];
+  return names.some((n) => n.toLowerCase() === wanted || firstName(n).toLowerCase() === wanted);
+}
+
+function openPlans(): Plan[] {
+  const at = (p: Plan) => (p.planned_for ? new Date(p.planned_for).getTime() : Number.POSITIVE_INFINITY);
+  return plans.filter((p) => p.status === "planned").sort((a, b) => at(a) - at(b));
+}
+
+function planMembers(args: Record<string, unknown>): PlanMember[] {
+  const ids = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+  const members: PlanMember[] = [];
+  for (const id of ids(args.connection_ids)) {
+    const c = connections.find((x) => x.connection_id === id);
+    if (c) members.push({ kind: "connection", id, display_name: c.display_name });
+  }
+  for (const id of ids(args.person_ids)) {
+    const p = people.find((x) => x.person_id === id);
+    if (p) members.push({ kind: "person", id, display_name: p.name });
+  }
+  return members.slice(0, 6);
+}
+
+function seedPlans(): void {
+  plans = [
+    {
+      plan_id: "plan_1",
+      title: "Golden-hour photo walk along the Han",
+      details: "Bring one camera each, walk from Mangwon to Hapjeong and swap favourite frames over coffee after.",
+      planned_for: iso(3),
+      status: "planned",
+      members: [{ kind: "person", id: "p4", display_name: "Maya Chen" }],
+      created_at: iso(-1),
+    },
+    {
+      plan_id: "plan_2",
+      title: "Board games and ramen night",
+      details: null,
+      planned_for: null,
+      status: "planned",
+      members: [
+        { kind: "connection", id: "c1", display_name: "Jun Park" },
+        { kind: "connection", id: "c3", display_name: "Mina Seo" },
+        { kind: "person", id: "p3", display_name: "Dohyun Lim" },
+      ],
+      created_at: iso(-4),
+    },
+  ];
+}
+
+const SAMPLE_CONNECTIONS: MockConnection[] = [
+  {
+    connection_id: "sample_c1",
+    user_id: "u_sample_priya",
+    display_name: "Priya Nair",
+    since: iso(-200),
+    last_interaction_at: iso(-12),
+    is_sample: true,
+    bio: "Product designer who plans her weekends around a good trail and a better bakery.",
+    interests: ["Hiking", "Specialty coffee", "Ceramics", "Podcasts"],
+    shared_memories: [
+      {
+        category: "EXPERIENCE",
+        title: "Sunrise hike on Inwangsan",
+        description: "Starts most Saturdays on a ridge before the city wakes up.",
+        tags: ["hiking", "mornings"],
+      },
+    ],
+  },
+  {
+    connection_id: "sample_c2",
+    user_id: "u_sample_leo",
+    display_name: "Leo Martins",
+    since: iso(-420),
+    last_interaction_at: iso(-48),
+    is_sample: true,
+    bio: "Sound engineer, weeknight climber, keeps a list of every film he has walked out of.",
+    interests: ["Bouldering", "Indie films", "Vinyl records"],
+    shared_memories: [
+      {
+        category: "INTEREST",
+        title: "Midnight screenings",
+        description: "Never says no to a late showing at an independent cinema.",
+        tags: ["films"],
+      },
+    ],
+  },
+];
+
+const SAMPLE_PEOPLE: Person[] = [
+  {
+    person_id: "sample_p1",
+    name: "Noor Haddad",
+    relationship: "Old coworker",
+    notes: "Left for a startup in spring. Makes her own hot sauce. Always asks about my climbing.",
+    interests: ["Cooking", "Bouldering", "Road trips"],
+    last_interaction_at: iso(-75),
+    created_at: iso(-300),
+    is_sample: true,
+  },
+  {
+    person_id: "sample_p2",
+    name: "Sam Okafor",
+    relationship: "Cousin",
+    notes: "Studying architecture in Daegu. Visits Seoul every few months.",
+    interests: ["Sketching", "Basketball"],
+    last_interaction_at: null,
+    created_at: iso(-120),
+    is_sample: true,
+  },
+];
+
+const SAMPLE_MEMORIES: Memory[] = [
+  {
+    memory_id: "sample_m1",
+    category: "RELATIONSHIP_CONTEXT",
+    title: "Trail breakfasts with Priya",
+    description: "Priya and I end every hike at the same bakery and split a cinnamon roll.",
+    tags: ["hiking", "ritual"],
+    visibility: "PRIVATE",
+    created_at: iso(-9),
+    source: "sample",
+    people: ["Priya"],
+  },
+  {
+    memory_id: "sample_m2",
+    category: "PERSONAL_MEMORY",
+    title: "Noor's farewell dinner",
+    description: "Promised Noor a climbing session once her new job settles down.",
+    tags: ["promise"],
+    visibility: "PRIVATE",
+    created_at: iso(-70),
+    source: "sample",
+    people: ["Noor"],
+  },
+];
+
+function loadSampleCircle() {
+  if (!sampleLoaded) {
+    sampleLoaded = true;
+    connections = [...connections, ...structuredClone(SAMPLE_CONNECTIONS)];
+    people = [...people, ...structuredClone(SAMPLE_PEOPLE)];
+    memories = [...memories, ...structuredClone(SAMPLE_MEMORIES)];
+    pending = [...pending, { request_id: "sample_r1", sender_display_name: "Elena Rossi (sample)", created_at: iso(-1) }];
+    followUps["connection:sample_c1"] = [
+      { follow_up_id: "sample_fu1", text: "Ask Priya how the ceramics show went", created_at: iso(-5) },
+    ];
+    interactions["connection:sample_c1"] = [
+      { activity: "Sunrise hike and bakery stop", occurred_at: iso(-12) },
+    ];
+  }
+  return {
+    loaded: true,
+    connections: SAMPLE_CONNECTIONS.length,
+    people: SAMPLE_PEOPLE.length,
+    pending_requests: 1,
+    memories_added: SAMPLE_MEMORIES.length,
+  };
+}
+
+function removeSampleCircle() {
+  const friends = connections.filter((c) => c.is_sample).length;
+  const persons = people.filter((p) => p.is_sample).length;
+  const mems = memories.filter((m) => m.source === "sample").length;
+  const gone = new Set([
+    ...connections.filter((c) => c.is_sample).map((c) => key("connection", c.connection_id)),
+    ...people.filter((p) => p.is_sample).map((p) => key("person", p.person_id)),
+  ]);
+  connections = connections.filter((c) => !c.is_sample);
+  people = people.filter((p) => !p.is_sample);
+  memories = memories.filter((m) => m.source !== "sample");
+  pending = pending.filter((r) => !r.request_id.startsWith("sample_"));
+  for (const k of gone) {
+    delete followUps[k];
+    delete interactions[k];
+  }
+  plans = plans
+    .map((p) => ({ ...p, had: p.members.length, members: p.members.filter((m) => !gone.has(key(m.kind, m.id))) }))
+    .filter((p) => p.had === 0 || p.members.length > 0)
+    .map(({ had: _had, ...p }) => p);
+  sampleLoaded = false;
+  return { removed: true, friends, people: persons, memories: mems };
+}
+
+const VENN_NOTE = "Built from your profile and what you know or were shown about them. Venn only suggests.";
+
+function vennView(args: Record<string, unknown>): VennViewData | null {
+  const f = findFriend(args);
+  if (!f) return null;
+  const first = firstName(f.name);
+  const shared = overlap(profile.interests, f.interests);
+  const sharedSet = new Set(lower(shared));
+  const youOnly = profile.interests.filter((i) => !sharedSet.has(i.toLowerCase()));
+  const themOnly = f.interests.filter((i) => !sharedSet.has(i.toLowerCase()));
+  const grounded = shared
+    .map((s) => IDEA_TEMPLATES[s.toLowerCase()])
+    .filter((t): t is (name: string) => ActivitySuggestion => typeof t === "function")
+    .map((t) => t(first));
+  const summary =
+    shared.length === 0
+      ? `Nothing in common on record yet. Ask ${first} about ${themOnly[0] ? themOnly[0].toLowerCase() : "what they are into"}.`
+      : shared.length === 1
+        ? `You and ${first} both love ${shared[0]!.toLowerCase()}.`
+        : `You and ${first} share ${shared.length} things, starting with ${shared[0]!.toLowerCase()} and ${shared[1]!.toLowerCase()}.`;
+  return {
+    view: "venn",
+    kind: f.kind,
+    id: f.id,
+    display_name: f.name,
+    on_venn: f.kind === "connection",
+    you_only: youOnly.slice(0, 8),
+    shared: shared.slice(0, 8),
+    them_only: themOnly.slice(0, 8),
+    summary,
+    suggestions: [...grounded, ...GENERAL_IDEAS(first)].slice(0, 2),
+    note: VENN_NOTE,
+  };
+}
+
+/** A crowded diagram for layout checks: eight labels in every region. */
+function vennFullView(): VennViewData {
+  return {
+    view: "venn",
+    kind: "connection",
+    id: "c1",
+    display_name: "Jun Park",
+    on_venn: true,
+    you_only: ["Specialty coffee", "Hiking", "Film photography", "Sourdough baking", "Morning runs", "Jazz bars", "Language exchange", "Houseplants"],
+    shared: ["Bouldering", "Indie films", "Ramen", "Night markets", "Road trips", "Karaoke", "Camping", "Street food"],
+    them_only: ["Board games", "Mechanical keyboards", "Baseball", "Craft beer", "Cycling", "Woodworking", "Sci-fi novels", "Chess"],
+    summary: "You and Jun share 8 things, starting with bouldering and indie films.",
+    suggestions: [IDEA_TEMPLATES.bouldering!("Jun"), IDEA_TEMPLATES["indie films"]!("Jun")],
+    note: VENN_NOTE,
+  };
+}
+
+function thisWeekView(): ThisWeekViewData {
+  const note = "Venn never sends anything for you.";
+  const all = [
+    ...connections.map((c) => ({ kind: "connection" as const, id: c.connection_id, name: c.display_name, interests: c.interests, last: c.last_interaction_at })),
+    ...people.map((p) => ({ kind: "person" as const, id: p.person_id, name: p.name, interests: p.interests, last: p.last_interaction_at })),
+  ];
+  if (all.length === 0) {
+    return {
+      view: "this_week",
+      actions: [],
+      empty_reason: "Add a few people first. Venn will then suggest who to reach out to each week.",
+      note,
+    };
+  }
+  const actions: WeekAction[] = [];
+  const used = new Set<string>();
+
+  const quiet = all
+    .filter((f) => f.last !== null && daysSince(f.last) >= MIN_RECONNECT_DAYS)
+    .sort((a, b) => daysSince(b.last!) - daysSince(a.last!))[0];
+  if (quiet) {
+    const first = firstName(quiet.name);
+    const topic = quiet.interests[0]?.toLowerCase();
+    used.add(key(quiet.kind, quiet.id));
+    actions.push({
+      type: "reach_out",
+      kind: quiet.kind,
+      id: quiet.id,
+      display_name: quiet.name,
+      title: `Check in with ${first}`,
+      reason: `You last caught up ${daysSince(quiet.last!)} days ago.`,
+      draft_message: `Hey ${first}! It's been too long. ${topic ? `Still into ${topic}? ` : ""}I'd love to catch up. Are you free for a call this weekend?`,
+      follow_up: null,
+      suggestion: null,
+    });
+  }
+
+  for (const f of all) {
+    const k = key(f.kind, f.id);
+    const fu = (followUps[k] ?? [])[0];
+    if (!fu || used.has(k)) continue;
+    used.add(k);
+    actions.push({
+      type: "follow_up",
+      kind: f.kind,
+      id: f.id,
+      display_name: f.name,
+      title: `Follow up with ${firstName(f.name)}`,
+      reason: `You noted this ${daysSince(fu.created_at)} days ago and it is still open.`,
+      draft_message: null,
+      follow_up: structuredClone(fu),
+      suggestion: null,
+    });
+    break;
+  }
+
+  for (const f of all) {
+    const k = key(f.kind, f.id);
+    if (used.has(k)) continue;
+    const shared = overlap(f.interests, profile.interests);
+    const template = shared.map((s) => IDEA_TEMPLATES[s.toLowerCase()]).find((t) => typeof t === "function");
+    if (!template) continue;
+    actions.push({
+      type: "plan",
+      kind: f.kind,
+      id: f.id,
+      display_name: f.name,
+      title: `Make a plan with ${firstName(f.name)}`,
+      reason: `You both like ${shared[0]!.toLowerCase()}.`,
+      draft_message: null,
+      follow_up: null,
+      suggestion: template(firstName(f.name)),
+    });
+    break;
+  }
+
+  return {
+    view: "this_week",
+    actions: actions.slice(0, 3),
+    empty_reason: actions.length === 0 ? "You are all caught up. Nothing needs your attention this week." : null,
+    note,
+  };
+}
+
+const ASK_QUESTIONS: { key: string; question: string; saves_as: string }[] = [
+  { key: "into", question: "What are you into lately?", saves_as: "Interests" },
+  { key: "together", question: "What would you like us to do together?", saves_as: "Note" },
+  { key: "treat", question: "What small thing always makes your day?", saves_as: "Note" },
+  { key: "ask", question: "What should I ask you about next time?", saves_as: "Follow-up" },
+];
+
+interface MockLink extends QuestionLink {
+  person_id: string | null;
+}
+
+let questionLinks: MockLink[] = [
+  { link_id: "ql_1", for_name: "Maya Chen", person_id: "p4", link: "https://venn.app/q/mAyA7c2k", expires_at: iso(11), responses: 1, active: true },
+  { link_id: "ql_2", for_name: null, person_id: null, link: "https://venn.app/q/op3nL1nk", expires_at: iso(5), responses: 1, active: true },
+  { link_id: "ql_3", for_name: "Taeyang Kim", person_id: "p1", link: "https://venn.app/q/t4eYang9", expires_at: iso(-3), responses: 0, active: false },
+];
+
+const answerItems = (answers: Record<string, string>): AnswerItem[] =>
+  ASK_QUESTIONS.filter((q) => answers[q.key]).map((q) => ({ ...q, answer: answers[q.key]! }));
+
+let answerInbox: AnswerResponse[] = [
+  {
+    response_id: "resp_1",
+    name: "Maya",
+    received_at: iso(-1),
+    person_id: "p4",
+    person_name: "Maya Chen",
+    items: answerItems({
+      into: "Film photography, wheel-thrown pottery, bread baking",
+      together: "A sunrise photo walk up Naksan, then breakfast",
+      treat: "A handwritten postcard out of nowhere",
+      ask: "How my first pottery market stall went",
+    }),
+  },
+  {
+    response_id: "resp_2",
+    name: "Sora",
+    received_at: iso(-2),
+    person_id: null,
+    person_name: null,
+    items: answerItems({
+      into: "Bouldering, natural wine",
+      together: "Try the new climbing gym in Seongsu",
+      ask: "Whether I finally booked the Jeju trip",
+    }),
+  },
+];
+
+function askLinkView(args: Record<string, unknown>): AskLinkViewData | string {
+  let forName: string | null = text(args.name, 80) || null;
+  let personId: string | null = null;
+  if (typeof args.person_id === "string") {
+    const person = people.find((p) => p.person_id === args.person_id);
+    if (!person) return "NOT_FOUND: person not found";
+    forName = person.name;
+    personId = person.person_id;
+  }
+  const token = newCode().toLowerCase();
+  const link: MockLink = {
+    link_id: nextId("ql"),
+    for_name: forName,
+    person_id: personId,
+    link: `https://venn.app/q/${token}`,
+    expires_at: iso(14),
+    responses: 0,
+    active: true,
+  };
+  questionLinks = [link, ...questionLinks];
+  return {
+    view: "ask_link",
+    link_id: link.link_id,
+    link: link.link,
+    qr: mockQrRows(link.link),
+    expires_at: link.expires_at,
+    for_name: forName,
+    share_text: `${forName ? `Hi ${firstName(forName)}! ` : "Hi! "}I'm trying to be a better friend this year. Could you answer four quick questions for me? It takes a minute and you don't need an account: ${link.link}`,
+    questions: ASK_QUESTIONS.map((q) => q.question),
+    max_responses: forName ? 1 : 5,
+    note: "Your friend needs no account. Their answers wait for your review; nothing is saved until you approve it.",
+  };
+}
+
+function answersView(): AnswersViewData {
+  return structuredClone({
+    view: "answers" as const,
+    responses: answerInbox,
+    links: questionLinks.map(({ person_id: _p, ...l }) => l),
+    note: "Answers are saved to your private notes only after you approve them.",
+  });
+}
+
 function lastActivity(kind: FriendKind, id: string): string | null {
   return (interactions[key(kind, id)] ?? []).find((i) => i.activity)?.activity ?? null;
 }
@@ -861,7 +1384,6 @@ function inviteView(maxUses: unknown, code = newCode()): InviteViewData {
 // Import, search, group plan, brief and quiz
 // ---------------------------------------------------------------------------
 
-const firstName = (name: string) => name.split(/\s+/)[0] || name;
 
 function importView(): PeopleImportViewData {
   const import_id = nextId("imp");
@@ -913,6 +1435,11 @@ function searchView(rawQuery: unknown): PeopleSearchViewData {
     return terms.some((t) => hay.includes(t));
   };
   const results: SearchResult[] = [];
+  const matchingMemories = memories.filter((m) => hit(m.title) || hit(m.description) || m.tags.some(hit) || m.people.some(hit));
+  /** The user's own matching memory that names this person, if any. */
+  const ownMemoryAbout = (name: string) =>
+    matchingMemories.find((m) => m.people.some((n) => n.toLowerCase() === firstName(name).toLowerCase() || n.toLowerCase() === name.toLowerCase()));
+  const joinList = (xs: string[]) => (xs.length <= 1 ? (xs[0] ?? "") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`);
 
   for (const c of connections) {
     const matched = c.interests.filter(hit);
@@ -921,7 +1448,15 @@ function searchView(rawQuery: unknown): PeopleSearchViewData {
     if (hit(c.display_name)) matched.push("Name");
     const bioHit = hit(c.bio);
     if (matched.length === 0 && !bioHit) continue;
+    const own = ownMemoryAbout(c.display_name);
     results.push({
+      why: own
+        ? `From your memory “${own.title}”.`
+        : memory
+          ? `They shared “${memory.title}” with you.`
+          : matched.length > 0
+            ? `Their profile lists ${joinList(matched.filter((m) => m !== "Name"))|| "this name"}.`
+            : "Mentioned in their bio.",
       kind: "connection",
       id: c.connection_id,
       display_name: c.display_name,
@@ -938,8 +1473,19 @@ function searchView(rawQuery: unknown): PeopleSearchViewData {
     if (hit(p.name)) matched.push("Name");
     const noteHit = hit(p.notes);
     if (noteHit) matched.push("Your notes");
-    if (matched.length === 0) continue;
+    const own = ownMemoryAbout(p.name);
+    if (matched.length === 0 && !own) continue;
+    const listed = p.interests.filter(hit);
     results.push({
+      why: own
+        ? `From your memory “${own.title}”.`
+        : listed.length > 0
+          ? `Your note lists ${joinList(listed)}.`
+          : noteHit
+            ? "From your notes about them."
+            : hit(p.relationship)
+              ? `You noted them as “${p.relationship}”.`
+              : "Their name matches.",
       kind: "person",
       id: p.person_id,
       display_name: p.name,
@@ -957,7 +1503,8 @@ function searchView(rawQuery: unknown): PeopleSearchViewData {
     results,
     count: results.length,
     searched: connections.length + people.length,
-    note: "Searched your private notes and what connections chose to share with you.",
+    note: "Searched your private notes, your own memories and what connections chose to share with you.",
+    memories: matchingMemories.slice(0, 5),
   });
 }
 
@@ -1204,7 +1751,7 @@ function quizView(args: Record<string, unknown>): QuizViewData | null {
 
 function welcomeView(): WelcomeViewData {
   // The welcome card is for a brand-new user: every step is still open.
-  return { view: "welcome", display_name: profile.display_name, goal_options: GOAL_OPTIONS, setup: setupSteps(true) };
+  return { view: "welcome", display_name: profile.display_name, goal_options: GOAL_OPTIONS, setup: setupSteps(true), sample_loaded: false };
 }
 
 export function mockInitialView(): ViewData | null {
@@ -1253,6 +1800,37 @@ export function mockInitialView(): ViewData | null {
       connections = [];
       pending = [];
       return dashboardView();
+    case "venn":
+      return vennView({ connection_id: "c1" });
+    case "venn_empty":
+      return vennView({ person_id: "p2" });
+    case "venn_full":
+      return vennFullView();
+    case "this_week":
+      return thisWeekView();
+    case "this_week_empty":
+      people = [];
+      connections = [];
+      pending = [];
+      return thisWeekView();
+    case "ask_link": {
+      const view = askLinkView({ person_id: "p4" });
+      return typeof view === "string" ? null : view;
+    }
+    case "answers":
+      return answersView();
+    case "answers_empty":
+      answerInbox = [];
+      questionLinks = [];
+      return answersView();
+    case "dashboard_sample":
+      loadSampleCircle();
+      return dashboardView();
+    case "dashboard_plans":
+      seedPlans();
+      return dashboardView();
+    case "memory_review_people":
+      return reviewView("conversation", PEOPLE_PROPOSALS, "prop_demo_people");
     default:
       return null;
   }
@@ -1334,10 +1912,31 @@ export function createMockBridge(): HostBridge {
               visibility: (a.visibility as Visibility) ?? "PRIVATE",
               created_at: new Date().toISOString(),
               source: review.source === "chatgpt_memory" ? "chatgpt_memory" : null,
+              people: proposal?.people ?? [],
             };
           });
           memories = [...memories, ...saved];
-          return ok({ saved, count: saved.length });
+          // Approving a memory that names someone new also adds them as a private note.
+          const peopleAdded: Person[] = [];
+          for (const a of approvals) {
+            const proposal = review.proposals.find((p) => p.index === a.index);
+            for (const n of proposal?.new_people ?? []) {
+              if (knowsName(n)) continue;
+              const person: Person = {
+                person_id: nextId("p"),
+                name: n,
+                relationship: null,
+                notes: `Mentioned in “${String(a.title ?? proposal?.title ?? "")}”.`,
+                interests: [],
+                last_interaction_at: null,
+                created_at: new Date().toISOString(),
+                is_sample: false,
+              };
+              people = [...people, person];
+              peopleAdded.push(person);
+            }
+          }
+          return ok({ saved, count: saved.length, people_added: peopleAdded });
         }
 
         case "venn_update_memory": {
@@ -1389,6 +1988,7 @@ export function createMockBridge(): HostBridge {
                 display_name: req.sender_display_name,
                 since: new Date().toISOString(),
                 last_interaction_at: null,
+                is_sample: false,
                 bio: "Just joined Venn.",
                 interests: ["Hiking", "Photography"],
                 shared_memories: [],
@@ -1446,6 +2046,7 @@ export function createMockBridge(): HostBridge {
             interests: list(args.interests) ?? [],
             last_interaction_at: null,
             created_at: new Date().toISOString(),
+            is_sample: false,
           };
           people = [...people, person];
           return ok(person);
@@ -1500,6 +2101,7 @@ export function createMockBridge(): HostBridge {
               interests: c.interests,
               last_interaction_at: c.last_met_days_ago === null ? null : iso(-c.last_met_days_ago),
               created_at: new Date().toISOString(),
+              is_sample: false,
             }));
           if (imported.length === 0) return fail("INVALID_ARGUMENT: pick at least one person");
           people = [...people, ...imported];
@@ -1541,6 +2143,140 @@ export function createMockBridge(): HostBridge {
           if (!entry) return fail("NOT_FOUND: follow-up not found");
           followUps[entry[0]] = entry[1].filter((i) => i.follow_up_id !== args.follow_up_id);
           return ok({ done: true, follow_up_id: args.follow_up_id });
+        }
+
+        case "venn_load_sample_circle":
+          return ok(loadSampleCircle());
+
+        case "venn_remove_sample_circle":
+          return ok(removeSampleCircle());
+
+        case "venn_compare": {
+          const view = vennView(args);
+          return view ? ok(view) : fail("NOT_FOUND: friend not found");
+        }
+
+        case "venn_this_week":
+          return ok(thisWeekView());
+
+        case "venn_create_question_link": {
+          const view = askLinkView(args);
+          return typeof view === "string" ? fail(view) : ok(view);
+        }
+
+        case "venn_review_answers":
+          return ok(answersView());
+
+        case "venn_save_answers": {
+          const response = answerInbox.find((r) => r.response_id === args.response_id);
+          if (!response) return fail("NOT_FOUND: these answers were already handled");
+          const keys = new Set(Array.isArray(args.keys) ? args.keys.filter((k): k is string => typeof k === "string") : []);
+          const chosen = response.items.filter((i) => keys.has(i.key));
+          if (chosen.length === 0) return fail("INVALID_ARGUMENT: choose at least one answer to save");
+          let person = response.person_id ? people.find((p) => p.person_id === response.person_id) : undefined;
+          if (!person) {
+            const personName = text(args.name, 80) || response.name.trim();
+            if (!personName) return fail("INVALID_ARGUMENT: name is required");
+            person = {
+              person_id: nextId("p"),
+              name: personName,
+              relationship: null,
+              notes: null,
+              interests: [],
+              last_interaction_at: null,
+              created_at: new Date().toISOString(),
+              is_sample: false,
+            };
+            people = [...people, person];
+          }
+          const addedInterests: string[] = [];
+          let followUp: FollowUp | null = null;
+          for (const item of chosen) {
+            if (item.key === "into") {
+              const have = new Set(lower(person.interests));
+              for (const raw of item.answer.split(/[,;\n]/)) {
+                const interest = raw.trim().slice(0, 40);
+                if (!interest || have.has(interest.toLowerCase())) continue;
+                have.add(interest.toLowerCase());
+                addedInterests.push(interest.charAt(0).toUpperCase() + interest.slice(1));
+              }
+              person.interests = [...person.interests, ...addedInterests];
+            } else if (item.key === "ask") {
+              const created: FollowUp = { follow_up_id: nextId("fu"), text: `Ask about: ${item.answer}`.slice(0, 200), created_at: new Date().toISOString() };
+              const k = key("person", person.person_id);
+              followUps[k] = [...(followUps[k] ?? []), created];
+              followUp = created;
+            } else {
+              const line = `${item.key === "together" ? "Wants to" : "Loves"}: ${item.answer}`;
+              person.notes = person.notes ? `${person.notes}\n${line}` : line;
+            }
+          }
+          answerInbox = answerInbox.filter((r) => r.response_id !== response.response_id);
+          return ok({ saved: true, response_id: response.response_id, person: structuredClone(person), added_interests: addedInterests, follow_up: followUp });
+        }
+
+        case "venn_discard_answers": {
+          if (!answerInbox.some((r) => r.response_id === args.response_id)) return fail("NOT_FOUND: these answers were already handled");
+          answerInbox = answerInbox.filter((r) => r.response_id !== args.response_id);
+          return ok({ discarded: true, response_id: args.response_id });
+        }
+
+        case "venn_revoke_question_link": {
+          const link = questionLinks.find((l) => l.link_id === args.link_id);
+          if (!link) return fail("NOT_FOUND: link not found");
+          link.active = false;
+          return ok({ revoked: true, link_id: link.link_id });
+        }
+
+        case "venn_save_plan": {
+          const title = text(args.title, 120);
+          if (!title) return fail("INVALID_ARGUMENT: title is required");
+          let plannedFor: string | null = null;
+          if (typeof args.planned_for === "string") {
+            const when = new Date(args.planned_for);
+            if (Number.isNaN(when.getTime())) return fail("INVALID_ARGUMENT: planned_for must be an ISO date and time");
+            plannedFor = when.toISOString();
+          }
+          const plan: Plan = {
+            plan_id: nextId("plan"),
+            title,
+            details: text(args.details, 500) || null,
+            planned_for: plannedFor,
+            status: "planned",
+            members: planMembers(args),
+            created_at: new Date().toISOString(),
+          };
+          plans = [...plans, plan];
+          return ok(structuredClone(plan));
+        }
+
+        case "venn_list_plans": {
+          const open = openPlans();
+          return ok({ plans: structuredClone(open), count: open.length });
+        }
+
+        case "venn_complete_plan": {
+          const plan = plans.find((p) => p.plan_id === args.plan_id && p.status === "planned");
+          if (!plan) return fail("NOT_FOUND: plan not found");
+          plan.status = "done";
+          const occurred_at = new Date().toISOString();
+          let logged = 0;
+          for (const m of plan.members) {
+            const f = findFriend(m.kind === "person" ? { person_id: m.id } : { connection_id: m.id });
+            if (!f) continue;
+            const k = key(f.kind, f.id);
+            interactions[k] = [{ occurred_at, activity: plan.title }, ...(interactions[k] ?? [])];
+            if (f.kind === "connection") f.conn.last_interaction_at = occurred_at;
+            else f.person.last_interaction_at = occurred_at;
+            logged += 1;
+          }
+          return ok({ done: true, plan_id: plan.plan_id, logged });
+        }
+
+        case "venn_delete_plan": {
+          if (!plans.some((p) => p.plan_id === args.plan_id)) return fail("NOT_FOUND: plan not found");
+          plans = plans.filter((p) => p.plan_id !== args.plan_id);
+          return ok({ deleted: true, plan_id: args.plan_id });
         }
 
         default:

@@ -12,7 +12,6 @@ MCP resource URL (audience). Production uses app.auth.jwt_verifier instead.
 from __future__ import annotations
 
 import html
-import re
 import secrets
 import time
 import uuid
@@ -36,11 +35,13 @@ from app.branding import page
 from app.config import ALL_SCOPES, Settings
 from app.db.database import session_scope
 from app.models import DevOAuthClient, DevOAuthCode
+from app.services import user_service
+from app.web import session as web_session
 
 CODE_TTL_SECONDS = 300
 TXN_TTL_SECONDS = 600
-DEV_ISSUER_PREFIX = "dev"
-_USERNAME_RE = re.compile(r"^[a-z0-9][a-z0-9_.-]{1,31}$")
+DEV_ISSUER_PREFIX = web_session.DEV_ISSUER
+_USERNAME_RE = web_session.USERNAME_RE
 
 
 class DevOAuthProvider:
@@ -96,30 +97,63 @@ class DevOAuthProvider:
         return data["client_id"], AuthorizationParams.model_validate(data["params"])
 
     async def login_page(self, request: Request) -> Response:
-        """GET shows the form; POST issues an authorization code and redirects to the client."""
+        """The page ChatGPT sends the user to when they connect Venn.
+
+        ChatGPT and the website are two ways into one account, so this page links to an existing
+        account rather than quietly making a second one: someone already signed in on the website
+        is offered that account, and a username that has no account yet has to be confirmed.
+        """
+        need_passcode = bool(self.settings.dev_auth_passcode)
+        invalid = HTMLResponse(_page("This sign-in link is invalid or expired.", ""), status_code=400)
+
         if request.method == "GET":
             txn = request.query_params.get("txn", "")
             if not self._decode_txn(txn):
-                return HTMLResponse(_page("This sign-in link is invalid or expired.", ""), status_code=400)
-            return HTMLResponse(_page(None, txn, need_passcode=bool(self.settings.dev_auth_passcode)))
+                return invalid
+            signed_in = None
+            if request.query_params.get("switch") != "1":
+                signed_in = await anyio.to_thread.run_sync(self._web_account, request)
+            if signed_in:
+                return HTMLResponse(_continue_page(txn, *signed_in))
+            return HTMLResponse(_page(None, txn, need_passcode=need_passcode))
 
         form = await request.form()
         txn = str(form.get("txn", ""))
         decoded = self._decode_txn(txn)
         if not decoded:
-            return HTMLResponse(_page("This sign-in link is invalid or expired.", ""), status_code=400)
+            return invalid
         client_id, params = decoded
-        if self.settings.dev_auth_passcode and not secrets.compare_digest(
-            str(form.get("passcode", "")), self.settings.dev_auth_passcode
-        ):
-            return HTMLResponse(_page("Wrong passcode.", txn, need_passcode=True), status_code=401)
-        username = str(form.get("username", "")).strip().lower()
-        if not _USERNAME_RE.match(username):
-            return HTMLResponse(
-                _page("Username: 2-32 chars, letters/digits/._-", txn, bool(self.settings.dev_auth_passcode)),
-                status_code=400,
-            )
-        display = str(form.get("display_name", "")).strip()[:60] or username
+
+        if str(form.get("session", "")) == "1":
+            # "Continue as …": the account comes from the website session, never from the form.
+            signed_in = await anyio.to_thread.run_sync(self._web_account, request)
+            if not signed_in:
+                return HTMLResponse(_page("You are signed out. Sign in again.", txn, need_passcode), status_code=401)
+            username, display = signed_in
+        else:
+            passcode = str(form.get("passcode", ""))
+            if need_passcode and not secrets.compare_digest(passcode, self.settings.dev_auth_passcode or ""):
+                return HTMLResponse(_page("Wrong passcode.", txn, need_passcode=True), status_code=401)
+            username = str(form.get("username", "")).strip().lower()
+            if not _USERNAME_RE.match(username):
+                return HTMLResponse(
+                    _page("Username: 2-32 chars, letters/digits/._-", txn, need_passcode), status_code=400
+                )
+            wanted = str(form.get("display_name", "")).strip()[:60]
+            create = str(form.get("create", "")) == "1"
+
+            def _account() -> str | None:
+                with session_scope() as db:
+                    subject = web_session.dev_subject(username)
+                    user = web_session.find_user(db, subject)
+                    if user is None and create:
+                        user, _ = user_service.get_or_create_user(db, subject, wanted or username)
+                    return None if user is None else (user.display_name or username)
+
+            display = await anyio.to_thread.run_sync(_account)
+            if display is None:
+                # No account under this name: ask before making one.
+                return HTMLResponse(_create_page(txn, username, wanted, passcode if need_passcode else ""))
 
         code = secrets.token_urlsafe(32)
         auth_code = AuthorizationCode(
@@ -141,9 +175,21 @@ class DevOAuthProvider:
                 )
 
         await anyio.to_thread.run_sync(_store)
-        return RedirectResponse(
+        response = RedirectResponse(
             construct_redirect_uri(str(params.redirect_uri), code=code, state=params.state), status_code=302
         )
+        # Same account on the website: the browser that just signed in is signed in there too.
+        web_session.set_cookie(response, request, self.settings, username)
+        return response
+
+    def _web_account(self, request: Request) -> tuple[str, str] | None:
+        """(username, display name) of the account signed in on the website in this browser, if any."""
+        username = web_session.username_from(request, self.settings)
+        if not username:
+            return None
+        with session_scope() as db:
+            user = web_session.find_user(db, web_session.dev_subject(username))
+            return None if user is None else (username, user.display_name or username)
 
     # ------------------------------------------------------------------- codes
     async def load_authorization_code(
@@ -273,6 +319,9 @@ class DevOAuthProvider:
         raise TokenError(error="unsupported_grant_type", error_description="not supported")
 
 
+_DEV_NOTE = '<div class="note">Development sign-in. Not for production use.</div>'
+
+
 def _page(error: str | None, txn: str, need_passcode: bool = False) -> str:
     err = f'<p class="err" role="alert">{html.escape(error)}</p>' if error else ""
     passcode = (
@@ -285,11 +334,11 @@ def _page(error: str | None, txn: str, need_passcode: bool = False) -> str:
   <input type="hidden" name="txn" value="{html.escape(txn)}">
   <label>Username<input name="username" required pattern="[a-zA-Z0-9][a-zA-Z0-9_.-]{{1,31}}"
     placeholder="alex" autocomplete="username" autocapitalize="none" spellcheck="false" autofocus></label>
-  <label>Display name<input name="display_name" maxlength="60" placeholder="Alex" autocomplete="name"></label>
   {passcode}
   <button type="submit">Continue to ChatGPT</button>
 </form>
-<small>Pick any username. The same username always opens the same Venn account.</small>"""
+<small>Use the username you use on the Venn website. It opens the same account: what you saved there is
+here too.</small>"""
         if txn
         else ""
     )
@@ -297,6 +346,47 @@ def _page(error: str | None, txn: str, need_passcode: bool = False) -> str:
         "Sign in to Venn (development)",
         f"""<h1>Sign in to Venn</h1>
 <p>Connect ChatGPT to your Venn account.</p>
-<div class="note">Development sign-in. Not for production use.</div>
+{_DEV_NOTE}
 {err}{form}""",
+    )
+
+
+def _continue_page(txn: str, username: str, display: str) -> str:
+    """Shown when this browser is already signed in on the Venn website."""
+    safe_txn = html.escape(txn)
+    return page(
+        "Connect ChatGPT to Venn (development)",
+        f"""<h1>Connect ChatGPT to Venn</h1>
+<p>You are signed in as <strong>{html.escape(display)}</strong> (@{html.escape(username)}). ChatGPT will use
+this account, so everything you saved to Venn is there too.</p>
+{_DEV_NOTE}
+<form method="post" action="/dev/login">
+  <input type="hidden" name="txn" value="{safe_txn}">
+  <input type="hidden" name="session" value="1">
+  <button type="submit">Continue as {html.escape(display)}</button>
+</form>
+<small><a class="quiet" href="/dev/login?txn={safe_txn}&amp;switch=1">Use a different account</a></small>
+<small>Your ChatGPT chats and ChatGPT's own memory are not synced to Venn. Only what you approve is saved.</small>""",
+    )
+
+
+def _create_page(txn: str, username: str, display: str, passcode: str) -> str:
+    """Shown when the username has no Venn account yet: nothing is created without a second step."""
+    safe_txn = html.escape(txn)
+    return page(
+        "Create a Venn account (development)",
+        f"""<h1>No Venn account called “{html.escape(username)}” yet</h1>
+<p>If you already use Venn on the website, go back and enter that username so ChatGPT opens the same account.
+Otherwise you can create a new one.</p>
+{_DEV_NOTE}
+<form method="post" action="/dev/login">
+  <input type="hidden" name="txn" value="{safe_txn}">
+  <input type="hidden" name="username" value="{html.escape(username)}">
+  <input type="hidden" name="passcode" value="{html.escape(passcode)}">
+  <input type="hidden" name="create" value="1">
+  <label>Your name<input name="display_name" maxlength="60" value="{html.escape(display)}" placeholder="Alex"
+    autocomplete="name" autofocus></label>
+  <button type="submit">Create account and continue</button>
+</form>
+<small><a class="quiet" href="/dev/login?txn={safe_txn}&amp;switch=1">Back</a></small>""",
     )

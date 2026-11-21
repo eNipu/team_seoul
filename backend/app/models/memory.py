@@ -22,8 +22,11 @@ class Memory(Base):
     tags: Mapped[list] = mapped_column(JSONType, default=list, nullable=False)
     visibility: Mapped[str] = mapped_column(String(32), default="PRIVATE", nullable=False)
     approved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    # Where the approved memory came from: NULL = this conversation, "chatgpt_memory" = imported.
+    # Where the approved memory came from: NULL = the user said or typed it, "chatgpt_memory" = imported,
+    # "sample" = part of the made-up sample circle.
     source: Mapped[str | None] = mapped_column(String(32))
+    # Names of the people this memory is about (NULL = nobody in particular).
+    people: Mapped[list | None] = mapped_column(JSONType)
     created_at: Mapped[datetime] = created_at_col()
     updated_at: Mapped[datetime] = updated_at_col()
 

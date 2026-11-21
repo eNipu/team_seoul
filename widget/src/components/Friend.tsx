@@ -59,6 +59,14 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
     void action.run("prep", () => nav.openView("venn_meetup_brief", arg));
   }
 
+  function compare() {
+    void action.run("compare", () => nav.openView("venn_compare", arg));
+  }
+
+  function ask() {
+    void action.run("ask", () => nav.openView("venn_create_question_link", { person_id: data.id }));
+  }
+
   function quiz() {
     void action.run("quiz", () => nav.openView("venn_start_quiz", { connection_id: data.id }));
   }
@@ -200,6 +208,10 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
             {action.busy === "ideas" ? "Loading…" : "Get ideas for time together"}
           </button>
           <div className="tool-grid" role="group" aria-label={`More with ${details.name}`}>
+            <button type="button" className="tool" disabled={busy} onClick={compare}>
+              <Icon name="venn" />
+              {action.busy === "compare" ? "Loading…" : "Common ground"}
+            </button>
             <button
               type="button"
               className="tool"
@@ -225,7 +237,12 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
               <Icon name="note" />
               {action.busy === "prep" ? "Loading…" : "Prep for a meetup"}
             </button>
-            {!isPerson && (
+            {isPerson ? (
+              <button type="button" className="tool" disabled={busy} onClick={ask}>
+                <Icon name="link" />
+                {action.busy === "ask" ? "Creating…" : "Ask them a few questions"}
+              </button>
+            ) : (
               <button type="button" className="tool" disabled={busy} onClick={quiz}>
                 <Icon name="dice" />
                 {action.busy === "quiz" ? "Loading…" : "Quiz"}

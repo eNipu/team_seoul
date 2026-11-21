@@ -8,13 +8,15 @@ interface Props {
   /** Event title, already including the friend name(s). */
   title: string;
   details: string;
+  /** Told the start time once the user changes it or opens the calendar; null when the field is unusable. */
+  onPick?: (start: Date | null) => void;
   onClose: () => void;
 }
 
 type State = "idle" | "opening" | "opened" | "blocked";
 
 /** Inline date-time picker that opens a prefilled Google Calendar event. Venn never creates the event itself. */
-export default function CalendarPicker({ bridge, title, details, onClose }: Props) {
+export default function CalendarPicker({ bridge, title, details, onPick, onClose }: Props) {
   const id = useId();
   const [value, setValue] = useState(() => toLocalInputValue(nextSaturdayAt11()));
   const [state, setState] = useState<State>("idle");
@@ -25,6 +27,7 @@ export default function CalendarPicker({ bridge, title, details, onClose }: Prop
     e.preventDefault();
     if (!url || state === "opening") return;
     setState("opening");
+    onPick?.(start);
     setState((await bridge.openLink(url)) ? "opened" : "blocked");
   }
 
@@ -40,6 +43,7 @@ export default function CalendarPicker({ bridge, title, details, onClose }: Prop
           onChange={(e) => {
             setValue(e.target.value);
             setState("idle");
+            onPick?.(parseLocalInputValue(e.target.value));
           }}
         />
       </label>

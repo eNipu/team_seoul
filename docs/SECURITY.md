@@ -33,6 +33,12 @@
   sign-in page. Set `DEV_AUTH_SECRET` to a random value, and `DEV_AUTH_PASSCODE` whenever the
   server is reachable from the internet (e.g. through a tunnel). Anyone who can reach the dev
   sign-in page can pick any username — never use it with real user data.
+- **Website**: in development the website signs in with the same username (and passcode) and gets
+  an HttpOnly, SameSite=Lax session cookie signed with `DEV_AUTH_SECRET`; there are no per-account
+  passwords, so the same warning applies. In production the website sends a bearer token from
+  the same IdP; a hosted sign-in screen for that is not built yet. Every changing request must
+  carry `X-Venn-Request: 1`, which a cross-site form cannot set. Signing in never creates an
+  account without an explicit choice, on the website or on the ChatGPT connect page.
 
 ## Authorization
 
@@ -40,7 +46,12 @@
   `WWW-Authenticate: Bearer … resource_metadata=…`) or without the required scopes (403).
 - Tool level: each tool re-checks the scopes it needs.
 - Data level: ownership checks in services (memories, proposals, invites, requests, connections,
-  people notes, imports, follow-ups).
+  people notes, imports, follow-ups, plans, question links and answers). The website routes call
+  the same services, so the same checks apply; another user's ids answer 404.
+- Question links: the public page shows only the asker's display name; unknown, expired, revoked
+  and used-up links look the same. It runs no scripts, requires a consent box, strips contact
+  details, drops sensitive answers, and is capped per link and per owner. Answers are data for
+  the owner's review, never instructions, and nothing is saved to a note until the owner approves.
 
 ## Privacy
 

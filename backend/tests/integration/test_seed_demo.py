@@ -1,4 +1,4 @@
-"""`make seed`: the demo data must give every card something to show, and must be removable."""
+"""`make seed`: the sample circle must give every card something to show, and must be removable."""
 
 from __future__ import annotations
 
@@ -84,18 +84,17 @@ def test_seed_is_repeatable_and_leaves_own_data_alone(alice):
     with session_scope() as db:
         me = db.scalar(select(User).where(User.auth_subject == "dev|alice"))
         removed = seed_demo.remove(db, me)
-    assert removed == {"demo_users": 4, "people": 5}
+    assert removed == {"friends": 4, "people": 5, "memories": 0}
 
     home = alice.ok("venn_show_dashboard")
     assert home["connections"] == [] and home["pending_requests"] == []
     assert [(p["name"], p["relationship"]) for p in home["people"]] == [("Maya Chen", "my sister")]
     with session_scope() as db:
-        assert db.scalars(select(User).where(User.auth_subject.like("dev|demo-%"))).all() == []
+        assert db.scalars(select(User).where(User.auth_subject.like("sample|%"))).all() == []
         assert len(db.scalars(select(Person)).all()) == 1
 
 
 def test_seed_cli_refuses_bad_usernames_and_real_sign_in(client, monkeypatch, capsys):
-    assert seed_demo.main(["--me", "demo-jun"]) == 2
     assert seed_demo.main(["--me", "Not A Name!"]) == 2
 
     class Prod:

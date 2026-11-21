@@ -2,14 +2,13 @@ import { useState } from "react";
 import { friendArg, parseLogInteraction, type ActivityIdeasViewData } from "../types";
 import { ActionError, Avatar, ChatStatus, EmptyNote, Ring, useAction, useChatPrompt, type ViewProps } from "./common";
 import { Icon } from "./icons";
-import CalendarPicker from "./CalendarPicker";
+import { PlanTools } from "./PlanTools";
 
 export default function ActivityIdeas({ data, bridge }: ViewProps<ActivityIdeasViewData>) {
   const action = useAction();
   const chat = useChatPrompt(bridge);
   const [logged, setLogged] = useState<number[]>([]);
   const [planned, setPlanned] = useState<number | null>(null);
-  const [calendar, setCalendar] = useState<number | null>(null);
 
   const percent = Math.round(data.match_score * 100);
   const busy = action.busy !== null;
@@ -104,7 +103,13 @@ export default function ActivityIdeas({ data, bridge }: ViewProps<ActivityIdeasV
                     {s.suggested_action}
                   </p>
                 )}
-                <div className="card__actions">
+                <PlanTools
+                  bridge={bridge}
+                  title={s.title}
+                  details={s.description}
+                  calendarTitle={data.display_name ? `${s.title} with ${data.display_name}` : s.title}
+                  friends={[{ kind: data.kind, id: data.id }]}
+                >
                   <button
                     type="button"
                     className="btn btn--primary btn--small"
@@ -123,24 +128,7 @@ export default function ActivityIdeas({ data, bridge }: ViewProps<ActivityIdeasV
                       {action.busy === `log-${i}` ? "Logging…" : "We did this"}
                     </button>
                   )}
-                  <button
-                    type="button"
-                    className="btn btn--ghost btn--small"
-                    aria-expanded={calendar === i}
-                    onClick={() => setCalendar(calendar === i ? null : i)}
-                  >
-                    <Icon name="calendar" size={16} />
-                    Add to calendar
-                  </button>
-                </div>
-                {calendar === i && (
-                  <CalendarPicker
-                    bridge={bridge}
-                    title={data.display_name ? `${s.title} with ${data.display_name}` : s.title}
-                    details={s.description}
-                    onClose={() => setCalendar(null)}
-                  />
-                )}
+                </PlanTools>
                 {planned === i && <ChatStatus state={chat.state} prompt={chat.prompt} />}
               </li>
             );
