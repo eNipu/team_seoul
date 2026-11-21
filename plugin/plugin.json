@@ -15,7 +15,7 @@
       "interface": {
         "displayName": "Heldly",
         "shortDescription": "Remember what matters and stay close to friends.",
-        "longDescription": "Heldly keeps a private, user-approved memory of your interests, preferences and social goals, lets you connect with friends through invite codes, and suggests ways to reconnect. Nothing is saved without your approval, and Heldly never contacts anyone on your behalf.",
+        "longDescription": "Heldly keeps a private, user-approved memory of what matters to you and the people you care about. Set up in three short steps: tell Heldly about you (or bring over what ChatGPT already remembers), add your people, and connect with friends through an invite code, link or QR. Then get ideas for time together, a brief before you meet, nudges when it has been a while, and a quiz on how well you know your friends. Nothing is saved without your approval, and Heldly never contacts anyone on your behalf.",
         "developerName": "Heldly",
         "category": "Lifestyle",
         "capabilities": ["Interactive", "Write"],
@@ -23,9 +23,9 @@
         "privacyPolicyURL": "https://heldly.example.com/privacy",
         "termsOfServiceURL": "https://heldly.example.com/terms",
         "defaultPrompt": [
-          "Set up my Heldly profile",
-          "Show my Heldly dashboard",
-          "Who should I reconnect with this week?"
+          "Set up Heldly",
+          "Who should I reconnect with this week?",
+          "What can Heldly do?"
         ],
         "brandColor": "#E86A4A",
         "composerIcon": "./assets/icon.svg",

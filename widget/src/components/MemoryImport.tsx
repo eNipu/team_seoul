@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { buildMemoryImportPrompt } from "../memoryImport";
 import { plural, type MemoryImportViewData } from "../types";
 import { EmptyNote, copyText, type ViewProps } from "./common";
+import { Icon, Illustration } from "./icons";
 
 type Phase = "choosing" | "sending" | "sent" | "manual";
 
@@ -73,23 +74,29 @@ export default function MemoryImport({ data, bridge }: ViewProps<MemoryImportVie
 
   return (
     <section className="panel">
-      <h2>Bring your ChatGPT memory with you</h2>
-      <p className="muted small lead">
-        Choose what ChatGPT should look for. It lists what it remembers in the chat first — nothing reaches Heldly until you pick
-        what to keep.
-      </p>
+      <div className="hero">
+        <Illustration name="import" />
+        <h2>Bring your ChatGPT memory with you</h2>
+        <p className="muted small">
+          Choose what ChatGPT should look for. It lists what it remembers in the chat first — nothing reaches Heldly until you
+          pick what to keep.
+        </p>
+      </div>
       {data.imported_count > 0 && (
-        <p className="muted small">{plural(data.imported_count, "memory", "memories")} already imported from ChatGPT.</p>
+        <p className="hint hint--ok">
+          <Icon name="check" size={16} />
+          <span>{plural(data.imported_count, "memory", "memories")} already imported from ChatGPT.</span>
+        </p>
       )}
 
       {data.areas.length === 0 ? (
-        <EmptyNote icon="🫙" title="Nothing to choose from">
+        <EmptyNote art="search" title="Nothing to choose from">
           Heldly didn't offer any areas to import. Ask Heldly to try again.
         </EmptyNote>
       ) : phase === "sent" ? (
         <div className="handoff handoff--ok">
           <h3 ref={resultRef} tabIndex={-1} role="status">
-            <span aria-hidden="true">💬</span> Check the chat
+            <Icon name="chat" /> Check the chat
           </h3>
           <p className="small">
             ChatGPT is listing what it remembers about you below. Tell it which ones to keep — for example “keep all” or “all
@@ -112,7 +119,8 @@ export default function MemoryImport({ data, bridge }: ViewProps<MemoryImportVie
           </label>
           <div className="button-row">
             <button type="button" className="btn btn--primary" onClick={() => void copy()}>
-              {copied ? "Copied ✓" : "Copy"}
+              <Icon name={copied ? "check" : "copy"} size={18} />
+              {copied ? "Copied" : "Copy"}
             </button>
             <button type="button" className="btn" onClick={chooseAgain}>
               Choose again
@@ -144,10 +152,16 @@ export default function MemoryImport({ data, bridge }: ViewProps<MemoryImportVie
             </ul>
           </fieldset>
 
-          {data.always_excluded && <p className="muted small">{data.always_excluded}</p>}
+          {data.always_excluded && (
+            <p className="trust">
+              <Icon name="shield" size={16} />
+              <span>{data.always_excluded}</span>
+            </p>
+          )}
 
           <div className="sticky-bar">
             <button type="button" className="btn btn--primary btn--block" disabled={busy || count === 0} onClick={() => void preview()}>
+              <Icon name="chat" size={18} />
               {busy ? "Asking ChatGPT…" : "Preview my ChatGPT memory"}
             </button>
           </div>

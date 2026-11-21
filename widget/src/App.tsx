@@ -15,6 +15,8 @@ import PeopleSearch from "./components/PeopleSearch";
 import GroupPlan from "./components/GroupPlan";
 import Brief from "./components/Brief";
 import Quiz from "./components/Quiz";
+import Help from "./components/Help";
+import { BrandMark, Icon, Illustration } from "./components/icons";
 import ErrorBanner from "./components/ErrorBanner";
 import { Spinner, type Nav } from "./components/common";
 
@@ -26,7 +28,7 @@ interface Entry {
   key: number;
 }
 
-type SkeletonKind = "dashboard" | "profile" | "ticket" | "cards";
+type SkeletonKind = "dashboard" | "profile" | "ticket" | "cards" | "hero" | "rows";
 
 function skeletonFor(hint: string | null | undefined): SkeletonKind {
   switch (hint) {
@@ -36,7 +38,6 @@ function skeletonFor(hint: string | null | undefined): SkeletonKind {
     case "heldly_view_friend":
     case "friend":
     case "friend_person":
-    case "welcome":
     case "heldly_meetup_brief":
     case "brief":
     case "brief_person":
@@ -44,6 +45,20 @@ function skeletonFor(hint: string | null | undefined): SkeletonKind {
     case "heldly_create_invite":
     case "invite":
       return "ticket";
+    case "heldly_onboard":
+    case "welcome":
+    case "heldly_import_chatgpt_memory":
+    case "memory_import":
+      return "hero";
+    case "heldly_help":
+    case "help":
+    case "heldly_reconnection_suggestions":
+    case "reconnect":
+    case "heldly_find_people":
+    case "people_search":
+    case "heldly_preview_people_import":
+    case "people_import":
+      return "rows";
     default:
       return "cards";
   }
@@ -62,6 +77,8 @@ function refreshCall(view: ViewData): { tool: string; args: Record<string, unkno
       return view.id ? { tool: "heldly_meetup_brief", args: friendArg(view.kind, view.id) } : null;
     case "people_search":
       return view.query ? { tool: "heldly_find_people", args: { query: view.query } } : null;
+    case "help":
+      return { tool: "heldly_help", args: {} };
     default:
       return null;
   }
@@ -224,19 +241,45 @@ export default function App() {
   const showSkeleton = loading && !error;
   const top = stack.length > 0 ? stack[stack.length - 1] : null;
 
+  const [openingHelp, setOpeningHelp] = useState(false);
+  const openHelp = useCallback(async () => {
+    setOpeningHelp(true);
+    let message: string | null;
+    try {
+      message = await openView("heldly_help", {});
+    } catch (e) {
+      message = e instanceof Error ? e.message : "Heldly couldn't open help.";
+    }
+    setOpeningHelp(false);
+    if (message) setError(message);
+  }, [openView]);
+  const showHelp = bridge !== null && !showSkeleton && top?.view.view !== "help";
+
   return (
     <div className="heldly">
       <header className="heldly__header">
         {canGoBack && !showSkeleton && (
-          <button type="button" className="btn btn--ghost btn--small back" onClick={back}>
-            <span aria-hidden="true">←</span> Back
+          <button type="button" className="icon-btn back" onClick={back} aria-label="Back" title="Back">
+            <Icon name="arrow-left" />
           </button>
         )}
-        <span className="logo" aria-hidden="true">♡</span>
+        <BrandMark />
         <span className="heldly__brand">Heldly</span>
         <span className="heldly__spacer" />
-        {refreshing && <Spinner label="Refreshing" />}
-        {bridge?.isMock && <span className="badge badge--demo">Demo mode</span>}
+        {(refreshing || openingHelp) && <Spinner label={openingHelp ? "Opening help" : "Refreshing"} />}
+        {bridge?.isMock && <span className="badge badge--demo">Demo</span>}
+        {showHelp && (
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={() => void openHelp()}
+            disabled={openingHelp}
+            aria-label="Help"
+            title="Help"
+          >
+            <Icon name="help" />
+          </button>
+        )}
       </header>
 
       {error && <ErrorBanner message={error} onDismiss={() => setError(null)} />}
@@ -288,6 +331,8 @@ function renderView(
       return <Brief key={key} data={view} bridge={bridge} nav={nav} />;
     case "quiz":
       return <Quiz key={key} data={view} bridge={bridge} nav={nav} />;
+    case "help":
+      return <Help key={key} data={view} bridge={bridge} nav={nav} />;
   }
 }
 
@@ -296,7 +341,7 @@ function Skeleton({ kind }: { kind: SkeletonKind }) {
     <div className="skeleton" aria-busy="true" aria-label="Loading">
       {kind === "dashboard" && (
         <>
-          <div className="skeleton__row">
+          <div className="skeleton__row skeleton__row--tabs">
             <div className="skeleton__pill" />
             <div className="skeleton__pill" />
             <div className="skeleton__pill" />
@@ -308,9 +353,37 @@ function Skeleton({ kind }: { kind: SkeletonKind }) {
               <div className="skeleton__line skeleton__line--short" />
             </div>
           </div>
+          <div className="skeleton__row skeleton__row--tiles">
+            <div className="skeleton__block skeleton__block--tile" />
+            <div className="skeleton__block skeleton__block--tile" />
+            <div className="skeleton__block skeleton__block--tile" />
+          </div>
           <div className="skeleton__line" />
           <div className="skeleton__line skeleton__line--short" />
+        </>
+      )}
+      {kind === "hero" && (
+        <>
+          <div className="skeleton__block skeleton__block--hero" />
+          <div className="skeleton__line skeleton__line--title skeleton__line--center" />
+          <div className="skeleton__line skeleton__line--short skeleton__line--center" />
           <div className="skeleton__block" />
+          <div className="skeleton__pill skeleton__pill--block" />
+        </>
+      )}
+      {kind === "rows" && (
+        <>
+          <div className="skeleton__line skeleton__line--title" />
+          <div className="skeleton__line skeleton__line--short" />
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="skeleton__row">
+              <div className="skeleton__circle" />
+              <div className="skeleton__stack">
+                <div className="skeleton__line skeleton__line--title" />
+                <div className="skeleton__line" />
+              </div>
+            </div>
+          ))}
         </>
       )}
       {kind === "profile" && (
@@ -357,7 +430,7 @@ function Skeleton({ kind }: { kind: SkeletonKind }) {
 function EmptyState({ demo }: { demo: boolean }) {
   return (
     <div className="panel empty">
-      <div className="empty__art" aria-hidden="true">☕</div>
+      <Illustration name="chat" />
       <p className="empty__title">Hi, I'm Heldly.</p>
       <p className="muted">Ask Heldly to get to know you, remember something, or show your dashboard</p>
       {demo && (

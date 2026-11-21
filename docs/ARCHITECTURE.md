@@ -22,15 +22,16 @@ ChatGPT ──(MCP over streamable HTTP, OAuth bearer)──▶ FastAPI app
 | `.agents/plugins/marketplace.json` | Repo-local marketplace for installing the plugin during development |
 | `backend/app/main.py` | `create_app()` — FastAPI app, mounts the MCP Starlette app, health checks, invite landing page (`/i/{code}`), lifespan |
 | `backend/app/invite_page.py` | The static page behind an invite link / QR code |
+| `backend/app/branding.py` | Shared look (mark, CSS, page shell) of the server-rendered pages: invite page and dev sign-in. No scripts or external requests |
 | `backend/app/mcp/server.py` | Builds `MCPServer` with the `Apps` extension, widget resource and auth |
-| `backend/app/mcp/tools.py` | All 38 MCP tools (thin: auth → service → result) |
+| `backend/app/mcp/tools.py` | All 39 MCP tools (thin: auth → service → result) |
 | `backend/app/mcp/common.py` | Scope constants, annotations, `run_as_user`, result/error shaping |
 | `backend/app/auth/` | `JWTTokenVerifier` (production), `DevOAuthProvider` (development), identity mapping |
-| `backend/app/services/` | Business logic: users, memories (+ search), social (invites/connections/blocking), people (notes on friends not on Heldly, import review), relationship (friend view, activity ideas, reconnection, "who do I know who…" search, group plans, meetup brief/recap, follow-ups), quiz, dashboard, analytics, consent |
+| `backend/app/services/` | Business logic: users, memories (+ search), social (invites/connections/blocking), people (notes on friends not on Heldly, import review), relationship (friend view, activity ideas, reconnection, "who do I know who…" search, group plans, meetup brief/recap, follow-ups), quiz, dashboard (home, set-up steps, help), analytics, consent |
 | `backend/scripts/seed_demo.py` | `make seed me=<dev username>` — demo friends for a development account |
 | `backend/app/ai/extraction.py` | Memory candidate extraction (OpenAI structured output, heuristic fallback) and sensitive-data filter |
 | `backend/app/models/` | SQLAlchemy 2 models; `backend/migrations/` Alembic |
-| `widget/` | React + Vite single-file bundle rendered by ChatGPT (memory review, home, invite, friend, activity ideas, reconnect, people import, people search, group plan, meetup brief, quiz) |
+| `widget/` | React + Vite single-file bundle rendered by ChatGPT (memory review, home with set-up checklist, help, invite, friend, activity ideas, reconnect, people import, people search, group plan, meetup brief, quiz) |
 
 ## Request flow
 
@@ -50,10 +51,10 @@ User ids are **never** taken from tool arguments.
 
 - One HTML resource `ui://heldly/app-v4.html` (`text/html;profile=mcp-app`), built from
   `widget/` into a single file and served from `widget/dist/index.html` (fallback page if missing).
-- Twelve *render* tools are bound to it via `_meta.ui.resourceUri`; each result carries a `view`
+- Thirteen *render* tools are bound to it via `_meta.ui.resourceUri`; each result carries a `view`
   discriminator the widget switches on: `heldly_propose_memories` (`memory_review`),
   `heldly_import_chatgpt_memory` (`memory_import`),
-  `heldly_show_dashboard` (`dashboard`, or `welcome` for an empty account),
+  `heldly_show_dashboard` (`dashboard`, or `welcome` for an empty account), `heldly_help` (`help`),
   `heldly_create_invite` (`invite`), `heldly_view_friend` (`friend`), `heldly_suggest_activity`
   (`activity_ideas`), `heldly_reconnection_suggestions` (`reconnect`),
   `heldly_propose_people_import` (`people_import`), `heldly_find_people` (`people_search`),

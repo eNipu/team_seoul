@@ -32,6 +32,7 @@ from sqlalchemy import delete, select
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, RedirectResponse, Response
 
+from app.branding import page
 from app.config import ALL_SCOPES, Settings
 from app.db.database import session_scope
 from app.models import DevOAuthClient, DevOAuthCode
@@ -273,24 +274,29 @@ class DevOAuthProvider:
 
 
 def _page(error: str | None, txn: str, need_passcode: bool = False) -> str:
-    err = f'<p class="err">{html.escape(error)}</p>' if error else ""
-    passcode = '<label>Dev passcode<input name="passcode" type="password" required></label>' if need_passcode else ""
+    err = f'<p class="err" role="alert">{html.escape(error)}</p>' if error else ""
+    passcode = (
+        '<label>Dev passcode<input name="passcode" type="password" required autocomplete="off"></label>'
+        if need_passcode
+        else ""
+    )
     form = (
         f"""<form method="post" action="/dev/login">
   <input type="hidden" name="txn" value="{html.escape(txn)}">
   <label>Username<input name="username" required pattern="[a-zA-Z0-9][a-zA-Z0-9_.-]{{1,31}}"
-    placeholder="alex"></label>
-  <label>Display name<input name="display_name" maxlength="60" placeholder="Alex"></label>
+    placeholder="alex" autocomplete="username" autocapitalize="none" spellcheck="false" autofocus></label>
+  <label>Display name<input name="display_name" maxlength="60" placeholder="Alex" autocomplete="name"></label>
   {passcode}
   <button type="submit">Continue to ChatGPT</button>
-</form>"""
+</form>
+<small>Pick any username. The same username always opens the same Heldly account.</small>"""
         if txn
         else ""
     )
-    return f"""<!doctype html><html><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><title>Heldly dev sign-in</title>
-<style>body{{font-family:system-ui;max-width:420px;margin:48px auto;padding:0 16px;color:#222}}
-label{{display:block;margin:12px 0}}input{{display:block;width:100%;padding:8px;margin-top:4px;box-sizing:border-box}}
-button{{padding:10px 16px;background:#e86a4a;color:#fff;border:0;border-radius:8px;font-size:16px}}
-.err{{color:#b00020}}.warn{{background:#fff4e5;padding:8px;border-radius:6px;font-size:14px}}</style></head>
-<body><h1>Heldly</h1><p class="warn">Development sign-in. Not for production use.</p>{err}{form}</body></html>"""
+    return page(
+        "Sign in to Heldly (development)",
+        f"""<h1>Sign in to Heldly</h1>
+<p>Connect ChatGPT to your Heldly account.</p>
+<div class="note">Development sign-in. Not for production use.</div>
+{err}{form}""",
+    )

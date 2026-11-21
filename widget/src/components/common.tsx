@@ -1,9 +1,10 @@
 // Small shared building blocks used by every view.
 
-import { useCallback, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { HostBridge } from "../mcp/client";
 import { LIMITS } from "../types";
 import ErrorBanner from "./ErrorBanner";
+import { Icon, Illustration, type IllustrationName } from "./icons";
 
 /** In-widget navigation, provided by App. */
 export interface Nav {
@@ -126,7 +127,12 @@ export function useChatPrompt(bridge: HostBridge) {
       sending.current = true;
       setPrompt(text);
       setState("sending");
-      const ok = await bridge.sendMessage(text);
+      let ok = false;
+      try {
+        ok = await bridge.sendMessage(text);
+      } catch {
+        ok = false;
+      }
       sending.current = false;
       setState(ok ? "sent" : "unavailable");
     },
@@ -140,7 +146,7 @@ export function ChatStatus({ state, prompt }: { state: ChatState; prompt: string
   if (state === "sent") {
     return (
       <p className="hint hint--ok" role="status">
-        <span aria-hidden="true">💬</span> Sent to the chat. Heldly will pick it up there.
+        <Icon name="chat" size={16} /> Sent to the chat. Heldly will pick it up there.
       </p>
     );
   }
@@ -218,14 +224,65 @@ export function Spinner({ label }: { label?: string }) {
   return <span className="spinner" role={label ? "status" : undefined} aria-label={label} aria-hidden={label ? undefined : true} />;
 }
 
-export function EmptyNote({ icon, title, children }: { icon: string; title: string; children?: ReactNode }) {
+/** Inline empty state: a spot illustration, a title and one line of guidance. */
+export function EmptyNote({ art, title, children }: { art: IllustrationName; title: string; children?: ReactNode }) {
   return (
     <div className="empty empty--inline">
-      <div className="empty__art" aria-hidden="true">
-        {icon}
-      </div>
+      <Illustration name={art} size="sm" />
       <p className="empty__title">{title}</p>
       {children && <p className="muted small">{children}</p>}
+    </div>
+  );
+}
+
+/** "Copy" button with a short-lived "Copied" state. Reports a blocked clipboard through `onBlocked`. */
+export function CopyButton({ text, className = "btn btn--small", onBlocked }: { text: string; className?: string; onBlocked?: () => void }) {
+  const [copied, setCopied] = useState(false);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  async function copy() {
+    const ok = await copyText(text);
+    window.clearTimeout(timer.current);
+    setCopied(ok);
+    if (ok) timer.current = window.setTimeout(() => setCopied(false), 2000);
+    else onBlocked?.();
+  }
+
+  return (
+    <>
+      <button type="button" className={className} onClick={() => void copy()}>
+        <Icon name={copied ? "check" : "copy"} size={16} />
+        {copied ? "Copied" : "Copy"}
+      </button>
+      <span className="sr-only" role="status">
+        {copied ? "Copied to clipboard" : ""}
+      </span>
+    </>
+  );
+}
+
+/**
+ * Shown when the host refused a chat message: the text itself, ready to copy.
+ * The text sits in a read-only field so it can still be selected when the clipboard is blocked.
+ */
+export function ChatFallback({ text }: { text: string }) {
+  const field = useRef<HTMLInputElement | null>(null);
+  const [blocked, setBlocked] = useState(false);
+  return (
+    <div className="fallback" role="status">
+      <label className="fallback__label">
+        <span className="small">{blocked ? "Press Ctrl/Cmd+C to copy, then paste it in the chat." : "Couldn't post to the chat from here. Paste this in the chat:"}</span>
+        <input ref={field} className="fallback__text" readOnly value={text} onFocus={(e) => e.target.select()} />
+      </label>
+      <CopyButton
+        text={text}
+        onBlocked={() => {
+          setBlocked(true);
+          field.current?.focus();
+          field.current?.select();
+        }}
+      />
     </div>
   );
 }
@@ -236,5 +293,32 @@ export function SectionTitle({ children, count }: { children: ReactNode; count?:
       <span>{children}</span>
       {count !== undefined && <span className="count">{count}</span>}
     </h3>
+  );
+}
+
+/**
+ * Small ring gauge with its value written in the middle. Decorative: callers
+ * state the same value in text next to it. Only ever fed real payload numbers.
+ */
+export function Ring({ ratio, label, size = 52 }: { ratio: number; label: string; size?: number }) {
+  const r = 20;
+  const c = 2 * Math.PI * r;
+  const clamped = Number.isFinite(ratio) ? Math.min(1, Math.max(0, ratio)) : 0;
+  return (
+    <span className="ring-gauge" style={{ width: size, height: size }} aria-hidden="true">
+      <svg viewBox="0 0 48 48" width={size} height={size} focusable="false">
+        <circle className="ring-gauge__track" cx="24" cy="24" r={r} />
+        <circle
+          className="ring-gauge__value"
+          cx="24"
+          cy="24"
+          r={r}
+          strokeDasharray={c}
+          strokeDashoffset={c * (1 - clamped)}
+          transform="rotate(-90 24 24)"
+        />
+      </svg>
+      <span className="ring-gauge__label">{label}</span>
+    </span>
   );
 }

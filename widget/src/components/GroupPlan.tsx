@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { joinNames, type GroupPlanViewData } from "../types";
 import { Avatar, ChatStatus, EmptyNote, SectionTitle, useChatPrompt, type ViewProps } from "./common";
+import { Icon } from "./icons";
 import CalendarPicker from "./CalendarPicker";
 
 const firstName = (name: string) => name.trim().split(/\s+/)[0] || name;
@@ -37,7 +38,7 @@ export default function GroupPlan({ data, bridge }: ViewProps<GroupPlanViewData>
         {data.common_to_all.length > 0 ? (
           <>
             <span className="spotlight__label">
-              <span aria-hidden="true">✨ </span>Everyone's into
+              <Icon name="sparkle" size={16} /> Everyone's into
             </span>
             <div className="chips">
               {data.common_to_all.map((s, i) => (
@@ -81,7 +82,7 @@ export default function GroupPlan({ data, bridge }: ViewProps<GroupPlanViewData>
 
       <SectionTitle count={data.suggestions.length}>Ideas for the group</SectionTitle>
       {data.suggestions.length === 0 ? (
-        <EmptyNote icon="🌱" title="No ideas yet">
+        <EmptyNote art="ideas" title="No ideas yet">
           Add a few interests for each friend and ask again.
         </EmptyNote>
       ) : (
@@ -93,8 +94,8 @@ export default function GroupPlan({ data, bridge }: ViewProps<GroupPlanViewData>
               {s.grounded_in.length > 0 && <p className="muted small">Based on: {s.grounded_in.join(", ")}</p>}
               {s.suggested_action && (
                 <p className="next-step">
-                  <span aria-hidden="true">→ </span>
-                  {s.suggested_action}
+                  <Icon name="arrow-right" size={16} />
+                  <span>{s.suggested_action}</span>
                 </p>
               )}
               <div className="card__actions">
@@ -104,6 +105,7 @@ export default function GroupPlan({ data, bridge }: ViewProps<GroupPlanViewData>
                   disabled={chat.state === "sending"}
                   onClick={() => plan(i, s.title)}
                 >
+                  <Icon name="chat" size={16} />
                   {chat.state === "sending" && planned === i ? "Asking…" : "Plan it"}
                 </button>
                 <button
@@ -112,7 +114,7 @@ export default function GroupPlan({ data, bridge }: ViewProps<GroupPlanViewData>
                   aria-expanded={calendar === i}
                   onClick={() => setCalendar(calendar === i ? null : i)}
                 >
-                  <span aria-hidden="true">📅</span> Add to calendar
+                  <Icon name="calendar" size={16} /> Add to calendar
                 </button>
               </div>
               {calendar === i && (

@@ -24,7 +24,7 @@ Annotations: **R** read-only, **W** write, **D** destructive (ChatGPT asks for c
 **UI** = renders the widget (`_meta.ui.resourceUri = ui://heldly/app-v4.html`); the result's
 `view` field tells the widget which card to show.
 
-38 tools, 12 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Heldly) or
+39 tools, 13 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Heldly) or
 `person_id` (a private note about someone who is not); results name it as `kind`
 (`"connection"` \| `"person"`) + `id`.
 
@@ -32,6 +32,20 @@ Annotations: **R** read-only, **W** write, **D** destructive (ChatGPT asks for c
 first Heldly call in a conversation must render a card: the specific card if the request maps
 to one, otherwise `heldly_show_dashboard` (home, or the welcome card for an empty account).
 This is guidance to the model, not something the server can enforce.
+
+**Set-up first.** Set-up has three steps, in order: *about you* (done once a memory is saved),
+*your people* (done once there is a people note or a connection), *connect* (done once there is
+a connection, a pending request, or an invite that is active or was used). Nothing extra is
+stored: each step is derived from the data it produces.
+- The home, welcome and help cards carry them as `setup[{key, title, description, done}]`. While
+  a step is open the home card shows a "Finish setting up" checklist with a button per step, so
+  set-up is always one tap away even if the model says nothing.
+- `heldly_show_dashboard` also puts the open steps into its result text and tells the model to
+  start the first open one in the same reply — import from ChatGPT memory or a couple of
+  questions, then `heldly_propose_people_import`, then `heldly_create_invite` — and to move on
+  by itself when a step is done or skipped.
+- What the model does with that text is guidance, not enforced; the checklist on the card is
+  what is guaranteed. Every step still ends in a review card.
 
 ## Profile
 
@@ -84,7 +98,8 @@ it does enforce is that nothing is saved without the user's confirmation on the 
 
 | Tool | Args | Scope | | Returns |
 | --- | --- | --- | --- | --- |
-| `heldly_show_dashboard` | – | profile.read, memories.read, connections.manage | R, UI | `{view: "dashboard", profile, memories[], connections[{connection_id, user_id, display_name, since, last_interaction_at}], people[Person], pending_requests[{request_id, sender_display_name, created_at}]}` — or, for an account with no memories, friends, requests or goals, `{view: "welcome", display_name, goal_options[{value, label}]}` |
+| `heldly_show_dashboard` | – | profile.read, memories.read, connections.manage | R, UI | `{view: "dashboard", profile, memories[], connections[{connection_id, user_id, display_name, since, last_interaction_at}], people[Person], pending_requests[{request_id, sender_display_name, created_at}]}` — or, for an account with no memories, friends, requests or goals, `{view: "welcome", display_name, goal_options[{value, label}], setup[]}`. The dashboard has `setup[{key, title, description, done}]` too (keys `about_you`, `your_people`, `connect`). |
+| `heldly_help` | – | profile.read, memories.read, connections.manage | R, UI | `{view: "help", display_name, topics[{key, title, description, examples[]}], setup[], privacy[], note}` — what Heldly can do, with example requests the user can tap (the widget sends the example as a chat message). Topic keys: `setup`, `memories`, `people`, `connect`, `stay_close`, `quiz`. Changes nothing. The widget header has a Help button that opens this card from any other card. |
 
 ## Invites & connections
 

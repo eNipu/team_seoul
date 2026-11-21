@@ -145,10 +145,23 @@ class GoalOption(BaseModel):
     label: str
 
 
+SetupStepKey = Literal["about_you", "your_people", "connect"]
+
+
+class SetupStep(BaseModel):
+    """One step of getting started. The widget shows these as a checklist."""
+
+    key: SetupStepKey
+    title: str
+    description: str
+    done: bool
+
+
 class WelcomeView(BaseModel):
     view: Literal["welcome"] = "welcome"
     display_name: str
     goal_options: list[GoalOption]
+    setup: list[SetupStep] = []
 
 
 class DashboardView(BaseModel):
@@ -158,6 +171,24 @@ class DashboardView(BaseModel):
     connections: list[dict]
     people: list[dict]
     pending_requests: list[dict]
+    setup: list[SetupStep] = []
+
+
+class HelpTopic(BaseModel):
+    key: str
+    title: str
+    description: str
+    examples: list[str]
+    """Things the user can say; the widget offers them as buttons."""
+
+
+class HelpView(BaseModel):
+    view: Literal["help"] = "help"
+    display_name: str
+    topics: list[HelpTopic]
+    setup: list[SetupStep]
+    privacy: list[str]
+    note: str = "The card lists what Heldly can do with examples to try. Do not repeat it in text."
 
 
 class SimpleOk(BaseModel):

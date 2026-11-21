@@ -99,7 +99,12 @@ points at `./plugin`. Set the `url` in `plugin/mcp.json` to your tunnel's `/mcp`
 
 Start a new chat, enable Heldly, and try the prompts below. Heldly is meant to open with a
 card: any opening prompt ("open Heldly", "set up my Heldly profile") should show the home or
-welcome card rather than a text answer.
+welcome card rather than a text answer. While set-up is unfinished it then goes straight into
+it without being asked: first you (import your ChatGPT memory or answer two questions), then
+your people (paste a list, upload contacts or name a few), then an invite for friends who use
+ChatGPT. Say "skip" to move on. The home card shows the same three steps as a checklist with
+buttons until they are done, and the **?** in the corner of any card (or *"help"*) opens a
+card with everything Heldly can do and examples to tap.
 
 - *"Set up my Heldly profile. I love bouldering and ramen, and I want to meet new people."*
   A memory review card appears; nothing is saved until you approve it.
@@ -180,10 +185,13 @@ ChatGPT ──MCP (OAuth bearer)──▶ FastAPI /mcp ──▶ services ──
   Uses only what friends shared with connections; scores aren't stored.
 - **Invite link + QR**: the invite card shows a QR code for `/i/{CODE}`, a page with the code
   and how to redeem it.
-- **Cards**: twelve tools render an interactive card in ChatGPT; the rest return data.
+- **Set-up and help**: the home card carries a three-step set-up checklist (about you, your
+  people, connect) until it is done, and the model is told to start it without being asked.
+  `heldly_help` shows what Heldly can do, with examples to tap.
+- **Cards**: thirteen tools render an interactive card in ChatGPT; the rest return data.
 - **Identity** always comes from the OAuth token, never from tool arguments.
 
-38 tools in total — see [docs/MCP_TOOLS.md](docs/MCP_TOOLS.md).
+39 tools in total — see [docs/MCP_TOOLS.md](docs/MCP_TOOLS.md).
 
 ## Configuration
 

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { friendArg, parseLogInteraction, type ActivityIdeasViewData } from "../types";
-import { ActionError, ChatStatus, EmptyNote, useAction, useChatPrompt, type ViewProps } from "./common";
+import { ActionError, Avatar, ChatStatus, EmptyNote, Ring, useAction, useChatPrompt, type ViewProps } from "./common";
+import { Icon } from "./icons";
 import CalendarPicker from "./CalendarPicker";
 
 export default function ActivityIdeas({ data, bridge }: ViewProps<ActivityIdeasViewData>) {
@@ -30,40 +31,49 @@ export default function ActivityIdeas({ data, bridge }: ViewProps<ActivityIdeasV
 
   return (
     <section className="panel">
-      <h2>Ideas with {data.display_name}</h2>
-
-      {data.shared_interests.length > 0 ? (
-        <div className="chips" aria-label="Shared interests">
-          {data.shared_interests.map((s, i) => (
-            <span key={`${s}-${i}`} className="chip chip--shared">
-              {s}
-            </span>
-          ))}
+      <div className="person-head">
+        <Avatar name={data.display_name} />
+        <div className="person-head__body">
+          <p className="eyebrow">Time together</p>
+          <h2>Ideas with {data.display_name}</h2>
         </div>
-      ) : (
-        <p className="muted small">No shared interests yet, so these are general ideas.</p>
-      )}
+      </div>
 
-      <div className="meter-block">
-        <div className="row row--between">
-          <span className="small muted" id="match-label">
-            Match
-          </span>
-          <strong className="small">{percent}%</strong>
-        </div>
-        <div
-          className="meter"
-          role="progressbar"
-          aria-labelledby="match-label"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={percent}
-        >
-          <div className="meter__fill" style={{ width: `${percent}%` }} />
+      <div className="match">
+        <div className="match__head">
+          <div
+            className="match__gauge"
+            role="meter"
+            aria-label="Match"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={percent}
+            aria-valuetext={`${percent}%`}
+          >
+            <Ring ratio={data.match_score} label={`${percent}%`} size={60} />
+          </div>
+          <div className="match__body">
+            <strong>Match</strong>
+            {data.shared_interests.length > 0 ? (
+              <div className="chips" aria-label="Shared interests">
+                {data.shared_interests.map((s, i) => (
+                  <span key={`${s}-${i}`} className="chip chip--shared">
+                    <Icon name="star" size={12} />
+                    {s}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="muted small">No shared interests yet, so these are general ideas.</p>
+            )}
+          </div>
         </div>
         {data.score_explanation.length > 0 && (
           <details className="details">
-            <summary>Why this score?</summary>
+            <summary>
+              <Icon name="chevron-right" size={16} />
+              Why this score?
+            </summary>
             <ul className="bullets">
               {data.score_explanation.map((line, i) => (
                 <li key={i}>{line}</li>
@@ -76,7 +86,7 @@ export default function ActivityIdeas({ data, bridge }: ViewProps<ActivityIdeasV
       <ActionError action={action} />
 
       {data.suggestions.length === 0 ? (
-        <EmptyNote icon="🌱" title="No ideas yet">
+        <EmptyNote art="ideas" title="No ideas yet">
           Tell Heldly a bit more about what you both enjoy and ask again.
         </EmptyNote>
       ) : (
@@ -90,7 +100,7 @@ export default function ActivityIdeas({ data, bridge }: ViewProps<ActivityIdeasV
                 {s.grounded_in.length > 0 && <p className="muted small">Based on: {s.grounded_in.join(", ")}</p>}
                 {s.suggested_action && (
                   <p className="next-step">
-                    <span aria-hidden="true">→ </span>
+                    <Icon name="arrow-right" size={16} />
                     {s.suggested_action}
                   </p>
                 )}
@@ -101,11 +111,12 @@ export default function ActivityIdeas({ data, bridge }: ViewProps<ActivityIdeasV
                     disabled={chat.state === "sending"}
                     onClick={() => plan(i, s.title)}
                   >
+                    <Icon name="chat" size={16} />
                     {chat.state === "sending" && planned === i ? "Asking…" : "Plan it"}
                   </button>
                   {isLogged ? (
                     <span className="status-pill" role="status">
-                      ✓ Logged
+                      <Icon name="check" size={16} /> Logged
                     </span>
                   ) : (
                     <button type="button" className="btn btn--small" disabled={busy} onClick={() => didThis(i, s.title)}>
@@ -118,7 +129,8 @@ export default function ActivityIdeas({ data, bridge }: ViewProps<ActivityIdeasV
                     aria-expanded={calendar === i}
                     onClick={() => setCalendar(calendar === i ? null : i)}
                   >
-                    <span aria-hidden="true">📅 </span>Add to calendar
+                    <Icon name="calendar" size={16} />
+                    Add to calendar
                   </button>
                 </div>
                 {calendar === i && (
