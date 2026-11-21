@@ -8,6 +8,31 @@
 | **Platform facts** | Checked against live OpenAI, Anthropic and MCP documentation on the date above. Sources in section 14. Anything not checked is listed in section 3.5. |
 | **Existing code** | A first implementation (commit `d7bb6c8`) arrived in this repository while this document was being written. Section 11 compares it with this document. |
 
+> **This document is reference, not the plan of record.** Day-to-day work lives in
+> [`docs/tasks/`](docs/tasks/README.md), cut into small tasks. Read a section here only when a
+> task or `docs/tasks/BACKLOG.md` names it.
+>
+> Since this was written the direction has narrowed: ChatGPT only for now, built on the existing
+> Python code. Interest clusters and "how a connection could help" are new and are specified in
+> the tasks, not here. What this document calls a *signal* is a shared *memory* in the code.
+
+| Section | Use it for | Still current? |
+| :-- | :-- | :-- |
+| 1 Summary | The feasibility verdict | Partly: the verdict holds, the scope has narrowed |
+| 2 Product definition | Problem, users, Boardy comparison | Yes, apart from scheduling and Claude |
+| 3 Feasibility | What ChatGPT and MCP allow, with sources | Yes. Read before any platform decision |
+| 4 Requirements | Requirement IDs the backlog refers to | Backlog only |
+| 5 Architecture | The stack table | 5.2 yes; the diagram shows backlog items too |
+| 6 MCP surface | Tool design rules (6.1) | 6.1 yes; the tool lists are superseded by `docs/MCP_TOOLS.md` |
+| 7 Agents | Scheduling and matching design | Backlog only |
+| 8 Security and privacy | Visibility rule, gates, data held | Yes |
+| 9 Flows | Publish and scheduling sequences | 9.2 is backlog |
+| 10 Database schema | Target tables, tested DDL | Backlog only; the live schema is `docs/DATA_MODEL.md` |
+| 11 Repository comparison | Gaps found in the first code drop | 11.3 yes (see task T13, T14); the rest is dated |
+| 12 Delivery plan | Phases and spikes | Superseded by `docs/tasks/` |
+| 13 Risks and questions | Risk table | Yes |
+| 14 Sources | Links for section 3 | Yes |
+
 ---
 
 ## 1. Summary and verdict
