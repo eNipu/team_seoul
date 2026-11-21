@@ -54,6 +54,7 @@ The hero heading is "Venn. Connect your AI memories." Everything follows the Cop
 | Where | Text |
 | --- | --- |
 | Hero subtitle | Build your inner circle. |
+| Under the subtitle | You already know your next customer. (then friend, business partner: T25) |
 | Form note, `pair` | You join with one person you know. We only email you about your invite. |
 | Form note, `open` | Founding Circle. We only email you about your invite. (unchanged) |
 | Pending, lead | Good things come in pairs. |

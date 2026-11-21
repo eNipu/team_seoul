@@ -1,15 +1,26 @@
 # T40 · Landing page onboarding preview
 
-**Goal.** Show how Venn works through a short preview, from reviewing memories to accepting an invitation and seeing shared interests. Keep the real waitlist available on the page.
+**Goal.** A visitor can try getting into Venn in four taps, after the team's prototype: connect
+memories, invite a +1, see their side, and land in a shared circle. Little text, a drawing that
+carries the story, and the real waitlist one tap away.
 
 ## Read first
 
 - `site/app/page.tsx`, `site/components/OnboardingPreview.tsx`, `site/components/Waitlist.tsx`
-- `site/app/globals.css`, `site/check.mjs`, `docs/tasks/WAITLIST.md`
+- `site/app/globals.css` › Onboarding, `site/check.mjs` › `exercisePreview`
+- `site/README.md` › Hero and onboarding, `docs/tasks/WAITLIST.md`
+
+## Decisions
+
+- One inline SVG stage for every step; its parts move between steps with CSS transitions. No
+  images, canvas or animation library. Nothing loops; with reduced motion each step just appears.
+- The hero is "Venn. Connect your AI memories." / "Build your inner circle." with the rolling
+  line from T25 under it. Its 3D scene is replaced by the CSS circles, so three.js is gone.
+- The preview stores nothing and uses a made-up person, Maya.
 
 ## Done when
 
-- The updated hero fits on mobile, uses two CSS circles, and links to the preview.
-- Visitors can choose sample memories, preview both sides of an invitation, see an overlap based on their choices, and restart.
-- The preview stores no selections. Its final call to action leads to the real waitlist.
-- The site build and browser checks pass, including the live waitlist flow against a test database.
+- [x] The hero, with the rolling line, fits at 360 x 640 in every waitlist state.
+- [x] Visitors tick memories, send an invite, accept as Maya, see the overlap their choices make,
+      go back and restart; the last step links to the real waitlist.
+- [x] `npm --prefix site run build && node site/check.mjs` passes with `DATABASE_URL` set.

@@ -1,4 +1,5 @@
 import HeroBackdrop from "@/components/HeroBackdrop";
+import NextWord from "@/components/NextWord";
 import OnboardingPreview from "@/components/OnboardingPreview";
 import PageView from "@/components/PageView";
 import SiteHeader from "@/components/SiteHeader";
@@ -7,6 +8,10 @@ import { cleanRef } from "@/lib/analytics";
 import { hasDatabase } from "@/lib/db";
 import { cleanVersion, defaultVersion } from "@/lib/version";
 import { inviteHasRoom } from "@/lib/waitlist";
+
+// "You already know your next …": the line under the subtitle shows these one at a time.
+// Each one is a claim; keep "What the copy may claim" in site/README.md in step.
+const NEXT = ["customer", "friend", "business partner"];
 
 const PRINCIPLES = [
   {
@@ -53,6 +58,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           <div className="hero__content wrap">
             <h1 id="hero-title">Venn. Connect your AI memories.</h1>
             <p className="hero__sub">Build your inner circle.</p>
+            <NextWord words={NEXT} />
             <Waitlist version={version} invite={invite} />
           </div>
         </section>

@@ -13,6 +13,7 @@ metrics page. A Next.js app (App Router) with its own small API and two tables i
 | `app/globals.css` | The page's own styles |
 | `app/venn-kit.css` | Copy of `widget/src/venn-kit.css`: tokens and card primitives shared with the ChatGPT widget. Do not edit here |
 | `components/HeroBackdrop.tsx` | Two overlapping CSS circles behind the hero |
+| `components/NextWord.tsx` | The line under the subtitle, "You already know your next customer.", whose last word rolls |
 | `components/Waitlist.tsx` | The email form and its states after joining |
 | `components/OnboardingPreview.tsx` | The interactive memory, invitation, and shared-interest preview |
 | `lib/db.ts`, `lib/waitlist.ts`, `lib/analytics.ts` | Postgres pool and schema, waitlist logic, events and metrics |
@@ -49,7 +50,8 @@ silently drop signups.
 `check.mjs` loads the page at 360, 390, 768 and 1280 px, plus once in dark mode and once with reduced motion. It
 fails on: a missing or empty heading, sideways overflow, a hero that does not fit in the first screen, text below
 WCAG AA contrast, text under 12 px, a control under 44 px, a console error, a request to another origin, a
-cookie, photos or canvas on the landing page, a broken step in the onboarding preview, a `/metrics`
+cookie, photos or canvas on the landing page, a word under the subtitle that never changes or that changes
+with reduced motion, a broken step in the onboarding preview, a `/metrics`
 that opens without the password, or a waitlist that never answers 429. With `DATABASE_URL`
 it also walks the waitlist on the smallest phone: joining alone with real key presses (Tab to the field,
 Enter, focus on the answer, Tab through both actions, each with a focus ring), arriving with that link (invited, then
@@ -142,13 +144,29 @@ First-party only: no third-party scripts, no cookies, nothing stored on the devi
 
 ## Hero and onboarding
 
-The two overlapping circles are drawn in CSS and paint with the page. The onboarding preview uses
-inline SVG for the invitation and the transition from two separate people to a circle.
+The page loads no images, no canvas and no 3D library: the hero's two circles are CSS and paint with the HTML,
+and every drawing in the onboarding is inline SVG styled from the kit tokens.
 
-The preview starts with sample memories. The visitor chooses what to share, opens a sample invitation,
-accepts as Maya, and sees the overlap calculated from the chosen memories. The preview does not submit
-or persist its choices. The last step links back to the live waitlist. Back preserves the choices and
-Restart clears them.
+Under the subtitle, `NEXT` in `app/page.tsx` lists the words that end "You already know your next …":
+customer, friend, business partner. The last word rolls upward to the next every 2.4 seconds, on one line from
+600 px up and on its own line below that. It holds still with reduced motion, under the pointer, while a form
+field has focus and in a hidden tab, and screen readers get one sentence with every word. There is no pause
+button, so it cannot be stopped from the keyboard (WCAG 2.2.2); add one before a formal audit. Each word is a
+claim: change the list with the claims table, the page description and the sentence `check.mjs` expects.
+
+`components/OnboardingPreview.tsx` walks through getting in, after the team's prototype, in four steps:
+
+1. **Connect your AI memories.** Tick sample memories; each one appears as a dot in your circle.
+2. **Invite your +1.** Your circle steps aside for a dashed empty one. "Send invite link" sends an envelope
+   across.
+3. **Maya gets your invite.** Her side: "Someone saved you a place." and "Accept as Maya".
+4. **You're both in.** The circles overlap, her memories appear, the ones you share slide into the overlap
+   and become one dot, and the founding circle shows two seats filled and three open.
+
+One SVG (`.stage`) is drawn for every step and its parts move with CSS transitions between steps, so the four
+screens read as one motion. Nothing loops, and with reduced motion each step simply appears. The preview
+sends and stores nothing; its last step links to the real waitlist. Back keeps the choices, Restart clears
+them.
 
 ## Shared styling with the widget
 
@@ -185,6 +203,9 @@ Keep the page true when the product changes.
 | Shows its own cards in ChatGPT | Works | `widget/` |
 | It never contacts anyone for you | Works | `README.md`, `plugin/skills/venn-social/SKILL.md` |
 | "Connect your AI memories." | Works for approved ChatGPT memories | `venn_import_chatgpt_memory`, memory review and save |
+| "Build your inner circle." | Works | Invite codes and connection requests |
+| "You already know your next customer", "business partner" | In development | Matching what one person needs with what another offers is T08 to T12 |
+| "You already know your next friend" | Works for shared interests | `venn_find_people` and activity ideas |
 | Review, accept, and find shared interests | Preview with a sample person | Memory review, invite redemption and acceptance, `venn_compare` |
 | "We only email you about your invite" | A promise the team must keep | `waitlist_signups` holds the emails. Nothing is sent today |
 | "A confirmed place for both of you", "Your places in the Founding Circle are confirmed" | A promise the team must keep | `confirmed_at`. Whoever opens Venn to the list must honour it |

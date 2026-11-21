@@ -6,6 +6,7 @@
 //
 // Covers: headings, horizontal overflow, the hero fitting in one screen, text contrast,
 // control sizes, console errors, third-party requests, cookies, the CSS-only hero,
+// the changing word under the subtitle (it must move on, and hold still with reduced motion),
 // the four-step onboarding preview, the /metrics password, /metrics itself, and the waitlist
 // with its rate limit: both versions, what an invited person sees, a full link, and
 // joining with the keyboard alone.
@@ -254,7 +255,7 @@ function auditFold() {
   if (hero.getBoundingClientRect().bottom > fold) {
     problems.push(`hero is ${Math.round(hero.getBoundingClientRect().height)}px tall, taller than the ${window.innerHeight}px screen`);
   }
-  for (const selector of [".site-header", "h1", ".hero__sub", ".waitlist"]) {
+  for (const selector of [".site-header", "h1", ".hero__sub", ".hero__next", ".waitlist"]) {
     const el = hero.querySelector(selector);
     if (!el) problems.push(`hero has no ${selector}`);
     else if (el.getBoundingClientRect().bottom > fold) problems.push(`${selector} ends below the fold`);
@@ -289,22 +290,29 @@ async function exercisePreview() {
   const storageBefore = JSON.stringify(localStorage);
 
   expect(boxes().length === 3 && boxes().every((b) => !b.checked), "memories start unselected");
-  expect(button("Select a memory to continue")?.disabled, "empty selection cannot advance");
+  expect(button("Tick a memory to continue")?.disabled, "empty selection cannot advance");
+  const stage = root.querySelector("svg.stage");
+  expect(stage?.getAttribute("aria-hidden") === "true", "the stage is one decorative SVG");
   boxes()[0]?.click();
   boxes()[2]?.click();
   await tick();
   button("Approve 2 memories")?.click();
   await tick();
   step(2);
-  expect(root.querySelector("svg.onboarding__circle .onboarding__outline"), "pending circle shown");
-  button("Preview Maya’s invitation")?.click();
+  expect(root.querySelectorAll(".stage__dot--on").length === 2, "each approved memory is a dot in your circle");
+  expect(!stage?.hasAttribute("data-sent"), "the invite waits for a tap");
+  button("Send invite link")?.click();
+  await tick();
+  expect(stage?.hasAttribute("data-sent") && root.textContent.includes("Invite sent."), "sending moves the envelope");
+  button("See what Maya sees")?.click();
   await tick();
   step(3);
-  expect(root.textContent.includes("Someone invited you to Venn."), "invitee sees an invitation");
+  expect(root.textContent.includes("Someone saved you a place."), "invitee sees an invitation");
   button("Accept as Maya")?.click();
   await tick();
   step(4);
-  expect(root.querySelectorAll(".onboarding__member").length === 2, "both people shown after acceptance");
+  expect(stage?.dataset.step === "3", "the circles come together");
+  expect(root.querySelector(".stage__common--on"), "shared ground lights up in the overlap");
   expect(root.querySelector(".onboarding__interests")?.textContent === "Photography", "only shared approved memories shown");
   expect(root.querySelector('a[href="#waitlist"]')?.textContent === "Join the Waitlist", "result links to live signup");
   button("Back")?.click();
@@ -318,16 +326,44 @@ async function exercisePreview() {
   await tick();
   button("Approve 1 memory")?.click();
   await tick();
-  button("Preview Maya’s invitation")?.click();
+  button("Send invite link")?.click();
+  await tick();
+  button("See what Maya sees")?.click();
   await tick();
   button("Accept as Maya")?.click();
   await tick();
-  expect(root.textContent.includes("No shared interests in the memories you chose."), "no overlap for an unshared interest");
+  expect(root.textContent.includes("Nothing in common yet."), "no overlap for an unshared interest");
+  expect(!root.querySelector(".stage__common--on"), "no shared dot without shared memories");
   button("Restart")?.click();
   await tick();
   expect(boxes().every((b) => !b.checked), "restart clears choices");
   expect(JSON.stringify(localStorage) === storageBefore, "preview did not change local storage");
   return problems;
+}
+
+
+// Runs in the page. The line under the headline: the word on show, and what a screen reader gets.
+// Waits out a roll in progress first, so the word is measured at rest.
+async function nextWord() {
+  for (let waited = 0; waited < 1500; waited += 50) {
+    const on = document.querySelector(".hero__next-word--on");
+    const style = on && getComputedStyle(on);
+    if (style && style.transform === "none" && style.opacity === "1" && !document.querySelector(".hero__next-words").getAnimations().length) break;
+    await new Promise((done) => setTimeout(done, 50));
+  }
+  const lead = document.querySelector(".hero__next-lead")?.getBoundingClientRect();
+  const word = document.querySelector(".hero__next-word--on")?.getBoundingClientRect();
+  const line = document.querySelector(".hero__next-line")?.getBoundingClientRect();
+  return {
+    shown: document.querySelector(".hero__next-word--on")?.textContent ?? "",
+    spoken: document.querySelector(".hero__next .sr-only")?.textContent ?? "",
+    // The word starts where the sentence ends, at the same height. (The two boxes differ in
+    // height by the line's leading, so their edges are not compared.)
+    oneLine:
+      !!lead && !!word && word.left >= lead.right - 1 && Math.abs((word.top + word.bottom - lead.top - lead.bottom) / 2) < 3,
+    // How far the sentence's middle is from the middle of the page.
+    offCenter: line ? Math.round(Math.abs((line.left + line.right) / 2 - window.innerWidth / 2)) : -1,
+  };
 }
 
 // Runs in the page. Where keyboard focus is, and whether a focus ring is drawn for it.
@@ -494,6 +530,29 @@ async function main() {
       await shot(`${label}-fold`, false);
       await shot(label);
 
+      // The changing word, once with motion and once without. One step is 2.4s.
+      if (viewport === VIEWPORTS[3]) {
+        const before = await run(nextWord);
+        await sleep(2900);
+        const after = await run(nextWord);
+        if (before.spoken !== "You already know your next customer, friend or business partner.") {
+          failures.push(`${label}: the line under the headline reads "${before.spoken}" to a screen reader`);
+        }
+        // One line on a wide screen, and centered whichever word is showing.
+        for (const at of [before, after]) {
+          if (!at.oneLine) failures.push(`${label}: "${at.shown}" is not on the same line as the sentence before it`);
+          if (at.offCenter > 2) failures.push(`${label}: with "${at.shown}" the line is ${at.offCenter}px off center`);
+        }
+        if (motion === "reduce") {
+          if (before.shown !== "customer." || after.shown !== "customer.") {
+            failures.push(`${label}: with reduced motion the word must stay "customer." (saw "${before.shown}", then "${after.shown}")`);
+          }
+        } else if (!before.shown || before.shown === after.shown) {
+          failures.push(`${label}: the word under the headline did not change ("${before.shown}")`);
+        }
+      }
+
+
       for (const problem of await run(exercisePreview)) failures.push(`${label}: ${problem}`);
       console.log(`checked ${label}`);
     }
@@ -504,7 +563,7 @@ async function main() {
       const next = await run(`async () => {
         const preview = document.querySelector(".onboarding");
         preview.querySelector('input').click();
-        const actions = ["Approve 1 memory", "Preview Maya’s invitation", "Accept as Maya"];
+        const actions = ["Approve 1 memory", "Send invite link", "See what Maya sees", "Accept as Maya"];
         for (const action of actions) {
           await new Promise((done) => requestAnimationFrame(done));
           Array.from(preview.querySelectorAll("button")).find((b) => b.textContent.trim() === action).click();
@@ -513,7 +572,7 @@ async function main() {
         preview.scrollIntoView({ block: "center" });
         return preview.querySelector("h3").textContent;
       }`);
-      if (next !== "Your circle starts here.") failures.push("onboarding screenshot did not reach the result");
+      if (next !== "You\u2019re both in.") failures.push("onboarding screenshot did not reach the result");
       for (const problem of await run(audit)) failures.push(`${label}: ${problem}`);
       await shot(label, false);
     }
