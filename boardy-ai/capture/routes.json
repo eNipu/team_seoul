@@ -1,0 +1,22 @@
+[
+  {
+    "path": "/events",
+    "slug": "events",
+    "url": "https://www.boardy.ai/events"
+  },
+  {
+    "path": "/booking",
+    "slug": "booking",
+    "url": "https://www.boardy.ai/booking"
+  },
+  {
+    "path": "/chatgpt",
+    "slug": "chatgpt",
+    "url": "https://www.boardy.ai/chatgpt"
+  },
+  {
+    "path": "/articles",
+    "slug": "articles",
+    "url": "https://www.boardy.ai/articles"
+  }
+]

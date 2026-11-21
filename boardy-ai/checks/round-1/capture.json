@@ -1,0 +1,705 @@
+{
+  "a11y": {
+    "images_without_alt": 0,
+    "landmarks": {},
+    "lang": "en",
+    "unnamed_controls": 0,
+    "unnamed_examples": []
+  },
+  "assets": {
+    "background_images": [],
+    "fonts": [
+      "http://127.0.0.1:51998/assets/geist-latin-wght-normal-Dm3htQBi.woff2",
+      "http://127.0.0.1:51998/assets/raleway-latin-wght-normal-CSF1BaNN.woff2"
+    ],
+    "images": [],
+    "inline_scripts": 1,
+    "requests": [
+      {
+        "bytes": 3147,
+        "type": "script",
+        "url": "http://127.0.0.1:51998/assets/api-mock.js"
+      },
+      {
+        "bytes": 5884,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/boardy-landing-logo-mark.webp"
+      },
+      {
+        "bytes": 1566,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/channels/whatsapp.svg"
+      },
+      {
+        "bytes": 538,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/channels/text.svg"
+      },
+      {
+        "bytes": 800,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/channels/linkedin.svg"
+      },
+      {
+        "bytes": 3878,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/hf0.webp"
+      },
+      {
+        "bytes": 563,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/channels/x.svg"
+      },
+      {
+        "bytes": 309,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/channels/claude-colour.webp"
+      },
+      {
+        "bytes": 885,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/channels/googlemeet.svg"
+      },
+      {
+        "bytes": 684,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/channels/gmail.svg"
+      },
+      {
+        "bytes": 39436,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/home-sections-BUMCjBEU.css"
+      },
+      {
+        "bytes": 30379,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/site-DUR2kEe6.css"
+      },
+      {
+        "bytes": 1138,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/yc.webp"
+      },
+      {
+        "bytes": 11991,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/calendar-flow-Bp6hH_5n.css"
+      },
+      {
+        "bytes": 5850,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/overlays-Crv5kqAx.css"
+      },
+      {
+        "bytes": 11624,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/subpage-DVtBcLkP.css"
+      },
+      {
+        "bytes": 1965,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/legal-x6EQ-mQt.css"
+      },
+      {
+        "bytes": 18867,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/inference-BnscEkuJ.css"
+      },
+      {
+        "bytes": 11155,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/ask-boardy-DhiQo54z.css"
+      },
+      {
+        "bytes": 15600,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/booking-page-DJqke4zm.css"
+      },
+      {
+        "bytes": 20912,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/booking-funnel-BL-iJFKT.css"
+      },
+      {
+        "bytes": 9068,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/index-DjptN0gA.css"
+      },
+      {
+        "bytes": 38007,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/cc-boardy-CLm2sa5g.css"
+      },
+      {
+        "bytes": 12450,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/landing-message-dialog-BacOj-wT.css"
+      },
+      {
+        "bytes": 61729,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/index-CdX9wR2c.css"
+      },
+      {
+        "bytes": 35399,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/home-nav-bar-DbWh5StU.css"
+      },
+      {
+        "bytes": 6244,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/a16z.webp"
+      },
+      {
+        "bytes": 7558,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/sequoia.webp"
+      },
+      {
+        "bytes": 4284,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/anthropic.webp"
+      },
+      {
+        "bytes": 5954,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/openai.webp"
+      },
+      {
+        "bytes": 2426,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/tesla.webp"
+      },
+      {
+        "bytes": 3356,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/nvidia.webp"
+      },
+      {
+        "bytes": 21808,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/general-catalyst.webp"
+      },
+      {
+        "bytes": 8488,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/tweets/scott-kelly.webp"
+      },
+      {
+        "bytes": 8008,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/tweets/alison-kaizer.webp"
+      },
+      {
+        "bytes": 10658,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/tweets/jonny-price.webp"
+      },
+      {
+        "bytes": 8664,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/tweets/prateek-sanjay.webp"
+      },
+      {
+        "bytes": 5892,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/tweets/sara-scarborough-graham.webp"
+      },
+      {
+        "bytes": 5628,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/boardy-phone-pfp.webp"
+      },
+      {
+        "bytes": 442682,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/phone.svg"
+      },
+      {
+        "bytes": 3964,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/tweets/alon-michael.webp"
+      },
+      {
+        "bytes": 9390,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/tweets/kevin.webp"
+      },
+      {
+        "bytes": 6302,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/tweets/josh-jackson.webp"
+      },
+      {
+        "bytes": 7296,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/tweets/shreyas-kulkarni.webp"
+      },
+      {
+        "bytes": 9928,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/tweets/stefan-mathys.webp"
+      },
+      {
+        "bytes": 6450,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/tweets/lopsii-olagoke.webp"
+      },
+      {
+        "bytes": 6016,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/tweets/virgile-rietsch.webp"
+      },
+      {
+        "bytes": 30946,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/andrew-profile.jpeg"
+      },
+      {
+        "bytes": 936292,
+        "type": "other",
+        "url": "http://127.0.0.1:51998/assets/index-BjgH2D5g.js"
+      },
+      {
+        "bytes": 1703,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/channels/google-calendar.svg"
+      },
+      {
+        "bytes": 16842,
+        "type": "other",
+        "url": "http://127.0.0.1:51998/assets/landing-message-dialog-CIclDkIa.js"
+      },
+      {
+        "bytes": 98029,
+        "type": "other",
+        "url": "http://127.0.0.1:51998/assets/index-B9RyudA8.js"
+      },
+      {
+        "bytes": 1097,
+        "type": "other",
+        "url": "http://127.0.0.1:51998/assets/scroll-reveal-observer-h4pxLmi5.js"
+      },
+      {
+        "bytes": 749,
+        "type": "other",
+        "url": "http://127.0.0.1:51998/assets/home-stats-B8pLmeA_.js"
+      },
+      {
+        "bytes": 379,
+        "type": "other",
+        "url": "http://127.0.0.1:51998/assets/is-record-WdQbMeHT.js"
+      },
+      {
+        "bytes": 6917,
+        "type": "other",
+        "url": "http://127.0.0.1:51998/assets/home-nav-bar-CMMaVtXX.js"
+      },
+      {
+        "bytes": 556,
+        "type": "other",
+        "url": "http://127.0.0.1:51998/assets/lock-keyhole-D51r-cXl.js"
+      },
+      {
+        "bytes": 1782,
+        "type": "other",
+        "url": "http://127.0.0.1:51998/assets/linktree-channel-dialog-BC4KBoT_.js"
+      },
+      {
+        "bytes": 28700,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/geist-latin-wght-normal-Dm3htQBi.woff2"
+      },
+      {
+        "bytes": 48564,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/raleway-latin-wght-normal-CSF1BaNN.woff2"
+      },
+      {
+        "bytes": 827,
+        "type": "other",
+        "url": "http://127.0.0.1:51998/assets/campaign-submission-Cvm2ovU4.js"
+      },
+      {
+        "bytes": 1468,
+        "type": "other",
+        "url": "http://127.0.0.1:51998/assets/index-BvvxcsDW.js"
+      },
+      {
+        "bytes": 566,
+        "type": "other",
+        "url": "http://127.0.0.1:51998/assets/search-CIraHuDM.js"
+      },
+      {
+        "bytes": 133881,
+        "type": "other",
+        "url": "http://127.0.0.1:51998/assets/country-code-picker-BibYXFOp.js"
+      },
+      {
+        "bytes": 455,
+        "type": "other",
+        "url": "http://127.0.0.1:51998/assets/x-BR0KwmdT.js"
+      },
+      {
+        "bytes": 0,
+        "type": "script",
+        "url": "https://us-assets.i.posthog.com/array/phc_aybzGDeUsNW2jlyrBdExPD9yG2If1qgP7LAZjcmXc7/config.js"
+      },
+      {
+        "bytes": 0,
+        "type": "script",
+        "url": "https://us-assets.i.posthog.com/static/1.438.12/dead-clicks-autocapture.js"
+      },
+      {
+        "bytes": 0,
+        "type": "script",
+        "url": "https://us-assets.i.posthog.com/static/1.438.12/web-vitals-with-attribution.js"
+      },
+      {
+        "bytes": 51677,
+        "type": "other",
+        "url": "http://127.0.0.1:51998/assets/connection-globe-cobalt-DObbCaFA.js"
+      },
+      {
+        "bytes": 477990,
+        "type": "other",
+        "url": "http://127.0.0.1:51998/assets/connection-stage-renderer-DYjQdL9g.js"
+      },
+      {
+        "bytes": 3878,
+        "type": "img",
+        "url": "http://127.0.0.1:51998/hf0.webp"
+      },
+      {
+        "bytes": 5884,
+        "type": "img",
+        "url": "http://127.0.0.1:51998/boardy-landing-logo-mark.webp"
+      },
+      {
+        "bytes": 5628,
+        "type": "img",
+        "url": "http://127.0.0.1:51998/boardy-phone-pfp.webp"
+      },
+      {
+        "bytes": 7656,
+        "type": "other",
+        "url": "http://127.0.0.1:51998/favicon.ico"
+      }
+    ],
+    "scripts": [
+      "http://127.0.0.1:51998/assets/api-mock.js",
+      "https://us-assets.i.posthog.com/array/phc_aybzGDeUsNW2jlyrBdExPD9yG2If1qgP7LAZjcmXc7/config.js",
+      "https://us-assets.i.posthog.com/static/1.438.12/dead-clicks-autocapture.js",
+      "https://us-assets.i.posthog.com/static/1.438.12/web-vitals-with-attribution.js",
+      "http://127.0.0.1:51998/assets/index-BjgH2D5g.js"
+    ],
+    "stylesheets": [
+      "http://127.0.0.1:51998/assets/site-DUR2kEe6.css",
+      "http://127.0.0.1:51998/assets/home-sections-BUMCjBEU.css",
+      "http://127.0.0.1:51998/assets/calendar-flow-Bp6hH_5n.css",
+      "http://127.0.0.1:51998/assets/overlays-Crv5kqAx.css",
+      "http://127.0.0.1:51998/assets/legal-x6EQ-mQt.css",
+      "http://127.0.0.1:51998/assets/subpage-DVtBcLkP.css",
+      "http://127.0.0.1:51998/assets/inference-BnscEkuJ.css",
+      "http://127.0.0.1:51998/assets/ask-boardy-DhiQo54z.css",
+      "http://127.0.0.1:51998/assets/cc-boardy-CLm2sa5g.css",
+      "http://127.0.0.1:51998/assets/booking-page-DJqke4zm.css",
+      "http://127.0.0.1:51998/assets/booking-funnel-BL-iJFKT.css",
+      "http://127.0.0.1:51998/assets/index-DjptN0gA.css",
+      "http://127.0.0.1:51998/assets/landing-message-dialog-BacOj-wT.css",
+      "http://127.0.0.1:51998/assets/home-nav-bar-DbWh5StU.css",
+      "http://127.0.0.1:51998/assets/index-CdX9wR2c.css"
+    ]
+  },
+  "breakpoints": [
+    {
+      "count": 1,
+      "px": 359,
+      "query": "max-width 359px"
+    },
+    {
+      "count": 1,
+      "px": 360,
+      "query": "max-width 360px"
+    },
+    {
+      "count": 2,
+      "px": 380,
+      "query": "max-width 380px"
+    },
+    {
+      "count": 1,
+      "px": 390,
+      "query": "max-width 390px"
+    },
+    {
+      "count": 3,
+      "px": 400,
+      "query": "max-width 400px"
+    },
+    {
+      "count": 1,
+      "px": 430,
+      "query": "max-width 430px"
+    },
+    {
+      "count": 7,
+      "px": 480,
+      "query": "max-width 480px"
+    },
+    {
+      "count": 1,
+      "px": 540,
+      "query": "max-width 540px"
+    },
+    {
+      "count": 2,
+      "px": 560,
+      "query": "max-width 560px"
+    },
+    {
+      "count": 1,
+      "px": 600,
+      "query": "max-width 600px"
+    },
+    {
+      "count": 3,
+      "px": 600,
+      "query": "min-width 600px"
+    },
+    {
+      "count": 2,
+      "px": 620,
+      "query": "max-width 620px"
+    },
+    {
+      "count": 1,
+      "px": 639,
+      "query": "max-width 639px"
+    },
+    {
+      "count": 19,
+      "px": 640,
+      "query": "max-width 640px"
+    },
+    {
+      "count": 1,
+      "px": 640,
+      "query": "min-width 640px"
+    },
+    {
+      "count": 2,
+      "px": 641,
+      "query": "min-width 641px"
+    },
+    {
+      "count": 4,
+      "px": 719,
+      "query": "max-width 719px"
+    },
+    {
+      "count": 12,
+      "px": 720,
+      "query": "max-width 720px"
+    },
+    {
+      "count": 4,
+      "px": 720,
+      "query": "min-width 720px"
+    },
+    {
+      "count": 1,
+      "px": 760,
+      "query": "min-width 760px"
+    },
+    {
+      "count": 3,
+      "px": 760,
+      "query": "max-width 760px"
+    },
+    {
+      "count": 1,
+      "px": 768,
+      "query": "min-width 768px"
+    },
+    {
+      "count": 1,
+      "px": 800,
+      "query": "max-width 800px"
+    },
+    {
+      "count": 1,
+      "px": 840,
+      "query": "max-width 840px"
+    }
+  ],
+  "design": {
+    "backgrounds": [
+      {
+        "count": 2,
+        "value": "#f5f2eb"
+      }
+    ],
+    "css_variables": {
+      "--card": "#fffefb",
+      "--cream": "#fffefb",
+      "--ease-in-out": "cubic-bezier(.77, 0, .175, 1)",
+      "--ease-linear": "linear",
+      "--ease-out": "cubic-bezier(.23, 1, .32, 1)",
+      "--ease-standard": "ease",
+      "--font-display": "\"Raleway Variable\", var(--font-sans)",
+      "--font-sans": "\"Geist Variable\", ui-sans-serif, system-ui, sans-serif",
+      "--font-serif": "var(--font-display)",
+      "--green": "#006ee6",
+      "--green-deep": "#0066d6",
+      "--green-soft": "#e3eefc",
+      "--ink": "#172335",
+      "--ink-soft": "#4e5968",
+      "--line": "#d4dce5",
+      "--paper": "#f5f2eb",
+      "--paper-deep": "#e0e7ee"
+    },
+    "font_faces": [
+      {
+        "family": "Twemoji Country Flags",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "normal"
+      },
+      {
+        "family": "Geist Variable",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Geist Variable",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Geist Variable",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Raleway Variable",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Raleway Variable",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Raleway Variable",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Raleway Variable",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Raleway Variable",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "100 900"
+      }
+    ],
+    "font_sizes": [],
+    "font_weights": [],
+    "fonts": [],
+    "max_widths": [],
+    "radii": [],
+    "shadows": [],
+    "spacing": [],
+    "text_colors": []
+  },
+  "forms": [],
+  "headings": [],
+  "health": {
+    "errors": [
+      {
+        "kind": "script",
+        "text": "TypeError: Cannot set properties of undefined (setting 't')",
+        "url": "http://127.0.0.1:51998/assets/index-BjgH2D5g.js"
+      }
+    ],
+    "failed_requests": [
+      {
+        "status": 404,
+        "type": "Image",
+        "url": "http://127.0.0.1:51998/channels/claude-colour.webp"
+      }
+    ]
+  },
+  "lang": "en",
+  "layouts": [
+    {
+      "blocks": [],
+      "page_h": 900,
+      "page_w": 1440,
+      "type": {
+        "body": 0,
+        "h1": 0,
+        "h2": 0,
+        "h3": 0
+      },
+      "width": 1440
+    },
+    {
+      "blocks": [],
+      "page_h": 900,
+      "page_w": 768,
+      "type": {
+        "body": 0,
+        "h1": 0,
+        "h2": 0,
+        "h3": 0
+      },
+      "width": 768
+    },
+    {
+      "blocks": [],
+      "page_h": 900,
+      "page_w": 390,
+      "type": {
+        "body": 0,
+        "h1": 0,
+        "h2": 0,
+        "h3": 0
+      },
+      "width": 390
+    }
+  ],
+  "links": [],
+  "meta": {
+    "description": "",
+    "icons": [],
+    "og_image": "",
+    "og_title": "",
+    "theme_color": ""
+  },
+  "outline": [],
+  "page": {
+    "h": 900,
+    "w": 1440
+  },
+  "text": "",
+  "title": "",
+  "unreadable_stylesheets": 0,
+  "url": "http://127.0.0.1:51998/",
+  "viewport": {
+    "h": 900,
+    "w": 1440
+  }
+}

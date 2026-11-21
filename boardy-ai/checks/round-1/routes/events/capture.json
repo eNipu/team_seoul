@@ -1,0 +1,561 @@
+{
+  "a11y": {
+    "images_without_alt": 0,
+    "landmarks": {},
+    "lang": "en",
+    "unnamed_controls": 0,
+    "unnamed_examples": []
+  },
+  "assets": {
+    "background_images": [],
+    "fonts": [
+      "http://127.0.0.1:51998/assets/geist-latin-wght-normal-Dm3htQBi.woff2",
+      "http://127.0.0.1:51998/assets/raleway-latin-wght-normal-CSF1BaNN.woff2"
+    ],
+    "images": [],
+    "inline_scripts": 1,
+    "requests": [
+      {
+        "bytes": 3147,
+        "type": "script",
+        "url": "http://127.0.0.1:51998/assets/api-mock.js"
+      },
+      {
+        "bytes": 53344,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/boardy-events-mascot.webp"
+      },
+      {
+        "bytes": 30379,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/site-DUR2kEe6.css"
+      },
+      {
+        "bytes": 39436,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/home-sections-BUMCjBEU.css"
+      },
+      {
+        "bytes": 5884,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/boardy-landing-logo-mark.webp"
+      },
+      {
+        "bytes": 11991,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/calendar-flow-Bp6hH_5n.css"
+      },
+      {
+        "bytes": 5850,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/overlays-Crv5kqAx.css"
+      },
+      {
+        "bytes": 1965,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/legal-x6EQ-mQt.css"
+      },
+      {
+        "bytes": 11624,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/subpage-DVtBcLkP.css"
+      },
+      {
+        "bytes": 18867,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/inference-BnscEkuJ.css"
+      },
+      {
+        "bytes": 11155,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/ask-boardy-DhiQo54z.css"
+      },
+      {
+        "bytes": 15600,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/booking-page-DJqke4zm.css"
+      },
+      {
+        "bytes": 38007,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/cc-boardy-CLm2sa5g.css"
+      },
+      {
+        "bytes": 20912,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/booking-funnel-BL-iJFKT.css"
+      },
+      {
+        "bytes": 33974,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/events-CP1ZOR0u.css"
+      },
+      {
+        "bytes": 300,
+        "type": "other",
+        "url": "http://127.0.0.1:51998/assets/events-DY2oXJhU.js"
+      },
+      {
+        "bytes": 379,
+        "type": "other",
+        "url": "http://127.0.0.1:51998/assets/is-record-WdQbMeHT.js"
+      },
+      {
+        "bytes": 9068,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/index-DjptN0gA.css"
+      },
+      {
+        "bytes": 936292,
+        "type": "other",
+        "url": "http://127.0.0.1:51998/assets/index-BjgH2D5g.js"
+      },
+      {
+        "bytes": 28700,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/geist-latin-wght-normal-Dm3htQBi.woff2"
+      },
+      {
+        "bytes": 48564,
+        "type": "link",
+        "url": "http://127.0.0.1:51998/assets/raleway-latin-wght-normal-CSF1BaNN.woff2"
+      },
+      {
+        "bytes": 300,
+        "type": "script",
+        "url": "http://127.0.0.1:51998/assets/events-DY2oXJhU.js"
+      },
+      {
+        "bytes": 3878,
+        "type": "img",
+        "url": "http://127.0.0.1:51998/hf0.webp"
+      },
+      {
+        "bytes": 4705,
+        "type": "img",
+        "url": "http://127.0.0.1:51998/logos/events/jpmorgan.svg"
+      },
+      {
+        "bytes": 4367,
+        "type": "img",
+        "url": "http://127.0.0.1:51998/logos/events/accel.svg"
+      },
+      {
+        "bytes": 3463,
+        "type": "img",
+        "url": "http://127.0.0.1:51998/logos/events/microsoft.svg"
+      },
+      {
+        "bytes": 13541,
+        "type": "img",
+        "url": "http://127.0.0.1:51998/logos/events/meta.svg"
+      },
+      {
+        "bytes": 6244,
+        "type": "img",
+        "url": "http://127.0.0.1:51998/a16z.webp"
+      },
+      {
+        "bytes": 3830,
+        "type": "img",
+        "url": "http://127.0.0.1:51998/logos/events/scale.svg"
+      }
+    ],
+    "scripts": [
+      "http://127.0.0.1:51998/assets/api-mock.js",
+      "http://127.0.0.1:51998/assets/index-BjgH2D5g.js"
+    ],
+    "stylesheets": [
+      "http://127.0.0.1:51998/assets/site-DUR2kEe6.css",
+      "http://127.0.0.1:51998/assets/home-sections-BUMCjBEU.css",
+      "http://127.0.0.1:51998/assets/calendar-flow-Bp6hH_5n.css",
+      "http://127.0.0.1:51998/assets/overlays-Crv5kqAx.css",
+      "http://127.0.0.1:51998/assets/legal-x6EQ-mQt.css",
+      "http://127.0.0.1:51998/assets/subpage-DVtBcLkP.css",
+      "http://127.0.0.1:51998/assets/inference-BnscEkuJ.css",
+      "http://127.0.0.1:51998/assets/ask-boardy-DhiQo54z.css",
+      "http://127.0.0.1:51998/assets/cc-boardy-CLm2sa5g.css",
+      "http://127.0.0.1:51998/assets/booking-page-DJqke4zm.css",
+      "http://127.0.0.1:51998/assets/booking-funnel-BL-iJFKT.css",
+      "http://127.0.0.1:51998/assets/index-DjptN0gA.css",
+      "http://127.0.0.1:51998/assets/events-CP1ZOR0u.css"
+    ]
+  },
+  "breakpoints": [
+    {
+      "count": 1,
+      "px": 359,
+      "query": "max-width 359px"
+    },
+    {
+      "count": 1,
+      "px": 360,
+      "query": "max-width 360px"
+    },
+    {
+      "count": 1,
+      "px": 390,
+      "query": "max-width 390px"
+    },
+    {
+      "count": 2,
+      "px": 400,
+      "query": "max-width 400px"
+    },
+    {
+      "count": 6,
+      "px": 480,
+      "query": "max-width 480px"
+    },
+    {
+      "count": 1,
+      "px": 540,
+      "query": "max-width 540px"
+    },
+    {
+      "count": 2,
+      "px": 560,
+      "query": "max-width 560px"
+    },
+    {
+      "count": 1,
+      "px": 600,
+      "query": "max-width 600px"
+    },
+    {
+      "count": 3,
+      "px": 600,
+      "query": "min-width 600px"
+    },
+    {
+      "count": 2,
+      "px": 620,
+      "query": "max-width 620px"
+    },
+    {
+      "count": 1,
+      "px": 639,
+      "query": "max-width 639px"
+    },
+    {
+      "count": 5,
+      "px": 640,
+      "query": "max-width 640px"
+    },
+    {
+      "count": 1,
+      "px": 640,
+      "query": "min-width 640px"
+    },
+    {
+      "count": 4,
+      "px": 719,
+      "query": "max-width 719px"
+    },
+    {
+      "count": 11,
+      "px": 720,
+      "query": "max-width 720px"
+    },
+    {
+      "count": 4,
+      "px": 720,
+      "query": "min-width 720px"
+    },
+    {
+      "count": 1,
+      "px": 760,
+      "query": "min-width 760px"
+    },
+    {
+      "count": 2,
+      "px": 760,
+      "query": "max-width 760px"
+    },
+    {
+      "count": 1,
+      "px": 768,
+      "query": "min-width 768px"
+    },
+    {
+      "count": 1,
+      "px": 840,
+      "query": "max-width 840px"
+    },
+    {
+      "count": 1,
+      "px": 841,
+      "query": "min-width 841px"
+    },
+    {
+      "count": 6,
+      "px": 860,
+      "query": "max-width 860px"
+    },
+    {
+      "count": 2,
+      "px": 861,
+      "query": "min-width 861px"
+    },
+    {
+      "count": 1,
+      "px": 880,
+      "query": "max-width 880px"
+    }
+  ],
+  "design": {
+    "backgrounds": [
+      {
+        "count": 2,
+        "value": "#f5f2eb"
+      },
+      {
+        "count": 1,
+        "value": "#efefef"
+      }
+    ],
+    "css_variables": {
+      "--card": "#fffefb",
+      "--cream": "#fffefb",
+      "--ease-in-out": "cubic-bezier(.77, 0, .175, 1)",
+      "--ease-linear": "linear",
+      "--ease-out": "cubic-bezier(.23, 1, .32, 1)",
+      "--ease-standard": "ease",
+      "--font-display": "\"Raleway Variable\", var(--font-sans)",
+      "--font-sans": "\"Geist Variable\", ui-sans-serif, system-ui, sans-serif",
+      "--font-serif": "var(--font-display)",
+      "--green": "#006ee6",
+      "--green-deep": "#0066d6",
+      "--green-soft": "#e3eefc",
+      "--ink": "#172335",
+      "--ink-soft": "#4e5968",
+      "--line": "#d4dce5",
+      "--paper": "#f5f2eb",
+      "--paper-deep": "#e0e7ee"
+    },
+    "font_faces": [
+      {
+        "family": "Twemoji Country Flags",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "normal"
+      },
+      {
+        "family": "Geist Variable",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Geist Variable",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Geist Variable",
+        "status": "loaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Raleway Variable",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Raleway Variable",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Raleway Variable",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Raleway Variable",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "100 900"
+      },
+      {
+        "family": "Raleway Variable",
+        "status": "unloaded",
+        "style": "normal",
+        "weight": "100 900"
+      }
+    ],
+    "font_sizes": [
+      {
+        "count": 1,
+        "value": "16px"
+      },
+      {
+        "count": 1,
+        "value": "9.6px"
+      }
+    ],
+    "font_weights": [
+      {
+        "count": 2,
+        "value": "700"
+      }
+    ],
+    "fonts": [
+      {
+        "count": 2,
+        "value": "\"Geist Variable\", ui-sans-serif, system-ui, sans-serif"
+      }
+    ],
+    "max_widths": [],
+    "radii": [
+      {
+        "count": 1,
+        "value": "4px"
+      }
+    ],
+    "shadows": [],
+    "spacing": [
+      {
+        "count": 6,
+        "value": "8px"
+      },
+      {
+        "count": 2,
+        "value": "1.6px"
+      },
+      {
+        "count": 2,
+        "value": "3.2px"
+      }
+    ],
+    "text_colors": [
+      {
+        "count": 2,
+        "value": "#172335"
+      }
+    ]
+  },
+  "forms": [],
+  "headings": [],
+  "health": {
+    "errors": [
+      {
+        "kind": "script",
+        "text": "TypeError: Cannot set properties of undefined (setting 't')",
+        "url": "http://127.0.0.1:51998/assets/index-BjgH2D5g.js"
+      },
+      {
+        "kind": "script",
+        "text": "Error: Minified React error #418; visit https://react.dev/errors/418?args[]=HTML&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+        "url": "http://127.0.0.1:51998/assets/index-BjgH2D5g.js"
+      },
+      {
+        "kind": "console",
+        "text": "TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:51998/assets/events-DY2oXJhU.js",
+        "url": ""
+      }
+    ],
+    "failed_requests": [
+      {
+        "status": 404,
+        "type": "Script",
+        "url": "http://127.0.0.1:51998/assets/events-DY2oXJhU.js"
+      },
+      {
+        "status": 404,
+        "type": "Script",
+        "url": "http://127.0.0.1:51998/assets/events-DY2oXJhU.js"
+      },
+      {
+        "status": 404,
+        "type": "Script",
+        "url": "http://127.0.0.1:51998/assets/events-DY2oXJhU.js"
+      },
+      {
+        "status": 404,
+        "type": "Script",
+        "url": "http://127.0.0.1:51998/assets/events-DY2oXJhU.js"
+      }
+    ]
+  },
+  "lang": "en",
+  "layouts": [
+    {
+      "blocks": [],
+      "page_h": 900,
+      "page_w": 1440,
+      "type": {
+        "body": 0,
+        "h1": 0,
+        "h2": 0,
+        "h3": 0
+      },
+      "width": 1440
+    },
+    {
+      "blocks": [],
+      "page_h": 900,
+      "page_w": 768,
+      "type": {
+        "body": 0,
+        "h1": 0,
+        "h2": 0,
+        "h3": 0
+      },
+      "width": 768
+    },
+    {
+      "blocks": [],
+      "page_h": 900,
+      "page_w": 390,
+      "type": {
+        "body": 0,
+        "h1": 0,
+        "h2": 0,
+        "h3": 0
+      },
+      "width": 390
+    }
+  ],
+  "links": [],
+  "meta": {
+    "description": "",
+    "icons": [],
+    "og_image": "",
+    "og_title": "",
+    "theme_color": ""
+  },
+  "outline": [
+    {
+      "background": "#efefef",
+      "box": {
+        "h": 20,
+        "w": 60,
+        "x": 200,
+        "y": 10
+      },
+      "color": "#172335",
+      "depth": 4,
+      "font": "9.6px 700",
+      "tag": "button",
+      "text": "Show Error"
+    }
+  ],
+  "page": {
+    "h": 900,
+    "w": 1440
+  },
+  "text": "Something went wrong! Show Error",
+  "title": "",
+  "unreadable_stylesheets": 0,
+  "url": "http://127.0.0.1:51998/events",
+  "viewport": {
+    "h": 900,
+    "w": 1440
+  }
+}
