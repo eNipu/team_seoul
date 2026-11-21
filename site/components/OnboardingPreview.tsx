@@ -1,142 +1,151 @@
 "use client";
 
+// A demo of the real Venn loop, with made-up people:
+// 1. In ChatGPT you say "Update my Venn". Your AI drafts this week's signals about you.
+// 2. You keep or drop each one and pick who sees them. Nothing leaves until you approve.
+// 3. Later, in someone else's ChatGPT, the right signal comes up at the right moment.
 import { useEffect, useRef, useState } from "react";
 
-import VennMark from "./VennMark";
+type Signal = { id: string; kind: string; text: string };
 
-const MEMORIES = ["Photography", "Weekend hikes", "Cooking"] as const;
-type Memory = (typeof MEMORIES)[number];
+const DRAFTS: readonly Signal[] = [
+  { id: "launch", kind: "Working on", text: "Launching our beta in Berlin next week." },
+  { id: "designer", kind: "Looking for", text: "A product designer who knows fintech." },
+  { id: "lisbon", kind: "Plans", text: "In Lisbon from Friday to Sunday." },
+];
 
-const MAYA_INTERESTS: readonly Memory[] = ["Photography", "Weekend hikes"];
-const STEPS = [
-  "Choose what to share.",
-  "Invite someone you know.",
-  "See what Maya sees.",
-  "Your circle starts here.",
-] as const;
+const CIRCLES = ["Close friends", "Work network"] as const;
+type Circle = (typeof CIRCLES)[number];
 
-function CirclePreview({ connected = false }: { connected?: boolean }) {
-  return (
-    <svg className="onboarding__circle" viewBox="0 0 260 124" aria-hidden="true" focusable="false">
-      {connected ? (
-        <>
-          <circle cx="101" cy="62" r="51" className="onboarding__member onboarding__member--first" />
-          <circle cx="159" cy="62" r="51" className="onboarding__member onboarding__member--second" />
-          <text x="84" y="62">You</text>
-          <text x="176" y="62">Maya</text>
-        </>
-      ) : (
-        <>
-          <path d="M96 62h68" className="onboarding__outline" />
-          <circle cx="54" cy="62" r="42" className="onboarding__member onboarding__member--first" />
-          <circle cx="206" cy="62" r="42" className="onboarding__outline" />
-          <text x="54" y="62">You</text>
-          <text x="206" y="62">Maya</text>
-        </>
-      )}
-    </svg>
-  );
-}
+const STEPS = ["Your week, drafted by your AI.", "Shared with your circle.", "The right moment, in Maya's ChatGPT."] as const;
 
 export default function OnboardingPreview() {
   const [step, setStep] = useState(0);
-  const [selected, setSelected] = useState<Memory[]>([]);
+  const [kept, setKept] = useState<string[]>(DRAFTS.map((d) => d.id));
+  const [circle, setCircle] = useState<Circle>("Close friends");
   const heading = useRef<HTMLHeadingElement>(null);
   const visited = useRef(false);
-  const shared = MAYA_INTERESTS.filter((interest) => selected.includes(interest));
 
   useEffect(() => {
     if (visited.current) heading.current?.focus();
   }, [step]);
 
-  function go(next: number) {
+  const go = (next: number) => {
     visited.current = true;
     setStep(next);
-  }
+  };
+  const toggle = (id: string) =>
+    setKept((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]));
 
-  function toggle(memory: Memory) {
-    setSelected((current) => current.includes(memory) ? current.filter((item) => item !== memory) : [...current, memory]);
-  }
+  const shared = DRAFTS.filter((d) => kept.includes(d.id));
+  // Maya's question matches the Lisbon plan for friends, the designer need for work.
+  const match = circle === "Close friends" ? DRAFTS[2] : DRAFTS[1];
+  const matchShared = kept.includes(match.id);
+  const mayaAsks =
+    circle === "Close friends" ? "Any friends around Lisbon this weekend?" : "Who do I know that's hiring a fintech designer?";
+  const answer =
+    match.id === "lisbon"
+      ? "Alex, your friend from uni, is in Lisbon from Friday to Sunday."
+      : "Alex, who you met at Web Summit, is looking for a fintech product designer.";
 
   return (
     <div className="onboarding">
       <header className="onboarding__header">
-        <span className="onboarding__brand"><VennMark size={22} /> Venn</span>
-        <span>Step {step + 1} of {STEPS.length}</span>
+        <span className="onboarding__brand">Inside ChatGPT, with Venn</span>
+        <span>
+          {step + 1} of {STEPS.length}
+        </span>
         <div className="onboarding__progress" aria-hidden="true">
-          {STEPS.map((title, index) => <span key={title} data-complete={index <= step} />)}
+          {STEPS.map((title, index) => (
+            <span key={title} data-complete={index <= step} />
+          ))}
         </div>
       </header>
 
       <div className="onboarding__body" key={step}>
-        <h3 ref={heading} tabIndex={-1} aria-describedby="onboarding-step">{STEPS[step]}</h3>
-        <span className="sr-only" id="onboarding-step">Step {step + 1} of {STEPS.length}</span>
+        <h3 ref={heading} tabIndex={-1}>
+          {STEPS[step]}
+        </h3>
 
         {step === 0 && (
           <>
-            <p className="muted">Pick sample memories to share in this preview.</p>
+            <p className="chat__user demo__user">Update my Venn for this week.</p>
+            <p className="muted">This week I&apos;d share these. Keep what you want, drop the rest:</p>
             <fieldset className="onboarding__choices">
-              <legend className="sr-only">Sample memories</legend>
-              {MEMORIES.map((memory) => {
-                const checked = selected.includes(memory);
-                return (
-                  <label key={memory} className={`pick pick--row${checked ? " pick--on" : ""}`}>
-                    <input type="checkbox" checked={checked} onChange={() => toggle(memory)} />
-                    <strong>{memory}</strong>
-                  </label>
-                );
-              })}
+              <legend className="sr-only">This week&apos;s signals</legend>
+              {DRAFTS.map((d) => (
+                <label key={d.id} className="onboarding__choice">
+                  <input type="checkbox" checked={kept.includes(d.id)} onChange={() => toggle(d.id)} />
+                  <span>
+                    <small className="demo__kind">{d.kind}</small>
+                    {d.text}
+                  </span>
+                </label>
+              ))}
             </fieldset>
-            <button type="button" className="btn btn--primary btn--block" disabled={!selected.length} onClick={() => go(1)}>
-              {selected.length ? `Approve ${selected.length} ${selected.length === 1 ? "memory" : "memories"}` : "Select a memory to continue"}
+            <fieldset className="demo__circles">
+              <legend className="muted">Who can see them</legend>
+              {CIRCLES.map((c) => (
+                <label key={c} className="demo__circle">
+                  <input type="radio" name="circle" checked={circle === c} onChange={() => setCircle(c)} />
+                  <span>{c}</span>
+                </label>
+              ))}
+            </fieldset>
+            <button type="button" className="btn btn--primary" disabled={!shared.length} onClick={() => go(1)}>
+              {shared.length ? `Share ${shared.length} with ${circle.toLowerCase()}` : "Keep at least one to share"}
             </button>
           </>
         )}
 
         {step === 1 && (
           <>
-            <CirclePreview />
-            <button type="button" className="btn btn--primary btn--block" onClick={() => go(2)}>Preview Maya’s invitation</button>
+            <p className="muted">
+              Only these {shared.length} lines went to your {circle.toLowerCase()}. Not your chats, not your memory.
+            </p>
+            <ul className="demo__shared">
+              {shared.map((d) => (
+                <li key={d.id}>
+                  <small className="demo__kind">{d.kind}</small>
+                  {d.text}
+                </li>
+              ))}
+            </ul>
+            <p className="muted">They expire on their own. Delete any of them anytime.</p>
+            <button type="button" className="btn btn--primary" onClick={() => go(2)}>
+              See it from Maya&apos;s side
+            </button>
           </>
         )}
 
         {step === 2 && (
           <>
-            <div className="card onboarding__invite">
-              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-                <rect x="3" y="5" width="18" height="14" rx="3" />
-                <path d="m4 7 8 6 8-6" />
-              </svg>
-              <strong>Someone invited you to Venn.</strong>
-              <p className="muted">Connect to see which interests you share.</p>
+            <p className="chat__user demo__user">{mayaAsks}</p>
+            {matchShared ? (
+              <div className="moment">
+                <img className="moment__icon" src="/brand/ai-icon.png" alt="" width={66} height={70} />
+                <p className="moment__text">{answer} Want to say hi?</p>
+                <p className="moment__prov">
+                  Shared by Alex&apos;s AI · via <b>venn</b>
+                </p>
+              </div>
+            ) : (
+              <p className="muted">
+                Nothing comes up: you didn&apos;t share that signal, so Maya&apos;s AI never sees it. That&apos;s the point.
+              </p>
+            )}
+            <div className="demo__actions">
+              <a className="btn btn--primary" href="#waitlist">
+                Build your inner circle
+              </a>
+              <button type="button" className="btn" onClick={() => go(0)}>
+                Start again
+              </button>
             </div>
-            <button type="button" className="btn btn--primary btn--block" onClick={() => go(3)}>Accept as Maya</button>
-          </>
-        )}
-
-        {step === 3 && (
-          <>
-            <CirclePreview connected />
-            <div className="onboarding__result">
-              <p>{shared.length ? "You and Maya share these interests." : "Maya joined your sample circle."}</p>
-              {shared.length ? (
-                <ul className="onboarding__interests" aria-label="Shared interests">
-                  {shared.map((interest) => <li key={interest} className="chip">{interest}</li>)}
-                </ul>
-              ) : <p className="muted">No shared interests in the memories you chose.</p>}
-            </div>
-            <a className="btn btn--primary btn--block" href="#waitlist">Join the Waitlist</a>
           </>
         )}
       </div>
-
-      <footer className="onboarding__footer">
-        {step > 0 && <button type="button" className="btn btn--ghost" onClick={() => go(step - 1)}>Back</button>}
-        <span>Preview · No choices saved</span>
-        {step > 0 && (
-          <button type="button" className="btn btn--ghost" onClick={() => { setSelected([]); go(0); }}>Restart</button>
-        )}
-      </footer>
+      <p className="onboarding__foot">Demo with made-up people. Nothing is saved.</p>
     </div>
   );
 }

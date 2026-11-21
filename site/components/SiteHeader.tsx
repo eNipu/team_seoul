@@ -4,10 +4,9 @@ export default function SiteHeader({ note = "For ChatGPT" }: { note?: string }) 
   return (
     <header className="site-header wrap">
       <span className="brand">
-        <VennMark />
-        Venn
+        <VennMark size={104} />
       </span>
-      <span className="pill">{note}</span>
+      <span className="site-header__note">{note}</span>
     </header>
   );
 }
