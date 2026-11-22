@@ -1,12 +1,9 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { QuizViewData } from "../types";
-import { ActionError, Avatar, ChatStatus, EmptyNote, useAction, useChatPrompt, type ViewProps } from "./common";
-import { Icon, Illustration, type IconName } from "./icons";
+import { ActionError, ChatStatus, useAction, useChatPrompt, type ViewProps } from "./common";
+import { Icon, type IconName } from "./icons";
+import "./cards.css";
 
-const LETTERS = ["A", "B", "C", "D"];
-const RING_R = 52;
-const RING_LEN = 2 * Math.PI * RING_R;
-const CONFETTI = Array.from({ length: 14 }, (_, i) => i);
 
 function verdict(score: number, total: number, name: string | null): { icon: IconName; line: string } {
   const ratio = total > 0 ? score / total : 0;
@@ -44,17 +41,17 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
 
   if (total === 0) {
     return (
-      <section className="panel">
-        <h2>{data.title}</h2>
+      <section className="vc">
+        <h2 className="vc__title">{data.title}</h2>
         <ActionError action={action} />
-        <EmptyNote art="quiz" title="Not enough to quiz on yet">
+        <p className="vc__muted">
           {isFriend && first
-            ? `${first} hasn't shared enough for a quiz. Check back once they add a few things.`
+            ? `${first} hasn't shared enough for a quiz yet. Check back once they add a few things.`
             : "Add a few friends and their interests, then try again."}
-        </EmptyNote>
+        </p>
         <button
           type="button"
-          className="btn"
+          className="vc__link"
           disabled={busy}
           onClick={() => void action.run("friends", () => nav.openView("venn_show_dashboard", {}))}
         >
@@ -68,85 +65,39 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
 
   if (finished) {
     const v = verdict(score, total, isFriend ? first : null);
-    const ratio = score / total;
-    const ringStyle = { "--ring-full": String(RING_LEN), "--ring-target": String(RING_LEN * (1 - ratio)) } as CSSProperties;
     return (
-      <section className="panel quiz">
+      <section className="vc">
         <ActionError action={action} />
-        <div className="quiz-result">
-          {ratio >= 0.6 && (
-            <div className="confetti" aria-hidden="true">
-              {CONFETTI.map((i) => (
-                <span key={i} className={`confetti__bit confetti__bit--${i % 7}`} style={{ "--i": String(i) } as CSSProperties} />
-              ))}
-            </div>
-          )}
-          <Illustration name="result" size="sm" />
-          <p className="eyebrow">{data.title}</p>
-          <div className="ring">
-            <svg viewBox="0 0 120 120" aria-hidden="true">
-              <circle className="ring__track" cx="60" cy="60" r={RING_R} />
-              <circle className="ring__value" cx="60" cy="60" r={RING_R} style={ringStyle} />
-            </svg>
-            <span className="ring__icon" aria-hidden="true">
-              <Icon name={v.icon} size={36} />
-            </span>
-          </div>
-          <h2 ref={headingRef} tabIndex={-1} className="quiz-result__score">
-            {score} of {total}
-          </h2>
-          <p className="quiz-result__verdict">{v.line}</p>
-          <ol className="quiz-dots" aria-label="Your answers">
-            {results.map((r, i) => (
-              <li key={i} className={`quiz-dot ${r ? "quiz-dot--right" : "quiz-dot--wrong"}`}>
-                <Icon name={r ? "check" : "close"} size={14} />
-                <span className="sr-only">
-                  Question {i + 1}: {r ? "correct" : "missed"}
-                </span>
-              </li>
-            ))}
-          </ol>
-        </div>
+        <p className="vc__kicker">{data.title}</p>
+        <h2 ref={headingRef} tabIndex={-1} className="vc__score">
+          {score}/{total}
+          <span className="sr-only"> correct</span>
+        </h2>
+        <p className="vc__body">{v.line}</p>
 
         {isFriend && first && data.id ? (
           <>
-            {data.common_ground.length > 0 && (
-              <div className="spotlight reveal">
-                <span className="spotlight__label">
-                  <Icon name="sparkle" size={16} /> What you two have in common
-                </span>
-                <div className="chips">
-                  {data.common_ground.map((s, i) => (
-                    <span key={`${s}-${i}`} className="chip chip--big" style={{ "--i": String(i) } as CSSProperties}>
-                      {s}
-                    </span>
-                  ))}
-                </div>
+            {(data.common_ground.length > 0 || data.next) && (
+              <div className="vc__moment">
+                {data.common_ground.length > 0 && <p>You both like {data.common_ground.join(", ")}.</p>}
+                {data.next && <small>Next together: {data.next.title}</small>}
               </div>
             )}
-            {data.next && (
-              <div className="card">
-                <span className="field__label">Do this together next</span>
-                <strong className="card__title">{data.next.title}</strong>
-                {data.next.description && <p>{data.next.description}</p>}
-              </div>
-            )}
-            <div className="button-row">
+            <button
+              type="button"
+              className="vc__cta"
+              disabled={busy}
+              onClick={() => {
+                const id = data.id;
+                if (id) void action.run("ideas", () => nav.openView("venn_suggest_activity", { connection_id: id }));
+              }}
+            >
+              {action.busy === "ideas" ? "Loading…" : `Get ideas with ${first}`}
+            </button>
+            {chat.state === "idle" || chat.state === "sending" ? (
               <button
                 type="button"
-                className="btn btn--primary"
-                disabled={busy}
-                onClick={() => {
-                  const id = data.id;
-                  if (id) void action.run("ideas", () => nav.openView("venn_suggest_activity", { connection_id: id }));
-                }}
-              >
-                <Icon name="bulb" size={18} />
-                {action.busy === "ideas" ? "Loading…" : `Get ideas with ${first}`}
-              </button>
-              <button
-                type="button"
-                className="btn"
+                className="vc__link vc__center"
                 disabled={chat.state === "sending"}
                 onClick={() =>
                   void chat.send(
@@ -155,35 +106,34 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
                   )
                 }
               >
-                <Icon name="chat" size={18} />
                 {chat.state === "sending" ? "Asking…" : `Tell ${first} my score`}
               </button>
-            </div>
-            <ChatStatus state={chat.state} prompt={chat.prompt} />
+            ) : (
+              <ChatStatus state={chat.state} prompt={chat.prompt} />
+            )}
           </>
         ) : (
-          <div className="button-row">
+          <>
             <button
               type="button"
-              className="btn btn--primary"
+              className="vc__cta"
               disabled={busy}
               onClick={() => void action.run("again", () => nav.replaceView("venn_start_quiz", {}))}
             >
-              <Icon name="dice" size={18} />
               {action.busy === "again" ? "Shuffling…" : "Play again"}
             </button>
             <button
               type="button"
-              className="btn"
+              className="vc__link vc__center"
               disabled={busy}
               onClick={() => void action.run("friends", () => nav.openView("venn_show_dashboard", {}))}
             >
               {action.busy === "friends" ? "Loading…" : "See my friends"}
             </button>
-          </div>
+          </>
         )}
 
-        {data.note && <p className="muted small footnote">{data.note}</p>}
+        {data.note && <p className="vc__muted">{data.note}</p>}
       </section>
     );
   }
@@ -208,18 +158,10 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
   }
 
   return (
-    <section className="panel quiz">
-      {index === 0 && !answered && (
-        <div className="quiz-intro">
-          <Illustration name="quiz" size="sm" />
-        </div>
-      )}
-      <div className="quiz-top">
-        <div className="quiz-top__who">
-          {isFriend && name && <Avatar name={name} size="small" />}
-          <p className="eyebrow">{data.title}</p>
-        </div>
-        <span className="quiz-count">
+    <section className="vc">
+      <div className="vc__item-row">
+        <p className="vc__muted" style={{ fontWeight: 600 }}>{data.title}</p>
+        <span className="vc__muted" style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
           <span className="sr-only">Question </span>
           {index + 1}
           <span aria-hidden="true"> / </span>
@@ -227,66 +169,50 @@ export default function Quiz({ data, bridge, nav }: ViewProps<QuizViewData>) {
           {total}
         </span>
       </div>
-      <div className="quiz-progress" aria-hidden="true">
+      <div className="vc__segs" aria-hidden="true">
         {data.questions.map((_, i) => (
-          <span
-            key={i}
-            className={`quiz-progress__seg ${
-              i < results.length ? (results[i] ? "quiz-progress__seg--right" : "quiz-progress__seg--wrong") : i === index ? "quiz-progress__seg--now" : ""
-            }`}
-          />
+          <span key={i} className={i < results.length || i === index ? "on" : ""} />
         ))}
       </div>
 
-      <div key={index} className="quiz-card">
-        <h2 ref={headingRef} tabIndex={-1} className="quiz-prompt">
-          {q.prompt}
-        </h2>
+      <h2 key={`q${index}`} ref={headingRef} tabIndex={-1} className="vc__title">
+        {q.prompt}
+      </h2>
 
-        <ul className="list list--tight" aria-label="Answers">
-          {q.options.map((opt, i) => {
-            const isAnswer = i === q.answer_index;
-            const isPicked = i === picked;
-            const state = !answered ? "" : isAnswer ? "quiz-option--right" : isPicked ? "quiz-option--wrong" : "quiz-option--dim";
-            return (
-              <li key={i}>
-                <button type="button" className={`quiz-option ${state}`} disabled={answered} onClick={() => pick(i)}>
-                  <span className="quiz-option__key" aria-hidden="true">
-                    {answered && isAnswer ? <Icon name="check" size={16} /> : answered && isPicked ? <Icon name="close" size={16} /> : LETTERS[i]}
-                  </span>
-                  <span className="quiz-option__text">{opt}</span>
-                  {answered && (isAnswer || isPicked) && (
-                    <span className="quiz-option__tag">
-                      {isAnswer ? (isPicked ? "Your answer · correct" : "Correct answer") : "Your answer"}
-                    </span>
-                  )}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+      <ul className="vc__picks" aria-label="Answers">
+        {q.options.map((opt, i) => {
+          const isAnswer = i === q.answer_index;
+          const isPicked = i === picked;
+          const state = !answered ? "" : isAnswer ? "vc__pick--right" : isPicked ? "vc__pick--wrong" : "vc__pick--dim";
+          return (
+            <li key={`${index}-${i}`}>
+              <button type="button" className={`vc__pick ${state}`} disabled={answered} onClick={() => pick(i)}>
+                <span>{opt}</span>
+                {answered && isAnswer && <Icon name="check" size={18} />}
+                {answered && (isAnswer || isPicked) && (
+                  <span className="sr-only">{isAnswer ? (isPicked ? "Your answer, correct" : "Correct answer") : "Your answer"}</span>
+                )}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
 
-        <div role="status" aria-live="polite">
-          {answered && (
-            <div className={`quiz-feedback ${right ? "quiz-feedback--right" : "quiz-feedback--wrong"}`}>
-              <strong className="quiz-feedback__title">
-                <Icon name={right ? "check-circle" : "info"} size={18} />
-                <span>{right ? "Correct!" : `Not quite. It's “${q.options[q.answer_index]}”.`}</span>
-              </strong>
-              {q.explanation && <p className="small">{q.explanation}</p>}
-            </div>
-          )}
-        </div>
-
+      <div role="status" aria-live="polite">
         {answered && (
-          <button ref={nextRef} type="button" className="btn btn--primary btn--block" onClick={next}>
-            {last ? "See my score" : "Next question"}
-            <Icon name="arrow-right" size={18} />
-          </button>
+          <p className="vc__body">
+            <strong>{right ? "Right." : "Not quite."}</strong>
+            {q.explanation && <> {q.explanation}</>}
+          </p>
         )}
       </div>
 
-      {data.note && <p className="muted small footnote">{data.note}</p>}
+      {answered && (
+        <button ref={nextRef} type="button" className="vc__cta" onClick={next}>
+          {last ? "See my score" : "Next"}
+        </button>
+      )}
+
     </section>
   );
 }

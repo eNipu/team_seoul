@@ -1,7 +1,8 @@
 import { useId, useState, type FormEvent } from "react";
 import type { HostBridge } from "../mcp/client";
 import { LIMITS, hasId, isObj, parseFollowUp, type FollowUp } from "../types";
-import { ActionError, SectionTitle, Spinner, useAction } from "./common";
+import { ActionError, Spinner, useAction } from "./common";
+import "./cards.css";
 
 interface Props {
   bridge: HostBridge;
@@ -19,7 +20,6 @@ export default function FollowUps({ bridge, friend, name, initial }: Props) {
   const [done, setDone] = useState<string[]>([]);
   const [text, setText] = useState("");
   const busy = action.busy !== null;
-  const open = items.filter((f) => !done.includes(f.follow_up_id)).length;
 
   function complete(item: FollowUp) {
     void action.run(`done-${item.follow_up_id}`, async () => {
@@ -46,30 +46,31 @@ export default function FollowUps({ bridge, friend, name, initial }: Props) {
   }
 
   return (
-    <>
-      <SectionTitle count={open}>Things to ask about</SectionTitle>
+    <div className="vc__quiet" style={{ gap: 4 }}>
+      <h3 className="vc__muted" style={{ fontWeight: 600 }}>Ask {name} about</h3>
       <ActionError action={action} />
-      {items.length === 0 ? (
-        <p className="muted small">Nothing yet. Jot down what you want to remember to ask {name}.</p>
-      ) : (
-        <ul className="list ask-list">
+      {items.length > 0 && (
+        <ul className="vc__list">
           {items.map((item) => {
             const isDone = done.includes(item.follow_up_id);
             const pending = action.busy === `done-${item.follow_up_id}`;
             return (
-              <li key={item.follow_up_id}>
-                <label className={`ask ${isDone ? "ask--done" : ""}`}>
-                  <input type="checkbox" checked={isDone} disabled={isDone || busy} onChange={() => complete(item)} />
-                  <span className="ask__text">{item.text}</span>
-                  {pending && <Spinner />}
-                  {isDone && <span className="ask__state">Asked</span>}
-                </label>
+              <li key={item.follow_up_id} className="vc__item-row">
+                <span style={isDone ? { color: "var(--muted)" } : undefined}>{item.text}</span>
+                {isDone ? (
+                  <span className="vc__muted" role="status">Asked</span>
+                ) : (
+                  <button type="button" className="vc__link" disabled={busy} onClick={() => complete(item)}
+                    aria-label={`Mark asked: ${item.text}`}>
+                    {pending ? <Spinner /> : "Asked"}
+                  </button>
+                )}
               </li>
             );
           })}
         </ul>
       )}
-      <form className="ask-add" onSubmit={add}>
+      <form className="vc__field" onSubmit={add} style={{ marginTop: 4 }}>
         <label className="sr-only" htmlFor={`${id}-ask`}>
           Add something to ask {name}
         </label>
@@ -78,15 +79,15 @@ export default function FollowUps({ bridge, friend, name, initial }: Props) {
           type="text"
           value={text}
           maxLength={LIMITS.followUp}
-          placeholder="How did the interview go?"
+          placeholder={items.length === 0 ? `Something to ask ${name}` : "Add another"}
           autoComplete="off"
           disabled={busy}
           onChange={(e) => setText(e.target.value)}
         />
-        <button type="submit" className="btn btn--small" disabled={busy || text.trim() === ""}>
+        <button type="submit" className="vc__link" disabled={busy || text.trim() === ""}>
           {action.busy === "add" ? "Adding…" : "Add"}
         </button>
       </form>
-    </>
+    </div>
   );
 }
