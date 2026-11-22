@@ -142,7 +142,7 @@ def create_invite(db: Session, user: User, note: str | None = None, max_uses: in
         code=pretty,
         expires_at=expires_at,
         max_uses=max_uses,
-        share_text=f"I want us closer. Join me on Venn — our ChatGPTs keep the little things for us. {link}",
+        share_text=f"I'm using Venn in ChatGPT to keep in touch. Join me? {link}",
         link=link,
         qr=qr_rows(link),
     )

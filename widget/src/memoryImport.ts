@@ -44,4 +44,10 @@ export const QUICK_IMPORT_PROMPT =
   "Connect my AI memories to Venn. Call venn_propose_memories now with quick_import: true, source \"chatgpt_memory\" " +
   "and everything you remember about me (saved memories and past chats, up to 30). Don't list them in the chat first. " +
   "Leave out health, money, passwords, ID numbers and anything you're not sure is about me. " +
-  "If you don't remember anything about me, just ask me one question about who I want to be closer to.";
+  "If you don't remember anything about me, just ask me one short question about who I want to keep in touch with.";
+
+/** Step 03 for friends, family, network or everyone: bring people in from an export or a pasted list. */
+export const IMPORT_CONTACTS_PROMPT =
+  "Help me import my contacts into Venn. Ask me to upload my LinkedIn or Instagram export, or paste names " +
+  "(one per line, optionally with how I know them). Then call venn_propose_people_import with source \"linkedin\", " +
+  "\"instagram\" or \"pasted list\" so I can confirm them on the card. Don't guess interests from names or job titles.";

@@ -1,19 +1,19 @@
-// Who the user wants to be closer to, picked on step 01 and remembered for the invite step.
-export type Circle = "partner" | "friends" | "old_friends" | "family";
+// Who Venn is for, picked on step 01 and remembered for step 03.
+export type Circle = "partner" | "friends_family" | "network" | "everyone";
 
-export const CIRCLES: { value: Circle; label: string; invite: string }[] = [
-  { value: "partner", label: "My partner", invite: "Invite your partner" },
-  { value: "friends", label: "Close friends", invite: "Invite your best friend" },
-  { value: "old_friends", label: "Old friends I miss", invite: "Invite an old friend" },
-  { value: "family", label: "Family", invite: "Invite someone in your family" },
+export const CIRCLES: { value: Circle; label: string; invite: string; importFirst: boolean }[] = [
+  { value: "partner", label: "Partner", invite: "Invite your partner", importFirst: false },
+  { value: "friends_family", label: "Friends and family", invite: "Invite someone", importFirst: true },
+  { value: "network", label: "Network", invite: "Invite someone", importFirst: true },
+  { value: "everyone", label: "Everyone", invite: "Invite someone", importFirst: true },
 ];
 
-// What Venn would surface for that circle, shown as the demo under Connect.
+// What Venn would mention for that circle, shown as the demo under Connect. Light, specific, never intimate.
 export const DEMO: Record<Circle, { ask: string; person: string; answer: string }> = {
-  partner: { ask: "Plan something for Saturday", person: "Sam", answer: "Sam has been wanting to try that pottery class. You're both free after 2." },
-  friends: { ask: "Any plans this weekend?", person: "Emma", answer: "Emma from uni is in Berlin on Saturday. You haven't seen her in 2 years." },
-  old_friends: { ask: "Who should I catch up with?", person: "Nate", answer: "Nate just moved back to your city. You last talked in 2023." },
-  family: { ask: "What should I get Mom?", person: "Mom", answer: "Your mom said she misses gardening. A small herb kit would land." },
+  partner: { ask: "Ideas for Saturday?", person: "Sam", answer: "Sam mentioned wanting to try a pottery class. There's one Saturday at 11." },
+  friends_family: { ask: "Any plans this weekend?", person: "Emma", answer: "Btw, Emma is in Berlin this weekend too. Worth a hello?" },
+  network: { ask: "Who could help with marketing?", person: "Maya", answer: "Btw, Maya works in marketing and is in Berlin this week. Worth reaching out?" },
+  everyone: { ask: "Who should I talk to about this?", person: "Alex", answer: "Btw, Alex is looking for a designer, and you know a few. Worth a hello?" },
 };
 
 const KEY = "venn.circle";

@@ -1472,7 +1472,7 @@ function inviteView(maxUses: unknown, code = newCode()): InviteViewData {
     qr: mockQrRows(link),
     expires_at,
     max_uses,
-    share_text: `I want us closer. Join me on Venn — our ChatGPTs keep the little things for us. https://joinvennai.com/i/${code}`,
+    share_text: `I'm using Venn in ChatGPT to keep in touch. Join me? https://joinvennai.com/i/${code}`,
     note: "Share this code only with people you know. Anyone who uses it can send you a connection request, which you still approve.",
   };
 }

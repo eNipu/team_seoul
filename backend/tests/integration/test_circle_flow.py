@@ -347,7 +347,7 @@ def test_invite_has_link_and_scannable_qr(alice, client):
     assert page.status_code == 200
     assert invite["code"] in page.text  # inside the ChatGPT link's redeem prompt
     assert "Alice" not in page.text  # never names the inviter (static page, no lookup)
-    assert "<h1>A friend wants you closer.</h1>" in page.text
+    assert "<h1>A friend invited you to Venn.</h1>" in page.text
     assert page.text.count('class="pill"') == 1 and ">Add Venn in ChatGPT</a>" in page.text
     assert f"https://chatgpt.com/?q=Redeem%20Venn%20invite%20{invite['code']}" in page.text
     assert "Free. Only what you both choose is shared." in page.text

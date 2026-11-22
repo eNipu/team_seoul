@@ -101,7 +101,7 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
     let sent = false;
     try {
       const who = CIRCLES.find((c) => c.value === circle)?.label.toLowerCase();
-      sent = await bridge.sendMessage(QUICK_IMPORT_PROMPT + (who ? ` I want to be closer to ${who}.` : ""));
+      sent = await bridge.sendMessage(QUICK_IMPORT_PROMPT + (who ? ` Venn is mainly for: ${who}.` : ""));
     } catch {
       sent = false;
     }
@@ -122,9 +122,9 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
     return (
       <section className="onb">
         <StepCount n={1} />
-        <h2 className="onb__title">Who do you want to be closer to?</h2>
+        <h2 className="onb__title">Who is Venn for?</h2>
         <fieldset className="onb__choices">
-          <legend className="sr-only">Who do you want to be closer to</legend>
+          <legend className="sr-only">Who is Venn for</legend>
           {CIRCLES.map((c) => (
             <label key={c.value} className="onb__choice">
               <input type="radio" name="circle" checked={circle === c.value}
@@ -137,7 +137,7 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
     );
   }
 
-  const demo = DEMO[circle ?? "friends"];
+  const demo = DEMO[circle ?? "friends_family"];
   return (
     <section className="onb">
       <StepCount n={2} />

@@ -67,10 +67,10 @@ def render_invite_page(code: str) -> str | None:
         '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
         '<meta name="robots" content="noindex">\n<meta name="theme-color" content="#ffffff">\n'
-        f"<title>A friend wants you closer · Venn</title>\n<style>{_CSS}</style>\n</head>\n<body>\n<main>\n"
+        f"<title>You're invited to Venn</title>\n<style>{_CSS}</style>\n</head>\n<body>\n<main>\n"
         f"{_MARK}\n"
-        "<h1>A friend wants you closer.</h1>\n"
+        "<h1>A friend invited you to Venn.</h1>\n"
         f'<a class="pill" href="{chatgpt_url}" rel="noopener noreferrer">Add Venn in ChatGPT</a>\n'
-        '<p class="quiet">Free. Only what you both choose is shared.</p>\n'
+        '<p class="quiet">Free. You choose what you share.</p>\n'
         "</main>\n</body>\n</html>\n"
     )
