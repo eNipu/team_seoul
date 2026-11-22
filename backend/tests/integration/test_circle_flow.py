@@ -350,7 +350,7 @@ def test_invite_has_link_and_scannable_qr(alice, client):
     assert "<h1>A friend invited you to Venn.</h1>" in page.text
     assert page.text.count('class="pill"') == 1 and ">Add Venn in ChatGPT</a>" in page.text
     assert f"https://chatgpt.com/?q=Redeem%20Venn%20invite%20{invite['code']}" in page.text
-    assert "Free. Only what you both choose is shared." in page.text
+    assert "Free. You choose what you share." in page.text
     assert page.text.upper().count("#FFD400") == 1  # yellow used once
     assert 'name="viewport"' in page.text and 'lang="en"' in page.text
     assert "<script" not in page.text and "accept" not in page.text.lower()
