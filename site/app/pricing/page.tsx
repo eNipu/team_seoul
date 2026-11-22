@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import JoinCircle from "@/components/sections/JoinCircle";
 
 import { CookieSettingsLink } from "@/components/ConsentBanner";
 import SiteHeader from "@/components/SiteHeader";
@@ -42,6 +43,8 @@ const FAQS = [
   },
 ];
 
+export const dynamic = "force-dynamic";
+
 export default function PricingPage() {
   return (
     <>
@@ -54,7 +57,7 @@ export default function PricingPage() {
             <p className="lead">
               One Venn subscription, shared by your circle. Every person you add makes it cheaper for everyone, down to $2 a month each.
             </p>
-            <a className="btn btn--primary" href="/#waitlist">
+            <a className="btn btn--primary" href="#join">
               Build your inner circle
             </a>
             <p className="pricing__note">Planned pricing at launch. Early access is free.</p>
@@ -100,15 +103,7 @@ export default function PricingPage() {
           </div>
         </section>
 
-        <section className="section pricing-founder" aria-labelledby="founder-title">
-          <div className="wrap pricing-founder__body">
-            <p className="eyebrow">Founding Circle</p>
-            <h2 className="h-section" id="founder-title">Free while we build.</h2>
-            <p className="lead">
-              Waitlist members get early access free, and keep the lowest price of their circle size for the first year after launch.
-            </p>
-          </div>
-        </section>
+        <JoinCircle title="Free while we build. Join the Founding Circle." />
 
         <section className="section section--paper faq" aria-labelledby="pricing-faq-title">
           <div className="wrap">

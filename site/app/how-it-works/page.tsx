@@ -6,11 +6,14 @@ import SiteHeader from "@/components/SiteHeader";
 import HowItWorks from "@/components/sections/HowItWorks";
 import PrivacyPrinciples from "@/components/sections/PrivacyPrinciples";
 import UseCases from "@/components/sections/UseCases";
+import JoinCircle from "@/components/sections/JoinCircle";
 
 export const metadata: Metadata = {
   title: "How it works · Venn",
   description: "See how approved signals reach the right person and try a week with Venn.",
 };
+
+export const dynamic = "force-dynamic";
 
 export default function HowItWorksPage() {
   return (
@@ -31,6 +34,7 @@ export default function HowItWorksPage() {
         </section>
         <UseCases />
         <PrivacyPrinciples />
+        <JoinCircle />
       </main>
       <SiteFooter />
       <Motion />
