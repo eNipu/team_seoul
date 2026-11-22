@@ -19,10 +19,12 @@ import {
   PageHeader,
   QrBlock,
   Skeleton,
+  copyText,
   useAction,
   useAsync,
   useToast,
 } from "../ui";
+import { CHATGPT_CONNECTORS_URL, DEFAULT_MCP_URL } from "./ConnectChatGpt";
 
 function ProfileCard({ me, onSaved }: { me: Me; onSaved: () => void }) {
   const { setDisplayName } = useSession();
@@ -69,20 +71,39 @@ function ProfileCard({ me, onSaved }: { me: Me; onSaved: () => void }) {
 }
 
 function ChatGptCard({ me }: { me: Me }) {
+  const toast = useToast();
+  const mcpUrl = me.mcp_url || DEFAULT_MCP_URL;
   return (
     <Card title="Use Venn in ChatGPT" icon="sparkle" id="chatgpt" className="card--feature">
       <p>
         Venn is one service with two ways in. In ChatGPT you start with a question — “who do I know who likes photography?”
         — and Venn answers inside the chat. Here you start with a person or a plan.
       </p>
+      <div className="row">
+        <button
+          type="button"
+          className="btn btn--primary"
+          onClick={async () => {
+            const ok = await copyText(mcpUrl);
+            toast(ok ? "MCP URL copied. Opening ChatGPT settings…" : "Opening ChatGPT settings…");
+            window.open(CHATGPT_CONNECTORS_URL, "_blank", "noopener,noreferrer");
+          }}
+        >
+          <Icon name="external" size={16} />
+          <span>Copy URL &amp; open ChatGPT</span>
+        </button>
+        <Link to="/connect" className="btn">
+          Open step-by-step guide
+        </Link>
+      </div>
       <ol className="numbered">
-        <li>In ChatGPT, add Venn as a connector (an MCP server) with this address.</li>
+        <li>In ChatGPT, add Venn as a connector (an MCP server) with this address and choose OAuth.</li>
         <li>
           Sign in with the same account
           {me.username ? (
             <>
               {" "}
-              (username: <strong className="mono">{me.username}</strong>)
+              (<strong className="mono">{me.username}</strong>)
             </>
           ) : null}{" "}
           when ChatGPT asks.
