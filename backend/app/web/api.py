@@ -365,6 +365,7 @@ def build_api(settings: Settings) -> APIRouter:  # noqa: C901 - flat list of rou
                 "username": who.username,
                 "auth_mode": settings.auth_mode,
                 "mcp_url": settings.mcp_resource_url,
+                "chatgpt_connected": user.chatgpt_connected_at is not None,
                 "profile": _json(user_service.get_profile(db, user)),
             }
 

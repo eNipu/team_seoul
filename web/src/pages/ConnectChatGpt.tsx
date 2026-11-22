@@ -1,326 +1,258 @@
-// Guided 1-click workflow to connect Venn's MCP server inside ChatGPT.
+// Guided "add Venn to ChatGPT" page: every step is one tap, the page notices when it worked.
+//
+// ChatGPT steps verified 2026-11-22 (OpenAI web search over OpenAI's own docs):
+//   https://help.openai.com/en/articles/12584461-connecting-custom-mcp-servers-in-chatgpt
+//   https://developers.openai.com/api/docs/guides/custom-mcp-server
+// Current flow: chatgpt.com/plugins -> "+" -> "Add custom MCP server" -> Name (required),
+// Description (optional), Connection > Server URL, Authentication = OAuth -> tick
+// "I understand and want to continue" -> "Create as a plugin" -> install it; in a chat type "@".
+// Developer mode is NOT needed for this flow. The old path (Settings > Apps > Advanced > Developer
+// mode > Create, #settings/Connectors) is legacy and unstable, so it is only a fallback note.
+// Custom MCP servers are web-only (not on mobile). Business: workspace admins/owners create them.
+// Success is detected server-side: `chatgpt_connected` on GET /me flips when ChatGPT's OAuth token
+// first reaches the MCP server.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import quickstartUrl from "../../../docs/Venn-Quickstart.pdf?url";
 import { api } from "../api";
 import { BrandMark, Icon } from "../icons";
 import { Link } from "../router";
 import { useSession } from "../session";
-import { Card, PageHeader, copyText, useAsync } from "../ui";
+import { copyText } from "../ui";
 
 export const DEFAULT_MCP_URL = "https://app.joinvennai.com/mcp";
-export const CHATGPT_CONNECTORS_URL = "https://chatgpt.com/#settings/Connectors";
 export const CHATGPT_PLUGINS_URL = "https://chatgpt.com/plugins";
-/** Set once the guided setup is finished here; Home then offers "Invite someone" instead. */
-export const CHATGPT_FLAG = "venn.chatgpt.connected";
 export const CHATGPT_TEST_URL = "https://chatgpt.com/?q=Open%20Venn";
+export const VENN_NAME = "Venn";
+export const VENN_DESCRIPTION = "Venn keeps you close to your partner and friends, from inside ChatGPT.";
+const POLL_MS = 3000;
 
-let lastAnnouncement = "";
+/** Phones and narrow screens: ChatGPT only adds custom MCP servers on the web. */
+function useNarrow(): boolean {
+  const query = "(max-width: 700px)";
+  const [narrow, setNarrow] = useState(() => typeof window !== "undefined" && window.matchMedia(query).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const on = () => setNarrow(mq.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  return narrow;
+}
 
-function useCopyStatus() {
-  const [state, setState] = useState<{ status: "idle" | "copied" | "failed"; text: string }>({
-    status: "idle",
-    text: "",
-  });
+/** Polls the account until ChatGPT's OAuth token has reached Venn. */
+function useConnected(enabled: boolean): boolean {
+  const [connected, setConnected] = useState(false);
+  useEffect(() => {
+    if (!enabled || connected) return;
+    let live = true;
+    const check = () => {
+      api
+        .getMe()
+        .then((me) => live && me.chatgpt_connected && setConnected(true))
+        .catch(() => undefined);
+    };
+    check();
+    const timer = window.setInterval(check, POLL_MS);
+    window.addEventListener("focus", check);
+    return () => {
+      live = false;
+      window.clearInterval(timer);
+      window.removeEventListener("focus", check);
+    };
+  }, [enabled, connected]);
+  return connected;
+}
+
+function CopyRow({ label, value, mono = true }: { label: string; value: string; mono?: boolean }) {
+  const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
   const timer = useRef<number | null>(null);
-
   useEffect(
     () => () => {
       if (timer.current !== null) window.clearTimeout(timer.current);
     },
     [],
   );
-
-  const report = useCallback((ok: boolean, okText = "Copied") => {
-    if (timer.current !== null) window.clearTimeout(timer.current);
-    let message = ok ? okText : "Copy failed";
-    if (message === lastAnnouncement) message += "\u00A0";
-    lastAnnouncement = message;
-    setState({ status: ok ? "copied" : "failed", text: message });
-    timer.current = window.setTimeout(() => {
-      setState({ status: "idle", text: "" });
-    }, 2400);
-  }, []);
-
-  return { state, report };
-}
-
-function AccessibleCopyButton({
-  value,
-  label,
-  ariaLabel,
-  className = "btn btn--small",
-}: {
-  value: string;
-  label: string;
-  ariaLabel: string;
-  className?: string;
-}) {
-  const { state, report } = useCopyStatus();
   return (
-    <span className="connect-copy">
+    <div className="cx-row">
+      <div className="cx-row__text">
+        <span className="cx-row__label">{label}</span>
+        <span className={mono ? "cx-row__value cx-row__value--mono" : "cx-row__value"}>{value}</span>
+      </div>
       <button
         type="button"
-        className={className}
-        aria-label={ariaLabel}
-        data-copied={state.status === "copied" ? "" : undefined}
-        data-failed={state.status === "failed" ? "" : undefined}
+        className="cx-copy"
+        aria-label={`Copy ${label}`}
+        data-copied={state === "copied" ? "" : undefined}
         onClick={async () => {
           const ok = await copyText(value);
-          report(ok);
+          setState(ok ? "copied" : "failed");
+          if (timer.current !== null) window.clearTimeout(timer.current);
+          timer.current = window.setTimeout(() => setState("idle"), 2200);
         }}
       >
-        <Icon name={state.status === "copied" ? "check" : "copy"} size={16} />
-        <span>{state.status === "copied" ? "Copied" : label}</span>
+        <Icon name={state === "copied" ? "check" : "copy"} size={16} />
+        <span role="status">{state === "copied" ? "Copied" : state === "failed" ? "Copy by hand" : "Copy"}</span>
       </button>
-      <span className="connect-copy__tip" role="status" data-show={state.status !== "idle" ? "true" : "false"}>
-        {state.text}
-      </span>
-    </span>
+    </div>
   );
 }
 
-function ConnectWorkflowBody({
-  mcpUrl,
-  signedInName,
-  signedInIdentity,
-  googleSsoAvailable,
+function Step({
+  n,
+  active,
+  done,
+  title,
+  children,
 }: {
-  mcpUrl: string;
-  signedInName?: string | null;
-  signedInIdentity?: string | null;
-  googleSsoAvailable?: boolean;
+  n: number;
+  active: boolean;
+  done: boolean;
+  title: string;
+  children: React.ReactNode;
 }) {
-  const [activeStep, setActiveStep] = useState<1 | 2 | 3>(1);
-  const [completed, setCompleted] = useState<Record<1 | 2 | 3, boolean>>({ 1: false, 2: false, 3: false });
-  const launch = useCopyStatus();
+  return (
+    <li className="cx-step" data-active={active} data-done={done}>
+      <span className="cx-step__num" aria-hidden="true">
+        {done ? "✓" : n}
+      </span>
+      <div className="cx-step__body">
+        <h2>{title}</h2>
+        {children}
+      </div>
+    </li>
+  );
+}
 
-  async function copyAndOpenChatGpt() {
-    const ok = await copyText(mcpUrl);
-    launch.report(ok, "MCP URL copied. ChatGPT opened.");
-    window.open(CHATGPT_CONNECTORS_URL, "_blank", "noopener,noreferrer");
-    setCompleted((prev) => ({ ...prev, 1: true }));
-    setActiveStep(2);
-  }
+/** Quoted name of the exact ChatGPT control to press. */
+function Pick({ children }: { children: React.ReactNode }) {
+  return <kbd className="cx-pick">{children}</kbd>;
+}
 
-  function markDone(step: 1 | 2 | 3) {
-    if (step === 3) {
-      try {
-        window.localStorage.setItem(CHATGPT_FLAG, "1");
-      } catch {
-        /* private mode: Home just keeps offering the setup */
-      }
-    }
-    setCompleted((prev) => ({ ...prev, [step]: true }));
-    if (step < 3) setActiveStep((step + 1) as 2 | 3);
-  }
+function Done() {
+  return (
+    <section className="cx-done" aria-live="polite">
+      <h1 id="page-title" tabIndex={-1}>
+        Venn is in <mark>your ChatGPT.</mark>
+      </h1>
+      <a className="btn btn--primary btn--pill" href={CHATGPT_TEST_URL} target="_blank" rel="noopener noreferrer">
+        Open ChatGPT
+      </a>
+      <p className="cx-note">In any chat, type @Venn to talk to it.</p>
+    </section>
+  );
+}
 
-  const doneCount = Number(completed[1]) + Number(completed[2]) + Number(completed[3]);
+function ConnectBody({ mcpUrl, signedIn }: { mcpUrl: string; signedIn: boolean }) {
+  const narrow = useNarrow();
+  const connected = useConnected(signedIn);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [urlCopied, setUrlCopied] = useState<boolean | null>(null);
+
+  const openChatGpt = useCallback(async () => {
+    // Copy first so the address is already on the clipboard when the form opens.
+    setUrlCopied(await copyText(mcpUrl));
+    window.open(CHATGPT_PLUGINS_URL, "_blank", "noopener,noreferrer");
+    setStep(2);
+  }, [mcpUrl]);
+
+  if (connected) return <Done />;
 
   return (
-    <div className="stack-lg">
-      <Card
-        title="One-click setup"
-        icon="sparkle"
-        className="card--feature"
-        action={<span className="connect-progress">{doneCount} of 3 done</span>}
-      >
-        <p>
-          Click once to copy Venn’s MCP address and jump straight to ChatGPT’s connector settings in a new tab. Keep
-          this page open beside ChatGPT to finish in under a minute.
-        </p>
+    <div className="cx">
+      <h1 id="page-title" tabIndex={-1}>
+        Add Venn to <mark>ChatGPT.</mark>
+      </h1>
+      <p className="cx-lead">Three steps. We do the typing.</p>
 
-        {signedInName ? (
-          <p className="connect-account-pill">
-            <Icon name="check-circle" size={16} />
-            <span>
-              Signed in as <strong>{signedInName}</strong>
-              {signedInIdentity ? ` (${signedInIdentity})` : ""} — ChatGPT will let you confirm in one click.
-            </span>
-          </p>
-        ) : googleSsoAvailable ? (
-          <p className="connect-account-pill">
-            <Icon name="user" size={16} />
-            <span>
-              Tip:{" "}
-              <a className="link" href="/auth/google/start?next=%2Fapp%2Fconnect">
-                Sign in with Google first
-              </a>{" "}
-              so ChatGPT connects your account in one click.
-            </span>
-          </p>
-        ) : null}
-
-        <div className="row">
-          <span className="connect-copy">
-            <button
-              type="button"
-              className={activeStep === 3 ? "btn" : "btn btn--primary"}
-              onClick={() => void copyAndOpenChatGpt()}
-            >
-              <Icon name="external" size={16} />
-              <span>Copy MCP URL &amp; open ChatGPT</span>
-            </button>
-            <span className="connect-copy__tip" role="status" data-show={launch.state.status !== "idle" ? "true" : "false"}>
-              {launch.state.text}
-            </span>
-          </span>
-          <a className="btn" href={CHATGPT_PLUGINS_URL} target="_blank" rel="noopener noreferrer">
-            Open ChatGPT Plugins
-          </a>
-          <a className="btn" href={quickstartUrl} target="_blank" rel="noopener">
-            <Icon name="help" size={16} />
-            <span>Quickstart PDF</span>
-          </a>
+      {narrow && (
+        <div className="cx-desktop" role="note">
+          <strong>ChatGPT adds this on the web, not in the phone app.</strong>
+          <CopyRow label="This page" value={`${window.location.origin}/app/connect`} />
         </div>
+      )}
 
-        <div className="connect-url-bar">
-          <span className="small muted">MCP Server URL</span>
-          <code className="mono connect-url-bar__code">{mcpUrl}</code>
-          <AccessibleCopyButton value={mcpUrl} label="Copy URL" ariaLabel="Copy Venn MCP server URL" />
-        </div>
-      </Card>
-
-      <ol className="connect-steps" aria-label="Steps to connect Venn in ChatGPT">
-        <li className="card connect-step" data-active={activeStep === 1} data-done={completed[1]}>
-          <div className="connect-step__head">
-            <span className="connect-step__num" aria-hidden="true">
-              {completed[1] ? "✓" : "1"}
-            </span>
-            <div>
-              <h3>Open ChatGPT connector settings</h3>
-              <p className="muted">
-                The button above copies the URL and opens ChatGPT Connectors directly. On some plans, custom MCP servers
-                appear under <strong>Plugins</strong>.
-              </p>
-            </div>
-          </div>
-          <details className="connect-tip">
-            <summary>Don’t see “Create” or “Add custom MCP server”?</summary>
-            <p className="muted small">
-              In ChatGPT, open <strong>Settings → Apps &amp; Connectors → Advanced</strong> and turn on{" "}
-              <strong>Developer mode</strong>. Custom MCP servers show up immediately after enabling it.
+      <ol className="cx-steps" aria-label="Add Venn to ChatGPT">
+        <Step n={1} active={step === 1} done={step > 1} title="Open ChatGPT plugins">
+          <p>
+            Press <Pick>+</Pick> then <Pick>Add custom MCP server</Pick>.
+          </p>
+          <button type="button" className="btn btn--primary btn--pill" onClick={() => void openChatGpt()}>
+            <Icon name="external" size={16} />
+            <span>Open ChatGPT plugins</span>
+          </button>
+          {urlCopied !== null && (
+            <p className="cx-ok" role="status">
+              {urlCopied ? "Server URL copied. ChatGPT opened." : "ChatGPT opened. Copy the URL in step 2."}
             </p>
-          </details>
-        </li>
+          )}
+        </Step>
 
-        <li className="card connect-step" data-active={activeStep === 2} data-done={completed[2]}>
-          <div className="connect-step__head">
-            <span className="connect-step__num" aria-hidden="true">
-              {completed[2] ? "✓" : "2"}
-            </span>
-            <div>
-              <h3>Paste Venn’s details and pick OAuth</h3>
-              <p className="muted">Fill in these three fields in ChatGPT. Leave Client ID and Secret blank.</p>
-            </div>
+        <Step n={2} active={step === 2} done={step > 2} title="Paste Venn’s details">
+          <p>
+            Set <Pick>Authentication</Pick> to <Pick>OAuth</Pick>. Leave the rest as it is.
+          </p>
+          <div className="cx-rows">
+            <CopyRow label="Name" value={VENN_NAME} mono={false} />
+            <CopyRow label="Description" value={VENN_DESCRIPTION} mono={false} />
+            <CopyRow label="Server URL" value={mcpUrl} />
           </div>
-          <dl className="connect-kv">
-            <div className="connect-kv__row">
-              <dt>Name</dt>
-              <dd>
-                <code className="mono">Venn</code>
-                <AccessibleCopyButton value="Venn" label="Copy" ariaLabel="Copy app name Venn" />
-              </dd>
-            </div>
-            <div className="connect-kv__row">
-              <dt>MCP Server URL</dt>
-              <dd>
-                <code className="mono">{mcpUrl}</code>
-                <AccessibleCopyButton value={mcpUrl} label="Copy" ariaLabel="Copy Venn MCP server URL" />
-              </dd>
-            </div>
-            <div className="connect-kv__row">
-              <dt>Authentication</dt>
-              <dd>
-                <span>
-                  <strong>OAuth</strong> <span className="muted small">(automatic — no keys needed)</span>
-                </span>
-              </dd>
-            </div>
-          </dl>
-          <div className="row">
-            <button type="button" className="btn btn--small" onClick={() => markDone(2)}>
-              {completed[2] ? "Done — go to step 3" : "I added Venn in ChatGPT"}
-            </button>
-          </div>
-        </li>
+          <button type="button" className="btn btn--pill cx-next" onClick={() => setStep(3)}>
+            I pasted them
+          </button>
+        </Step>
 
-        <li className="card connect-step" data-active={activeStep === 3} data-done={completed[3]}>
-          <div className="connect-step__head">
-            <span className="connect-step__num" aria-hidden="true">
-              {completed[3] ? "✓" : "3"}
-            </span>
-            <div>
-              <h3>Sign in with Google &amp; test Venn</h3>
-              <p className="muted">
-                When ChatGPT asks you to connect, click{" "}
-                <strong>{signedInName ? `Continue as ${signedInName}` : "Continue with Google"}</strong>. Your web app
-                and ChatGPT share the exact same Venn account.
-              </p>
-            </div>
-          </div>
-          <div className="row">
-            <a
-              className={activeStep === 3 ? "btn btn--primary" : "btn"}
-              href={CHATGPT_TEST_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => markDone(3)}
-            >
-              <Icon name="sparkle" size={16} />
-              <span>Open ChatGPT &amp; say “Open Venn”</span>
-            </a>
-            {signedInName ? (
-              <Link to="/" className="btn">
-                Back to My Venn
-              </Link>
-            ) : (
-              <Link to="/" className="btn">
-                Sign in to My Venn
-              </Link>
-            )}
-          </div>
-        </li>
+        <Step n={3} active={step === 3} done={false} title="Create it and sign in">
+          <p>
+            Tick <Pick>I understand and want to continue</Pick>, press <Pick>Create as a plugin</Pick>, then sign in
+            with Google.
+          </p>
+          {signedIn ? (
+            <p className="cx-wait" role="status">
+              <span className="cx-wait__dot" aria-hidden="true" />
+              Waiting for ChatGPT. This page updates by itself.
+            </p>
+          ) : (
+            <Link to="/" className="btn btn--primary btn--pill">
+              Sign in here first
+            </Link>
+          )}
+        </Step>
       </ol>
+
+      <details className="cx-fallback">
+        <summary>Not seeing “Add custom MCP server”?</summary>
+        <p>
+          On Business workspaces only admins can add it. On older accounts open Settings, then Apps, turn on
+          Developer mode under Advanced, and press Create.
+        </p>
+      </details>
     </div>
   );
 }
 
 /** Signed-in Connect page inside the My Venn app shell. */
 export default function ConnectChatGpt() {
-  const { displayName, session } = useSession();
-  const me = useAsync(api.getMe, []);
-  const mcpUrl = me.data?.mcp_url || DEFAULT_MCP_URL;
-  const identity =
-    session.username && session.username.includes("@")
-      ? session.username
-      : session.username
-        ? `@${session.username}`
-        : null;
-
+  const { session } = useSession();
+  const [mcpUrl, setMcpUrl] = useState(DEFAULT_MCP_URL);
+  useEffect(() => {
+    api
+      .getMe()
+      .then((me) => me.mcp_url && setMcpUrl(me.mcp_url))
+      .catch(() => undefined);
+  }, []);
   return (
     <div className="page">
-      <PageHeader
-        title="Connect Venn to ChatGPT"
-        lead="One click copies the MCP URL and opens ChatGPT connector settings so anyone can connect in under a minute."
-      />
-      <ConnectWorkflowBody
-        mcpUrl={mcpUrl}
-        signedInName={displayName}
-        signedInIdentity={identity}
-        googleSsoAvailable={session.google_sso_available}
-      />
+      <ConnectBody mcpUrl={mcpUrl} signedIn={session.signed_in} />
     </div>
   );
 }
 
 /** Public standalone Connect page at /app/connect when visited before signing in. */
-export function PublicConnectChatGpt({ googleSsoAvailable }: { googleSsoAvailable: boolean }) {
+export function PublicConnectChatGpt({ googleSsoAvailable: _google }: { googleSsoAvailable: boolean }) {
   const mcpUrl =
     typeof window !== "undefined" && window.location.origin.startsWith("http")
       ? `${window.location.origin}/mcp`
       : DEFAULT_MCP_URL;
-
   return (
     <main className="public-connect">
       <div className="public-connect__top">
@@ -332,11 +264,7 @@ export function PublicConnectChatGpt({ googleSsoAvailable }: { googleSsoAvailabl
           Sign in to My Venn
         </Link>
       </div>
-      <PageHeader
-        title="Connect Venn to ChatGPT"
-        lead="One click copies the MCP URL and opens ChatGPT connector settings so anyone can connect in under a minute."
-      />
-      <ConnectWorkflowBody mcpUrl={mcpUrl} googleSsoAvailable={googleSsoAvailable} />
+      <ConnectBody mcpUrl={mcpUrl} signedIn={false} />
     </main>
   );
 }

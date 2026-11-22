@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from sqlalchemy import func, select
+from datetime import UTC, datetime
+
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from app.models import Memory, User, UserProfile
@@ -22,6 +24,15 @@ def get_or_create_user(db: Session, auth_subject: str, display_name_hint: str | 
     db.flush()
     analytics.track(db, "profile_created", user.id)
     return user, True
+
+
+def mark_chatgpt_connected(db: Session, auth_subject: str) -> None:
+    """Stamp the first time a verified MCP OAuth token for this account is used (never provisions)."""
+    db.execute(
+        update(User)
+        .where(User.auth_subject == auth_subject, User.chatgpt_connected_at.is_(None))
+        .values(chatgpt_connected_at=datetime.now(UTC))
+    )
 
 
 # Sample friends (see sample_service) are users nobody can sign in as. Their subject is
