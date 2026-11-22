@@ -1,7 +1,7 @@
 "use client";
 
-// The hero picture: two glass spheres slowly orbiting each other, with the volume
-// they share lit up. Loaded on its own (next/dynamic, ssr: false) after the page is
+// The picture behind the join panel: two glass spheres slowly orbiting each other, with the
+// volume they share lit up. Loaded on its own (next/dynamic, ssr: false) after the page is
 // interactive; HeroBackdrop shows a CSS version until the first frame is drawn.
 
 import { useEffect, useRef } from "react";
@@ -53,6 +53,9 @@ const FRAGMENT = /* glsl */ `
 `;
 
 const MAX_PIXEL_RATIO = 1.75;
+// Below this width-to-height ratio the spheres sit one above the other, so one shows above
+// the join panel and one below it. That is the case on a phone and in the desktop column.
+const STACK_BELOW = 1.25;
 
 export default function VennScene({ onReady, onFail }: Props) {
   const host = useRef<HTMLDivElement>(null);
@@ -73,7 +76,7 @@ export default function VennScene({ onReady, onFail }: Props) {
     el.appendChild(canvas);
 
     const token = (name: string, fallback: string) => getComputedStyle(el).getPropertyValue(name).trim() || fallback;
-    const shared = new Color(token("--venn-shared", "#8f6bff"));
+    const shared = new Color(token("--venn-shared", "#ff7a00"));
     const centers = [new Vector3(), new Vector3()];
     const geometry = new SphereGeometry(1, 48, 32);
     const glass = (color: string, other: Vector3) =>
@@ -90,8 +93,8 @@ export default function VennScene({ onReady, onFail }: Props) {
         depthWrite: false,
       });
     const spheres = [
-      new Mesh(geometry, glass(token("--venn-a", "#4f9dff"), centers[1])),
-      new Mesh(geometry, glass(token("--venn-b", "#ff7aa8"), centers[0])),
+      new Mesh(geometry, glass(token("--venn-a", "#ffd400"), centers[1])),
+      new Mesh(geometry, glass(token("--venn-b", "#eb0a0a"), centers[0])),
     ];
 
     const scene = new Scene();
@@ -110,8 +113,8 @@ export default function VennScene({ onReady, onFail }: Props) {
       const t = (performance.now() - started) / 1000;
       const angle = -0.35 + t * 0.1;
       const reach = radius * (0.56 + 0.06 * Math.sin(t * 0.37));
-      // The pair sits side by side on wide screens and one above the other on phones,
-      // and circles on a tilted orbit, so each sphere passes behind the other in turn.
+      // The pair sits one above the other in a tall or squarish space and side by side in a
+      // wide one, and circles on a tilted orbit, so each sphere passes behind the other in turn.
       const along = reach * Math.cos(angle);
       const across = reach * 0.35 * Math.sin(angle);
       const depth = reach * 0.9 * Math.sin(angle);
@@ -147,8 +150,8 @@ export default function VennScene({ onReady, onFail }: Props) {
       camera.updateProjectionMatrix();
       const visibleHeight = 2 * camera.position.z * Math.tan((camera.fov * Math.PI) / 360);
       const visibleWidth = visibleHeight * camera.aspect;
-      portrait = camera.aspect < 0.8;
-      radius = portrait ? Math.min(visibleWidth * 0.46, visibleHeight * 0.26) : Math.min(visibleWidth * 0.3, visibleHeight * 0.36);
+      portrait = camera.aspect < STACK_BELOW;
+      radius = portrait ? Math.min(visibleWidth * 0.46, visibleHeight * 0.28) : Math.min(visibleWidth * 0.3, visibleHeight * 0.36);
       draw();
     };
 

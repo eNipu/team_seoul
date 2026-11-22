@@ -17,6 +17,7 @@ from app.models.memory import Memory, MemoryProposal
 from app.models.person import FollowUp, PeopleImport, Person, PersonInteraction
 from app.models.plan import Plan, PlanMember
 from app.models.question import QuestionLink, QuestionResponse
+from app.models.reply import SavedReply
 from app.models.user import User, UserProfile
 
 __all__ = [
@@ -42,6 +43,7 @@ __all__ = [
     "QuestionLink",
     "QuestionResponse",
     "RelationshipEvent",
+    "SavedReply",
     "User",
     "UserProfile",
 ]

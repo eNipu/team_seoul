@@ -10,7 +10,8 @@ Conventions
   venn_suggest_activity (activity_ideas), venn_reconnection_suggestions (reconnect),
   venn_find_people (people_search), venn_plan_group (group_plan), venn_meetup_brief (brief),
   venn_start_quiz (quiz), venn_compare (venn), venn_this_week (this_week),
-  venn_create_question_link (ask_link) and venn_review_answers (answers).
+  venn_create_question_link (ask_link), venn_review_answers (answers), venn_show_reply (reply)
+  and venn_saved_replies (saved_replies).
 - Anything that adds several records at once is two-step: a propose tool stores the candidates
   and shows a review card; the save tool only accepts entries of that stored proposal.
 - A friend is addressed by exactly one of `connection_id` (someone on Venn) or `person_id`
@@ -40,6 +41,7 @@ from app.mcp.common import (
     WIDGET_URI,
     WRITE,
     WRITE_IDEMPOTENT,
+    app_only_meta,
     guarded,
     invocation_meta,
     ok,
@@ -54,6 +56,7 @@ from app.schemas.memory import (
     MemoryVisibility,
 )
 from app.schemas.profile import ProfileUpdate, ProfileVisibility, SocialGoal
+from app.schemas.reply import Reply
 from app.schemas.social import PersonCandidate
 from app.services import (
     availability_service,
@@ -65,6 +68,7 @@ from app.services import (
     question_service,
     quiz_service,
     relationship_service,
+    reply_service,
     sample_service,
     social_service,
     user_service,
@@ -1272,6 +1276,73 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
                 return ok(view.empty_reason or "Nothing for this week.", view)
             lines = "\n".join(f"- {a.title}: {a.reason}" for a in view.actions)
             return ok(f"This week ({len(view.actions)}), shown on the card:\n{lines}", view)
+
+        return await guarded(body)
+
+    # ----------------------------------------------------------------- replies
+    @apps.tool(
+        resource_uri=WIDGET_URI,
+        visibility=["model", "app"],
+        meta=ui_meta("Preparing your reply…", "Reply ready"),
+        name="venn_show_reply",
+        title="Show a tailored Venn reply",
+        description=(
+            "Show your answer to the current Venn social question when no dedicated Venn card fits. "
+            "Use advice for a short answer, checklist for ordered next steps (body introduces the steps), "
+            "or draft for a ready-to-copy message (body is the message). Use a short, descriptive title. "
+            "Pass only the task-specific answer in plain text. Never pass chat history, raw user messages, "
+            "credentials, or unrelated personal information. This tool does not save or send the reply."
+        ),
+        annotations=READ_ONLY,
+    )
+    async def venn_show_reply(reply: Reply) -> CallToolResult:
+        async def body():
+            await run_as_user([CONNECTIONS], lambda _db, _user, _: reply_service.check_content(reply))
+            return ok("Venn is showing your reply as a card.", {"view": "reply", "reply": reply.model_dump()})
+
+        return await guarded(body)
+
+    @mcp.tool(
+        name="venn_save_reply",
+        title="Save this reply privately",
+        description="Save the reply shown in Venn when the user presses Save privately on its card.",
+        annotations=WRITE_IDEMPOTENT,
+        meta=app_only_meta("Saving your reply…", "Reply saved"),
+    )
+    async def venn_save_reply(reply: Reply) -> CallToolResult:
+        async def body():
+            result = await run_as_user([CONNECTIONS], lambda db, user, _: reply_service.save(db, user, reply))
+            return ok("Reply saved privately.", result)
+
+        return await guarded(body)
+
+    @apps.tool(
+        resource_uri=WIDGET_URI,
+        visibility=["model", "app"],
+        meta=ui_meta("Opening your saved replies…", "Saved replies ready"),
+        name="venn_saved_replies",
+        title="Open saved Venn replies",
+        description="Show the user's private saved replies when they ask what replies or drafts they kept.",
+        annotations=READ_ONLY,
+    )
+    async def venn_saved_replies() -> CallToolResult:
+        async def body():
+            replies = await run_as_user([CONNECTIONS], lambda db, user, _: reply_service.list_saved(db, user))
+            return ok("Venn is showing the user's saved replies.", {"view": "saved_replies", "replies": replies})
+
+        return await guarded(body)
+
+    @mcp.tool(
+        name="venn_delete_saved_reply",
+        title="Delete a saved Venn reply",
+        description="Remove the user's saved reply after they confirm Delete reply in Venn.",
+        annotations=DESTRUCTIVE,
+        meta=app_only_meta("Deleting the reply…", "Reply deleted"),
+    )
+    async def venn_delete_saved_reply(reply_id: str) -> CallToolResult:
+        async def body():
+            await run_as_user([CONNECTIONS], lambda db, user, _: reply_service.remove(db, user, reply_id))
+            return ok("Reply deleted.", {"deleted": True})
 
         return await guarded(body)
 

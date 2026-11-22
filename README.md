@@ -127,6 +127,7 @@ curl https://abc123.ngrok-free.app/.well-known/oauth-protected-resource/mcp  # O
 
 Or install the packaged plugin from the repo marketplace: `.agents/plugins/marketplace.json`
 points at `./plugin`. Set the `url` in `plugin/mcp.json` to your tunnel's `/mcp` URL first.
+After changing tools or the widget, refresh the Venn connection in ChatGPT's Plugins settings.
 
 ### 6. Try it
 
@@ -149,6 +150,8 @@ card with everything Venn can do and examples to tap.
 - *"Add my friend Maya to Venn — college roommate, loves hiking, haven't seen her in two months"*
 - *"What could I do with Maya?"*
 - *"Who should I reconnect with?"*
+- *"Draft a low-pressure message inviting Maya for a photo walk"* — Venn opens a draft card
+  with **Copy** and **Save privately**. The bookmark in the widget header opens saved replies.
 - *"What did I save about food?"*
 - *"Import my friends: Maya (college roommate, loves pottery), Tom (old coworker, cycling), …"*
   — or paste a list / upload a contacts export. A card lets you pick who to add.
@@ -232,7 +235,7 @@ ChatGPT ──MCP (OAuth bearer)──▶ FastAPI /mcp ──▶ services ──
 - **Cards**: seventeen tools render an interactive card in ChatGPT; the rest return data.
 - **Identity** always comes from the OAuth token, never from tool arguments.
 
-52 tools in total — see [docs/MCP_TOOLS.md](docs/MCP_TOOLS.md). The website's routes are in [docs/WEB_API.md](docs/WEB_API.md).
+60 tools in total — see [docs/MCP_TOOLS.md](docs/MCP_TOOLS.md). The website's routes are in [docs/WEB_API.md](docs/WEB_API.md).
 
 ## Configuration
 

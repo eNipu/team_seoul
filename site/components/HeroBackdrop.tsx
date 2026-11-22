@@ -17,9 +17,9 @@ function canAnimateIn3d(): boolean {
 }
 
 /**
- * Full-bleed, non-interactive hero background: the Venn scene, with a veil over it
- * that keeps the text contrast high. Stays on the CSS circles when the visitor asks
- * for reduced motion or data saving, or when WebGL is unavailable.
+ * The picture behind the join panel: two glass spheres orbiting each other, in 3D.
+ * Decorative and never in the way of the pointer. Stays on the still CSS circles when
+ * the visitor asks for reduced motion or data saving, or when WebGL is unavailable.
  */
 export default function HeroBackdrop() {
   const [mode, setMode] = useState<Mode>("css");
@@ -45,7 +45,6 @@ export default function HeroBackdrop() {
         <span className="venn-fallback__circle venn-fallback__circle--b" />
       </div>
       {mode !== "css" && <VennScene onReady={onReady} onFail={onFail} />}
-      <div className="hero__veil" />
     </div>
   );
 }

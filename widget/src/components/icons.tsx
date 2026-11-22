@@ -19,6 +19,8 @@ const ICONS = {
   "chevron-down": <path d="M6 9.5l6 6 6-6" />,
   check: <path d="M5 12.5l4.5 4.5L19 7.5" />,
   close: <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" />,
+  expand: <path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5" />,
+  collapse: <path d="M4 9h5V4m11 5h-5V4M4 15h5v5m11-5h-5v5" />,
   plus: <path d="M12 5.5v13M5.5 12h13" />,
   help: (
     <>
