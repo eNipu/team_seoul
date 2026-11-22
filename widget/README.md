@@ -71,7 +71,7 @@ roughly matches the incoming view. A tool result with `isError` shows an error b
 | `saved_replies` | `venn_saved_replies` | Open or delete your saved replies. Also available through the bookmark button in the header. |
 | `memory_review` | `venn_propose_memories` | Review three drafts per page. **Edit** changes wording and visibility; moving between pages preserves all edits and choices. Imported drafts start unchecked. The confirmation lists only saved records and offers **Continue to contacts** after a ChatGPT import. |
 | `memory_import` | `venn_import_chatgpt_memory` | **Choose memories to preview**: one checkbox per area, the always-excluded note, **Preview in chat** (sends a prompt into the chat), then "Check the chat" with **Choose again**, or the prompt to copy when the host refuses the message. Nothing is sent to Venn from this card. |
-| `dashboard` | `venn_show_dashboard` | Three-step setup guide above the tabs while a set-up step is open (see "Set-up"). Tabs **Profile** (edit name/bio, at-a-glance tiles for memories / friends / requests that open the matching tab, goals, interests), **Memories** ("Sources" row for ChatGPT memory with **Import from ChatGPT** / **Import more**, search, grouped by category, "From ChatGPT" badge, edit, delete), **Friends** (search "Who do I know who…", invite, reconnect, quick actions **Import friends** / **Play a quiz** / **Plan a group hangout** (pick 2 to 6 friends), pending requests, "On Venn", "Private notes", add a person). |
+| `dashboard` | `venn_show_dashboard` | Three-step setup guide above the tabs while a set-up step is open (see "Set-up"). Tabs **Profile** (edit name/bio, at-a-glance tiles for memories / friends / requests that open the matching tab, goals, interests), **Memories** ("Sources" row for ChatGPT memory with **Import from ChatGPT** / **Import more**, search, grouped by category, "From ChatGPT" badge, edit, delete), **Friends** (search "Who do I know who…", invite, reconnect, quick actions **Import contacts** / **Play a quiz** / **Plan a group hangout** (pick 2 to 6 friends), pending requests, "On Venn", "Private notes", add a person). |
 | `welcome` | `venn_show_dashboard` (new user) | One three-step path, starting with **Choose memory areas**. Later steps have no action until the prerequisites are complete. |
 | `help` | `venn_help` | "How Venn helps": the set-up card (while a step is open), topics with an icon, a description and "try it" examples that are sent into the chat ("Sent — continue in the chat", or the text with **Copy** when the host refuses), then "Your data". `note` is model-facing and not shown. |
 | `invite` | `venn_create_invite` | Code as a ticket, QR code ("Scan to connect", when `qr` is non-empty), copy code / copy invite message / copy link (when `link` is non-empty), expiry, uses, revoke. |
@@ -196,7 +196,7 @@ Welcome, home and help use `onboarding: {memories_ready, contacts_ready, matches
 | We did this / We met up / Log a hangout | `venn_log_interaction` | `{ ...friendArg, activity? }` | `{ recorded: true, kind, id, last_interaction_at }` |
 | Invite a friend | `venn_create_invite` | `{}` | `invite` view |
 | Revoke code | `venn_revoke_invite` | `{ code }` | `{ revoked: true }` |
-| Step 2 → Instagram import / LinkedIn import | `venn_preview_demo_people_import` | `{ platform: "instagram" or "linkedin" }` | `people_import` view plus widget-only `_meta["venn/demoImportConfirmation"]` |
+| Step 2, after Connect, or Friends tab → Instagram import / LinkedIn import | `venn_preview_demo_people_import` | `{ platform: "instagram" or "linkedin" }` | `people_import` view plus widget-only `_meta["venn/demoImportConfirmation"]` |
 | Add N profiles | `venn_import_demo_people` | `{ import_id, indexes: number[], confirmation_token }` | `{ imported: Person[], count }`; the widget forwards the token from that review only on **Add** |
 | Add N people (regular import) | `venn_import_people` | `{ import_id, indexes: number[] }` | `{ imported: Person[], count }` |
 | Friends tab search; search again | `venn_find_people` | `{ query }` | `people_search` view |
@@ -249,10 +249,9 @@ the local state and show a banner with **Retry**. Buttons are disabled while a c
 - `sendMessage`: **Plan it** (`Help me plan "<title>" with <name>. I will reach out myself.`),
   **Draft a message** (`Help me draft a short, warm message to reconnect with <name>. I will send it myself.`)
   and **Set up Venn** (`Let's set up Venn. Start with my first unfinished step and ask me one question at a time.`).
-  Also **Import friends** (`I'd like to import my friends into Venn. I'll paste a list, upload a contacts file, or just tell you about them.`),
-  group **Plan it** (`Help me plan "<title>" with <names>. I will reach out to everyone myself.`) and
+  Also group **Plan it** (`Help me plan "<title>" with <names>. I will reach out to everyone myself.`) and
   **Tell <name> my score** (`I just scored X out of N on Venn's "How well do you know <name>?" quiz. Help me draft a short, playful message telling <name> my score. I will send it myself.`).
-  **Add your people** opens a platform review card directly, without sending a chat message. A help example sends its own text unchanged.
+  **Import contacts** after one-tap Connect and on the Friends tab offers the same Instagram and LinkedIn sample reviews as **Add your people**. No chat message, file, or social account is needed. A help example sends its own text unchanged.
   This week **Ask ChatGPT to rewrite** (`Rewrite this message to <name> in my voice, keep it short: “<draft>”`);
   the button disappears when the host refuses the message.
   **Preview my ChatGPT memory** sends the import prompt described under "Importing ChatGPT memory".

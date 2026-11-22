@@ -1,14 +1,12 @@
-import { DEMO_PLATFORM_LABELS, type DashboardViewData, type HelpViewData, type WelcomeViewData } from "../types";
+import type { DashboardViewData, HelpViewData, WelcomeViewData } from "../types";
+import ContactImportSources from "./ContactImportSources";
 import { ActionError, useAction, type Nav } from "./common";
 import { Icon } from "./icons";
 
 type SetupData = DashboardViewData | HelpViewData | WelcomeViewData;
 const titles = ["Import memories", "Add your people", "Find connections with similar interests"];
-const descriptions = [
-  "Choose which interests to preview in chat. Only the memories you select and approve are saved.",
-  "Start with Instagram or LinkedIn. You’ll review generated profiles, not contacts from your account. Pick who to add, then continue or try the other source.",
-  "Compare your saved interests with your circle. Looking at a match doesn’t contact anyone.",
-];
+const memoryDescription = "Choose which interests to preview in chat. Only the memories you select and approve are saved.";
+const matchesDescription = "Compare your saved interests with your circle. Looking at a match doesn’t contact anyone.";
 
 export default function SetupCard({ data, nav }: { data: SetupData; nav: Nav }) {
   const action = useAction();
@@ -40,24 +38,16 @@ export default function SetupCard({ data, nav }: { data: SetupData; nav: Nav }) 
             <div className="setup-step__body">
               <h3 className="setup-step__title">{title}</h3>
               {i !== current ? <p className="muted small">{i < current ? "Complete" : `Locked until step ${i} is complete`}</p> : <>
-                <p className="muted small">{descriptions[i]}</p>
-                {i === 1 ? (
-                  <div className="setup-step__platforms" role="group" aria-label="Choose a profile source">
-                    {(["instagram", "linkedin"] as const).map((platform) => (
-                      <button key={platform} type="button" className="btn" disabled={action.busy !== null}
-                        onClick={() => void action.run(platform, () => nav.openView("venn_preview_demo_people_import", { platform }))}>
-                        <Icon name="import" size={18} />
-                        {action.busy === platform ? `Opening ${DEMO_PLATFORM_LABELS[platform]}…` : `${DEMO_PLATFORM_LABELS[platform]} import`}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="setup-step__actions"><button className="btn btn--primary" type="button" disabled={action.busy !== null} onClick={openStep}>
-                    {action.busy ? "Opening…" : i === 0 ? "Choose memory areas" : "Find matches"}
-                  </button></div>
+                {i === 1 ? <ContactImportSources action={action} nav={nav} /> : (
+                  <>
+                    <p className="muted small">{i === 0 ? memoryDescription : matchesDescription}</p>
+                    <div className="setup-step__actions"><button className="btn btn--primary" type="button" disabled={action.busy !== null} onClick={openStep}>
+                      {action.busy ? "Opening…" : i === 0 ? "Choose memory areas" : "Find matches"}
+                    </button></div>
+                  </>
                 )}
                 <ActionError action={action} />
-                {action.failure && <p className="muted small">Or ask in chat: “{["Open Venn’s memory import", "Help me add people from Instagram or LinkedIn", "Find connections with similar interests in Venn"][i]}.”</p>}
+                {action.failure && <p className="muted small">Or ask in chat: “{["Open Venn’s memory import", "Show me sample contacts for an Instagram import", "Find connections with similar interests in Venn"][i]}.”</p>}
               </>}
             </div>
           </li>

@@ -64,8 +64,8 @@ SETUP_STEPS: tuple[_Step, ...] = (
         "your_people",
         "Import contacts",
         "From LinkedIn, Instagram or a list.",
-        "Import contacts: the user uploads a LinkedIn or Instagram export or pastes names -> "
-        "venn_propose_people_import; they confirm on the card. Never infer interests from names or job titles. "
+        "In ChatGPT, Import contacts offers sample Instagram and LinkedIn profiles. The user chooses a "
+        "platform and confirms on the card. Do not ask for an upload. "
         "If the user picked Partner on the welcome card, do Invite someone first.",
     ),
     _Step(
@@ -194,7 +194,8 @@ HELP_TOPICS: tuple[HelpTopic, ...] = (
         ),
         examples=[
             "Who do I know who'd enjoy a photo walk?",
-            "Import my friends into Venn",
+            "Show me sample contacts for an Instagram import",
+            "Show me sample contacts for a LinkedIn import",
         ],
     ),
     HelpTopic(

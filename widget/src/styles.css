@@ -1200,8 +1200,10 @@ input[type="datetime-local"] {
 .pick-list--demo {
   padding: 4px; /* Leave room for checkbox focus; paging replaces nested scrolling. */
 }
-.own-import { margin-block: 12px; }
-.own-import summary { cursor: pointer; padding-block: 10px; }
+.contact-import-sources {
+  display: grid;
+  gap: var(--s-2);
+}
 .pick__notes,
 .snippet {
   display: -webkit-box;
@@ -2200,11 +2202,6 @@ input[type="datetime-local"] {
 .welcome__actions {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
-  gap: var(--s-2);
-}
-.setup-step__platforms {
-  display: flex;
-  flex-wrap: wrap;
   gap: var(--s-2);
 }
 .welcome__goals summary {

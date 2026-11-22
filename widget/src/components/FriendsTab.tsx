@@ -16,7 +16,8 @@ import {
   type PendingRequest,
   type Person,
 } from "../types";
-import { Avatar, ChatStatus, EmptyNote, SectionTitle, Spinner, useChatPrompt, type Action, type Nav } from "./common";
+import { Avatar, EmptyNote, SectionTitle, Spinner, type Action, type Nav } from "./common";
+import ContactImportSources from "./ContactImportSources";
 import { Icon } from "./icons";
 import { SearchIcon } from "./PeopleSearch";
 import PersonForm, { type PersonValues } from "./PersonForm";
@@ -38,7 +39,8 @@ interface Props {
 export default function FriendsTab(props: Props) {
   const { connections, people, pending, bridge, nav, action } = props;
   const searchId = useId();
-  const chat = useChatPrompt(bridge);
+  const sourcesId = useId();
+  const [showSources, setShowSources] = useState(false);
   const [adding, setAdding] = useState(false);
   const [query, setQuery] = useState("");
   /** `null` = not picking; otherwise the `${kind}:${id}` keys chosen for a group hangout. */
@@ -195,11 +197,13 @@ export default function FriendsTab(props: Props) {
         <button
           type="button"
           className="quick-action"
-          disabled={chat.state === "sending"}
-          onClick={() => void chat.send(IMPORT_PROMPT)}
+          disabled={busy}
+          aria-expanded={showSources}
+          aria-controls={sourcesId}
+          onClick={() => setShowSources((shown) => !shown)}
         >
           <Icon name="import" size={18} />
-          {chat.state === "sending" ? "Asking…" : "Import friends"}
+          Import contacts
         </button>
         <button
           type="button"
@@ -234,7 +238,9 @@ export default function FriendsTab(props: Props) {
           </button>
         )}
       </div>
-      <ChatStatus state={chat.state} prompt={chat.prompt} />
+      <div id={sourcesId} hidden={!showSources}>
+        {showSources && <ContactImportSources action={action} nav={nav} />}
+      </div>
 
       {picking && (
         <div className="group-bar">
@@ -368,9 +374,6 @@ export default function FriendsTab(props: Props) {
     </>
   );
 }
-
-const IMPORT_PROMPT =
-  "I'd like to import my friends into Venn. I'll paste a list, upload a contacts file, or just tell you about them.";
 
 interface RowProps {
   name: string;

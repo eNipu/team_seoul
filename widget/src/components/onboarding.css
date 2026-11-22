@@ -100,6 +100,7 @@
 .onb__moment { display: grid; gap: 6px; padding: 14px 16px; border-radius: 16px; background: var(--onb-yellow); color: #000; }
 .onb__moment p { margin: 0; font-size: 0.9375rem; font-weight: 600; line-height: 1.4; }
 .onb__moment small { font-size: 0.75rem; color: #4c4000; }
+.onb .contact-import-sources > p { color: #6e6e73; }
 .onb__row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; width: 100%; }
 .onb__row .onb__more { width: auto; text-align: right; }
 .onb__row .onb__more[open] { width: 100%; text-align: left; }

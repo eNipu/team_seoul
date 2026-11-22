@@ -2,7 +2,7 @@
   {
     "url": "/?view=welcome", "w": 360, "h": 740, "scheme": "dark",
     "steps": [
-      "waitFor:Step 1 of 3", "click('Choose memory areas')", "waitFor:Choose memories to preview", "document.querySelector('.memory-import-topics input').click()", "click('Preview in chat')", "waitFor:Check the chat",
+      "waitFor:Who is Venn for?", "click('Friends and family')", "click('Preview first')", "click('Pick what to import')", "waitFor:Choose memories to preview",
       "click('Review “Film photography”')", "waitFor:Memory review", "document.querySelector('.review-choice input').click()",
       "click('Save 1 privately')", "waitFor:Continue to contacts", "click('Continue to contacts')", "waitFor:Step 2 of 3",
       "click('Instagram import')", "waitFor:Instagram import", "click('Nadia Amari')", "clickLabel('Next profiles')", "waitFor:Page 2 of", "clickLabel('Previous profiles')",
@@ -21,8 +21,24 @@
   {
     "url": "/?view=dashboard_sample&tab=friends", "w": 390, "h": 800, "scheme": "dark",
     "steps": [
-      "waitFor:Elena Rossi", "has('Clear preview data')", "!(/\\bsample\\b/i.test(document.body.innerText) || document.querySelector('.badge--sample,.sample-banner,[aria-label$=\"(preview)\"]')) ? 'ok' : 'MISSING ordinary friend presentation'",
-      "!document.querySelector('[role=tabpanel] .demo-import') && !/try the demo import|preview profiles/i.test(document.querySelector('[role=tabpanel]').innerText) ? 'ok' : 'MISSING removal of duplicate import'", "document.querySelector('[role=tab][id$=\"-tab-memories\"]').click()", "waitFor:ChatGPT memory", "!(/\\bsample\\b/i.test(document.body.innerText) || document.querySelector('.badge--sample,.sample-banner')) ? 'ok' : 'MISSING ordinary memory presentation'", "overflow()"
+      "waitFor:Elena Rossi", "has('Clear preview data')", "!(/\\bsample\\b/i.test(document.querySelector('[role=tabpanel]').innerText) || document.querySelector('.badge--sample,.sample-banner,[aria-label$=\"(preview)\"]')) ? 'ok' : 'MISSING ordinary friend presentation'",
+      "!document.querySelector('[role=tabpanel] .demo-import') && !/try the demo import|preview profiles/i.test(document.querySelector('[role=tabpanel]').innerText) ? 'ok' : 'MISSING removal of duplicate import'", "document.querySelector('[role=tab][id$=\"-tab-memories\"]').click()", "waitFor:ChatGPT memory", "!(/\\bsample\\b/i.test(document.querySelector('[role=tabpanel]').innerText) || document.querySelector('.badge--sample,.sample-banner')) ? 'ok' : 'MISSING ordinary memory presentation'", "overflow()"
+    ]
+  },
+  {
+    "url": "/?view=memory_quick_import&nochat=1", "w": 375, "h": 740, "scheme": "light",
+    "steps": [
+      "waitFor:Import contacts", "click('Import contacts')", "has('Import sample contacts from Instagram or LinkedIn.')",
+      "click('Instagram import')", "waitFor:0 of 100 selected", "has('Choose fictional Instagram contacts')",
+      "!/upload|export|csv/i.test(document.body.innerText) ? 'ok' : 'UNEXPECTED upload copy'", "overflow()"
+    ]
+  },
+  {
+    "url": "/?view=dashboard&tab=friends&nochat=1", "w": 800, "h": 850, "scheme": "dark",
+    "steps": [
+      "waitFor:Import contacts", "click('Import contacts')", "click('LinkedIn import')", "waitFor:0 of 100 selected",
+      "has('Choose fictional LinkedIn contacts')", "document.querySelector('.pick-list--demo input:not(:disabled)').click()",
+      "click('Add 1 profile')", "waitFor:Added 1 profile", "has('These sample LinkedIn contacts are private notes.')", "overflow()"
     ]
   },
   {

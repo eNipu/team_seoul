@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { HostBridge } from "../mcp/client";
 import { parseSaveMemories, plural, type Memory, type MemoryReviewViewData } from "../types";
-import { ActionError, ChatFallback, useAction, type Nav } from "./common";
+import { ActionError, useAction, type Nav } from "./common";
 import { Icon } from "./icons";
 import { StepCount } from "./Welcome";
 import { CIRCLES, loadCircle } from "../onboardingCircle";
-import { IMPORT_CONTACTS_PROMPT } from "../memoryImport";
+import ContactImportSources from "./ContactImportSources";
 import "./onboarding.css";
 
 // After one tap on Connect: save everything PRIVATE straight away (the tap is the consent),
@@ -16,7 +16,8 @@ export default function QuickImport({ data, bridge, nav }: { data: MemoryReviewV
   const [saved, setSaved] = useState<Memory[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [removed, setRemoved] = useState<string[]>([]);
-  const [importSent, setImportSent] = useState<"sent" | "fallback" | null>(null);
+  const [showSources, setShowSources] = useState(false);
+  const sourcesId = useId();
 
   async function save() {
     setError(null);
@@ -74,23 +75,18 @@ export default function QuickImport({ data, bridge, nav }: { data: MemoryReviewV
   const circle = CIRCLES.find((c) => c.value === loadCircle());
   const importFirst = circle?.importFirst ?? true;
 
-  async function importContacts() {
-    if (action.busy !== null) return;
-    let sent = false;
-    try { sent = await bridge.sendMessage(IMPORT_CONTACTS_PROMPT); } catch { sent = false; }
-    setImportSent(sent ? "sent" : "fallback");
-  }
   const invitePerson = () => void action.run("invite", () => nav.openView("venn_create_invite", {}));
-
-  if (importSent) {
-    return (
-      <section className="onb" aria-live="polite">
-        <StepCount n={3} />
-        <h2 className="onb__title">Upload or paste your contacts in the chat.</h2>
-        {importSent === "fallback" && <ChatFallback text={IMPORT_CONTACTS_PROMPT} />}
-      </section>
-    );
-  }
+  const importButton = (
+    <button type="button" className={importFirst ? "onb__cta" : "onb__link"} disabled={action.busy !== null}
+      aria-expanded={showSources} aria-controls={sourcesId} onClick={() => setShowSources((shown) => !shown)}>
+      Import contacts
+    </button>
+  );
+  const importSources = (
+    <div id={sourcesId} hidden={!showSources}>
+      {showSources && <ContactImportSources action={action} nav={nav} />}
+    </div>
+  );
 
   return (
     <section className="onb">
@@ -99,9 +95,8 @@ export default function QuickImport({ data, bridge, nav }: { data: MemoryReviewV
       <ActionError action={action} />
       {importFirst ? (
         <>
-          <button type="button" className="onb__cta" disabled={action.busy !== null} onClick={() => void importContacts()}>
-            Import contacts
-          </button>
+          {importButton}
+          {importSources}
           <div className="onb__row">
             <button type="button" className="onb__link" onClick={invitePerson}>Invite someone</button>
             {kept.length > 0 && <ReviewList kept={kept} busy={action.busy !== null} remove={remove} />}
@@ -113,9 +108,10 @@ export default function QuickImport({ data, bridge, nav }: { data: MemoryReviewV
             {action.busy === "invite" ? "Opening…" : invite}
           </button>
           <div className="onb__row">
-            <button type="button" className="onb__link" onClick={() => void importContacts()}>Import contacts</button>
+            {importButton}
             {kept.length > 0 && <ReviewList kept={kept} busy={action.busy !== null} remove={remove} />}
           </div>
+          {importSources}
         </>
       )}
     </section>

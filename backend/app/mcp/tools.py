@@ -110,10 +110,9 @@ def _onboarding_guidance(progress) -> str:
             "remember about them (up to 30). Do not list them in chat first. The card saves them privately."
         )
     return (
-        "Step 2 of 3: the card offers Import contacts or Invite someone. Import contacts: the user uploads an "
-        "Instagram or LinkedIn export or pastes names -> venn_propose_people_import (they confirm on the card; "
-        "never infer interests from names or titles). Invite someone: venn_create_invite. If the user picked "
-        "Partner, the invite comes first."
+        "Step 2 of 3: the card offers Import contacts or Invite someone. Import contacts opens a sample "
+        "import for Instagram or LinkedIn; the user chooses and confirms on the card. Do not ask for an upload. "
+        "Invite someone: venn_create_invite. If the user picked Partner, the invite comes first."
     )
 
 
@@ -960,7 +959,7 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
         title="Preview social profiles",
         description=(
             "Open an Instagram or LinkedIn import review using the built-in profile collection, not a connected "
-            "account. For the user's own contacts, review a supplied export instead. Nothing is selected: "
+            "account. Nothing is selected: "
             "let the user choose and add profiles on the card. Confirmed profiles become private notes."
         ),
         annotations=WRITE,

@@ -1,7 +1,7 @@
 import { strongestFirst } from "../../../shared/importInterests";
 import { useEffect, useRef, useState } from "react";
 import { DEMO_PLATFORM_LABELS, formatDaysAgo, parseImportPeople, parseView, plural, type ImportCandidate, type PeopleImportViewData } from "../types";
-import { ActionError, Avatar, ChatStatus, EmptyNote, useAction, useChatPrompt, type ViewProps } from "./common";
+import { ActionError, Avatar, EmptyNote, useAction, type ViewProps } from "./common";
 import ImportInterests from "./ImportInterests";
 import PeopleRadar from "./PeopleRadar";
 import { Illustration } from "./icons";
@@ -11,7 +11,6 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
   const demoPlatform = data.demo_platform;
   const platform = demoPlatform && DEMO_PLATFORM_LABELS[demoPlatform];
   const token = data.confirmation_token;
-  const ownImport = useChatPrompt(bridge);
   const socialSource = demoPlatform ?? (data.source === "instagram" || data.source === "linkedin" ? data.source : null);
   const [page, setPage] = useState(0);
   const listHeading = useRef<HTMLHeadingElement>(null);
@@ -99,7 +98,7 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
         <Illustration name="friends" />
         <h2 ref={resultHeading} tabIndex={-1} role="status">Added {platform ? plural(added.count, "profile", "profiles") : plural(added.count, "person", "people")}</h2>
         <p className="muted">
-          {platform ? "Only you can see these notes. To clear them, choose Clear preview data on the dashboard." :
+          {platform ? `These sample ${platform} contacts are private notes. Clear preview data on the dashboard to remove them.` :
             "They're saved as private notes. Only you can see them."}
         </p>
         {shown.length > 0 && (
@@ -145,18 +144,12 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
     <section className="panel">
       <h2 ref={listHeading} tabIndex={-1}>{platform ? `${platform} import` : "Your people radar"}</h2>
       <p className="muted small lead">
-        {platform ? `These built-in profiles aren’t from your ${platform} account. Add the ones you choose as private notes.` :
+        {platform ? `Choose fictional ${platform} contacts to add as private notes.` :
           `Tap a person to see what connects you. People you add become private notes.`}
       </p>
 
       <ActionError action={action} />
 
-      {platform && <details className="own-import">
-        <summary>Use my own {platform} contacts instead</summary>
-        <p className="muted small">Paste names or attach your export in chat. No password or account connection is needed.</p>
-        <button type="button" className="btn" disabled={busy || ownImport.state === "sending" || ownImport.state === "sent"} onClick={() => void ownImport.send(`Help me review my own ${platform} contacts. Ask me to paste names or attach my export, then call venn_propose_people_import with source '${demoPlatform}'. Use only details I supply. I’ll choose who to add on the card.`)}>Continue in chat</button>
-        <ChatStatus state={ownImport.state} prompt={ownImport.prompt} />
-      </details>}
       {demoPlatform && !token ? (
         <div className="stack">
           <p className="muted small">This review can’t confirm an import. Open a fresh review to choose who to add.</p>
@@ -171,7 +164,7 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
         </div>
       ) : data.candidates.length === 0 ? (
         <EmptyNote art="search" title="No one to add">
-          Venn couldn't find any people in that. Try pasting names, one per line.
+          {platform ? `No sample ${platform} contacts are available.` : "Venn couldn't find any people in that. Try pasting names, one per line."}
         </EmptyNote>
       ) : (
         <>

@@ -41,7 +41,8 @@ def test_steps_are_ticked_off_by_what_the_user_has_done(alice):
     assert view["view"] == "dashboard"
     assert steps(view) == {"about_you": True, "your_people": False, "connect": False}
     said = text(alice, "venn_show_dashboard")
-    assert "Step 2 of 3" in said and "Instagram or LinkedIn" in said
+    assert "Step 2 of 3" in said and "sample import for Instagram or LinkedIn" in said
+    assert "Do not ask for an upload" in said
 
     alice.ok("venn_add_person", name="Maya")
     assert steps(alice.ok("venn_show_dashboard")) == {"about_you": True, "your_people": True, "connect": False}

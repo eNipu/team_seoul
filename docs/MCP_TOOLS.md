@@ -59,7 +59,7 @@ memory. The reply tool accepts the task-specific payload and has no conversation
 | `venn_delete_saved_reply` | `reply_id` | D, widget only | `{deleted: true}`. Removes the owner's saved reply. |
 This is guidance to the model, not something the server can enforce.
 
-**Guided setup.** “Open Venn” shows the first unfinished step on the card: import memories → import Instagram and/or LinkedIn contacts → find connections with similar interests. Welcome, dashboard and help carry `onboarding: { memories_ready, contacts_ready, matches_reviewed }`. Opening a review, loading a starter circle, or sending an invite does not complete a step. A user-approved non-sample memory and one confirmed platform contact suffice for the final step. An explicit search counts even if it finds no matches. Dedicated tools outside guided setup remain available. `setup[]` is the separate web checklist, not authoritative for plugin onboarding.
+**Guided setup.** “Open Venn” shows the first unfinished step on the card: import memories → review and add sample Instagram and/or LinkedIn contacts (no account access or upload) → find connections with similar interests. Welcome, dashboard and help carry `onboarding: { memories_ready, contacts_ready, matches_reviewed }`. Opening a review, loading a starter circle, or sending an invite does not complete a step. A user-approved non-sample memory and one confirmed platform contact suffice for the final step. An explicit search counts even if it finds no matches. Dedicated tools outside guided setup remain available. `setup[]` is the separate web checklist, not authoritative for plugin onboarding.
 
 ## Profile
 

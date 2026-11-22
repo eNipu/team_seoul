@@ -797,7 +797,7 @@ const HELP_TOPICS: HelpTopic[] = [
     key: "people",
     title: "Keep notes on your people",
     description: "Add friends who are not on Venn, one at a time or a whole list. Notes stay private to you.",
-    examples: ["Import my friends into Venn", "Who do I know who likes hiking?"],
+    examples: ["Show me sample contacts for an Instagram import", "Show me sample contacts for a LinkedIn import", "Who do I know who likes hiking?"],
   },
   {
     key: "connect",
