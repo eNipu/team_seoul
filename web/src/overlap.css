@@ -1,45 +1,8 @@
-.ov-entry { display: grid; grid-template-columns: auto 1fr auto; }
-.ov-entry__text { display: grid; gap: .2rem; }
-.overlap {
-  display: grid;
-  gap: 1.1rem;
-  max-width: 52rem;
-  margin-inline: auto;
-  overflow-wrap: anywhere;
-}
-.ov-hero, .ov-card {
-  border: 1px solid var(--border);
-  border-radius: 1.4rem;
-  padding: clamp(1.15rem, 3vw, 2rem);
-}
-.ov-hero {
-  display: flex;
-  align-items: center;
-  gap: clamp(1rem, 4vw, 2.5rem);
-  background: var(--surface-2);
-}
-.ov-hero h1 {
-  margin: .4rem 0 .65rem;
-  font-size: clamp(1.9rem, 4vw, 3rem);
-  line-height: 1.06;
-  letter-spacing: -.045em;
-  text-wrap: balance;
-}
-.ov-kicker { color: var(--accent-strong); font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
-.ov-rings { display: flex; align-items: center; flex: none; }
-.ov-rings i {
-  width: clamp(3.25rem, 8vw, 5.5rem);
-  aspect-ratio: 1;
-  border: 2px solid var(--accent);
-  border-radius: 50%;
-  background: var(--venn-you);
-}
-.ov-rings i + i { margin-left: -.7rem; border-style: dashed; transition: transform .45s ease, background-color .45s ease; }
-.ov-mutual i + i { transform: translateX(-22%); border-style: solid; background: color-mix(in srgb, var(--accent) 35%, transparent); }
-.ov-card { display: grid; gap: 1rem; background: var(--surface); }
-.ov-card h2, .ov-card h3, .overlap p { margin: 0; }
-.overlap p { color: var(--muted); line-height: 1.55; }
-.ov-consent { padding-inline: .4rem; }
+/* Overlap page and its Home doorway. The look comes from pages/tools.css (.tl). */
+.ov-entry { display: grid; grid-template-columns: auto 1fr auto; align-items: center; }
+.ov-entry__text { display: grid; gap: .1rem; }
+
+.overlap { overflow-wrap: anywhere; }
 .ov-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); gap: .8rem; }
 .ov-fields label, .ov-select { display: grid; gap: .4rem; font-weight: 600; }
 .ov-fields select, .ov-select select { width: 100%; min-height: 44px; }
@@ -47,11 +10,5 @@
 .ov-interests legend { padding: 0; margin-bottom: .5rem; font-weight: 600; }
 .ov-row { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
 .ov-select + .ov-row { margin-top: 1rem; }
-.ov-interests .btn { border-radius: 2rem; }
-.ov-interests .btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); }
-.ov-note { display: grid; gap: .6rem; border-inline-start: 3px solid var(--accent); background: var(--surface-2); border-radius: .2rem .8rem .8rem .2rem; padding: 1rem; }
-.ov-note h3 { font-size: 1rem; }
 .ov-summary { display: grid; gap: .25rem; }
 .ov-check { display: flex; align-items: center; gap: .65rem; min-height: 44px; cursor: pointer; }
-@media (max-width: 550px) { .ov-hero { align-items: flex-start; flex-direction: column; } }
-@media (prefers-reduced-motion: reduce) { .ov-rings i + i { transition: none; } }
