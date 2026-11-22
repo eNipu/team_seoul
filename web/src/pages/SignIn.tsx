@@ -1,5 +1,6 @@
-// Sign-in is part of the app: the same Venn account as in ChatGPT.
-// An account is only ever created after the explicit second step.
+// Sign-in and sign-up are part of the app: the same Venn account as in ChatGPT.
+// Signing in never creates an account silently; users either choose Sign up directly
+// or confirm account creation when a username isn't found.
 
 import { useState } from "react";
 import { api } from "../api";
@@ -10,12 +11,27 @@ import { Field, InlineError } from "../ui";
 
 const USERNAME = /^[a-z0-9][a-z0-9._-]{1,31}$/;
 
+type AuthMode = "signin" | "signup";
+
+function initialMode(): AuthMode {
+  const mode = new URLSearchParams(window.location.search).get("mode");
+  return mode === "signup" ? "signup" : "signin";
+}
+
+function suggestDisplayName(username: string): string {
+  return username
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
 function AuthFrame({ children }: { children: React.ReactNode }) {
   return (
     <div className="auth">
       <main className="auth__card">
         <div className="auth__brand">
-          <BrandMark size={44} />
+          <BrandMark size={36} />
           <span className="brand__name">Venn</span>
         </div>
         {children}
@@ -35,45 +51,65 @@ export default function SignIn({
   passcodeRequired: boolean;
   onSignedIn: (result: SignInResult) => void;
 }) {
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [username, setUsername] = useState("");
   const [passcode, setPasscode] = useState("");
+  const [showPasscode, setShowPasscode] = useState(false);
   const [displayName, setDisplayName] = useState("");
-  /** The username the server said has no account yet; shows the create-account step. */
+  /** Username the server reported missing on Sign in, used to offer one-click switch to Sign up. */
   const [missing, setMissing] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | null>(null);
+  const [displayNameError, setDisplayNameError] = useState<string | null>(null);
 
-  const creating = missing !== null && missing === username;
+  const isSignUp = mode === "signup";
+  const showMissingNotice = !isSignUp && missing !== null && missing === username;
 
-  const submit = async (create: boolean) => {
+  const switchMode = (next: AuthMode, prefillUsername?: string) => {
+    setMode(next);
+    setError(null);
+    setNameError(null);
+    setDisplayNameError(null);
+    if (next === "signup") {
+      const target = prefillUsername ?? username.trim().toLowerCase();
+      if (target && !displayName.trim()) setDisplayName(suggestDisplayName(target));
+      setMissing(null);
+    } else {
+      setMissing(null);
+    }
+  };
+
+  const submit = async () => {
     const name = username.trim().toLowerCase();
     setError(null);
     setNameError(null);
+    setDisplayNameError(null);
+
+    if (isSignUp && !displayName.trim()) {
+      setDisplayNameError("Enter the name Venn should call you.");
+      return;
+    }
     if (!USERNAME.test(name)) {
       setNameError("Use 2–32 characters: lower-case letters, digits, dots, underscores or hyphens.");
       return;
     }
     if (passcodeRequired && !passcode) {
-      setError("Enter the passcode.");
+      setError("Enter the server passcode.");
       return;
     }
-    if (create && !displayName.trim()) {
-      setError("Enter the name Venn should call you.");
-      return;
-    }
+
     setBusy(true);
     try {
       const result = await api.signIn({
         username: name,
         ...(passcodeRequired ? { passcode } : {}),
-        ...(create ? { display_name: displayName.trim(), create: true } : {}),
+        ...(isSignUp ? { display_name: displayName.trim(), create: true } : {}),
       });
       onSignedIn(result);
     } catch (e) {
-      if (!create && e instanceof ApiError && e.code === "NOT_FOUND") {
+      if (!isSignUp && e instanceof ApiError && e.code === "NOT_FOUND") {
         setMissing(name);
-        if (!displayName) setDisplayName(name.charAt(0).toUpperCase() + name.slice(1).replace(/[._-]+/g, " "));
       } else {
         setError(errorMessage(e));
       }
@@ -83,19 +119,70 @@ export default function SignIn({
 
   return (
     <AuthFrame>
-      <h1>Sign in to Venn</h1>
-      <p className="auth__lead">
-        Use your Venn username: the one you chose when you connected Venn in ChatGPT. This is not your
-        ChatGPT login.
-      </p>
+      <div className="auth__tabs" role="tablist" aria-label="Account access">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={!isSignUp}
+          className={`auth__tab${!isSignUp ? " auth__tab--on" : ""}`}
+          onClick={() => switchMode("signin")}
+        >
+          Sign in
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={isSignUp}
+          className={`auth__tab${isSignUp ? " auth__tab--on" : ""}`}
+          onClick={() => switchMode("signup")}
+        >
+          Sign up
+        </button>
+      </div>
+
+      <div className="auth__header">
+        <h1>{isSignUp ? "Create your Venn account" : "Sign in to Venn"}</h1>
+        <p className="auth__lead">
+          {isSignUp
+            ? "Choose your display name and Venn username. Use the same username to connect Venn in ChatGPT."
+            : "Use your Venn username — the one you chose when you created your account or connected Venn in ChatGPT."}
+        </p>
+      </div>
+
       <form
         className="stack"
         noValidate
         onSubmit={(e) => {
           e.preventDefault();
-          void submit(creating);
+          void submit();
         }}
       >
+        {isSignUp && (
+          <Field
+            label="Display name"
+            error={displayNameError}
+            hint="What Venn calls you. You can change this anytime."
+          >
+            {(p) => (
+              <input
+                {...p}
+                name="display_name"
+                value={displayName}
+                onChange={(e) => {
+                  setDisplayName(e.target.value);
+                  if (displayNameError) setDisplayNameError(null);
+                }}
+                placeholder="e.g. Maya Chen"
+                autoComplete="name"
+                enterKeyHint="next"
+                maxLength={LIMITS.displayName}
+                autoFocus
+                required
+              />
+            )}
+          </Field>
+        )}
+
         <Field
           label="Venn username"
           error={nameError}
@@ -106,59 +193,99 @@ export default function SignIn({
               {...p}
               name="username"
               value={username}
-              onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ""))}
+              onChange={(e) => {
+                setUsername(e.target.value.toLowerCase().replace(/\s+/g, ""));
+                if (nameError) setNameError(null);
+              }}
+              placeholder="e.g. maya"
               autoComplete="username"
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
+              enterKeyHint={passcodeRequired ? "next" : "done"}
               maxLength={32}
-              autoFocus
+              autoFocus={!isSignUp}
               required
             />
           )}
         </Field>
+
         {passcodeRequired && (
-          <Field label="Server passcode" hint="The shared passcode for this development server, not a personal password.">
+          <Field
+            label="Server passcode"
+            hint="The shared passcode for this development server, not a personal password."
+          >
             {(p) => (
-              <input
-                {...p}
-                name="passcode"
-                type="password"
-                value={passcode}
-                onChange={(e) => setPasscode(e.target.value)}
-                autoComplete="current-password"
-                required
-              />
+              <div className="passcode-wrap">
+                <input
+                  {...p}
+                  name={isSignUp ? "new-passcode" : "passcode"}
+                  type={showPasscode ? "text" : "password"}
+                  value={passcode}
+                  onChange={(e) => setPasscode(e.target.value)}
+                  autoComplete={isSignUp ? "new-password" : "current-password"}
+                  enterKeyHint="done"
+                  required
+                />
+                <button
+                  type="button"
+                  className="passcode-wrap__toggle"
+                  aria-label={showPasscode ? "Hide passcode" : "Show passcode"}
+                  aria-pressed={showPasscode}
+                  onClick={() => setShowPasscode((v) => !v)}
+                >
+                  {showPasscode ? "Hide" : "Show"}
+                </button>
+              </div>
             )}
           </Field>
         )}
-        {creating && (
-          <div className="auth__create" role="status">
-            <p className="auth__missing">
-              <Icon name="info" size={18} />
+
+        {showMissingNotice && (
+          <div className="auth__missing" role="status">
+            <Icon name="info" size={18} />
+            <div className="auth__missing-body">
               <span>No Venn account called “{missing}” yet.</span>
-            </p>
-            <Field label="Display name" hint="What Venn calls you. You can change it later.">
-              {(p) => (
-                <input
-                  {...p}
-                  name="display_name"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  autoComplete="name"
-                  maxLength={LIMITS.displayName}
-                />
-              )}
-            </Field>
+              <button
+                type="button"
+                className="link-btn"
+                onClick={() => switchMode("signup", missing ?? undefined)}
+              >
+                Create an account as “{missing}”
+              </button>
+            </div>
           </div>
         )}
+
         <InlineError message={error} />
+
         <button type="submit" className="btn btn--primary btn--block" disabled={busy}>
-          {busy ? "One moment…" : creating ? "Create account" : "Sign in"}
+          {busy
+            ? isSignUp
+              ? "Creating account…"
+              : "Signing in…"
+            : isSignUp
+              ? "Create account"
+              : "Sign in"}
         </button>
-        {creating && (
-          <p className="auth__hint">Or change the username above to sign in to an account you already have.</p>
-        )}
+
+        <p className="auth__switch">
+          {isSignUp ? (
+            <>
+              Already have an account?{" "}
+              <button type="button" className="link-btn" onClick={() => switchMode("signin")}>
+                Sign in
+              </button>
+            </>
+          ) : (
+            <>
+              New to Venn?{" "}
+              <button type="button" className="link-btn" onClick={() => switchMode("signup")}>
+                Create an account
+              </button>
+            </>
+          )}
+        </p>
       </form>
     </AuthFrame>
   );
