@@ -71,6 +71,7 @@ stored: each step is derived from the data it produces.
 - `venn_show_dashboard` includes the open steps in its result text. Start the first open one
   only when the user asks for set-up, then move on when a step is done or skipped. Demo
   imports and the sample circle do not count toward set-up.
+  The first About you question asks who the user wants to spend time with and what they would enjoy together.
 - What the model does with that text is guidance, not enforced; the checklist on the card is
   what is guaranteed. Every step still ends in a review card.
 
@@ -182,7 +183,7 @@ candidates are stored server-side, so nothing can be added that the user was not
 
 | Tool | Args | Scope | | Returns |
 | --- | --- | --- | --- | --- |
-| `venn_propose_people_import` | `people[]` (1–50 `{name, relationship?, notes?, interests?[], last_met_days_ago?}`), `source?` (≤60) | connections | W, UI | `{view: "people_import", import_id, expires_at, source, candidates[{index, name, relationship, notes, interests[], last_met_days_ago, already_added}], skipped, note}` — **adds nobody** |
+| `venn_propose_people_import` | `people[]` (1–50 `{name, relationship?, notes?, interests?[], last_met_days_ago?}`), `source?` (≤60) | connections | W, UI | `{view: "people_import", import_id, expires_at, source, candidates[{index, name, relationship, notes, interests[], last_met_days_ago, already_added, existing_relationships[], shared_interests[]}], skipped, note}` — **adds nobody** |
 | `venn_import_people` | `import_id`, `indexes[]` (1–50) | connections | W | `{imported: Person[], count}`; regular imports only |
 | `venn_preview_demo_people_import` | `platform`: `"instagram"` or `"linkedin"` | connections | W, UI | `people_import` with `demo_platform` and 100 fictional candidates. Adds nobody; no social login or external API. Result `_meta` carries the review's confirmation token for the widget |
 | `venn_import_demo_people` | `import_id`, `indexes[]` (1–100), `confirmation_token` | connections | W, widget callback | `{imported: Person[], count}`. Only the widget's **Add** button sends the token and selected indexes. Saves owner-only Sample notes; **Remove sample data** clears them |
@@ -193,8 +194,8 @@ and widget-only token (`_meta["venn/demoImportConfirmation"]`, not in model-visi
 
 Emails, links and phone numbers are stripped from names, relationships and notes; entries
 containing credentials or card/ID numbers are dropped and counted in `skipped`. `already_added`
-marks a name the user already has a note for. An import is owner-only, single-use and expires
-after 24 hours.
+marks a name the user already has a note for. Review shows the saved relationship clues alongside the proposed clue. The user can explicitly select a namesake to create a separate private note with its own ID. An import is owner-only, single-use and expires
+after 24 hours. The ChatGPT radar highlights candidate interests matching the owner’s saved interest titles or tags when the caller has memory-read permission.
 
 ## Relationship maintenance
 

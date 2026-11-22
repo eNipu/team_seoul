@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { DEMO_PLATFORM_LABELS, formatDaysAgo, parseImportPeople, plural, type ImportCandidate, type PeopleImportViewData } from "../types";
 import { ActionError, Avatar, EmptyNote, useAction, type ViewProps } from "./common";
+import PeopleRadar from "./PeopleRadar";
 import { Illustration } from "./icons";
 
 export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImportViewData>) {
@@ -9,7 +10,7 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
   const platform = demoPlatform && DEMO_PLATFORM_LABELS[demoPlatform];
   const token = data.confirmation_token;
   const fresh = data.candidates.filter((c) => !c.already_added);
-  const [picked, setPicked] = useState<Set<number>>(() => new Set(platform ? [] : fresh.map((c) => c.index)));
+  const [picked, setPicked] = useState<Set<number>>(() => new Set());
   const [added, setAdded] = useState<{ count: number; names: string[] } | null>(null);
 
   const busy = action.busy !== null;
@@ -112,10 +113,10 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
 
   return (
     <section className="panel">
-      <h2>{platform ? `${platform} demo import` : "Add these people?"}</h2>
+      <h2>{platform ? `${platform} demo import` : "Your people radar"}</h2>
       <p className="muted small lead">
         {platform ? `${plural(data.candidates.length, "fictional profile", "fictional profiles")}, not from a real ${platform} account. Pick the ones you want to add as private sample notes.` :
-          `${data.source ? `From your ${data.source}. ` : ""}Nothing is saved until you confirm. They become private notes only you can see.`}
+          `Tap a person to see what connects you. People you add become private notes.`}
       </p>
 
       <ActionError action={action} />
@@ -138,6 +139,7 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
         </EmptyNote>
       ) : (
         <>
+          {!platform && <PeopleRadar candidates={data.candidates} picked={picked} busy={busy} toggle={toggle} />}
           <div className="pick-bar">
             <span className="pick-bar__count" role="status">
               {count} of {data.candidates.length} selected
@@ -148,60 +150,62 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
               disabled={busy || fresh.length === 0}
               onClick={() => replaceSelection(new Set(fresh.map((c) => c.index)))}
             >
-              Select all
+              {platform ? "Select all" : "Select new names"}
             </button>
             <button type="button" className="btn btn--ghost btn--small" disabled={busy || count === 0} onClick={() => replaceSelection(new Set())}>
               Clear
             </button>
           </div>
 
-          {platform && addButton}
+          {platform && (
+            <>
+              {addButton}
 
-          <ul
-            className={`list pick-list${platform ? " pick-list--demo" : ""}`}
-            tabIndex={platform ? 0 : undefined}
-            aria-label={platform ? "Fictional profiles" : undefined}
-          >
-            {data.candidates.map((c, i) => {
-              const on = picked.has(c.index);
-              const meta = [c.relationship, c.last_met_days_ago !== null ? `Last met ${approxDays(c.last_met_days_ago)}` : null]
-                .filter(Boolean)
-                .join(" · ");
-              return (
-                <li key={`${c.index}-${i}`}>
-                  <label className={`pick ${on ? "pick--on" : ""}`}>
-                    <input type="checkbox" checked={on} disabled={busy || Boolean(platform && c.already_added)} onChange={() => toggle(c)} />
-                    <Avatar name={c.name} size="small" />
-                    <span className="pick__body">
-                      <span className="pick__name">
-                        <strong>{c.name}</strong>
-                        {c.already_added && <span className="badge badge--on">Already in Venn</span>}
-                      </span>
-                      {meta && <span className="muted small">{meta}</span>}
-                      {c.notes && <span className="muted small pick__notes">{c.notes}</span>}
-                      {c.interests.length > 0 && (
-                        <span className="chips">
-                          {c.interests.map((it, j) => (
-                            <span key={`${it}-${j}`} className="chip chip--small">
-                              {it}
+              <ul
+                className="list pick-list pick-list--demo"
+                tabIndex={0}
+                aria-label="Fictional profiles"
+              >
+                {data.candidates.map((c, i) => {
+                  const on = picked.has(c.index);
+                  const meta = [c.relationship, c.last_met_days_ago !== null ? `Last met ${approxDays(c.last_met_days_ago)}` : null]
+                    .filter(Boolean)
+                    .join(" · ");
+                  return (
+                    <li key={`${c.index}-${i}`}>
+                      <label className={`pick ${on ? "pick--on" : ""}`}>
+                        <input type="checkbox" checked={on} disabled={busy || c.already_added} onChange={() => toggle(c)} />
+                        <Avatar name={c.name} size="small" />
+                        <span className="pick__body">
+                          <span className="pick__name">
+                            <strong>{c.name}</strong>
+                            {c.already_added && <span className="badge badge--on">Already in Venn</span>}
+                          </span>
+                          {meta && <span className="muted small">{meta}</span>}
+                          {c.notes && <span className="muted small pick__notes">{c.notes}</span>}
+                          {c.interests.length > 0 && (
+                            <span className="chips">
+                              {c.interests.map((it, j) => (
+                                <span key={`${it}-${j}`} className="chip chip--small">
+                                  {it}
+                                </span>
+                              ))}
                             </span>
-                          ))}
+                          )}
                         </span>
-                      )}
-                    </span>
-                  </label>
-                </li>
-              );
-            })}
-          </ul>
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
+          )}
 
           {skippedLine && <p className="muted small">{skippedLine}</p>}
 
           {!platform && <div className="sticky-bar">{addButton}</div>}
         </>
       )}
-
-      {data.note && <p className="muted small footnote">{data.note}</p>}
     </section>
   );
 }

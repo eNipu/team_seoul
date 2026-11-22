@@ -95,6 +95,9 @@ Read `SCHEDULING.md` before any task in this group.
 | [T45](T45-plugin-weekly-review.md) | Review and save weekly updates in ChatGPT | both | M | – | done |
 | [T47](T47-chatgpt-starter-demo-import.md) | Add ChatGPT starter actions and demo contact imports | both | S | T46 | done |
 
+| [T51](T51-onboarding-question.md) | Ask a default question on the first Venn interaction | backend | S | – | done |
+| [T52](T52-people-radar.md) | Review people on a radar with shared interests | both | S | T51 | done |
+
 ### G. Website experience
 
 | ID | Task | Area | Size | Depends on | Status |

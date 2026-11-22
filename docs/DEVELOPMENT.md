@@ -155,6 +155,18 @@ See [.env.example](../.env.example). Key settings:
 
 See [docs/SECURITY.md](SECURITY.md) for the full checklist.
 
+### ChatGPT development listing
+
+For a manually registered Venn app, open **Settings → Plugins → Venn → Manage app**.
+Set **App name** to **Venn** and **App description** to “Keep private notes about people you
+know, find shared interests, and plan time together.” The development listing in ChatGPT
+has its own editable fields. After deploying an MCP change, use **Refresh tools** and open
+**View details** to check what the host displays.
+
+For a listing editor that accepts an icon, use [the 512 px Venn PNG](../web/public/venn-icon.png).
+Use **Lifestyle** for category and **https://joinvennai.com** for website where those fields
+are available. The packaged plugin also declares these details in [its manifest](../plugin/plugin.json).
+
 ### Railway deployment
 
 Railway project `heldly` (the old product name), environment `production`:
