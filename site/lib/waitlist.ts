@@ -128,6 +128,7 @@ export async function joinWaitlist(
           const [existing] = await tx<{ id: string }>("SELECT id FROM waitlist_signups WHERE email = $1", [email]);
           return { id: existing.id, created: false };
         }
+        await tx("INSERT INTO waitlist_receipts (signup_id) VALUES ($1)", [inserted.id]);
         if (inviter) {
           await tx("UPDATE waitlist_signups SET confirmed_at = now() WHERE id = $1 AND confirmed_at IS NULL", [inviter]);
         }
