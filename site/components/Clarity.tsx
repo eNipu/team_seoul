@@ -12,7 +12,7 @@ declare global {
 }
 
 export default function Clarity() {
-  const id = process.env.NEXT_PUBLIC_CLARITY_ID;
+  const id = process.env.NEXT_PUBLIC_CLARITY_ID || "zhd6eu9vuv";
   const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
