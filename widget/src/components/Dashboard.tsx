@@ -19,8 +19,8 @@ import { ActionError, Avatar, SectionTitle, useAction, type Action, type ViewPro
 import type { HostBridge } from "../mcp/client";
 import MemoriesTab from "./MemoriesTab";
 import FriendsTab from "./FriendsTab";
-import SetupCard from "./Setup";
-import { HomeTiles, Plans, PreviewCleanup } from "./DashboardHome";
+import { PreviewCleanup } from "./DashboardHome";
+import { QuietHome } from "./Moment";
 import { Icon, type IconName } from "./icons";
 
 export type DashboardTab = "profile" | "memories" | "friends";
@@ -34,14 +34,15 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
   const id = useId();
   const action = useAction();
   const [tab, setTabState] = useState<DashboardTab>(initialTab ?? "profile");
+  const showAll = initialTab !== null;
   const [profile, setProfile] = useState<Profile>(data.profile);
   const [memories, setMemories] = useState<Memory[]>(data.memories);
   const [connections, setConnections] = useState<Connection[]>(data.connections);
   const [people, setPeople] = useState<Person[]>(data.people);
   const [pending, setPending] = useState<PendingRequest[]>(data.pending_requests);
-  const [setupData, setSetupData] = useState(data);
-  const [plans, setPlans] = useState<Plan[]>(data.plans);
-  const [pendingAnswers, setPendingAnswers] = useState(data.pending_answers);
+  const [, setSetupData] = useState(data);
+  const [, setPlans] = useState<Plan[]>(data.plans);
+  const [, setPendingAnswers] = useState(data.pending_answers);
   const [sampleLoaded, setSampleLoaded] = useState(data.sample_loaded);
 
   const friendCount = connections.length + people.length;
@@ -84,16 +85,12 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
 
   return (
     <>
-    <SetupCard data={setupData} nav={nav} />
-    <HomeTiles pendingAnswers={pendingAnswers} bridge={bridge} nav={nav} />
-    <Plans
-      plans={plans}
-      bridge={bridge}
-      onChanged={(next) => {
-        setPlans(next);
-        void reload();
-      }}
-    />
+    <QuietHome bridge={bridge} nav={nav} />
+    {/* Lists (friends, memories, plans, setup) only when the chat asked for them. */}
+    {showAll && (
+    <div className="home-more">
+        <div className="home-more__body">
+          {sampleLoaded && <PreviewCleanup bridge={bridge} onChanged={() => nav.replaceView("venn_show_dashboard", {})} />}
     <section className="panel panel--tabs">
       <div className="tabs" role="tablist" aria-label="Dashboard sections">
         {tabs.map((t) => (
@@ -148,7 +145,9 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
         )}
       </div>
     </section>
-    {sampleLoaded && <PreviewCleanup bridge={bridge} onChanged={() => nav.replaceView("venn_show_dashboard", {})} />}
+        </div>
+    </div>
+    )}
     </>
   );
 }

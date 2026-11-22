@@ -143,10 +143,10 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
 
   return (
     <section className="panel">
-      <h2 ref={listHeading} tabIndex={-1}>{platform ? `${platform} import` : "Your people radar"}</h2>
+      <h2 ref={listHeading} tabIndex={-1}>{platform ? `${platform} demo import` : "Add more people."}</h2>
       <p className="muted small lead">
-        {platform ? `These built-in profiles aren’t from your ${platform} account. Add the ones you choose as private notes.` :
-          `Tap a person to see what connects you. People you add become private notes.`}
+        {platform ? `${plural(data.candidates.length, "fictional profile", "fictional profiles")}, not from a real ${platform} account. Pick the ones you want to add as private sample notes.` :
+          `Only you see these.`}
       </p>
 
       <ActionError action={action} />

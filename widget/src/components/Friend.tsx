@@ -1,23 +1,17 @@
-import { useId, useState, type FormEvent } from "react";
+import { useState } from "react";
 import {
   CATEGORY_LABELS,
-  LIMITS,
-  formatDate,
-  formatRelative,
-  friendArg,
   hasId,
   isObj,
-  parseLogInteraction,
   parsePerson,
   type FriendViewData,
-  type Interaction,
 } from "../types";
-import { ActionError, Avatar, ChatStatus, SectionTitle, useAction, useChatPrompt, type ViewProps } from "./common";
-import FollowUps from "./FollowUps";
+import { OpenMyVenn, signalsFrom } from "./Moment";
+import { ActionError, SectionTitle, useAction, type ViewProps } from "./common";
 import { CategoryIcon, Icon, Illustration } from "./icons";
 import PersonForm, { type PersonValues } from "./PersonForm";
 
-type Mode = "view" | "log" | "edit" | "confirm-remove";
+type Mode = "view" | "edit" | "confirm-remove";
 
 interface Details {
   name: string;
@@ -29,11 +23,8 @@ interface Details {
 const sameList = (a: string[], b: string[]) => a.length === b.length && a.every((x, i) => x === b[i]);
 
 export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>) {
-  const formId = useId();
   const action = useAction();
-  const chat = useChatPrompt(bridge);
   const isPerson = data.kind === "person";
-  const arg = friendArg(data.kind, data.id);
 
   const [mode, setMode] = useState<Mode>("view");
   const [details, setDetails] = useState<Details>({
@@ -42,52 +33,16 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
     notes: data.notes,
     interests: data.interests,
   });
-  const [interactions, setInteractions] = useState<Interaction[]>(data.recent_interactions);
-  const [lastAt, setLastAt] = useState<string | null>(data.last_interaction_at);
-  const [activity, setActivity] = useState("");
-  const [justLogged, setJustLogged] = useState(false);
   const [gone, setGone] = useState(false);
 
   const busy = action.busy !== null;
   const shared = new Set(data.shared_interests.map((s) => s.toLowerCase()));
 
-  function ideas() {
-    void action.run("ideas", () => nav.openView("venn_suggest_activity", arg));
-  }
 
-  function prep() {
-    void action.run("prep", () => nav.openView("venn_meetup_brief", arg));
-  }
 
-  function compare() {
-    void action.run("compare", () => nav.openView("venn_compare", arg));
-  }
 
-  function ask() {
-    void action.run("ask", () => nav.openView("venn_create_question_link", { person_id: data.id }));
-  }
 
-  function quiz() {
-    void action.run("quiz", () => nav.openView("venn_start_quiz", { connection_id: data.id }));
-  }
 
-  function logHangout(e: FormEvent) {
-    e.preventDefault();
-    const what = activity.trim();
-    void action.run("log", async () => {
-      const res = await bridge.callTool("venn_log_interaction", what ? { ...arg, activity: what } : arg);
-      if (!res.ok) return res.errorText;
-      const result = parseLogInteraction(res.data);
-      if (!result.recorded) return "Venn couldn't log that.";
-      const at = result.last_interaction_at ?? new Date().toISOString();
-      setInteractions((list) => [{ occurred_at: at, activity: what || null }, ...list]);
-      setLastAt(at);
-      setActivity("");
-      setJustLogged(true);
-      setMode("view");
-      return null;
-    });
-  }
 
   function saveEdit(values: PersonValues) {
     // Send only what changed. Cleared optional fields are sent as "" / [].
@@ -151,29 +106,11 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
   const listed = new Set(details.interests.map((i) => i.toLowerCase()));
   const chips = [...details.interests, ...(isPerson ? [] : data.shared_interests.filter((s) => !listed.has(s.toLowerCase())))];
 
-  return (
-    <section className="panel">
-      <div className="profile-head">
-        <Avatar name={details.name} size="large" />
-        <div className="profile-head__body">
-          <h2>{details.name}</h2>
-          <p className="muted small">
-            {isPerson || !data.on_venn
-              ? "Private note · only you can see this"
-              : data.since
-                ? `On Venn since ${formatDate(data.since)}`
-                : "On Venn"}
-          </p>
-          <div className="row row--wrap">
-            {details.relationship && <span className="badge badge--note">{details.relationship}</span>}
-            <span className="badge">
-              <Icon name="clock" size={12} />
-              {lastAt ? `Last met ${formatRelative(lastAt)}` : "No hangouts yet"}
-            </span>
-          </div>
-        </div>
-      </div>
+  const signals = signalsFrom({ ...data, display_name: details.name, notes: details.notes });
 
+  return (
+    <section className="onb friend">
+      <h2 className="onb__title">{details.name}</h2>
       <ActionError action={action} />
 
       {mode === "edit" ? (
@@ -195,89 +132,19 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
         </div>
       ) : (
         <>
-          {!isPerson && data.bio && <p>{data.bio}</p>}
-          {isPerson && details.notes && (
-            <div className="note-box">
-              <span className="field__label">Your notes</span>
-              <p>{details.notes}</p>
+          {signals.signal && (
+            <div className="onb__moment">
+              <p>{signals.signal.title}</p>
+              {signals.signal.detail && <span className="onb__moment-detail">{signals.signal.detail}</span>}
+              <small>{signals.signal.source}</small>
             </div>
           )}
+          <div className="onb__row">
+            <OpenMyVenn bridge={bridge} />
+            <details className="onb__more">
+              <summary>More</summary>
+              <div className="onb__more-body">
 
-          <button type="button" className="btn btn--primary btn--block" disabled={busy} onClick={ideas}>
-            <Icon name="bulb" size={18} />
-            {action.busy === "ideas" ? "Loading…" : "Get ideas for time together"}
-          </button>
-          <div className="tool-grid" role="group" aria-label={`More with ${details.name}`}>
-            <button type="button" className="tool" disabled={busy} onClick={compare}>
-              <Icon name="venn" />
-              {action.busy === "compare" ? "Loading…" : "Common ground"}
-            </button>
-            <button
-              type="button"
-              className="tool"
-              disabled={busy}
-              aria-expanded={mode === "log"}
-              onClick={() => setMode(mode === "log" ? "view" : "log")}
-            >
-              <Icon name="check-circle" />
-              Log a hangout
-            </button>
-            <button
-              type="button"
-              className="tool"
-              disabled={chat.state === "sending"}
-              onClick={() =>
-                void chat.send(`Help me draft a short, warm message to reconnect with ${details.name}. I will send it myself.`)
-              }
-            >
-              <Icon name="pencil" />
-              {chat.state === "sending" ? "Asking…" : "Draft a message"}
-            </button>
-            <button type="button" className="tool" disabled={busy} onClick={prep}>
-              <Icon name="note" />
-              {action.busy === "prep" ? "Loading…" : "Prep for a meetup"}
-            </button>
-            {isPerson ? (
-              <button type="button" className="tool" disabled={busy} onClick={ask}>
-                <Icon name="link" />
-                {action.busy === "ask" ? "Creating…" : "Ask them a few questions"}
-              </button>
-            ) : (
-              <button type="button" className="tool" disabled={busy} onClick={quiz}>
-                <Icon name="dice" />
-                {action.busy === "quiz" ? "Loading…" : "Quiz"}
-              </button>
-            )}
-          </div>
-          <ChatStatus state={chat.state} prompt={chat.prompt} />
-
-          {mode === "log" && (
-            <form className="inline-form form" onSubmit={logHangout}>
-              <label className="field" htmlFor={`${formId}-activity`}>
-                <span className="field__label">What did you do? (optional)</span>
-                <input
-                  id={`${formId}-activity`}
-                  type="text"
-                  value={activity}
-                  maxLength={LIMITS.activity}
-                  placeholder="Coffee, a walk, a long call…"
-                  autoComplete="off"
-                  disabled={busy}
-                  onChange={(e) => setActivity(e.target.value)}
-                />
-              </label>
-              <div className="actions actions--compact">
-                <button type="button" className="btn btn--ghost" disabled={busy} onClick={() => setMode("view")}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn--primary" disabled={busy}>
-                  {action.busy === "log" ? "Logging…" : "Log it"}
-                </button>
-              </div>
-            </form>
-          )}
-
-          <FollowUps bridge={bridge} friend={arg} name={details.name} initial={data.follow_ups} />
 
           <SectionTitle>Interests</SectionTitle>
           {chips.length > 0 ? (
@@ -328,25 +195,6 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
             </>
           )}
 
-          <SectionTitle count={interactions.length}>Recent hangouts</SectionTitle>
-          {justLogged && (
-            <p className="hint hint--ok" role="status">
-              <Icon name="check" size={16} /> Hangout logged
-            </p>
-          )}
-          {interactions.length === 0 ? (
-            <p className="muted small">No hangouts logged yet</p>
-          ) : (
-            <ol className="timeline">
-              {interactions.map((it, i) => (
-                <li key={`${it.occurred_at}-${i}`} className="timeline__item">
-                  <span className="timeline__what">{it.activity ?? "Spent time together"}</span>
-                  <span className="muted small">{formatDate(it.occurred_at)}</span>
-                </li>
-              ))}
-            </ol>
-          )}
-
           <div className="footer-actions">
             {mode === "confirm-remove" ? (
               <div className="confirm" role="group" aria-label="Confirm">
@@ -380,6 +228,9 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
                 </button>
               </>
             )}
+          </div>
+              </div>
+            </details>
           </div>
         </>
       )}
