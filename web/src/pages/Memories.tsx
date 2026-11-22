@@ -12,7 +12,6 @@ import {
   VISIBILITIES,
   VISIBILITY_HINTS,
   VISIBILITY_LABELS,
-  formatDate,
   plural,
   type FriendSummary,
   type Memory,
@@ -27,7 +26,6 @@ import {
   Field,
   InlineError,
   Loaded,
-  Notice,
   PageHeader,
   Skeleton,
   Tag,
@@ -324,12 +322,9 @@ export function MemoryCard({
         </div>
         <p>{memory.description}</p>
         <div className="memory__meta">
-          <Tag icon={VISIBILITY_ICON[memory.visibility]} tone={memory.visibility === "PRIVATE" ? "neutral" : "warn"}>
-            {VISIBILITY_LABELS[memory.visibility]}
-          </Tag>
-          {memory.source === "chatgpt_memory" && (
-            <Tag tone="info" icon="chat">
-              From ChatGPT
+          {memory.visibility !== "PRIVATE" && (
+            <Tag icon={VISIBILITY_ICON[memory.visibility]} tone="warn">
+              {VISIBILITY_LABELS[memory.visibility]}
             </Tag>
           )}
           {memory.source === "sample" && <Tag tone="info">Preview</Tag>}
@@ -338,14 +333,6 @@ export function MemoryCard({
               {p}
             </Tag>
           ))}
-          {memory.tags.map((t) => (
-            <span key={t} className="hash">
-              #{t}
-            </span>
-          ))}
-          <span className="muted small">
-            {CATEGORY_LABELS[memory.category]} · {formatDate(memory.created_at)}
-          </span>
         </div>
       </div>
     </li>
@@ -392,18 +379,13 @@ export default function Memories() {
         lead="What Venn has saved about you and your friendships."
         actions={
           <>
-          <Link to="/memories" query={{ import: "1", q: q || undefined }} className="btn">Import from ChatGPT</Link>
+          <Link to="/memories" query={{ import: "1", q: q || undefined }} className="link-btn">Import from ChatGPT</Link>
           <Link to="/memories" query={{ new: "1", q: q || undefined }} className="btn btn--primary">
-            <Icon name="plus" size={18} />
             Add a memory
           </Link>
           </>
         }
       />
-      <Notice icon="info">
-        This is what Venn has saved. It's the same in ChatGPT and here. Your ChatGPT chats and ChatGPT's own memory are not
-        synced — only what you approved or typed in.
-      </Notice>
 
       <form
         className="toolbar"
@@ -424,11 +406,11 @@ export default function Memories() {
             maxLength={LIMITS.searchQuery}
           />
         </label>
-        <button type="submit" className="btn">
+        <button type="submit" className="sr-only">
           Search
         </button>
         {q && (
-          <button type="button" className="btn" onClick={() => navigate("/memories")}>
+          <button type="button" className="link-btn" onClick={() => navigate("/memories")}>
             Clear
           </button>
         )}
@@ -469,22 +451,6 @@ export default function Memories() {
           }));
           return (
             <>
-              <div className="filters" role="group" aria-label="Filter by kind">
-                <button type="button" className="filter-chip" aria-pressed={active === "ALL"} onClick={() => setCategory("ALL")}>
-                  All <span>{list.length}</span>
-                </button>
-                {present.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    className="filter-chip"
-                    aria-pressed={active === c}
-                    onClick={() => setCategory(c)}
-                  >
-                    {CATEGORY_GROUP_LABELS[c]} <span>{counts.get(c)}</span>
-                  </button>
-                ))}
-              </div>
               {q && (
                 <p className="count" aria-live="polite">
                   {plural(list.length, "memory", "memories")} matching “{q}”
@@ -493,7 +459,7 @@ export default function Memories() {
               {groups.map((g) => (
                 <section key={g.category} className="memory-group">
                   <h2>{CATEGORY_GROUP_LABELS[g.category]}</h2>
-                  <ul className="memories card card--flush">
+                  <ul className="memories">
                     {g.items.map((m) => (
                       <MemoryCard key={m.memory_id} memory={m} onEdit={() => setEditing(m)} onDelete={() => setDeleting(m)} />
                     ))}
