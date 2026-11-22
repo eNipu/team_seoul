@@ -61,7 +61,10 @@
   saved reply in the database. **Save privately** keeps the displayed reply in the owner's account.
   Save and delete are widget actions. The server checks OAuth scopes, rejects credential and
   sensitive-number patterns, and restricts reading and deletion to the owner. Users can delete
-  an individual reply from **Saved replies**. The reply tools have no transcript input.
+  an individual reply from **Saved replies**. Saved bodies are returned to the widget in MCP
+  result metadata, outside the model-visible result. A discussion answer goes to ChatGPT only
+  when the user selects **Reply in ChatGPT**. The reply tools have no transcript input, and
+  reply-save analytics record the reply kind and a count.
 - Importing from ChatGPT memory: Venn's server cannot read ChatGPT's memory and never
   receives it wholesale. ChatGPT lists what it remembers in the chat; only the items the user
   picks there are sent to `venn_propose_memories`, and only the ones confirmed on the card are

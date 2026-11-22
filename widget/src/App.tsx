@@ -176,7 +176,7 @@ export default function App() {
           setError(extractText(result) || "Venn couldn't complete that request.");
           return;
         }
-        const parsed = parseView(result.structuredContent);
+        const parsed = parseView(result.structuredContent, result._meta);
         // A host-delivered result always resets the stack to that single view.
         generation.current += 1;
         dashboardTab.current = null;
@@ -219,7 +219,7 @@ export default function App() {
       const res = await b.callTool(tool, args);
       if (gen !== generation.current) return null; // superseded by a host-delivered result
       if (!res.ok) return res.errorText;
-      const parsed = parseView(res.data);
+      const parsed = parseView(res.data, res.meta);
       if (!parsed) return "Venn sent something this widget can't show yet.";
       setError(null);
       const cur = stackRef.current;
@@ -244,7 +244,7 @@ export default function App() {
       if (gen !== generation.current) return;
       setRefreshing(false);
       if (!res.ok) return;
-      const parsed = parseView(res.data);
+      const parsed = parseView(res.data, res.meta);
       if (!parsed || parsed.view !== target.view.view) return;
       setStack(stackRef.current.map((e) => (e.key === target.key ? entry(parsed) : e)));
     },
@@ -318,8 +318,11 @@ export default function App() {
             <Icon name="arrow-left" />
           </button>
         )}
-        <BrandMark />
-        <span className="venn__brand">Venn</span>
+        <div className="venn__brand">
+          <BrandMark size={23} />
+          <span>Venn</span>
+          <span className="venn__pen"><Icon name="pen" size={17} /></span>
+        </div>
         <span className="venn__spacer" />
         {(refreshing || opening) && <Spinner label={opening ? `Opening ${opening.toLowerCase()}` : "Refreshing"} />}
         {bridge?.isMock && <span className="badge badge--demo">Demo</span>}

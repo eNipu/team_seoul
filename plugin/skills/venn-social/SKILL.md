@@ -23,9 +23,11 @@ Use Venn cards for questions directed to Venn, including follow-ups.
    `venn_this_week` ("what should I do this week?"), `venn_create_question_link`,
    `venn_review_answers`, `venn_saved_replies` ("show my saved replies").
 2. When a Venn social question needs a tailored answer without a matching card, call
-   `venn_show_reply` with your answer as `advice`, `checklist` (ordered steps), or `draft`
-   (a ready-to-copy message). Pass only the plain-text answer and a descriptive title.
-   The card is the reply. The user can save it privately on the card.
+   `venn_show_reply` with `advice` for a short result, `checklist` for ordered steps, or `draft`
+   for a ready-to-copy message. Use `discussion` to ask one focused question, and `thread` to
+   recap a topic in two to six titled Venn-authored entries. Pass task-specific plain text and
+   keep chat history out of the tool input. A discussion answer sent from the card is the
+   user's next turn. Let the card carry the reply. The user can save it privately on the card.
    For opening Venn, saying hello, set-up, or a profile request, call `venn_show_dashboard`. It returns the
    profile too, so don't call `venn_get_profile` first; that tool returns data with no card.
 3. A brand-new account gets a welcome card (`view: "welcome"`); otherwise the card is their

@@ -101,7 +101,17 @@ See `site/README.md` › Waitlist, Analytics.
 
 | Table | Columns | Notes |
 | --- | --- | --- |
-| `saved_replies` | id*, owner_user_id* (FK cascade), reply* (JSON), created_at* | Private ChatGPT-generated advice, ordered steps, or drafts saved from a Venn card. Same content for the same owner has the same ID. |
+| `saved_replies` | id*, owner_user_id* (FK cascade), reply* (JSONB on Postgres), created_at* | Private advice, steps, drafts, discussion prompts, or thread recaps saved from a Venn card. Same typed payload for the same owner has the same ID. |
+
+The reply contract validates `kind` and its fields before rendering or saving. Postgres can group
+saved cards by `reply->>'kind'`. The first successful insert also creates a `reply_saved` event with
+`category` set to the validated reply kind and `count` set to 1. The row and event commit together.
+Retries of an existing save produce the existing reply ID and no additional event.
+
+Matching and activity suggestions use approved memory categories and tags, and interests on private
+people notes, through the existing visibility and ownership checks. If a discussion yields a
+durable interest or preference, ChatGPT can propose the specific item with
+`venn_propose_memories`. It becomes a matching signal after the user approves it in the review card.
 
 ## Deletion
 

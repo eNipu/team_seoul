@@ -15,7 +15,7 @@ import {
 export type CallToolResult = McpUiToolResultNotification["params"];
 
 export type ToolOutcome =
-  | { ok: true; data: unknown; errorText?: undefined }
+  | { ok: true; data: unknown; meta?: unknown; errorText?: undefined }
   | { ok: false; data?: undefined; errorText: string };
 
 export interface HostBridge {
@@ -85,7 +85,7 @@ class ExtAppsBridge implements HostBridge {
       if (result.isError) {
         return { ok: false, errorText: extractText(result) || `Tool ${name} failed.` };
       }
-      return { ok: true, data: result.structuredContent ?? null };
+      return { ok: true, data: result.structuredContent ?? null, meta: result._meta };
     } catch (e) {
       return { ok: false, errorText: errMessage(e) };
     }
