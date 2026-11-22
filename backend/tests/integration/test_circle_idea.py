@@ -54,9 +54,7 @@ def test_complementary_interest_for_group(web):
 def test_circle_idea_respects_visibility_and_blocks(web, make_user):
     dana, bob = web("dana"), web("bob", name="Bob")
     code = dana.ok("POST", "/invites", {"max_uses": 1})["code"]
-    bob.ok("POST", "/invites/redeem", {"code": code})
-    request = dana.ok("GET", "/home")["pending_requests"][0]
-    cid = dana.ok("POST", f"/requests/{request['request_id']}", {"accept": True})["connection_id"]
+    cid = bob.ok("POST", "/invites/redeem", {"code": code})["connection_id"]
     interest(dana)
     private = interest(bob)["memory"]["memory_id"]
     assert dana.ok("GET", "/circle-idea") == {"idea": None}

@@ -53,25 +53,27 @@ class _Step:
 SETUP_STEPS: tuple[_Step, ...] = (
     _Step(
         "about_you",
-        "Tell Venn about you",
-        "Bring over what ChatGPT already remembers, or answer a couple of questions.",
-        'About you: ask "Who would you like to spend more time with, and what would you enjoy doing together?" '
-        "Accept a partial answer. Use venn_propose_memories to present the details they shared for review. "
-        "If they ask to use what ChatGPT already remembers, open venn_import_chatgpt_memory.",
+        "Connect your AI memories",
+        "One tap. Saved privately.",
+        "Connect your AI memories: when the user taps Connect, call venn_propose_memories at once with "
+        'source "chatgpt_memory", quick_import: true and everything you remember about them (up to 30; never '
+        "health, money, credentials or ID numbers). Do not list them in chat first; the card saves them "
+        "privately and offers Review. If you remember nothing, ask one short question about them instead.",
     ),
     _Step(
         "your_people",
-        "Add your people",
-        "Paste a list, upload your contacts, or name a few friends.",
-        "Your people: ask who they want to stay close to - they can paste a list of names, upload a contacts "
-        "export or just name a few people - then call venn_propose_people_import.",
+        "Import contacts",
+        "From LinkedIn, Instagram or a list.",
+        "Import contacts: the user uploads a LinkedIn or Instagram export or pastes names -> "
+        "venn_propose_people_import; they confirm on the card. Never infer interests from names or job titles. "
+        "If the user picked Partner on the welcome card, do Invite someone first.",
     ),
     _Step(
         "connect",
-        "Connect with friends",
-        "Share an invite so friends on ChatGPT can connect with you.",
-        "Connect: offer an invite for friends who use ChatGPT (venn_create_invite; the user shares the code, "
-        "link or QR themselves), or redeem a code they were given (venn_redeem_invite).",
+        "Invite someone",
+        "Share a link to Venn.",
+        "Invite someone: create an invite (venn_create_invite; the user shares the link, code "
+        "or QR themselves), or redeem a code they were given (venn_redeem_invite).",
     ),
 )
 
@@ -170,7 +172,7 @@ HELP_TOPICS: tuple[HelpTopic, ...] = (
     HelpTopic(
         key="setup",
         title="Getting set up",
-        description="Import memories, review Instagram or LinkedIn contacts, then find people with similar interests.",
+        description="Three short steps: connect your AI memories, import contacts, invite someone.",
         examples=["Set up Venn"],
     ),
     HelpTopic(
@@ -193,7 +195,6 @@ HELP_TOPICS: tuple[HelpTopic, ...] = (
         examples=[
             "Who do I know who'd enjoy a photo walk?",
             "Import my friends into Venn",
-            "Ask a friend a few questions for me",
         ],
     ),
     HelpTopic(
@@ -206,27 +207,21 @@ HELP_TOPICS: tuple[HelpTopic, ...] = (
         key="stay_close",
         title="Stay close",
         description=(
-            "What you have in common, three things to do this week, a brief before you meet, a recap after, "
-            "and nudges when it has been a while."
+            "Venn quietly tells you when a friend is nearby, working on something you care about, or "
+            "looking for what you have, from what they chose to share."
         ),
         examples=[
-            "What should I do this week?",
+            "What's new with my people?",
             "What do I have in common with a friend?",
             "I'm seeing a friend tomorrow — brief me",
         ],
-    ),
-    HelpTopic(
-        key="quiz",
-        title="Play",
-        description="A quick quiz on how well you remember your people. It works with your own notes.",
-        examples=["Play the Venn quiz"],
     ),
 )
 
 HELP_PRIVACY: tuple[str, ...] = (
     "Nothing is saved until you approve it.",
     "Memories are private unless you choose to share them.",
-    "Venn never contacts anyone for you. It can draft a message; you send it.",
+    "Venn never contacts anyone for you. It only tells you; reaching out is up to you.",
     "What you save to Venn is there in ChatGPT and on the Venn website. "
     "Your ChatGPT chats and ChatGPT's own memory are not synced.",
     "You can edit or delete anything, or delete your whole account.",

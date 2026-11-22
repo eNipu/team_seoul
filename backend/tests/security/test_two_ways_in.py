@@ -80,9 +80,7 @@ def test_website_keeps_friends_private_memories_private(web, make_user):
     save(bob, "INTEREST", "Bouldering", "Indoor mostly.", "SHARED_WITH_CONNECTIONS")
     save(bob, "PERSONAL_MEMORY", "Stamp collecting", "My secret hobby.", "PRIVATE")
     code = alice.ok("POST", "/invites", {})["code"]
-    bob.ok("venn_redeem_invite", code=code)
-    request_id = alice.ok("GET", "/home")["pending_requests"][0]["request_id"]
-    connection_id = alice.ok("POST", f"/requests/{request_id}", {"accept": True})["connection_id"]
+    connection_id = bob.ok("venn_redeem_invite", code=code)["connection_id"]
 
     for path in ("", "/venn", "/brief", "/ideas"):
         payload = alice.ok("GET", f"/friends/connection/{connection_id}{path}")

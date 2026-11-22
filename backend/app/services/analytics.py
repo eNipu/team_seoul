@@ -33,6 +33,7 @@ EVENT_TYPES = {
     "sample_loaded",
     "venn_compared",
     "this_week",
+    "whats_new",
     "plan_saved",
     "plan_done",
     "question_link_created",

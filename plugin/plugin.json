@@ -9,22 +9,31 @@
   },
   "homepage": "https://joinvennai.com",
   "license": "UNLICENSED",
-  "keywords": ["social", "friends", "memories", "relationships", "companion"],
+  "keywords": [
+    "social",
+    "friends",
+    "memories",
+    "relationships",
+    "companion"
+  ],
   "extensions": {
     "com.openai": {
       "interface": {
         "displayName": "Venn",
         "shortDescription": "Keep private notes about people you know and plan time together.",
-        "longDescription": "Venn keeps a private, user-approved memory of what matters to you and the people you already know, friends and colleagues alike. Set up in three steps: choose memories to import, review contacts from Instagram or LinkedIn, then find people with similar interests. See which interests matched and why. Then get ideas for time together, a brief before you meet, nudges when it has been a while, and a quiz on how well you know your friends. Nothing is saved without your approval, and Venn never contacts anyone on your behalf.",
+        "longDescription": "Connect your AI memories. Build your inner circle. Venn quietly tells you when a friend is nearby, working on something you care about, or looking for what you have — right inside ChatGPT.",
         "developerName": "Venn",
         "category": "Lifestyle",
-        "capabilities": ["Interactive", "Write"],
+        "capabilities": [
+          "Interactive",
+          "Write"
+        ],
         "websiteURL": "https://joinvennai.com",
         "privacyPolicyURL": "https://joinvennai.com/privacy",
         "defaultPrompt": [
           "Open Venn",
           "Guide me through Venn setup",
-          "What should I do this week?"
+          "What's new with my people?"
         ],
         "brandColor": "#FCD305",
         "composerIcon": "./assets/icon.png",

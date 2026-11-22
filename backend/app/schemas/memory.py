@@ -43,6 +43,54 @@ def _clean_tags(tags: list[str]) -> list[str]:
     return out[:8]
 
 
+_CATEGORY_ALIASES: dict[str, str] = {
+    "HOBBY": "INTEREST",
+    "HOBBIES": "INTEREST",
+    "INTERESTS": "INTEREST",
+    "LIKES": "INTEREST",
+    "DISLIKES": "DISLIKE",
+    "PREFERENCES": "PREFERENCE",
+    "EXPERIENCES": "EXPERIENCE",
+    "JOB": "WORK",
+    "CAREER": "WORK",
+    "PROJECT": "WORK",
+    "PROJECTS": "WORK",
+    "WORK_AND_PROJECTS": "WORK",
+    "MEMORY": "PERSONAL_MEMORY",
+    "PERSONAL": "PERSONAL_MEMORY",
+    "GOAL": "SOCIAL_GOAL",
+    "GOALS": "SOCIAL_GOAL",
+    "RELATIONSHIP": "RELATIONSHIP_CONTEXT",
+    "RELATIONSHIPS": "RELATIONSHIP_CONTEXT",
+}
+
+_VISIBILITY_ALIASES: dict[str, str] = {
+    "ONLY_YOU": "PRIVATE",
+    "SHARED": "SHARED_WITH_CONNECTIONS",
+    "CONNECTIONS": "SHARED_WITH_CONNECTIONS",
+    "FRIENDS": "SHARED_WITH_CONNECTIONS",
+    "PUBLIC": "PUBLIC_PROFILE",
+}
+
+
+def _normalize_enum(value: object, aliases: dict[str, str]) -> object:
+    if not isinstance(value, str):
+        return value
+    key = "_".join(value.strip().upper().replace("-", " ").split())
+    return aliases.get(key, key)
+
+
+def _clean_text_field(value: object, limit: int, *, empty_to_none: bool = False) -> object:
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        return value
+    cleaned = " ".join(value.split())[:limit]
+    if not cleaned and empty_to_none:
+        return None
+    return cleaned
+
+
 class MemoryCandidate(BaseModel):
     """A proposed (not yet saved) memory."""
 
@@ -56,15 +104,38 @@ class MemoryCandidate(BaseModel):
         description="Names of the friends this memory is about, e.g. ['Maya']. Empty when it is only about the user.",
     )
 
-    @field_validator("tags")
+    @field_validator("category", mode="before")
     @classmethod
-    def _normalize_tags(cls, v: list[str]) -> list[str]:
-        return _clean_tags(v)
+    def _normalize_category(cls, v: object) -> object:
+        return _normalize_enum(v, _CATEGORY_ALIASES)
 
-    @field_validator("people")
+    @field_validator("title", mode="before")
     @classmethod
-    def _normalize_people(cls, v: list[str]) -> list[str]:
-        return clean_names(v)
+    def _normalize_title(cls, v: object) -> object:
+        return _clean_text_field(v, 120)
+
+    @field_validator("description", mode="before")
+    @classmethod
+    def _normalize_description(cls, v: object) -> object:
+        return _clean_text_field(v, 500)
+
+    @field_validator("tags", mode="before")
+    @classmethod
+    def _normalize_tags(cls, v: object) -> object:
+        if v is None:
+            return []
+        if isinstance(v, list):
+            return _clean_tags(v)
+        return v
+
+    @field_validator("people", mode="before")
+    @classmethod
+    def _normalize_people(cls, v: object) -> object:
+        if v is None:
+            return []
+        if isinstance(v, list):
+            return clean_names(v)
+        return v
 
 
 class ProposedMemory(MemoryCandidate):
@@ -94,6 +165,23 @@ class MemoryApproval(BaseModel):
     visibility: MemoryVisibility = MemoryVisibility.PRIVATE
     title: str | None = Field(default=None, min_length=1, max_length=120, description="User edit, optional.")
     description: str | None = Field(default=None, min_length=1, max_length=500, description="User edit.")
+
+    @field_validator("visibility", mode="before")
+    @classmethod
+    def _normalize_visibility(cls, v: object) -> object:
+        if v is None:
+            return MemoryVisibility.PRIVATE
+        return _normalize_enum(v, _VISIBILITY_ALIASES)
+
+    @field_validator("title", mode="before")
+    @classmethod
+    def _normalize_edit_title(cls, v: object) -> object:
+        return _clean_text_field(v, 120, empty_to_none=True)
+
+    @field_validator("description", mode="before")
+    @classmethod
+    def _normalize_edit_description(cls, v: object) -> object:
+        return _clean_text_field(v, 500, empty_to_none=True)
 
 
 class MemoryOut(BaseModel):
