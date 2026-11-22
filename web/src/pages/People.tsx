@@ -7,7 +7,6 @@ import { Link, navigate, useLocation } from "../router";
 import {
   LIMITS,
   daysSince,
-  formatLastSeen,
   friendPath,
   plural,
   type FriendSummary,
@@ -139,7 +138,7 @@ function PersonRow({ f }: { f: FriendSummary }) {
             <strong>{f.display_name}</strong>
           </span>
           <span className="muted small">
-            {[f.relationship, formatLastSeen(f.last_interaction_at)].filter(Boolean).join(" · ")}
+            {f.relationship}
           </span>
           
         </span>
