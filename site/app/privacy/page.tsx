@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CookieSettingsLink } from "@/components/ConsentBanner";
 import SiteHeader from "@/components/SiteHeader";
 
 export const metadata: Metadata = { title: "Privacy · Venn", description: "How Venn handles your data." };
@@ -16,6 +17,8 @@ export default function Privacy() {
         <p>We use your email to send your early-access invite and occasional product updates about Venn. We do not sell or rent your data, and we do not share it with anyone except the service providers that host this site and send our emails.</p>
         <h2>Ads and measurement</h2>
         <p>If you arrive from Meta (Facebook or Instagram) ads, Meta may receive standard events such as a page view or a sign-up, so we can measure our ads. Sign-ups made in a Meta lead form are shared with us by Meta under Meta&apos;s terms.</p>
+        <h2>Cookies</h2>
+        <p>With your consent, Microsoft Clarity helps us understand how visitors use the site, and Meta Pixel helps us measure ads on Meta services. You can withdraw consent anytime from <CookieSettingsLink className="text-button" />.</p>
         <h2>The product</h2>
         <p>Venn only ever uses signals you approve. It does not read your chats or your ChatGPT memory, and nothing is shared with anyone until you choose to share it.</p>
         <h2>Your choices</h2>
