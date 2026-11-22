@@ -27,6 +27,8 @@ class Person(Base):
     relationship: Mapped[str | None] = mapped_column(String(80))
     notes: Mapped[str | None] = mapped_column(Text)
     interests: Mapped[list] = mapped_column(JSONType, default=list, nullable=False)
+    # Set only when the owner confirms an Instagram or LinkedIn import.
+    import_platform: Mapped[str | None] = mapped_column(String(16))
     # Part of the made-up sample circle; removed again with it.
     is_sample: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false(), nullable=False)
     created_at: Mapped[datetime] = created_at_col()

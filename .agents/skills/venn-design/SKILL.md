@@ -52,6 +52,11 @@ Three steps, everything after the first click happens inside ChatGPT:
    connected at once (redeeming an invite connects both; no "accept request" step).
 
 Then the product is **"Venn tells you when"**: proactive moment cards inside ChatGPT.
+**A moment is a recommendation from signals, never a reminder.** A friend's AI-shared update
+(working on, looking for, plans, in town) meets your need or context right now, and Venn
+recommends one action. Like the Meta ads: "Remember Alex from your accelerator? He shared last
+week his company is looking for exactly what you sell." + "Shared by Alex's AI · via venn" ->
+"Say hi". Never "Check in with X", "It's been a while" or "Follow up with X" as the headline.
 Off the main path, never required:
 - **Web app** (app.joinvennai.com): see and edit everything, reached from one quiet
   "Open my Venn" link. Not a step, not a dashboard people must visit.

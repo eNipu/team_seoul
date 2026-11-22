@@ -4,8 +4,8 @@ import type { HostBridge } from "../mcp/client";
 import { ActionError, Avatar, SectionTitle, useAction, type Nav } from "./common";
 import { Icon } from "./icons";
 
-/** Slim banner shown while the made-up sample circle is loaded. */
-export function SampleBanner({ bridge, onChanged }: { bridge: HostBridge; onChanged: () => Promise<string | null> }) {
+/** Optional cleanup action; never interrupt Home with a preview warning. */
+export function PreviewCleanup({ bridge, onChanged }: { bridge: HostBridge; onChanged: () => Promise<string | null> }) {
   const action = useAction();
   const [confirming, setConfirming] = useState(false);
   const busy = action.busy !== null;
@@ -14,32 +14,26 @@ export function SampleBanner({ bridge, onChanged }: { bridge: HostBridge; onChan
     void action.run("remove", async () => {
       const res = await bridge.callTool("venn_remove_sample_circle", {});
       if (!res.ok) return res.errorText;
-      if (!isObj(res.data) || res.data.removed !== true) return "Venn couldn't remove the sample data.";
+      if (!isObj(res.data) || res.data.removed !== true) return "Venn couldn't clear the preview data.";
       setConfirming(false);
       return onChanged();
     });
   }
 
   return (
-    <section className="sample-banner" aria-label="Sample data">
-      <div className="sample-banner__row">
-        <span className="sample-banner__text">
-          <Icon name="sparkle" size={18} />
-          <span>
-            <strong>Sample data is loaded.</strong> Fictional profiles are marked Sample.
-          </span>
-        </span>
+    <section aria-label="Preview data">
+      <div>
         {!confirming && (
           <button type="button" className="btn btn--small" disabled={busy} onClick={() => setConfirming(true)}>
-            Remove sample data
+            Clear preview data
           </button>
         )}
       </div>
       {confirming && (
         <div className="confirm confirm--plain">
-          <span className="small">Remove all sample data, including any edits to samples? Your own data stays.</span>
+          <span className="small">Clear all preview data, including your edits to those records? Your own people and memories will stay.</span>
           <button type="button" className="btn btn--danger btn--small" disabled={busy} onClick={remove}>
-            {action.busy === "remove" ? "Removing…" : "Remove"}
+            {action.busy === "remove" ? "Clearing…" : "Clear preview data"}
           </button>
           <button type="button" className="btn btn--ghost btn--small" disabled={busy} onClick={() => setConfirming(false)}>
             Keep

@@ -3,6 +3,21 @@
 Written once here. Backend schemas and `widget/src/types.ts` must both match. Change a shape
 here first, in the same commit as the code.
 
+## Guided plugin setup (T55)
+
+`venn_show_dashboard` (including welcome) and `venn_help` return `onboarding: {memories_ready: boolean, contacts_ready: boolean, matches_reviewed: boolean}`. Use the first false flag for the next step. The web checklist remains separate.
+
+After the first two steps, `venn_find_interest_matches({limit?: number})` returns a card:
+
+```json
+{
+  "view": "interest_matches",
+  "matches": [{"kind": "person", "id": "…", "display_name": "Nadia", "interest_matches": [{"my_label": "Pottery", "their_label": "Ceramics", "kind": "related"}]}]
+}
+```
+
+`kind` on a row is `person` or `connection`; on an evidence pair it is `exact` or `related`. `matches: []` is a successful search. Unsatisfied prerequisites return a tool error, not an empty search result.
+
 ## Interests
 
 Result of `venn_show_interests` (T02). `friends` is empty until T03; `keep_alive` is `null`

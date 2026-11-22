@@ -42,8 +42,9 @@
     "h": 900,
     "steps": [
       "waitFor:Getting set up",
-      "click('Try with sample friends')",
-      "waitFor:Remove sample data",
+      "click('Explore a starter circle')",
+      "waitFor:Clear preview data",
+      "!document.body.textContent.includes(\"You're looking at sample friends\") ? 'OK: no sample warning' : 'MISSING warning removal'",
       "document.querySelectorAll('.setup a').length === 3 ? 'OK: samples do not count' : 'MISSING setup steps after loading samples'",
       "document.querySelector('.setup a[href*=account]').click()",
       "waitFor:Create an invite",

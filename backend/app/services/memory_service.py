@@ -62,7 +62,8 @@ IMPORT_ALWAYS_EXCLUDED = "Health, money, passwords and ID numbers are never impo
 IMPORT_NOTE = (
     "Venn cannot read ChatGPT's memory; only you can. Nothing has been imported. When the user presses "
     "the button on this card (or asks in chat), list in the chat what you already remember about them in "
-    "the areas they chose — numbered, at most 30, leaving out health, money, credentials, ID numbers and "
+    "the areas they chose — three numbered items per turn, up to 30 total. Wait for their picks or 'more'. "
+    "Leave out health, money, credentials, ID numbers and "
     "anything you are not sure is about them — and do NOT call a Venn tool with those items yet. Only "
     'after the user says which ones to keep, call venn_propose_memories with source "chatgpt_memory" '
     "and just those items. Exception: if the user tapped Connect (one-tap import), call "

@@ -42,13 +42,13 @@ the same in ChatGPT and on the Venn website. Friends do not need to join for Ven
   If there's no strong match, continue normally: no card, no mention of the search, no substitute
   person. Otherwise show ONE venn_show_reply of kind nudge: title = a small proposed activity with
   the returned person; body = the one supported reason, attributed to its source. Don't infer a
-  friend's preferences from a dislike or claim anyone is available. Label sample matches as fictional.
+  friend's preferences from a dislike or claim anyone is available. Identify preview profiles as such.
   Offer this once, not every turn.
   On "Draft an invite", use venn_show_reply(kind=draft); don't copy private grounding into the
   invitation. Drafting is not permission to send, save or book.
 - On "make it a group thing", keep the original person and activity in context. Find one other
   relevant person via venn_find_nudge with the original topic and the first person's connection_id
-  or person_id. Label sample matches as fictional. Use only returned ids; if there is no match,
+  or person_id. Keep preview profiles distinct from actual acquaintances. Use only returned ids; if there is no match,
   ask whom to include. Call venn_plan_group with the 2–6 friends, not the user, and activity_topic
   set to the original topic, not the full message. Highlight one
   feasible idea from the card that fits the original activity, naming whose interests it brings
@@ -73,6 +73,11 @@ the same in ChatGPT and on the Venn website. Friends do not need to join for Ven
   on the user's behalf or request social credentials. The user confirms on the card.
   For "try with sample friends", use venn_load_sample_circle instead. Sample data is not the
   user's own and does not count as set-up; remove it when asked with venn_remove_sample_circle.
+- Later, never part of first set-up ("Add more people"): import contacts from Instagram or LinkedIn
+  (the user's own export via venn_propose_people_import with source 'instagram' or 'linkedin'; never
+  infer interests from names or job titles; confirm on the review card), then
+  venn_find_interest_matches to show who shares their interests with an honest empty state. Do not
+  send an invitation or create a connection from a match.
 - Answer requests directed to Venn with a dedicated card whenever one fits, including follow-ups.
   If the request maps to a specific card, call that tool (venn_find_people, venn_this_week,
   venn_compare, venn_propose_memories, venn_import_chatgpt_memory, venn_create_invite,
@@ -112,8 +117,8 @@ the same in ChatGPT and on the Venn website. Friends do not need to join for Ven
 - Importing ChatGPT memory: when the user wants to bring over what you already remember about them
   (saved memories, other chats), call venn_import_chatgpt_memory (or, if they tapped Connect, use
   the one-tap quick_import above instead). Venn cannot read your memory.
-  After the user chooses areas, list what you remember IN THE CHAT (numbered, at most 30; never
-  health, money, credentials or ID numbers; nothing you are unsure is about them) and send nothing
+  After the user chooses areas, show at most three numbered items per turn IN THE CHAT (up to 30 total).
+  Offer "more" and keep numbering. Exclude health, money, credentials, ID numbers and uncertain items. Send nothing
   to Venn yet. When the user says which to keep, call venn_propose_memories with
   source "chatgpt_memory" and only those; they confirm on the card. If you remember nothing about
   the user, say so - never invent memories.
@@ -180,7 +185,7 @@ class VennMCPServer(MCPServer):
             if name == "venn_import_demo_people" and isinstance(exc.__cause__, ValidationError):
                 # SDK validation errors can echo arguments, including the review's private capability.
                 return error(
-                    InvalidRequest("Open a fresh demo review and use its Add button to confirm your selection.")
+                    InvalidRequest("Open a fresh import review and use its Add button to confirm your selection.")
                 )
             raise
 

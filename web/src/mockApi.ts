@@ -9,6 +9,7 @@
 import type { Api } from "./api";
 import { ApiError } from "./errors";
 import { createOverlapDemo } from "./mockOverlap";
+import { interestFamily, previewInterests } from "../../shared/importInterests";
 import { mockQrRows } from "./mockQr";
 import type * as T from "./types";
 
@@ -399,30 +400,30 @@ const LINKEDIN_DEMO: [string, string, string, string, string[]][] = [
 const DEMO_NAMES = ["Hana", "Mateo", "Amara", "Tobias", "Yuna", "Priya", "Nico", "Leila", "Adaeze", "Felix"];
 const DEMO_SURNAMES = ["Moon", "Ibarra", "Mensah", "Kern", "Baek", "Deshmukh", "Ferretti", "Nassar", "Nwosu", "Moreau"];
 const DEMO_ROLES = [
-  ["Product designer at Pebbleloom Studio", "accessibility", "design systems"],
-  ["Climate data scientist at Rainspoke Analytics", "climate tech", "data visualization"],
-  ["Documentary producer at Lantern Field Films", "documentaries", "photography"],
-  ["Robotics engineer at Copper Finch Labs", "robotics", "open source"],
-  ["UX researcher at Mossbridge Design", "user research", "accessibility"],
-  ["Founder at Saffron Grid Energy", "clean energy", "startups"],
-  ["Coffee roaster at Second Rill Coffee", "specialty coffee", "cycling"],
-  ["Urban planner at Canopy Dial", "urban planning", "public transit"],
-  ["Backend engineer at Driftline Systems", "Python", "developer tools"],
-  ["Sound designer at Paper Current Audio", "sound design", "independent film"],
+  ["Product designer at Pebbleloom Studio", "accessibility", "design systems", "typography", "prototyping", "wayfinding"],
+  ["Climate data scientist at Rainspoke Analytics", "climate tech", "data visualization", "weather maps", "birding", "cartography"],
+  ["Documentary producer at Lantern Field Films", "documentaries", "street photography", "field recording", "oral history", "film festivals"],
+  ["Robotics engineer at Copper Finch Labs", "robotics", "open source", "electronics", "woodworking", "model making"],
+  ["UX researcher at Mossbridge Design", "user research", "accessibility", "interviews", "service design", "board games"],
+  ["Founder at Saffron Grid Energy", "clean energy", "startups", "solar power", "repair cafes", "cycling"],
+  ["Coffee roaster at Second Rill Coffee", "specialty coffee", "cycling", "espresso", "bread baking", "bike touring"],
+  ["Urban planner at Canopy Dial", "urban planning", "public transit", "walking tours", "architecture", "mapping"],
+  ["Backend engineer at Driftline Systems", "Python", "developer tools", "open source", "puzzles", "mentorship"],
+  ["Sound designer at Paper Current Audio", "sound design", "independent film", "field recording", "synthesizers", "cinema"],
 ];
 const INSTAGRAM_NAMES = ["Mara", "Joon", "Nia", "Elias", "Romy", "Devika", "Oscar", "Aya", "Theo", "Lina"];
 const INSTAGRAM_SURNAMES = ["Solano", "Park", "Boateng", "Moreno", "Delacroix", "Pillai", "Nilsson", "Matsuda", "Okafor", "Haddad"];
 const INSTAGRAM_BIOS = [
-  ["Photographs the city before the shop shutters come up", "street photography", "architecture"],
-  ["Folds dumplings on Sundays and keeps a freezer stash for friends", "food", "dumplings"],
-  ["Paints tiny gouache scenes from the bus window", "art", "gouache"],
-  ["Packs a thermos for foggy ridge walks", "hiking", "landscape photography"],
-  ["Keeps a sketchbook of favorite scenes from matinees", "independent film", "sketching"],
-  ["Shares the records she plays while cooking dinner", "music", "vinyl"],
-  ["Makes mismatched mugs and tests glazes on their handles", "ceramics", "pottery"],
-  ["Collects fallen leaves for cyanotype prints", "printmaking", "botany"],
-  ["Finds quiet bike routes between neighborhood bakeries", "cycling", "baking"],
-  ["Cooks from the handwritten margins of a family recipe book", "home cooking", "food photography"],
+  ["Photographs the city before the shop shutters come up", "street photography", "architecture", "walking tours", "film photography", "urban sketching"],
+  ["Folds dumplings on Sundays and keeps a freezer stash for friends", "food", "dumplings", "home cooking", "hosting", "recipe swaps"],
+  ["Paints tiny gouache scenes from the bus window", "art", "gouache", "urban sketching", "public transit", "color theory"],
+  ["Packs a thermos for foggy ridge walks", "hiking", "landscape photography", "camping", "tea", "mapmaking"],
+  ["Keeps a sketchbook of favorite scenes from matinees", "independent film", "sketching", "storyboarding", "film history", "illustration"],
+  ["Shares the records she plays while cooking dinner", "music", "vinyl", "home cooking", "jazz", "record collecting"],
+  ["Makes mismatched mugs and tests glazes on their handles", "ceramics", "pottery", "glaze chemistry", "tea", "surface design"],
+  ["Collects fallen leaves for cyanotype prints", "printmaking", "botany", "cyanotypes", "nature walks", "paper crafts"],
+  ["Finds quiet bike routes between neighborhood bakeries", "cycling", "baking", "bike touring", "sourdough", "coffee"],
+  ["Cooks from the handwritten margins of a family recipe book", "home cooking", "food photography", "cookbooks", "family history", "preserving"],
 ];
 
 const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
@@ -506,6 +507,8 @@ export function createMockApi(options: MockOptions): Api {
         .filter((m) => ["INTEREST", "PERSONAL_MEMORY", "EXPERIENCE"].includes(m.category))
         .flatMap((m) => m.tags),
     );
+  const importLabels = () => state.memories.filter(m => m.category === "INTEREST" && m.source !== "sample" && !m.people?.length).flatMap(m => [m.title, ...m.tags]);
+  const relatedWith = (f: MockFriend) => previewInterests(importLabels(), f.interests).interest_matches.filter(m => m.kind === "related");
   const sharedWith = (f: MockFriend) => {
     const mine = myInterests();
     return f.interests.filter((i) => mine.some((m) => same(m, i)));
@@ -582,10 +585,12 @@ export function createMockApi(options: MockOptions): Api {
   function ideasFor(f: MockFriend): T.ActivitySuggestion[] {
     const shared = sharedWith(f);
     const out: T.ActivitySuggestion[] = [];
-    for (const topic of [...shared, ...f.interests]) {
+    const related = relatedWith(f);
+    for (const topic of [...shared, ...related.flatMap(m => [interestFamily(m.their_label), m.their_label]), ...f.interests]) {
       const idea = IDEA_BANK[topic.toLowerCase()];
       if (idea && !out.some((o) => o.title === idea[0])) {
-        out.push({ title: idea[0], description: idea[1], grounded_in: [topic], suggested_action: idea[2] });
+        const pair = related.find(m => interestFamily(m.their_label) === interestFamily(topic));
+        out.push({ title: idea[0], description: idea[1], grounded_in: pair ? [pair.my_label, pair.their_label] : [topic], suggested_action: idea[2] });
       }
     }
     if (out.length < 2) {
@@ -887,6 +892,7 @@ export function createMockApi(options: MockOptions): Api {
         if (people.length < 1 || people.length > 50) {
           fail("INVALID_REQUEST", "Import between 1 and 50 people at a time.", 400);
         }
+        const mine = importLabels();
         const candidates: T.ImportCandidate[] = people
           .filter((p) => p.name.trim() !== "")
           .map((p, index) => ({
@@ -895,6 +901,7 @@ export function createMockApi(options: MockOptions): Api {
             relationship: p.relationship?.trim() || null,
             notes: p.notes?.trim() || null,
             interests: unique(p.interests ?? []),
+            ...previewInterests(mine, p.interests ?? []),
             last_met_days_ago: p.last_met_days_ago ?? null,
             already_added: state.friends.some((f) => f.kind === "person" && !f.isSample && same(f.name, p.name)),
           }));
@@ -962,6 +969,7 @@ export function createMockApi(options: MockOptions): Api {
       }),
     linkedinPreview: (people) =>
       wait(() => {
+        const mine = importLabels();
         const candidates: T.ImportCandidate[] = people.map((p, index) => {
           const demo = LINKEDIN_DEMO.find(([id]) => id === p.public_identifier);
           return {
@@ -970,6 +978,7 @@ export function createMockApi(options: MockOptions): Api {
             relationship: "LinkedIn connection",
             notes: [p.headline, demo?.[3]].filter(Boolean).join(". ") + ".",
             interests: demo?.[4] ?? [],
+            ...previewInterests(mine, demo?.[4] ?? []),
             last_met_days_ago: null,
             already_added: state.friends.some((f) => f.kind === "person" && !f.isSample && same(f.name, p.name)),
           };
@@ -996,6 +1005,7 @@ export function createMockApi(options: MockOptions): Api {
         const surnames = instagram ? INSTAGRAM_SURNAMES : DEMO_SURNAMES;
         const bios = instagram ? INSTAGRAM_BIOS : DEMO_ROLES;
         const relationship = instagram ? "Instagram connection" : "LinkedIn connection";
+        const mine = importLabels();
         const candidates = surnames.flatMap((_, group) =>
           names.map((firstName, i): T.ImportCandidate => {
             const name = `${firstName} ${surnames[(i + group) % surnames.length]}`;
@@ -1006,6 +1016,7 @@ export function createMockApi(options: MockOptions): Api {
               relationship,
               notes: `${bio}.`,
               interests,
+              ...previewInterests(mine, interests),
               already_added: state.friends.some((f) => f.kind === "person" && same(f.name, name)),
               last_met_days_ago: null,
             };
@@ -1101,6 +1112,8 @@ export function createMockApi(options: MockOptions): Api {
       wait(() => {
         const f = find(kind, id);
         const shared = sharedWith(f);
+        const related = relatedWith(f);
+        const pair = related[0];
         const mine = myInterests().filter((m) => !shared.some((s) => same(s, m)));
         const theirs = f.interests.filter((i) => !shared.some((s) => same(s, i)));
         const n = first(f.name);
@@ -1113,12 +1126,12 @@ export function createMockApi(options: MockOptions): Api {
           you_only: mine.slice(0, 8),
           shared: shared.slice(0, 8),
           them_only: theirs.slice(0, 8),
-          summary:
+          summary: pair ? `Your interest in ${pair.my_label} connects with ${n}'s interest in ${pair.their_label}.` :
             shared.length === 0
               ? `Nothing in common with ${n} on record yet.`
               : `You and ${n} share ${shared.length} ${shared.length === 1 ? "thing" : "things"}.`,
           suggestions: ideasFor(f)
-            .filter((i) => i.grounded_in.some((g) => shared.some((s) => same(s, g))))
+            .filter((i) => i.grounded_in.some((g) => shared.some((s) => same(s, g)) || related.some(m => same(m.their_label, g))))
             .slice(0, 2),
           note:
             f.kind === "connection"
@@ -1130,14 +1143,15 @@ export function createMockApi(options: MockOptions): Api {
       wait(() => {
         const f = find(kind, id);
         const shared = sharedWith(f);
+        const related = relatedWith(f);
         return {
           view: "activity_ideas" as const,
           kind: f.kind,
           id: f.id,
           display_name: f.name,
           shared_interests: shared,
-          match_score: Math.min(1, shared.length / 3),
-          score_explanation: shared.map((s) => `You both like ${s}.`),
+          match_score: Math.min(1, shared.length / 3 + (related.length ? 0.1 : 0)),
+          score_explanation: [...shared.map((s) => `You both like ${s}.`), ...related.map(m => `Related interests: your ${m.my_label} and their ${m.their_label}.`)],
           suggestions: ideasFor(f),
           note: "Ideas come from what's saved in Venn. Nothing is booked or sent.",
         };
@@ -1550,13 +1564,13 @@ export function createMockApi(options: MockOptions): Api {
     /* -------------------------------------------------------------- sample */
     loadSample: () =>
       wait(() => {
-        if (state.sampleLoaded) fail("INVALID_REQUEST", "The sample friends are already loaded.", 400);
+        if (state.sampleLoaded) fail("INVALID_REQUEST", "The starter circle is already loaded.", 400);
         const connections = [
           friend({
             kind: "connection",
             id: newId("con"),
             name: "Alex Rivera",
-            bio: "Sample friend. Weekend hiker and amateur barista.",
+            bio: "Weekend hiker and amateur barista.",
             interests: ["hiking", "coffee", "photography"],
             shared: [
               {
@@ -1575,7 +1589,7 @@ export function createMockApi(options: MockOptions): Api {
             kind: "connection",
             id: newId("con"),
             name: "Sam Lee",
-            bio: "Sample friend. Cooks for a crowd.",
+            bio: "Cooks for a crowd.",
             interests: ["cooking", "board games", "karaoke"],
             shared: [
               {

@@ -22,7 +22,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.ai.extraction import contains_sensitive
-from app.models import Memory, PeopleImport, Person, PersonInteraction, User
+from app.models import PeopleImport, Person, PersonInteraction, User
 from app.models._base import as_aware, utcnow
 from app.schemas.social import (
     DeletePersonOut,
@@ -30,6 +30,7 @@ from app.schemas.social import (
     ImportCandidateOut,
     ImportPeopleOut,
     InteractionOut,
+    LinkedInCandidate,
     PeopleImportView,
     PeopleListOut,
     PersonCandidate,
@@ -37,6 +38,7 @@ from app.schemas.social import (
 )
 from app.services import analytics, instagram_demo, linkedin_demo
 from app.services.errors import InvalidRequest, NotFound, PrivacyViolation
+from app.services.interest_matching import match_interests, my_interest_labels
 
 MAX_PEOPLE_PER_USER = 500
 MAX_IMPORT_CANDIDATES = 50
@@ -254,7 +256,7 @@ def propose_import(
     db: Session, user: User, people: list[PersonCandidate], source: str | None = None, *, match_interests: bool = False
 ) -> PeopleImportView:
     """Store a list of people for the user to review. Adds nothing to their notes yet."""
-    return _propose_import(db, user, people[:MAX_IMPORT_CANDIDATES], source, match_interests=match_interests)
+    return _propose_import(db, user, people[:MAX_IMPORT_CANDIDATES], source, read_interests=match_interests)
 
 
 def propose_demo_import(
@@ -263,6 +265,7 @@ def propose_demo_import(
     platform: DemoPlatform,
     *,
     channel: DemoChannel,
+    match_interests: bool = False,
     confirmation_token: str | None = None,
 ) -> PeopleImportView:
     lock_people_writes(db, user)
@@ -275,6 +278,7 @@ def propose_demo_import(
         fixture.SOURCE,
         demo_platform=platform,
         demo_channel=channel,
+        read_interests=match_interests,
         confirmation_token=confirmation_token,
     )
 
@@ -285,7 +289,7 @@ def _propose_import(
     people: list[PersonCandidate],
     source: str | None,
     *,
-    match_interests: bool = False,
+    read_interests: bool = False,
     demo_platform: DemoPlatform | None = None,
     demo_channel: DemoChannel | None = None,
     confirmation_token: str | None = None,
@@ -334,6 +338,7 @@ def _propose_import(
                 # Only the server-owned demo proposal sets this; source is untrusted.
                 "is_sample": is_sample,
                 "demo_channel": demo_channel,
+                "import_platform": demo_platform or ("linkedin" if isinstance(candidate, LinkedInCandidate) else None),
             }
         )
     if not items:
@@ -349,28 +354,25 @@ def _propose_import(
     )
     db.add(row)
     db.flush()
-    my_interests: set[str] = set()
-    if match_interests:
-        for title, tags in db.execute(
-            select(Memory.title, Memory.tags).where(
-                Memory.user_id == user.id, Memory.category == "INTEREST", Memory.source.is_distinct_from("sample")
-            )
-        ):
-            my_interests.update(label.strip().casefold() for label in [title, *(tags or [])])
-    return PeopleImportView(
-        import_id=str(row.id),
-        expires_at=as_aware(row.expires_at),
-        source=row.source,
-        candidates=[
+    mine = my_interest_labels(db, user) if read_interests else []
+    candidates = []
+    for i, item in enumerate(items):
+        matches = match_interests(mine, item["interests"]) if mine else []
+        candidates.append(
             ImportCandidateOut(
                 index=i,
-                shared_interests=[label for label in item["interests"] if label.casefold() in my_interests],
+                interest_matches=matches,
+                shared_interests=[m.their_label for m in matches if m.kind == "exact"],
                 already_added=item["name"].casefold() in existing,
                 existing_relationships=existing.get(item["name"].casefold(), []),
                 **item,
             )
-            for i, item in enumerate(items)
-        ],
+        )
+    return PeopleImportView(
+        import_id=str(row.id),
+        expires_at=as_aware(row.expires_at),
+        source=row.source,
+        candidates=candidates,
         skipped=skipped,
         demo_platform=demo_platform,
     )
@@ -412,7 +414,7 @@ def import_people(
                 or not confirmation_token
                 or not compare_digest(digest, sha256(confirmation_token.encode()).hexdigest())
             ):
-                raise InvalidRequest("Open a fresh demo review and use its Add button to confirm your selection.")
+                raise InvalidRequest("Open a fresh import review and use its Add button to confirm your selection.")
     elif channel == "chatgpt":
         raise InvalidRequest("Use the Add button on the matching import review card.")
     limit = MAX_DEMO_IMPORT_CANDIDATES if is_sample else MAX_IMPORT_CANDIDATES
@@ -442,6 +444,7 @@ def import_people(
             notes=item.get("notes"),
             interests=list(item.get("interests") or []),
             is_sample=is_sample,
+            import_platform=item.get("import_platform"),
         )
         db.add(person)
         db.flush()

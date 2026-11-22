@@ -8,9 +8,20 @@ from sqlalchemy.orm import Session
 
 from app.models import User
 from app.schemas.profile import SocialGoal
-from app.schemas.social import DashboardView, GoalOption, HelpTopic, HelpView, SetupStep, WelcomeView
+from app.schemas.social import (
+    DashboardView,
+    GoalOption,
+    HelpTopic,
+    HelpView,
+    PluginDashboardView,
+    PluginHelpView,
+    PluginWelcomeView,
+    SetupStep,
+    WelcomeView,
+)
 from app.services import (
     memory_service,
+    onboarding_service,
     people_service,
     plan_service,
     question_service,
@@ -123,6 +134,16 @@ def build_home(db: Session, user: User) -> DashboardView | WelcomeView:
         goal_options=[GoalOption(value=goal.value, label=label) for goal, label in GOAL_LABELS.items()],
         setup=dashboard.setup,
     )
+
+
+def plugin_home(db: Session, user: User) -> PluginDashboardView | PluginWelcomeView:
+    home = build_home(db, user)
+    cls = PluginWelcomeView if isinstance(home, WelcomeView) else PluginDashboardView
+    return cls(**home.model_dump(), onboarding=onboarding_service.state_sync(db, user))
+
+
+def plugin_help(db: Session, user: User) -> PluginHelpView:
+    return PluginHelpView(**build_help(db, user).model_dump(), onboarding=onboarding_service.state_sync(db, user))
 
 
 def setup_guidance(setup: list[SetupStep], *, start: bool = True) -> str:

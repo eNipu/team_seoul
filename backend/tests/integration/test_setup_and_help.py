@@ -24,11 +24,10 @@ def test_new_account_starts_with_all_three_steps_open(alice):
     assert all(len(s["description"].split()) <= 8 for s in view["setup"])
 
 
-def test_model_leaves_generic_opening_to_the_starter_actions(alice):
+def test_model_opens_with_one_memory_import_step(alice):
     said = text(alice, "venn_show_dashboard")
-    assert "Set-up is not finished (open: about you, your people, connect)" in said
-    assert "starter actions" in said
-    assert "Start the first open step only if the user asked for set-up" in said
+    assert "Step 1 of 3: Connect" in said
+    assert "Wait for the user's choice" in said
     assert alice.ok("venn_list_people")["count"] == 0
     # The first open step is the one-tap Connect: propose everything remembered, flagged quick_import.
     assert "venn_propose_memories" in said and "quick_import: true" in said
@@ -42,21 +41,18 @@ def test_steps_are_ticked_off_by_what_the_user_has_done(alice):
     assert view["view"] == "dashboard"
     assert steps(view) == {"about_you": True, "your_people": False, "connect": False}
     said = text(alice, "venn_show_dashboard")
-    assert "(open: your people, connect)" in said
-    assert "Who would you like to spend more time with" not in said
-    assert "venn_propose_people_import" in said
+    assert "Step 2 of 3" in said and "Instagram or LinkedIn" in said
 
     alice.ok("venn_add_person", name="Maya")
     assert steps(alice.ok("venn_show_dashboard")) == {"about_you": True, "your_people": True, "connect": False}
     said = text(alice, "venn_show_dashboard")
-    assert "(open: connect)" in said and "venn_create_invite" in said
+    assert "Step 2 of 3" in said and "venn_create_invite" in said  # send the spark comes next
 
     alice.ok("venn_create_invite")
     view = alice.ok("venn_show_dashboard")
     assert steps(view) == {"about_you": True, "your_people": True, "connect": True}
     said = text(alice, "venn_show_dashboard")
-    assert "Set-up is complete." in said
-    assert "not finished" not in said
+    assert "Step 2 of 3" in said  # Legacy web checklist completion does not advance plugin setup.
 
 
 def test_a_revoked_unused_invite_does_not_count_as_connecting(alice):
@@ -107,13 +103,13 @@ def test_help_card(alice):
 def test_help_offers_setup_but_does_not_start_it(alice):
     said = text(alice, "venn_help")
     assert "Showing the help card" in said
-    assert "Offer, in one line, to continue with the first open step" in said
+    assert "Step 1 of 3" in said
     assert "start the first open step in this same reply" not in said
 
     save(alice, "INTEREST", "Bouldering", "Climbs twice a week", "PRIVATE")
     alice.ok("venn_add_person", name="Maya")
     alice.ok("venn_create_invite")
-    assert "Set-up is complete." in text(alice, "venn_help")
+    assert "Step 2 of 3" in text(alice, "venn_help")
     assert all(alice.ok("venn_help")["setup"][i]["done"] for i in range(3))
 
 
@@ -130,14 +126,13 @@ def test_help_examples_are_requests_the_server_instructions_route(alice):
         {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "t", "version": "0"}},
     ).json()["result"]["instructions"]
     assert "venn_help" in instructions
-    assert "let the user choose an" in instructions
-    assert "Do not begin set-up or load sample data unless they ask" in instructions
+    assert "one-tap Connect" in instructions
+    assert "venn_find_interest_matches" in instructions
     for tool in (
         "venn_import_chatgpt_memory",
         "venn_propose_people_import",
         "venn_preview_demo_people_import",
         "venn_create_invite",
-        "venn_redeem_invite",
         "venn_start_quiz",
         "venn_find_people",
     ):

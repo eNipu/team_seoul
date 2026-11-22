@@ -200,7 +200,7 @@ def test_widget_resource_served(alice):
 
 def test_render_tools_bound_to_widget(alice):
     tools = {t["name"]: t for t in alice.rpc("tools/list").json()["result"]["tools"]}
-    assert len(tools) == 63
+    assert len(tools) == 64
     nudge = tools["venn_find_nudge"]
     assert nudge["annotations"]["readOnlyHint"] is True
     assert nudge["_meta"]["ui"] == {"visibility": ["model"]}
@@ -218,6 +218,7 @@ def test_render_tools_bound_to_widget(alice):
         "venn_view_friend",
         "venn_suggest_activity",
         "venn_reconnection_suggestions",
+        "venn_find_interest_matches",
         "venn_find_people",
         "venn_plan_group",
         "venn_meetup_brief",
@@ -259,7 +260,7 @@ def test_render_tools_bound_to_widget(alice):
     ):
         assert tools[name]["_meta"]["openai/widgetAccessible"] is True, name
     assert "ui" not in (tools["venn_list_memories"].get("_meta") or {})
-    assert sum("resourceUri" in t.get("_meta", {}).get("ui", {}) for t in tools.values()) == 20
+    assert {name for name, t in tools.items() if "resourceUri" in t.get("_meta", {}).get("ui", {})} == set(render_tools)
     for name in ("venn_save_reply", "venn_delete_saved_reply"):
         meta = tools[name]["_meta"]
         assert meta["ui"] == {"visibility": ["app"]}, name

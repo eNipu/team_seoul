@@ -1,0 +1,20 @@
+{
+  "photography": ["film photography", "street photography", "photo walk", "photo walks", "landscape photography", "food photography", "portrait photography", "macro photography", "night photography", "architecture photography", "still life photography"],
+  "climbing": ["rock climbing", "bouldering"],
+  "ceramics": ["pottery", "wheel throwing"],
+  "coffee": ["specialty coffee", "espresso", "coffee roasting"],
+  "cooking": ["home cooking", "recipe swaps"],
+  "baking": ["bread baking", "sourdough", "bread making"],
+  "reading": ["books", "book club"],
+  "football": ["soccer"],
+  "jazz": ["live jazz"],
+  "running": ["trail running", "jogging"],
+  "cycling": ["biking", "bike touring", "road cycling"],
+  "board games": ["tabletop games", "board gaming"],
+  "birding": ["birdwatching", "bird watching"],
+  "cinema": ["movies", "independent film", "film festivals"],
+  "mapping": ["cartography", "mapmaking"],
+  "user research": ["ux research", "usability testing"],
+  "data visualization": ["dataviz", "data viz", "data visualisation"],
+  "walking": ["walking tours", "nature walks"]
+}
