@@ -4030,7 +4030,7 @@ input[type="datetime-local"], input:not([type]), select, textarea {
 .memory:hover .memory__actions, .memory:focus-within .memory__actions { opacity: 1; }
 .link-btn--danger { color: var(--danger); }
 /* person: only the overlap is yellow */
-:root { --venn-you: #f5f5f7; --venn-them: #f5f5f7; --venn-lens: #ffd400; }
+:root { --venn-you: #f5f5f7; --venn-them: #f5f5f7; --venn-lens: #ffd400; --venn-you-line: #48484a; }
 .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #000; }
 .next__why { margin-bottom: -8px; color: #6e6e73; font-size: 1rem; font-weight: 600; }
 
@@ -4069,7 +4069,7 @@ input[type="datetime-local"], input:not([type]), select, textarea {
 .h2__side { display: grid; justify-items: start; gap: 20px; }
 @media (min-width: 900px) { .h2__side { justify-items: center; text-align: center; } }
 .h2-stack { display: grid; gap: 14px; justify-items: inherit; color: #000; text-decoration: none; }
-.h2-stack__faces { display: flex; padding: 22px 28px; background: url("./brand/mark-underline-yellow.webp") center bottom / 90% 18px no-repeat; }
+.h2-stack__faces { display: flex; padding: 22px 28px; }
 .h2-stack__faces .avatar { width: 72px; height: 72px; margin-left: -16px; font-size: 1.15rem; border: 3px solid #fff; }
 .h2-stack__faces .avatar:first-child { margin-left: 0; }
 .h2-stack__label { font-size: 1rem; font-weight: 700; }
@@ -4095,3 +4095,8 @@ input[type="datetime-local"], input:not([type]), select, textarea {
 .h2-demo__dots span[data-on="true"] { width: 18px; background: #000; }
 @keyframes h2-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .h2-demo__ask, .h2-demo .h2-moment { animation: none; } }
+.people__more { margin: 8px 0 0; }
+
+/* final: narrow settings column; task screens (join, invite) drop the nav */
+.page--narrow { max-width: 640px; }
+.shell--task .topbar .nav { display: none; }

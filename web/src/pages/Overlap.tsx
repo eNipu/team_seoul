@@ -150,7 +150,7 @@ export default function Overlap() {
   const activeArea = state.error ? null : state.data?.preference?.area;
   const cityName = overlapCityInfo(activeArea ? overlapAreaInfo(activeArea).city : city).name;
   const headline = status === "introduced" ? `You and ${match?.other_name || "your match"} both said yes.` : status === "waiting" ? "You said yes. Now it’s their turn." : status === "offered" ? "Your windows overlap." : activeArea ? "Your window is open." : `Find an overlap in ${cityName}.`;
-  return <div className="overlap tl">
+  return <div className="page overlap tl">
     <header className="page-head"><h1 aria-live="polite" tabIndex={-1} id="page-title">{headline}</h1>
       {status === "waiting" ? <p>Names stay hidden unless you both agree.</p> : !state.data?.preference && <p>One neighborhood, a little free time, something you both enjoy.</p>}
     </header>

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import { Link } from "../router";
 import { useSession } from "../session";
+import { CHATGPT_FLAG } from "./ConnectChatGpt";
 import { firstName, joinNames, type DashboardHome } from "../types";
 import {
   Avatar,
@@ -93,7 +94,6 @@ function chatgptConnected(home: DashboardHome): boolean {
   return home.memories.some((m) => m.source === "chatgpt_memory") || hasConnectedFlag();
 }
 
-export const CHATGPT_FLAG = "venn.chatgpt.connected";
 function hasConnectedFlag(): boolean {
   try {
     return window.localStorage.getItem(CHATGPT_FLAG) === "1";
@@ -118,7 +118,7 @@ function Dashboard({ home, reloadHome }: { home: DashboardHome; reloadHome: () =
           </Link>
         )}
         {chatgptConnected(home) ? (
-          <Link to="/account" query={{ section: "connect" }} className="btn btn--primary btn--pill h2__invite">
+          <Link to="/invite" className="btn btn--primary btn--pill h2__invite">
             Invite someone
           </Link>
         ) : (

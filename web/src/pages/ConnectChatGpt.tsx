@@ -11,6 +11,8 @@ import { Card, PageHeader, copyText, useAsync } from "../ui";
 export const DEFAULT_MCP_URL = "https://app.joinvennai.com/mcp";
 export const CHATGPT_CONNECTORS_URL = "https://chatgpt.com/#settings/Connectors";
 export const CHATGPT_PLUGINS_URL = "https://chatgpt.com/plugins";
+/** Set once the guided setup is finished here; Home then offers "Invite someone" instead. */
+export const CHATGPT_FLAG = "venn.chatgpt.connected";
 export const CHATGPT_TEST_URL = "https://chatgpt.com/?q=Open%20Venn";
 
 let lastAnnouncement = "";
@@ -102,6 +104,13 @@ function ConnectWorkflowBody({
   }
 
   function markDone(step: 1 | 2 | 3) {
+    if (step === 3) {
+      try {
+        window.localStorage.setItem(CHATGPT_FLAG, "1");
+      } catch {
+        /* private mode: Home just keeps offering the setup */
+      }
+    }
     setCompleted((prev) => ({ ...prev, [step]: true }));
     if (step < 3) setActiveStep((step + 1) as 2 | 3);
   }

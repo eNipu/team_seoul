@@ -5,18 +5,16 @@ import { api } from "../api";
 import { Icon } from "../icons";
 import { Link, useLocation } from "../router";
 import { useSession } from "../session";
-import { DELETE_ACCOUNT_PHRASE, LIMITS, formatDate, type Invite, type Me, type PendingRequest } from "../types";
+import { DELETE_ACCOUNT_PHRASE, LIMITS, formatDate, type Me, type PendingRequest } from "../types";
 import {
   Avatar,
   Card,
-  CopyButton,
   CopyField,
   Dialog,
   Field,
   InlineError,
   Loaded,
   PageHeader,
-  QrBlock,
   Skeleton,
   useAction,
   useAsync,
@@ -72,7 +70,7 @@ function ChatGptCard({ me }: { me: Me }) {
     <Card title="Venn in ChatGPT" icon="sparkle" id="chatgpt">
       <p className="muted">Add Venn once. Then ChatGPT tells you when someone in your circle matters.</p>
       <div className="row">
-        <Link to="/connect" className="btn btn--primary">Connect to ChatGPT</Link>
+        <Link to="/connect" className="btn">Connect to ChatGPT</Link>
       </div>
       <details className="quiet-details">
         <summary>Set it up by hand</summary>
@@ -89,10 +87,8 @@ function ChatGptCard({ me }: { me: Me }) {
 }
 
 function ConnectCard({ requests, onChanged }: { requests: PendingRequest[]; onChanged: () => void }) {
-  const [invite, setInvite] = useState<Invite | null>(null);
   const [code, setCode] = useState("");
   const [redeemed, setRedeemed] = useState<string | null>(null);
-  const create = useAction();
   const redeem = useAction();
   const respond = useAction();
   const toast = useToast();
@@ -147,34 +143,11 @@ function ConnectCard({ requests, onChanged }: { requests: PendingRequest[]; onCh
         </>
       )}
 
-      {invite ? (
-        <div className="invite">
-          <div className="invite__main">
-            <p className="invite__code">
-              <span className="muted small">Invite code</span>
-              <strong className="mono">{invite.code}</strong>
-            </p>
-            <CopyField label="Invite link" value={invite.link} copyLabel="Copy link" />
-            <div className="row">
-              <CopyButton text={invite.code} label="Copy code" />
-              <CopyButton text={invite.share_text} label="Copy message" />
-            </div>
-            <p className="muted small">Expires {formatDate(invite.expires_at)}.</p>
-          </div>
-          <QrBlock rows={invite.qr} label="QR code for the invite link" caption="Or let them scan this" />
-        </div>
-      ) : (
-        <button
-          type="button"
-          className="btn btn--primary"
-          id="create-friend-invite"
-          disabled={create.busy}
-          onClick={() => void create.run(async () => setInvite(await api.createInvite()))}
-        >
-          {create.busy ? "Creating…" : "Create an invite link"}
-        </button>
-      )}
-      <InlineError message={create.error} />
+      <div className="row">
+        <Link to="/invite" className="btn btn--primary" id="create-friend-invite">
+          Show my QR code
+        </Link>
+      </div>
 
       <details className="more more--quiet">
       <summary>Have a code from a friend?</summary>

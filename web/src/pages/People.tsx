@@ -254,6 +254,9 @@ export default function People() {
                   ))}
                 </ul>
               )}
+              <p className="people__more">
+                <Link to="/overlap" className="link-btn">Meet someone new nearby</Link>
+              </p>
             </>
           )
         }

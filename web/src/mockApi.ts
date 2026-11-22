@@ -1433,8 +1433,10 @@ export function createMockApi(options: MockOptions): Api {
     /* ---------------------------------------------------------- connecting */
     createInvite: (maxUses = 1) =>
       wait(() => {
-        const code = `VENN-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
-        const link = `${SITE}/join/${code}`;
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        const pick = () => Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+        const code = `${pick()}-${pick()}`;
+        const link = `${SITE}/i/${code}`;
         state.inviteExpiresAt = ahead(7, 12);
         return {
           view: "invite" as const,
@@ -1450,14 +1452,15 @@ export function createMockApi(options: MockOptions): Api {
     redeemInvite: (code) =>
       wait(() => {
         const c = code.trim().toUpperCase();
-        if (!/^VENN-[A-Z0-9]{4}$/.test(c)) {
-          fail("NOT_FOUND", "That code isn't valid or has expired. Check it with your friend.", 404);
+        // Demo: ZZZZ-ZZZZ stands for an expired / used code; any other well-formed code connects.
+        if (!/^(VENN-[A-Z0-9]{4}|[A-Z0-9]{4}-?[A-Z0-9]{4})$/.test(c) || c === "ZZZZ-ZZZZ") {
+          fail("NOT_FOUND", "invite code is invalid or expired", 404);
         }
         return {
-          status: "pending",
+          status: "CONNECTED",
           request_id: newId("req"),
           inviter_display_name: "Hana Kim",
-          message: "Request sent to Hana Kim. You'll be connected once they accept.",
+          message: "You and Hana Kim are connected.",
         };
       }),
     respondRequest: (id, accept) =>

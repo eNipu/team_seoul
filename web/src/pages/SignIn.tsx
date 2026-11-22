@@ -83,7 +83,9 @@ export default function SignIn({
   passcodeRequired: boolean;
   onSignedIn: (result: SignInResult) => void;
 }) {
-  const [mode, setMode] = useState<AuthMode>(initialMode);
+  // Arriving from an invite link: the code stays in the URL, and Google returns here after sign-in.
+  const invited = window.location.pathname.replace(/\/+$/, "").endsWith("/join");
+  const [mode, setMode] = useState<AuthMode>(invited ? "signup" : initialMode);
   const [authError, setAuthError] = useState<string | null>(initialAuthError);
   const [googleBusy, setGoogleBusy] = useState(false);
 
@@ -197,7 +199,7 @@ export default function SignIn({
       </div>
 
       <div className="auth__header">
-        <h1>{isSignUp ? "Build your inner circle." : "Open your Venn."}</h1>
+        <h1>{invited ? "A friend invited you to Venn." : isSignUp ? "Build your inner circle." : "Open your Venn."}</h1>
         <p className="auth__lead">
           {isSignUp
             ? "Use your Google account to get started in one click — no server passcode needed."

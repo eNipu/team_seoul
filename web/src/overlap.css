@@ -3,7 +3,7 @@
 .ov-entry__text { display: grid; gap: .1rem; }
 
 .overlap { overflow-wrap: anywhere; }
-.ov-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr)); gap: .8rem; }
+.ov-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: .8rem; }
 .ov-fields label, .ov-select { display: grid; gap: .4rem; font-weight: 600; }
 .ov-fields select, .ov-select select { width: 100%; min-height: 44px; }
 .ov-interests { padding: 0; margin: 0; min-width: 0; border: 0; }

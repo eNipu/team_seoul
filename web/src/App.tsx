@@ -20,6 +20,8 @@ import Plans from "./pages/Plans";
 import Answers from "./pages/Answers";
 import Account from "./pages/Account";
 import ConnectChatGpt, { PublicConnectChatGpt } from "./pages/ConnectChatGpt";
+import Invite from "./pages/Invite";
+import Join from "./pages/Join";
 
 interface NavItem {
   to: string;
@@ -61,6 +63,8 @@ function matchRoute(loc: Location): Route {
   if (path === "/plans") return { title: "Plans", element: <Plans /> };
   if (path === "/answers") return { title: "Answers", element: <Answers /> };
   if (path === "/connect") return { title: "Connect ChatGPT", element: <ConnectChatGpt /> };
+  if (path === "/invite") return { title: "Invite", element: <Invite /> };
+  if (path === "/join") return { title: "Join", element: <Join /> };
   if (path === "/account") return { title: "Account", element: <Account /> };
   return { title: "Page not found", element: <NotFound /> };
 }
@@ -176,7 +180,7 @@ function Shell() {
   }, [loc.path]);
 
   return (
-    <div className="shell">
+    <div className={loc.path === "/join" || loc.path === "/invite" ? "shell shell--task" : "shell"}>
       <a className="skip-link" href="#main">
         Skip to content
       </a>
