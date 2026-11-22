@@ -29,6 +29,7 @@ def test_model_leaves_generic_opening_to_the_starter_actions(alice):
     assert "starter actions" in said
     assert "Start the first open step only if the user asked for set-up" in said
     assert alice.ok("venn_list_people")["count"] == 0
+    assert "Who would you like to spend more time with, and what would you enjoy doing together?" in said
     # The first open step names the tools that do it.
     assert "venn_import_chatgpt_memory" in said and "venn_propose_memories" in said
     assert "venn_propose_people_import" not in said
@@ -41,6 +42,7 @@ def test_steps_are_ticked_off_by_what_the_user_has_done(alice):
     assert steps(view) == {"about_you": True, "your_people": False, "connect": False}
     said = text(alice, "venn_show_dashboard")
     assert "(open: your people, connect)" in said
+    assert "Who would you like to spend more time with" not in said
     assert "venn_propose_people_import" in said
 
     alice.ok("venn_add_person", name="Maya")

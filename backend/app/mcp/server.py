@@ -10,6 +10,7 @@ from mcp.server.apps import Apps, ResourceCsp
 from mcp.server.auth.settings import AuthSettings, ClientRegistrationOptions, RevocationOptions
 from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
+from mcp_types import Icon
 from pydantic import ValidationError
 
 from app.auth.dev_provider import DevOAuthProvider
@@ -55,9 +56,10 @@ the same in ChatGPT and on the Venn website. Friends do not need to join for Ven
 - For a generic greeting or "Open Venn", call venn_show_dashboard and let the user choose an
   action on the card. Do not begin set-up or load sample data unless they ask. When they ask to set
   up Venn, use the open steps from the dashboard result and start with the first one:
-  1. About you (no memories yet): offer to bring over what you already remember about them
-     (venn_import_chatgpt_memory), or ask what they enjoy and what they avoid and call
-     venn_propose_memories with their answers.
+  1. About you (no memories yet): ask the opening question supplied by venn_show_dashboard.
+     Accept a partial answer and use venn_propose_memories with structured candidates drawn
+     from what the user shared. If they ask to use existing ChatGPT memories, open
+     venn_import_chatgpt_memory.
   2. Your people (no friends yet): ask who they want to stay close to. They can paste a list of
      names, upload a contacts export or just name a few people -> venn_propose_people_import.
   3. Connect (no connections yet): offer an invite for friends who use ChatGPT ->
@@ -113,7 +115,8 @@ the same in ChatGPT and on the Venn website. Friends do not need to join for Ven
   the user, say so - never invent memories.
 - Importing friends: when the user pastes a list, uploads a contacts file or describes several
   people, call venn_propose_people_import (max 50 per call, no contact details). The user picks
-  who to add on the card; nothing is saved before that.
+  who to add on the card. When two people share a name, ask how the user knows each one
+  and put their clues in the relationship fields. Let the user resolve possible matches.
 - Plans: when the user settles on something to do with friends, offer to keep it ->
   venn_save_plan (venn_list_plans, venn_complete_plan when it happened, venn_delete_plan).
   A plan is a note for the user; it invites nobody.
@@ -222,7 +225,15 @@ def build_mcp_server(settings: Settings) -> tuple[MCPServer, DevOAuthProvider | 
     mcp = VennMCPServer(
         name="venn",
         title="Venn",
-        description="Consent-based memories and common ground with the people you already know.",
+        description="Keep private notes about people you know, find shared interests, and plan time together.",
+        website_url="https://joinvennai.com",
+        icons=[
+            Icon(
+                src=f"{settings.public_base_url.rstrip('/')}/app/venn-icon.png",
+                mime_type="image/png",
+                sizes=["512x512"],
+            )
+        ],
         instructions=INSTRUCTIONS,
         version="0.1.0",
         auth=auth,

@@ -70,6 +70,7 @@ export const LIMITS = {
   memoryTitle: 120,
   memoryDescription: 500,
   personName: 80,
+  importPeople: 50,
   relationship: 80,
   notes: 1000,
   interestCount: 12,
@@ -356,6 +357,8 @@ export interface HelpViewData {
 }
 
 export interface ImportCandidate {
+  shared_interests?: string[];
+  existing_relationships?: string[];
   index: number;
   name: string;
   relationship: string | null;
@@ -1046,6 +1049,8 @@ export function parseView(sc: unknown, meta?: unknown): ViewData | null {
           interests: strArr(c.interests),
           last_met_days_ago: daysOrNull(c.last_met_days_ago),
           already_added: c.already_added === true,
+          shared_interests: strArr(c.shared_interests),
+          existing_relationships: strArr(c.existing_relationships),
         })),
         skipped: Math.max(0, Math.floor(num(sc.skipped))),
         note: str(sc.note),

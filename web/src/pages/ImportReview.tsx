@@ -50,7 +50,7 @@ export function ImportReview({
           {action.busy
             ? "Adding…"
             : checked.length === 0
-              ? selectable.length === 0
+              ? selectionTools && selectable.length === 0
                 ? "Everyone is already added"
                 : "Choose at least one"
               : `Add ${plural(checked.length, "person", "people")}`}
@@ -86,11 +86,11 @@ export function ImportReview({
           const on = checked.includes(c.index);
           return (
             <li key={c.index}>
-              <label className={`review__row ${c.already_added ? "review__row--off" : ""}`}>
+              <label className="review__row">
                 <input
                   type="checkbox"
                   checked={on}
-                  disabled={action.busy || c.already_added}
+                  disabled={action.busy || Boolean(selectionTools && c.already_added)}
                   onChange={() => setChecked(on ? checked.filter((i) => i !== c.index) : [...checked, c.index])}
                 />
                 <Avatar name={c.name} size="small" />
@@ -99,9 +99,10 @@ export function ImportReview({
                   <span className="muted small">
                     {[c.relationship, c.interests.join(", ")].filter(Boolean).join(" · ") || "No details"}
                   </span>
+                  {!!c.existing_relationships?.length && <span className="small">Already saved: {c.existing_relationships.join(", ")}</span>}
                   {c.notes && <span className="small review__notes">{c.notes}</span>}
                 </span>
-                {c.already_added && <Tag icon="check">Already in your people</Tag>}
+                {c.already_added && <Tag>{selectionTools ? "Already in your people" : "Same name in your people"}</Tag>}
               </label>
             </li>
           );

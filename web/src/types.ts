@@ -414,6 +414,7 @@ export interface Quiz {
 }
 
 export interface ImportCandidate {
+  existing_relationships?: string[];
   index: number;
   name: string;
   relationship: string | null;
@@ -1138,6 +1139,7 @@ export function parsePeopleImport(v: unknown): PeopleImport {
         notes: strOrNull(c.notes),
         interests: strArr(c.interests),
         last_met_days_ago: numOrNull(c.last_met_days_ago),
+        existing_relationships: strArr(c.existing_relationships),
         already_added: bool(c.already_added),
       }))
       .filter((c) => c.name !== ""),

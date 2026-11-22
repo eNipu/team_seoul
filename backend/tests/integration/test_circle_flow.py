@@ -4,6 +4,7 @@ import random
 
 import pytest
 
+from app.config import ALL_SCOPES
 from app.db.database import session_scope
 from app.invite_page import normalize, render_invite_page
 from app.models import Person, User
@@ -61,6 +62,40 @@ def test_import_flags_people_already_added_and_skips_sensitive(alice):
     )
     assert [(c["name"], c["already_added"]) for c in view["candidates"]] == [("maya park", True), ("Hana", False)]
     assert view["skipped"] == 1
+
+
+def test_namesakes_are_reviewed_separately_and_ambiguous_memories_stay_unassigned(alice, bob):
+    first = add(alice, name="Alex", relationship="coworker")
+    add(bob, name="Alex", relationship="neighbor")
+    view = alice.ok("venn_propose_people_import", people=[{"name": "Alex", "relationship": "running club"}])
+    candidate = view["candidates"][0]
+    assert candidate["already_added"] and candidate["existing_relationships"] == ["coworker"]
+    assert candidate["relationship"] == "running club"
+    second = alice.ok("venn_import_people", import_id=view["import_id"], indexes=[0])["imported"][0]
+    assert first["person_id"] != second["person_id"]
+
+    proposal = alice.ok(
+        "venn_propose_memories",
+        suggested=[
+            {"category": "EXPERIENCE", "title": "Pottery with Alex", "description": "We made mugs.", "people": ["Alex"]}
+        ],
+    )
+    alice.ok("venn_save_memories", proposal_id=proposal["proposal_id"], approvals=[{"index": 0}])
+    assert not alice.ok("venn_find_people", query="pottery")["results"]
+    for person in (first, second):
+        friend = alice.ok("venn_view_friend", person_id=person["person_id"])
+        assert "pottery" not in [term.lower() for term in friend["shared_interests"]]
+
+
+def test_radar_signals_only_the_callers_authorized_interests(alice, bob, make_user):
+    save(alice, "INTEREST", "Pottery", "Wheel throwing", "PRIVATE", ["ceramics"])
+    save(bob, "INTEREST", "Sailing", "On weekends", "PRIVATE")
+    people = [{"name": "Alex", "interests": ["CERAMICS", "Sailing"]}]
+    view = alice.ok("venn_propose_people_import", people=people)
+    assert view["candidates"][0]["shared_interests"] == ["CERAMICS"]
+    limited = make_user("alice", scopes=[s for s in ALL_SCOPES if s != "venn.memories.read"])
+    denied = limited.rpc("tools/call", {"name": "venn_propose_people_import", "arguments": {"people": people}})
+    assert denied.status_code == 403
 
 
 def test_import_validation(alice):

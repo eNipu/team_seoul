@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import re
 import uuid
+from collections import Counter
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -197,23 +199,41 @@ def my_terms(db: Session, user: User) -> set[str]:
     return _memory_terms(own_memories(db, user))
 
 
-def _is_about(m: Memory, name: str) -> bool:
-    """Is this memory of the user's about the friend called `name`?
+def _alias_counts(names: Iterable[str]) -> Counter[str]:
+    """Count how many people each full name or first name could refer to."""
+    counts: Counter[str] = Counter()
+    for name in names:
+        full = " ".join(name.casefold().split())
+        if full:
+            counts.update({full, full.split()[0]})
+    return counts
 
-    Yes when the memory names them ("Maya" also stands for "Maya Chen"). A memory saved without
-    names still counts when the friend's first name appears in its text, capitalised as a name.
-    """
-    if m.people:
-        return any(memory_service.same_person(n, name) for n in m.people)
-    first = name.split()[0] if name.split() else ""
-    if len(first) < 3 or not first[0].isupper():
+
+def _is_about(m: Memory, name: str, aliases: Counter[str]) -> bool:
+    full = " ".join(name.casefold().split())
+    if not full:
         return False
-    return re.search(rf"\b{re.escape(first)}\b", f"{m.title} {m.description}") is not None
+    first = full.split()[0]
+    if m.people:
+        for mention in m.people:
+            label = " ".join(mention.casefold().split())
+            if label in {full, first} and aliases[label] == 1:
+                return True
+            if full == first and label.startswith(first + " ") and aliases[first] == 1:
+                return True
+        return False
+    token = name.split()[0]
+    return (
+        aliases[first] == 1
+        and len(token) >= 3
+        and token[0].isupper()
+        and re.search(rf"\b{re.escape(token)}\b", f"{m.title} {m.description}") is not None
+    )
 
 
-def _link_own_memories(friend: Friend, mine: list[Memory]) -> Friend:
-    """Attach the user's memories about this friend; what they did together counts as common ground."""
-    friend.about = [m for m in mine if _is_about(m, friend.display_name)]
+def _link_own_memories(friend: Friend, mine: list[Memory], aliases: Counter[str]) -> Friend:
+    """Only attach a memory when its name identifies this friend uniquely."""
+    friend.about = [m for m in mine if _is_about(m, friend.display_name, aliases)]
     for m in friend.about:
         if m.category != "DISLIKE":
             friend.about_terms |= terms_of(_topic(m, friend.display_name), *(m.tags or []))
@@ -274,11 +294,13 @@ def resolve(db: Session, user: User, connection_id: str | None, person_id: str |
     if bool(connection_id) == bool(person_id):
         raise InvalidRequest("Provide exactly one of connection_id or person_id.")
     if person_id:
-        return _link_own_memories(_person_friend(db, people_service.owned(db, user, person_id)), own_memories(db, user))
-    conn, friend_id = social_service.own_connection(db, user, connection_id or "")
-    if social_service.is_blocked(db, user.id, friend_id):
-        raise NotFound("connection not found")
-    return _link_own_memories(_connection_friend(db, user, conn, friend_id), own_memories(db, user))
+        friend = _person_friend(db, people_service.owned(db, user, person_id))
+    else:
+        conn, friend_id = social_service.own_connection(db, user, connection_id or "")
+        if social_service.is_blocked(db, user.id, friend_id):
+            raise NotFound("connection not found")
+        friend = _connection_friend(db, user, conn, friend_id)
+    return _link_own_memories(friend, own_memories(db, user), _alias_counts(memory_service.circle_names(db, user)))
 
 
 def all_friends(db: Session, user: User) -> list[Friend]:
@@ -293,7 +315,8 @@ def all_friends(db: Session, user: User) -> list[Friend]:
     for p in db.scalars(select(Person).where(Person.owner_user_id == user.id)).all():
         out.append(_person_friend(db, p))
     mine = own_memories(db, user)
-    return [_link_own_memories(friend, mine) for friend in out]
+    aliases = _alias_counts(friend.display_name for friend in out)
+    return [_link_own_memories(friend, mine, aliases) for friend in out]
 
 
 def compatible_companions(db: Session, anchor: Friend, friends: list[Friend]) -> list[Friend]:
