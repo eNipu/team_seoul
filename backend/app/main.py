@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import contextlib
 import logging
+import os
 from collections.abc import AsyncIterator
 from urllib.parse import urlparse
 
@@ -85,10 +86,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return {"status": "ok"}
 
     @app.get("/readyz", include_in_schema=False)
-    def readyz() -> dict:
+    def readyz(response: Response) -> dict:
         with session_scope() as db:
             db.execute(text("SELECT 1"))
-        return {"status": "ready", "environment": settings.environment, "auth_mode": settings.auth_mode}
+        response.headers["Cache-Control"] = "no-store"
+        return {
+            "status": "ready",
+            "environment": settings.environment,
+            "auth_mode": settings.auth_mode,
+            "revision": os.getenv("RAILWAY_GIT_COMMIT_SHA"),
+        }
 
     @app.get("/i/{code}", include_in_schema=False)
     def invite_page(code: str) -> HTMLResponse:
