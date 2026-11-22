@@ -60,6 +60,8 @@ import type {
   SetupStep,
   SharedMemory,
   ViewData,
+  Reply,
+  SavedReply,
   Visibility,
   WelcomeViewData,
 } from "./types";
@@ -96,6 +98,10 @@ export const DEMO_VIEWS = [
   "dashboard_sample",
   "dashboard_plans",
   "memory_review_people",
+  "reply_advice",
+  "reply_checklist",
+  "reply_draft",
+  "saved_replies",
 ] as const;
 
 export function demoParam(name: string): string | null {
@@ -1754,8 +1760,38 @@ function welcomeView(): WelcomeViewData {
   return { view: "welcome", display_name: profile.display_name, goal_options: GOAL_OPTIONS, setup: setupSteps(true), sample_loaded: false };
 }
 
+const demoReplies: Record<string, Reply> = {
+  reply_advice: {
+    kind: "advice",
+    title: "Start with something you share",
+    body: "Send Maya a photo from one of your old walks, or mention a place you used to go together. Give her an easy way to reply before suggesting a date.",
+  },
+  reply_checklist: {
+    kind: "checklist",
+    title: "Plan an easy photo walk",
+    body: "Pick a short route with a café at the end. That gives you somewhere to go if the weather turns.",
+    steps: ["Send Maya two possible times.", "Pick a meeting point near the start of the route.", "Send a quick check-in on the day."],
+  },
+  reply_draft: {
+    kind: "draft",
+    title: "Invite Maya on a photo walk",
+    body: "Hey Maya! I passed our old photo walk spot today and thought of you. Are you up for a short walk and coffee next weekend?",
+  },
+};
+
+let savedReplies: SavedReply[] = [];
+
 export function mockInitialView(): ViewData | null {
   switch (demoParam("view")) {
+    case "reply_advice":
+      return { view: "reply", reply: demoReplies.reply_advice };
+    case "reply_checklist":
+      return { view: "reply", reply: demoReplies.reply_checklist };
+    case "reply_draft":
+      return { view: "reply", reply: demoReplies.reply_draft };
+    case "saved_replies":
+      savedReplies = [{ reply_id: "reply_demo_1", reply: demoReplies.reply_draft }];
+      return { view: "saved_replies", replies: savedReplies };
     case "memory_review":
       return reviewView("conversation", DEMO_PROPOSALS, "prop_demo_1");
     case "memory_review_import":
@@ -1874,6 +1910,25 @@ export function createMockBridge(): HostBridge {
       if (flaky && calls % 2 === 1) return fail("NETWORK_ERROR: simulated failure (flaky mode). Try again.");
 
       switch (name) {
+        case "venn_show_reply": {
+          const view = parseView({ view: "reply", reply: args.reply });
+          return view ? ok(view) : fail("INVALID_REQUEST: reply is missing or invalid");
+        }
+        case "venn_save_reply": {
+          const view = parseView({ view: "reply", reply: args.reply });
+          if (view?.view !== "reply") return fail("INVALID_REQUEST: reply is missing or invalid");
+          const existing = savedReplies.find(({ reply }) => JSON.stringify(reply) === JSON.stringify(view.reply));
+          if (existing) return ok({ saved: true, reply_id: existing.reply_id });
+          const reply_id = nextId("reply");
+          savedReplies = [{ reply_id, reply: view.reply }, ...savedReplies];
+          return ok({ saved: true, reply_id });
+        }
+        case "venn_saved_replies":
+          return ok({ view: "saved_replies", replies: savedReplies });
+        case "venn_delete_saved_reply":
+          if (!savedReplies.some(({ reply_id }) => reply_id === args.reply_id)) return fail("NOT_FOUND: Saved reply not found.");
+          savedReplies = savedReplies.filter(({ reply_id }) => reply_id !== args.reply_id);
+          return ok({ deleted: true });
         case "venn_show_dashboard":
           return ok(dashboardView());
 

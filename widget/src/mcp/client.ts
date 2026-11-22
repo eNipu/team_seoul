@@ -7,6 +7,7 @@ import {
   PostMessageTransport,
   applyDocumentTheme,
   type McpUiHostContext,
+  type McpUiDisplayMode,
   type McpUiToolResultNotification,
 } from "@modelcontextprotocol/ext-apps";
 
@@ -27,6 +28,8 @@ export interface HostBridge {
   sendMessage(text: string): Promise<boolean>;
   /** Ask the host to open an external link. Resolves false if unsupported/denied/failed. */
   openLink(url: string): Promise<boolean>;
+  /** Change the widget presentation when the host offers the requested mode. */
+  requestDisplayMode?(mode: "inline" | "fullscreen"): Promise<McpUiDisplayMode | null>;
 }
 
 export interface BridgeHandlers {
@@ -124,6 +127,17 @@ class ExtAppsBridge implements HostBridge {
       return false;
     }
   }
+
+  async requestDisplayMode(mode: "inline" | "fullscreen"): Promise<McpUiDisplayMode | null> {
+    if (!this.ctx.availableDisplayModes?.includes(mode)) return null;
+    try {
+      const result = await this.app.requestDisplayMode({ mode });
+      this.mergeContext({ displayMode: result.mode });
+      return result.mode;
+    } catch {
+      return null;
+    }
+  }
 }
 
 /**
@@ -132,7 +146,11 @@ class ExtAppsBridge implements HostBridge {
  * the host over postMessage.
  */
 export async function connectToHost(handlers: BridgeHandlers): Promise<HostBridge> {
-  const app = new App({ name: "venn-widget", version: "1.0.0" }, {}, { autoResize: true });
+  const app = new App(
+    { name: "venn-widget", version: "1.0.0" },
+    { availableDisplayModes: ["inline", "fullscreen"] },
+    { autoResize: true },
+  );
   const bridge = new ExtAppsBridge(app);
 
   app.ontoolinput = (params) => handlers.onToolInput(params.arguments);
