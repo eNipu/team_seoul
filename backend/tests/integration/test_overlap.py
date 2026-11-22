@@ -78,9 +78,10 @@ def test_auth_and_csrf(web):
     assert alice.ok("GET", ROOT) == EMPTY
 
 
-def test_private_account_location_is_independent_of_overlap_opt_in(web):
+@pytest.mark.parametrize("saved_area", ["hongdae", "berlin-kreuzberg"])
+def test_private_account_location_is_independent_of_overlap_opt_in(web, saved_area):
     anon, alice, bob = web(), web("alice"), web("bob")
-    area = {"area": "hongdae"}
+    area = {"area": saved_area}
     assert anon.err("GET", LOCATION) == (401, "UNAUTHENTICATED")
     assert anon.err("PATCH", LOCATION, area) == (401, "UNAUTHENTICATED")
     assert alice.send("PATCH", LOCATION, area, headers={}).status_code == 403
@@ -138,6 +139,49 @@ def test_requires_same_area_day_slot_and_common_topic(web, field):
     alice.ok("POST", PREF, prefs())
     assert bob.ok("POST", PREF, prefs(**{field: changes[field]}))["match"] is None
     assert alice.ok("GET", ROOT)["match"] is None
+
+
+def test_berlin_matching_and_meeting_point_use_local_summer_time(web, monkeypatch):
+    now = datetime(2026, 7, 22, 14, 30, tzinfo=UTC)
+    monkeypatch.setattr(overlap_service, "utcnow", lambda: now)
+    alice, bob, seoul = web("alice"), web("bob"), web("seoul")
+    window = prefs(area="berlin-mitte", date="2026-07-22", slot="evening")
+    assert seoul.ok("POST", PREF, {**window, "area": "seongsu"})["match"] is None
+    assert alice.ok("POST", PREF, window)["match"] is None
+    assert seoul.ok("GET", ROOT)["match"] is None
+
+    now += timedelta(hours=1)  # July 23 in Seoul, but still July 22 in Berlin.
+    assert bob.err("POST", PREF, {**window, "date": "2026-07-29"}) == (400, "INVALID_REQUEST")
+    match = bob.ok("POST", PREF, window)["match"]
+    assert "in Mitte." in match["reason"]
+    path = match_path(match["id"])
+    alice.ok("POST", path, {"action": "yes"})
+    assert bob.ok("POST", path, {"action": "yes"})["match"]["meeting_point"] == {
+        "label": "Brandenburg Gate, Pariser Platz · 2026-07-22 19:00 CEST",
+        "status": "available",
+    }
+
+    now = datetime(2026, 7, 22, 17, tzinfo=UTC)  # Exactly 19:00 in Berlin.
+    assert alice.ok("GET", ROOT)["match"]["meeting_point"] is None
+    assert bob.err("POST", path, {"action": "suggest_spot"}) == (400, "INVALID_REQUEST")
+    now = datetime(2026, 7, 22, 22, tzinfo=UTC)
+    assert alice.ok("GET", ROOT) == bob.ok("GET", ROOT) == EMPTY
+
+
+def test_switching_cities_reoffers_the_released_peers_local_window(web, monkeypatch):
+    now = datetime(2026, 7, 22, 15, 30, tzinfo=UTC)
+    monkeypatch.setattr(overlap_service, "utcnow", lambda: now)
+    alice, bob, carol = web("alice"), web("bob"), web("carol")
+    berlin = prefs(area="berlin-pberg", date="2026-07-22", slot="evening")
+    alice.ok("POST", PREF, berlin)
+    original = bob.ok("POST", PREF, berlin)["match"]["id"]
+    assert carol.ok("POST", PREF, berlin)["match"] is None
+
+    seoul = {**berlin, "area": "seongsu", "date": "2026-07-23"}
+    assert alice.ok("POST", PREF, seoul)["match"] is None
+    rematch = bob.ok("GET", ROOT)["match"]["id"]
+    assert rematch != original
+    assert carol.ok("GET", ROOT)["match"]["id"] == rematch
 
 
 def test_shared_interest_and_complement_explained_from_each_perspective(web):

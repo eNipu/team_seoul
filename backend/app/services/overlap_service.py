@@ -1,6 +1,9 @@
-"""Consent-first Seoul discovery. The caller owns the transaction and authenticates the user."""
+"""Consent-first discovery. The caller owns the transaction and authenticates the user."""
 
+import json
+from dataclasses import dataclass
 from datetime import datetime, time, timedelta
+from importlib.resources import files
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -13,14 +16,24 @@ from app.schemas.overlap import MeetingPoint, OverlapCard, OverlapPreferenceInpu
 from app.services.errors import InvalidRequest, NotFound
 from app.services.overlap_plans import PLANS, plan_for
 
-_SEOUL = ZoneInfo("Asia/Seoul")
 _END_HOUR = {"morning": 12, "afternoon": 18, "evening": 24}
-_SPOTS = {
-    "seongsu": "Seongsu Station Exit 3",
-    "hongdae": "Hongik University Station Exit 9",
-    "yeonnam": "Hongik University Station Exit 3",
-}
 _SPOT_HOUR = {"morning": 10, "afternoon": 15, "evening": 19}
+
+
+@dataclass(frozen=True)
+class _AreaDetails:
+    city: str
+    zone: ZoneInfo
+    name: str
+    spot: str
+
+
+_CITIES = json.loads(files("app.schemas").joinpath("overlap_cities.json").read_text(encoding="utf-8"))
+_AREAS = {
+    area: _AreaDetails(city["name"], ZoneInfo(city["timezone"]), details["name"], details["spot"])
+    for city in _CITIES.values()
+    for area, details in city["areas"].items()
+}
 
 
 def _lock(db: Session) -> None:
@@ -35,11 +48,10 @@ def _lock(db: Session) -> None:
 
 
 def _open(pref, now: datetime) -> bool:
-    return (
-        pref is not None
-        and pref.adults_confirmed
-        and (pref.date > now.date() or (pref.date == now.date() and now.hour < _END_HOUR[pref.slot]))
-    )
+    if pref is None or not pref.adults_confirmed:
+        return False
+    local_now = now.astimezone(_AREAS[pref.area].zone)
+    return pref.date > local_now.date() or (pref.date == local_now.date() and local_now.hour < _END_HOUR[pref.slot])
 
 
 def _eligible(a, b):
@@ -74,18 +86,20 @@ def _first_name(name):
 
 
 def _meeting_point(pref, peer, now) -> MeetingPoint | None:
-    when = datetime.combine(pref.date, time(_SPOT_HOUR[pref.slot]), _SEOUL)
+    area = _AREAS[pref.area]
+    when = datetime.combine(pref.date, time(_SPOT_HOUR[pref.slot]), area.zone)
     if not (pref.accepted and peer.accepted) or when <= now:
         return None
     if pref.spot_confirmed:
         status = "agreed" if peer.spot_confirmed else "suggested_by_you"
     else:
         status = "suggested_to_you" if peer.spot_confirmed else "available"
-    return MeetingPoint(label=f"{_SPOTS[pref.area]} · {when:%Y-%m-%d %H:%M} KST", status=status)
+    return MeetingPoint(label=f"{area.spot} · {when:%Y-%m-%d %H:%M %Z}", status=status)
 
 
-def get_state(db: Session, user: User) -> OverlapState:
-    now = utcnow().astimezone(_SEOUL)
+def get_state(db: Session, user: User, *, now: datetime | None = None) -> OverlapState:
+    if now is None:
+        now = utcnow()
     own, other = OverlapPreference, aliased(OverlapPreference)
     # One statement snapshot: never combine a pre-block vote with a post-block identity.
     row = db.execute(
@@ -108,7 +122,7 @@ def get_state(db: Session, user: User) -> OverlapState:
     state = OverlapState(preference=OverlapWindow.model_validate(pref))
     if _open(peer, now) and match is not None:
         mutual = pref.accepted and peer.accepted
-        title, reason, challenge = plan_for(match.interest, pref.interests, peer.interests, pref.area)
+        title, reason, challenge = plan_for(match.interest, pref.interests, peer.interests, _AREAS[pref.area].name)
         state.match = OverlapCard(
             id=str(match.id),
             status="introduced" if mutual else "waiting" if pref.accepted else "offered",
@@ -170,9 +184,10 @@ def _offer(db, pref, now):
 
 def opt_in(db: Session, user: User, prefs: OverlapPreferenceInput) -> OverlapState:
     _lock(db)
-    now = utcnow().astimezone(_SEOUL)
-    if not _open(prefs, now) or prefs.date >= now.date() + timedelta(days=7):
-        raise InvalidRequest("Choose an open window in the next seven Seoul dates.")
+    now = utcnow()
+    area = _AREAS[prefs.area]
+    if not _open(prefs, now) or prefs.date >= now.astimezone(area.zone).date() + timedelta(days=7):
+        raise InvalidRequest(f"Choose an open window in the next seven {area.city} dates.")
     pref = db.get(OverlapPreference, user.id)
     released = None
     if pref is None:
@@ -202,22 +217,23 @@ def opt_in(db: Session, user: User, prefs: OverlapPreferenceInput) -> OverlapSta
     _offer(db, pref, now)
     if released is not None:
         _offer(db, released, now)
-    return get_state(db, user)
+    return get_state(db, user, now=now)
 
 
 def withdraw(db: Session, user: User) -> OverlapState:
     _lock(db)
     if pref := db.get(OverlapPreference, user.id):
+        now = utcnow()
         released = _release(db, pref)
         db.delete(pref)
         db.flush()
-        _offer(db, released, utcnow().astimezone(_SEOUL))
+        _offer(db, released, now)
     return OverlapState()
 
 
 def _members(db, user, match_id):
     _lock(db)
-    now = utcnow().astimezone(_SEOUL)
+    now = utcnow()
     pref = db.get(OverlapPreference, user.id)
     try:
         target = UUID(str(match_id))
@@ -225,37 +241,37 @@ def _members(db, user, match_id):
         raise NotFound("Overlap not found") from None
     if not pref or pref.match_id != target or not (peer := _peer(db, pref, now)):
         raise NotFound("Overlap not found")
-    return pref, peer
+    return pref, peer, now
 
 
-def _hide(db, pref, peer, kind, reason=None):
+def _hide(db, pref, peer, now, kind, reason=None):
     db.add(OverlapExclusion(actor_id=pref.user_id, other_id=peer.user_id, kind=kind, reason=reason))
     _release(db, pref)
-    _offer(db, peer, utcnow().astimezone(_SEOUL))
+    _offer(db, peer, now)
 
 
 def respond(db: Session, user: User, match_id: str, action: str) -> OverlapState:
-    pref, peer = _members(db, user, match_id)
+    pref, peer, now = _members(db, user, match_id)
     if action == "yes":
         pref.accepted = True
         db.flush()
     elif action == "suggest_spot":
-        if _meeting_point(pref, peer, utcnow().astimezone(_SEOUL)) is None:
+        if _meeting_point(pref, peer, now) is None:
             raise InvalidRequest("A mutual introduction and a future public meeting point are required.")
         pref.spot_confirmed = True
         db.flush()
     elif action in {"pass", "block"}:
-        _hide(db, pref, peer, action)
+        _hide(db, pref, peer, now, action)
         if action == "pass":
-            _offer(db, pref, utcnow().astimezone(_SEOUL))
+            _offer(db, pref, now)
     else:
         raise InvalidRequest("Unknown overlap action")
-    return get_state(db, user)
+    return get_state(db, user, now=now)
 
 
 def report(db: Session, user: User, match_id: str, reason: str) -> OverlapState:
-    pref, peer = _members(db, user, match_id)
+    pref, peer, now = _members(db, user, match_id)
     if reason not in {"safety", "spam", "other"}:
         raise InvalidRequest("Unknown report reason")
-    _hide(db, pref, peer, "report", reason)
-    return get_state(db, user)
+    _hide(db, pref, peer, now, "report", reason)
+    return get_state(db, user, now=now)

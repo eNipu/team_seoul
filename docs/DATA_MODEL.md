@@ -115,13 +115,16 @@ people notes, through the existing visibility and ownership checks. If a discuss
 durable interest or preference, ChatGPT can propose the specific item with
 `venn_propose_memories`. It becomes a matching signal after the user approves it in the review card.
 
-## Seoul Overlap (migrations 0009, 0010, 0012)
+## Venn Overlap (migrations 0009, 0010, 0012)
 
-`users.overlap_area` is a nullable, private preference for one supported Seoul neighborhood. It is visible only to the owner through signed-in web settings. It is a shortcut when choosing a window, not an opt-in or a matching input; deleting the account also removes it.
+`users.overlap_area` is a nullable, private preference for one supported neighborhood. It is visible only to the owner through signed-in web settings. It is a shortcut when choosing a window, not an opt-in or a matching input; deleting the account also removes it.
 
-`overlap_preferences` has one explicitly adult-confirmed opt-in per user: curated district,
-Seoul local date, slot, and 1–3 selected interest codes. Today through today + 6 days are
-selectable. Morning closes at noon, afternoon at 18:00, evening at midnight Seoul time;
+`overlap_preferences` has one explicitly adult-confirmed opt-in per user: a globally unique
+neighborhood code, its city's local date, slot, and 1–3 selected interest codes. The shared
+`backend/app/schemas/overlap_cities.json` catalog maps areas to cities, time zones, and public
+meeting points. Keep area codes at most 16 characters and retain existing codes. Today through
+today + 6 days are selectable. Morning closes at noon, afternoon at 18:00, evening at midnight
+in the selected city;
 expired rows are invisible and cannot authorize responses. Expiry is not physical deletion.
 
 `overlap_matches` holds an opaque plan ID and one shared interest. Together with the two sets of explicitly selected tags, this picks a curated activity and challenge.

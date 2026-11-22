@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { api, DEMO } from "../api";
-import { OVERLAP_AREAS, parseOverlapLocation, type OverlapArea } from "../types";
+import { DEFAULT_OVERLAP_CITY, OVERLAP_CITIES, overlapAreaInfo, overlapAreasIn, overlapCityInfo, type OverlapArea } from "../overlapCities";
+import { parseOverlapLocation } from "../types";
 import { Card, Field, InlineError, Loaded, useAction, useAsync, useToast } from "../ui";
 
-const names: Record<OverlapArea, string> = { seongsu: "Seongsu", hongdae: "Hongdae", yeonnam: "Yeonnam" };
-export const overlapAreaName = (area: OverlapArea) => names[area];
-
 function LocationForm({ savedArea, onSaved }: { savedArea: OverlapArea | null; onSaved: (area: OverlapArea | null) => void }) {
+  const savedCity = savedArea ? overlapAreaInfo(savedArea).city : null;
+  const [city, setCity] = useState(savedCity ?? DEFAULT_OVERLAP_CITY);
   const [area, setArea] = useState(savedArea);
   const action = useAction();
   const toast = useToast();
-  const changed = area !== savedArea;
+  // Browsing another city is not a request to remove the existing preference.
+  const changed = area !== savedArea && (area !== null || city === savedCity);
   return (
     <form className="stack" onSubmit={event => {
       event.preventDefault();
@@ -21,18 +22,29 @@ function LocationForm({ savedArea, onSaved }: { savedArea: OverlapArea | null; o
         toast(saved.area ? "Neighborhood saved." : "Saved neighborhood removed.");
       });
     }}>
-      <Field label="Preferred Seoul neighborhood" optional hint="Only you see this preference. Overlap can suggest it later without opting you in.">
+      <Field label="City for Overlap">
+        {props => <select {...props} value={city} disabled={action.busy} onChange={event => {
+          const next = OVERLAP_CITIES.find(code => code === event.target.value);
+          if (!next) return;
+          action.clear();
+          setCity(next);
+          setArea(next === savedCity ? savedArea : null);
+        }}>
+          {OVERLAP_CITIES.map(code => <option key={code} value={code}>{overlapCityInfo(code).name}</option>)}
+        </select>}
+      </Field>
+      <Field label="Preferred neighborhood" optional hint="Only you see this preference. Overlap can suggest it later without opting you in.">
         {props => <select {...props} name="overlap-neighborhood" value={area ?? ""} disabled={action.busy} onChange={event => {
           action.clear();
           setArea(parseOverlapLocation({ area: event.target.value }).area);
         }}>
-          <option value="">{savedArea ? "No saved neighborhood" : "Choose a neighborhood"}</option>
-          {OVERLAP_AREAS.map(code => <option key={code} value={code}>{overlapAreaName(code)}</option>)}
+          <option value="">{city === savedCity ? "No saved neighborhood" : "Choose a neighborhood"}</option>
+          {overlapAreasIn(city).map(code => <option key={code} value={code}>{overlapAreaInfo(code).name}</option>)}
         </select>}
       </Field>
       <InlineError message={action.error} />
       <div className="row"><button type="submit" className="btn" disabled={action.busy || !changed}>
-        {action.busy ? "Saving…" : !area && savedArea ? "Remove saved neighborhood" : "Save neighborhood"}
+        {action.busy ? "Saving…" : !area && city === savedCity ? "Remove saved neighborhood" : "Save neighborhood"}
       </button></div>
     </form>
   );

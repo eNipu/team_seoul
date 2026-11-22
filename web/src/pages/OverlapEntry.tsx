@@ -26,7 +26,7 @@ export function OverlapEntry() {
     : match?.status === "waiting" ? "Your name stays private until you both opt in to the plan."
     : match ? "An activity for two, based on the interests and window you chose."
     : enrolled ? "You’re opted in for one window. View or withdraw your request."
-    : "Choose a Seoul neighborhood and an activity. Get introduced only if you both say yes.";
+    : "Choose a neighborhood and an activity. Get introduced only if you both say yes.";
   return (
     <Link to="/overlap" className="callout ov-entry">
       <Icon name="users" size={22} />

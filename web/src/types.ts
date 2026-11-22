@@ -82,23 +82,23 @@ export type FriendKind = (typeof FRIEND_KINDS)[number];
 /* ------------------------------------------------------------------ shapes */
 
 import { relatedLabels } from "../../shared/importInterests";
-import { openSlots, seoulWeek } from "./overlapWindow";
+import { findOverlapArea, overlapAreaInfo, type OverlapArea } from "./overlapCities";
+import { cityWeek, openSlots, type SLOTS } from "./overlapWindow";
 
-export const OVERLAP_AREAS = ["seongsu", "hongdae", "yeonnam"] as const;
-export type OverlapArea = (typeof OVERLAP_AREAS)[number];
+export type { OverlapArea } from "./overlapCities";
 export interface OverlapLocation { area: OverlapArea | null }
 
 export function parseOverlapLocation(value: unknown): OverlapLocation {
   const area = isObj(value) ? value.area : null;
-  return { area: OVERLAP_AREAS.find(code => code === area) ?? null };
+  return { area: findOverlapArea(area) ?? null };
 }
 
 export const OVERLAP_INTERESTS = ["photography", "architecture", "walking", "coffee", "books", "art"] as const;
 
 export interface OverlapPreference {
-  area: string;
+  area: OverlapArea;
   date: string;
-  slot: string;
+  slot: (typeof SLOTS)[number];
   interests: string[];
 }
 export type OverlapInput = OverlapPreference & { adults_confirmed: true };
@@ -125,13 +125,15 @@ export interface OverlapState {
 export function parseOverlapState(value: unknown): OverlapState {
   const empty = { preference: null, match: null };
   if (!isObj(value) || !isObj(value.preference)) return empty;
-  const { area, date, slot, interests } = value.preference;
+  const { date, slot: rawSlot, interests } = value.preference;
+  const area = findOverlapArea(value.preference.area);
   const text = (s: unknown): s is string => typeof s === "string" && !!s.trim();
-  if (!OVERLAP_AREAS.some(a => a === area) || !text(area) || !text(date) || !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
-      !Number.isFinite(Date.parse(date)) || new Date(date).toISOString().slice(0, 10) !== date ||
-      !seoulWeek().includes(date) || !text(slot) || !openSlots(date).includes(slot) ||
-      !Array.isArray(interests) || !interests.length || interests.length > 3 || new Set(interests).size !== interests.length ||
-      !interests.every(i => OVERLAP_INTERESTS.some(code => code === i))) return empty;
+  if (!area || !text(date) || !Array.isArray(interests) || !interests.length || interests.length > 3 ||
+      new Set(interests).size !== interests.length || !interests.every(i => OVERLAP_INTERESTS.some(code => code === i))) return empty;
+  const { city } = overlapAreaInfo(area);
+  const now = Date.now();
+  const slot = openSlots(city, date, now).find(s => s === rawSlot);
+  if (!slot || !cityWeek(city, now).includes(date)) return empty;
   const preference = { area, date, slot, interests: [...interests] };
   const m = value.match;
   if (!isObj(m) || !text(m.id) || !text(m.title) || !text(m.reason) || !text(m.challenge) ||

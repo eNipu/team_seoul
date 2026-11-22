@@ -5,7 +5,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
 
-Area = Literal["seongsu", "hongdae", "yeonnam"]
+Area = Literal["seongsu", "hongdae", "yeonnam", "berlin-mitte", "berlin-kreuzberg", "berlin-pberg"]
 Slot = Literal["morning", "afternoon", "evening"]
 Interest = Literal["photography", "architecture", "walking", "coffee", "books", "art"]
 

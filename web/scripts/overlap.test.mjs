@@ -13,13 +13,19 @@ test("fictional seats require matching opt-ins and independent consent", async t
   const { createOverlapDemo } = await server.ssrLoadModule("/src/mockOverlap.ts");
   const { parseOverlapState } = await server.ssrLoadModule("/src/types.ts");
   const a = createOverlapDemo("a"), b = createOverlapDemo("b"), spectator = createOverlapDemo();
-  const { seoulWeek } = await server.ssrLoadModule("/src/overlapWindow.ts");
-  const input = { area: "seongsu", date: seoulWeek()[1],
+  const { cityWeek, openSlots } = await server.ssrLoadModule("/src/overlapWindow.ts");
+  const nearMidnight = Date.parse("2026-07-01T22:30:00Z");
+  assert.equal(cityWeek("berlin", nearMidnight)[0], "2026-07-02");
+  const nearCutoff = Date.parse("2026-07-01T10:30:00Z");
+  assert.deepEqual(openSlots("berlin", "2026-07-01", nearCutoff), ["afternoon", "evening"]);
+  assert.deepEqual(openSlots("seoul", "2026-07-01", nearCutoff), ["evening"]);
+  const input = { area: "berlin-mitte", date: cityWeek("berlin")[1],
     slot: "afternoon", interests: ["walking"], adults_confirmed: true };
   assert.equal((await a.getOverlap()).match, null);
   assert.equal(keys.size, 0);
   await assert.rejects(spectator.optInOverlap(input));
   assert.equal((await a.optInOverlap(input)).match, null);
+  assert.equal((await b.optInOverlap({ ...input, area: "seongsu" })).match, null);
   assert.equal((await b.optInOverlap({ ...input, interests: ["books"] })).match, null);
   const offered = await b.optInOverlap(input);
   const id = offered.match.id;
@@ -39,6 +45,7 @@ test("fictional seats require matching opt-ins and independent consent", async t
   assert.equal((await b.respondOverlap(id, "yes")).match.other_name, "Demo Robin");
   assert.equal((await a.getOverlap()).match.other_name, "Demo Wren");
   const introduced = await a.getOverlap();
+  assert.match(introduced.match.meeting_point.label, /Brandenburg Gate.*Berlin time/);
   assert.equal(parseOverlapState(introduced).match.meeting_point.status, "available");
   assert.equal(parseOverlapState({ ...introduced, match: { ...introduced.match, meeting_point: { ...leaked, status: "invalid" } } }).match.meeting_point, null);
   assert.equal((await a.respondOverlap(id, "suggest_spot")).match.meeting_point.status, "suggested_by_you");
@@ -48,7 +55,7 @@ test("fictional seats require matching opt-ins and independent consent", async t
   assert.equal((await a.getOverlap()).match.meeting_point.status, "agreed");
   const realNow = Date.now;
   try {
-    Date.now = () => Date.parse(`${input.date}T18:00:00+09:00`);
+    Date.now = () => Date.parse(`${input.date}T18:00:00Z`);
     for (const seat of [a, b]) assert.deepEqual(await seat.getOverlap(), { preference: null, match: null });
     await assert.rejects(a.respondOverlap(id, "yes"));
   } finally { Date.now = realNow; }

@@ -116,6 +116,7 @@ Read `SCHEDULING.md` before any task in this group.
 | [T61](T61-card-memory-import.md) | Import ChatGPT memories on the card and populate profile interests | widget + backend | S | T55 | done |
 | [T62](T62-web-home-chatgpt-link.md) | Link to ChatGPT and its quickstart guide from the web home greeting | web | S | — | done |
 | [T63](T63-overlap-onboarding-location.md) | Save a private Seoul neighborhood during web onboarding | web + backend | S | T53 | done |
+| [T64](T64-overlap-cities.md) | Support Berlin and Seoul in Overlap; default the picker to Berlin | web + backend | M | T63 | done |
 
 T04 and T12 can start right away, in parallel with the backend tasks, because the shapes they
 render are fixed in `CONTRACTS.md`.

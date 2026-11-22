@@ -3,6 +3,8 @@
 import type { Api } from "./api";
 import { ApiError } from "./errors";
 import { demoOverlapPlan } from "./demoOverlapPlan";
+import { overlapAreaInfo, overlapCityInfo } from "./overlapCities";
+import { cityClock, SPOT_HOURS } from "./overlapWindow";
 import { parseOverlapLocation, parseOverlapState, type OverlapPreference, type OverlapState, type OverlapAction, type OverlapReportReason } from "./types";
 
 type Seat = "a" | "b";
@@ -36,18 +38,20 @@ export function createOverlapDemo(selected?: string | null, run: <R>(fn: () => R
     const none = { preference, match: null };
     if (!preference || !p || own.blocked || peer.blocked || preference.date !== p.date ||
         preference.area !== p.area || preference.slot !== p.slot) return none;
-    const plan = demoOverlapPlan(preference.interests, p.interests, preference.area);
+    const place = overlapAreaInfo(preference.area);
+    const city = overlapCityInfo(place.city);
+    const plan = demoOverlapPlan(preference.interests, p.interests, `${place.name}, ${city.name}`);
     if (!plan) return none;
     const id = seat === "a" ? `${own.revision}:${peer.revision}` : `${peer.revision}:${own.revision}`;
     const mine = own.response?.id === id ? own.response.action : null;
     const theirs = peer.response?.id === id ? peer.response.action : null;
     if (mine === "pass" || theirs === "pass") return none;
     const status = mine !== "yes" ? "offered" : theirs !== "yes" ? "waiting" : "introduced";
-    const entrance = { seongsu: "Seongsu Station Exit 3", hongdae: "Hongik University Station Exit 9", yeonnam: "Hongik University Station Exit 3" }[preference.area];
-    const hour = preference.slot === "morning" ? "10:00" : preference.slot === "afternoon" ? "15:00" : "19:00";
-    const future = Date.parse(`${preference.date}T${hour}:00+09:00`) > Date.now();
+    const hour = SPOT_HOURS[preference.slot];
+    const local = cityClock(place.city);
+    const future = preference.date > local.date || (preference.date === local.date && hour > local.hour);
     return { preference, match: { id, status, ...plan,
-      meeting_point: status === "introduced" && future ? { label: `${entrance} · ${preference.date} ${hour} KST`,
+      meeting_point: status === "introduced" && future ? { label: `${place.spot} · ${preference.date} ${hour}:00 (${city.name} time)`,
         status: own.suggestedMatch === id ? (peer.suggestedMatch === id ? "agreed" : "suggested_by_you")
           : peer.suggestedMatch === id ? "suggested_to_you" : "available" } : null,
       other_name: status === "introduced" ? names[other] : null } };
@@ -85,7 +89,7 @@ export function createOverlapDemo(selected?: string | null, run: <R>(fn: () => R
     }),
     optInOverlap: input => run(() => update(entry => {
       const { preference } = parseOverlapState({ preference: input });
-      if (input.adults_confirmed !== true || !preference || !["morning", "afternoon", "evening"].includes(preference.slot)) throw new ApiError("INVALID_REQUEST", "Check your overlap preferences.", 400);
+      if (input.adults_confirmed !== true || !preference) throw new ApiError("INVALID_REQUEST", "Check your overlap preferences.", 400);
       const prev = entry.preference;
       if (prev && prev.area === preference.area && prev.date === preference.date && prev.slot === preference.slot &&
           prev.interests.length === preference.interests.length && prev.interests.every(i => preference.interests.includes(i))) return;

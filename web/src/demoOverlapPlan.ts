@@ -8,7 +8,7 @@ const plans = {
   walking: ["A walk with one rule", "Explore a public walking path for 20 minutes", "Each point out something the other would have walked past."],
 };
 
-export function demoOverlapPlan(mine: string[], theirs: string[], area: string) {
+export function demoOverlapPlan(mine: string[], theirs: string[], place: string) {
   const common = (Object.keys(plans) as (keyof typeof plans)[]).find(i => mine.includes(i) && theirs.includes(i));
   if (!common) return null;
   let [title, activity, challenge] = plans[common];
@@ -25,5 +25,5 @@ export function demoOverlapPlan(mine: string[], theirs: string[], area: string) 
     why += ` ${mine.includes(extra) ? (theirs.includes(extra) ? "You both" : "You") : "They"} also picked ${extra}.`;
     break;
   }
-  return {title, reason: `${activity} in ${area[0].toUpperCase() + area.slice(1)}. ${why}`, challenge};
+  return {title, reason: `${activity} in ${place}. ${why}`, challenge};
 }

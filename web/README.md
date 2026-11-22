@@ -64,7 +64,7 @@ same URL, so signing in continues where the user was. Sign out is `DELETE /api/v
 | Path | Screen |
 | --- | --- |
 | `/app` | Home (or first-run welcome) |
-| `/app/overlap` | Meet someone new: one optional Seoul activity, mutual introduction |
+| `/app/overlap` | Meet someone new: one optional local activity in Berlin (default) or Seoul, mutual introduction |
 | `/app/people` | People (`?new=1` opens "Add a person", `?import=1` opens "Import a list", `?linkedin=1` opens "Import from LinkedIn", `?instagram=1` opens "Instagram demo import") |
 | `/app/people/person/<id>`, `/app/people/connection/<id>` | Person page with the Venn diagram |
 | `/app/memories` | Memories (`?q=` keyword search, `?new=1` opens "Add a memory") |

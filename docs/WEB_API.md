@@ -138,12 +138,12 @@ For live windows:
 | Route | Body | Effect |
 |---|---|---|
 | `GET /api/v1/overlap` | — | Read your live window/offer. Never opts in or creates a match. |
-| `POST /api/v1/overlap/preference` | `{area,date,slot,interests,adults_confirmed:true}` | Open a window in Seoul and look for another eligible opted-in member. |
+| `POST /api/v1/overlap/preference` | `{area,date,slot,interests,adults_confirmed:true}` | Open a window in a supported neighborhood and look for another eligible opted-in member there. |
 | `DELETE /api/v1/overlap/preference` | — | Withdraw and close any current introduction. |
 | `POST /api/v1/overlap/matches/{id}/respond` | `{action}` | `yes`, `pass`, `block` or (only after mutual yes) `suggest_spot` on the caller’s current offer. |
 | `POST /api/v1/overlap/matches/{id}/report` | `{reason}` | `safety`, `spam` or `other`; exclude the pair. |
 
-All return `{preference,match}` (each nullable). Area is `seongsu`, `hongdae` or `yeonnam`. Send an ISO calendar `date` and `morning`, `afternoon` or `evening` in **Asia/Seoul**, plus one to three of `photography`, `architecture`, `walking`, `coffee`, `books`, `art`. An offer has an opaque match `id`, `title`, `reason`, `challenge`, `status` (`offered` / `waiting` / `introduced` from the caller's perspective) and `other_name` (only after mutual yes). After mutual consent, an optional `meeting_point` has a predefined public place/time `label` and caller-relative `status` (`available`, `suggested_by_you`, `suggested_to_you`, `agreed`); otherwise it is null. Each person confirms independently with `suggest_spot`. Nothing is booked. No other user's ID, exact position or contact details. The window closes at slot expiry. See `web/README.md` for the two-seat rehearsal.
+All return `{preference,match}` (each nullable). Use `berlin-mitte`, `berlin-kreuzberg`, or `berlin-pberg` for Berlin; `seongsu`, `hongdae`, or `yeonnam` for Seoul. Berlin is the web picker's default, not an API default. Both location and preference requests use the area code without a separate city field. Send an ISO calendar `date` and `morning`, `afternoon` or `evening` in the area's city time zone (**Europe/Berlin** or **Asia/Seoul**), plus one to three of `photography`, `architecture`, `walking`, `coffee`, `books`, `art`. An offer has an opaque match `id`, `title`, `reason`, `challenge`, `status` (`offered` / `waiting` / `introduced` from the caller's perspective) and `other_name` (only after mutual yes). After mutual consent, an optional `meeting_point` has a predefined public place/time `label` and caller-relative `status` (`available`, `suggested_by_you`, `suggested_to_you`, `agreed`); otherwise it is null. Each person confirms independently with `suggest_spot`. Nothing is booked. No other user's ID, exact position or contact details. The window closes at slot expiry. See `web/README.md` for the two-seat rehearsal.
 
 ### Follow-ups
 | Route | Body | Returns |

@@ -1,0 +1,20 @@
+{
+  "berlin": {
+    "name": "Berlin",
+    "timezone": "Europe/Berlin",
+    "areas": {
+      "berlin-mitte": { "name": "Mitte", "spot": "Brandenburg Gate, Pariser Platz" },
+      "berlin-kreuzberg": { "name": "Kreuzberg", "spot": "Görlitzer Park entrance at Wiener Straße" },
+      "berlin-pberg": { "name": "Prenzlauer Berg", "spot": "Kollwitzplatz at the Käthe Kollwitz monument" }
+    }
+  },
+  "seoul": {
+    "name": "Seoul",
+    "timezone": "Asia/Seoul",
+    "areas": {
+      "seongsu": { "name": "Seongsu", "spot": "Seongsu Station Exit 3" },
+      "hongdae": { "name": "Hongdae", "spot": "Hongik University Station Exit 9" },
+      "yeonnam": { "name": "Yeonnam", "spot": "Hongik University Station Exit 3" }
+    }
+  }
+}
