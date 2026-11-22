@@ -5,47 +5,14 @@ import SiteHeader from "@/components/SiteHeader";
 
 export const metadata: Metadata = {
   title: "Pricing · Venn",
-  description: "Planned launch pricing for Venn. Early access is free, and invited friends are always free.",
+  description: "Planned launch pricing for Venn: one subscription shared by your circle. The more you invite, the less you pay.",
 };
 
-const PLANS = [
-  {
-    name: "Free Guest",
-    price: "$0",
-    note: "Forever.",
-    audience: "For invited friends and light personal use.",
-    items: [
-      "Accept invites and stay connected.",
-      "Approve, edit, or stop sharing any signal.",
-      "Answer question links without an account wall.",
-      "Keep up to 10 private people of your own.",
-    ],
-  },
-  {
-    name: "Inner Circle",
-    price: "$5",
-    note: "Per month, planned at launch.",
-    audience: "For the person who wants Venn to maintain their network.",
-    featured: true,
-    items: [
-      "Up to 1,000 people.",
-      "Five free friend passes.",
-      "Reconnection nudges and private notes.",
-      "Your ChatGPT helps you find the right person.",
-    ],
-  },
-  {
-    name: "Patron Circle",
-    price: "$10",
-    note: "Per month, planned at launch.",
-    audience: "For people who can pay more and sponsor more of the network.",
-    items: [
-      "Everything in Inner Circle.",
-      "Ten free friend passes.",
-      "Priority early features.",
-      "Optional supporter status.",
-    ],
-  },
+const LADDER = [
+  { people: "Just you", each: "$6", total: "$6 a month", note: "Start on your own." },
+  { people: "You + 1", each: "$4", total: "$8 a month, split by 2", note: "Bring your partner or best friend." },
+  { people: "You + 2", each: "$3", total: "$9 a month, split by 3", note: "A small circle." },
+  { people: "You + 4", each: "$2", total: "$10 a month, split by 5", note: "The full inner circle.", featured: true },
 ];
 
 const FAQS = [
@@ -54,20 +21,24 @@ const FAQS = [
     answer: "No. These are planned launch prices. Early access is free for the Founding Circle.",
   },
   {
-    question: "Do invited friends ever have to pay?",
-    answer: "No. Invited friends can accept, share, edit, stop sharing, and stay connected for free.",
+    question: "How does the price drop?",
+    answer: "Everyone you add to your circle shares one subscription. The plan gets a little bigger, but it is split between more people, so each person pays less: $6 alone, $2 each when five of you share it.",
   },
   {
-    question: "What happens after five friends?",
-    answer: "Your extra contacts still stay in Venn. Five active friend passes are included at launch, and friends who upgrade get their own passes without changing your connection.",
+    question: "Who pays inside a shared circle?",
+    answer: "You choose. One person can cover everyone, or each person pays their own share. Either way, every member has their own account and decides for themselves what they share.",
   },
   {
-    question: "Why not charge per friend?",
-    answer: "Because Venn works only when inviting someone feels generous. The person who wants a larger circle pays; the friend never gets a bill for being invited.",
+    question: "Does sharing a subscription share my data?",
+    answer: "No. Sharing the bill never shares your AI memory. Each person only shares the signals they approve, with the people they pick.",
+  },
+  {
+    question: "Can someone I invite use Venn for free?",
+    answer: "Yes. Anyone can accept an invite, stay connected and approve what they share for free. The subscription is for getting the full Venn in ChatGPT: reconnection nudges, your whole network, and more.",
   },
   {
     question: "What is the Founding Circle offer?",
-    answer: "Waitlist members get early access free. When billing starts, founders can keep Inner Circle at $5 per month or choose $50 for the first year.",
+    answer: "Waitlist members get early access free, and keep the lowest price of their circle size for the first year after launch.",
   },
 ];
 
@@ -79,9 +50,9 @@ export default function PricingPage() {
           <SiteHeader note="Planned pricing" />
           <div className="wrap pricing-hero__body">
             <p className="eyebrow">Early access is free</p>
-            <h1 className="h-section" id="pricing-title">One subscription grows the circle.</h1>
+            <h1 className="h-section" id="pricing-title">The more you invite, the less you pay.</h1>
             <p className="lead">
-              Venn is planned to be inexpensive at launch. The person who wants a larger circle pays. The friends they invite are always free.
+              One Venn subscription, shared by your circle. Every person you add makes it cheaper for everyone, down to $2 a month each.
             </p>
             <a className="btn btn--primary" href="/#waitlist">
               Build your inner circle
@@ -92,27 +63,24 @@ export default function PricingPage() {
 
         <section className="section pricing-plans" aria-labelledby="plans-title">
           <div className="wrap">
-            <h2 className="h-section" id="plans-title">Simple by design.</h2>
-            <div className="pricing-grid" aria-label="Pricing plans">
-              {PLANS.map((plan) => (
-                <article className={`pricing-card${plan.featured ? " pricing-card--featured" : ""}`} key={plan.name}>
+            <h2 className="h-section" id="plans-title">Share the subscription.</h2>
+            <div className="pricing-grid" aria-label="Price per person by circle size">
+              {LADDER.map((step) => (
+                <article className={`pricing-card${step.featured ? " pricing-card--featured" : ""}`} key={step.people}>
                   <div className="pricing-card__head">
-                    <h3>{plan.name}</h3>
-                    {plan.featured ? <span className="badge">Planned core plan</span> : null}
+                    <h3>{step.people}</h3>
+                    {step.featured ? <span className="badge">Best price</span> : null}
                   </div>
                   <p className="pricing-card__price">
-                    {plan.price}
-                    <span>{plan.note}</span>
+                    {step.each}
+                    <span>per person, per month</span>
                   </p>
-                  <p>{plan.audience}</p>
-                  <ul>
-                    {plan.items.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
+                  <p>{step.total}</p>
+                  <p>{step.note}</p>
                 </article>
               ))}
             </div>
+            <p className="pricing__note">Everyone gets the full Venn: your whole network, reconnection nudges and your AI meeting theirs inside ChatGPT.</p>
           </div>
         </section>
 
@@ -120,14 +88,14 @@ export default function PricingPage() {
           <div className="wrap pricing-promise__grid">
             <div>
               <p className="eyebrow">The promise</p>
-              <h2 className="h-section" id="promise-title">Invited friends are always free.</h2>
+              <h2 className="h-section" id="promise-title">You share the bill. Not your memory.</h2>
               <p className="lead">
-                They can accept your invite, approve what they share, revoke it, and stay connected without paying. If they later want to grow their own circle, they can choose to subscribe.
+                Every person in a shared circle has their own account. They choose what to share and with whom. Anyone you invite can also stay connected for free.
               </p>
             </div>
             <div className="moment" aria-hidden="true">
-              <span className="moment__text">You sponsor the circle. They choose what to share.</span>
-              <span className="moment__prov">No friend is charged because you invited them.</span>
+              <span className="moment__text">Lena joined your circle. You now pay $4 instead of $6.</span>
+              <span className="moment__prov">Shared subscription · via <b>venn</b></span>
             </div>
           </div>
         </section>
@@ -137,7 +105,7 @@ export default function PricingPage() {
             <p className="eyebrow">Founding Circle</p>
             <h2 className="h-section" id="founder-title">Free while we build.</h2>
             <p className="lead">
-              Waitlist members get early access free. When billing starts, founders can keep Inner Circle at $5 per month or choose $50 for the first year.
+              Waitlist members get early access free, and keep the lowest price of their circle size for the first year after launch.
             </p>
           </div>
         </section>

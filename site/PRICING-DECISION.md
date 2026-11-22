@@ -59,3 +59,18 @@ Founding Circle members get early access free. When billing starts, they can kee
 - Whether Patron Circle attracts supporters without cannibalizing Inner Circle.
 - Whether 10-contact free personal use is enough for invited friends to form a habit.
 - Whether users fill passes before they ask for extra capacity.
+
+## Revision (22 November 2026, founder)
+
+Replaced the sponsor/patron model. Founder's rule: "the more you invite, the less you pay", with one subscription shared by the circle.
+
+| Circle size | Per person / month | Total / month |
+| --- | ---: | ---: |
+| Just you | $6 | $6 |
+| You + 1 | $4 | $8 |
+| You + 2 | $3 | $9 |
+| You + 4 | $2 | $10 |
+
+- Every member has their own account and privacy; sharing the bill never shares memory.
+- Anyone invited can stay connected for free; the subscription unlocks the full Venn in ChatGPT.
+- Founding Circle: early access free, then the lowest price for their circle size for year one.
