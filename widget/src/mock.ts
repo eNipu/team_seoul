@@ -101,6 +101,8 @@ export const DEMO_VIEWS = [
   "reply_advice",
   "reply_checklist",
   "reply_draft",
+  "reply_discussion",
+  "reply_thread",
   "saved_replies",
 ] as const;
 
@@ -1777,6 +1779,22 @@ const demoReplies: Record<string, Reply> = {
     title: "Invite Maya on a photo walk",
     body: "Hey Maya! I passed our old photo walk spot today and thought of you. Are you up for a short walk and coffee next weekend?",
   },
+  reply_discussion: {
+    kind: "discussion",
+    title: "Reaching out after a long silence",
+    body: "A small, specific message can make it easier to reconnect. Start with something you both remember and give Maya room to decide what comes next.",
+    question: "What would you like Maya to know when she hears from you?",
+  },
+  reply_thread: {
+    kind: "thread",
+    title: "Picking up with Maya",
+    body: "You want to reconnect without putting pressure on the first message.",
+    entries: [
+      { title: "What feels natural", body: "An old photo walk is an easy place to start. Mention the route you used to take together." },
+      { title: "How to make it easy to answer", body: "Ask how she’s been and give her time to reply before suggesting a date." },
+      { title: "If she wants to meet", body: "Offer a short walk and coffee at a place you both know." },
+    ],
+  },
 };
 
 let savedReplies: SavedReply[] = [];
@@ -1789,6 +1807,10 @@ export function mockInitialView(): ViewData | null {
       return { view: "reply", reply: demoReplies.reply_checklist };
     case "reply_draft":
       return { view: "reply", reply: demoReplies.reply_draft };
+    case "reply_discussion":
+      return { view: "reply", reply: demoReplies.reply_discussion };
+    case "reply_thread":
+      return { view: "reply", reply: demoReplies.reply_thread };
     case "saved_replies":
       savedReplies = [{ reply_id: "reply_demo_1", reply: demoReplies.reply_draft }];
       return { view: "saved_replies", replies: savedReplies };
@@ -1898,7 +1920,8 @@ export function createMockBridge(): HostBridge {
   const noChat = demoParam("nochat") === "1";
   let calls = 0;
 
-  const ok = (data: unknown): ToolOutcome => ({ ok: true, data: structuredClone(data) });
+  const ok = (data: unknown, meta?: unknown): ToolOutcome =>
+    ({ ok: true, data: structuredClone(data), meta: structuredClone(meta) });
   const fail = (errorText: string): ToolOutcome => ({ ok: false, errorText });
 
   return {
@@ -1924,7 +1947,7 @@ export function createMockBridge(): HostBridge {
           return ok({ saved: true, reply_id });
         }
         case "venn_saved_replies":
-          return ok({ view: "saved_replies", replies: savedReplies });
+          return ok({ view: "saved_replies", count: savedReplies.length }, { replies: savedReplies });
         case "venn_delete_saved_reply":
           if (!savedReplies.some(({ reply_id }) => reply_id === args.reply_id)) return fail("NOT_FOUND: Saved reply not found.");
           savedReplies = savedReplies.filter(({ reply_id }) => reply_id !== args.reply_id);

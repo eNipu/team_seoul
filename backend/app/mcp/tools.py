@@ -56,7 +56,7 @@ from app.schemas.memory import (
     MemoryVisibility,
 )
 from app.schemas.profile import ProfileUpdate, ProfileVisibility, SocialGoal
-from app.schemas.reply import Reply
+from app.schemas.reply import DeleteReplyResult, Reply, ReplyView, SavedRepliesView, SaveReplyResult
 from app.schemas.social import PersonCandidate
 from app.services import (
     availability_service,
@@ -1289,16 +1289,18 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
         description=(
             "Show your answer to the current Venn social question when no dedicated Venn card fits. "
             "Use advice for a short answer, checklist for ordered next steps (body introduces the steps), "
-            "or draft for a ready-to-copy message (body is the message). Use a short, descriptive title. "
+            "draft for a ready-to-copy message (body is the message), discussion to ask one focused follow-up "
+            "question, or thread for a recap with two to six titled Venn-authored entries. "
+            "Use a short, descriptive title. "
             "Pass only the task-specific answer in plain text. Never pass chat history, raw user messages, "
             "credentials, or unrelated personal information. This tool does not save or send the reply."
         ),
         annotations=READ_ONLY,
     )
-    async def venn_show_reply(reply: Reply) -> CallToolResult:
+    async def venn_show_reply(reply: Reply) -> Annotated[CallToolResult, ReplyView]:
         async def body():
             await run_as_user([CONNECTIONS], lambda _db, _user, _: reply_service.check_content(reply))
-            return ok("Venn is showing your reply as a card.", {"view": "reply", "reply": reply.model_dump()})
+            return ok("Venn is showing your reply as a card.", ReplyView(reply=reply))
 
         return await guarded(body)
 
@@ -1309,7 +1311,7 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
         annotations=WRITE_IDEMPOTENT,
         meta=app_only_meta("Saving your reply…", "Reply saved"),
     )
-    async def venn_save_reply(reply: Reply) -> CallToolResult:
+    async def venn_save_reply(reply: Reply) -> Annotated[CallToolResult, SaveReplyResult]:
         async def body():
             result = await run_as_user([CONNECTIONS], lambda db, user, _: reply_service.save(db, user, reply))
             return ok("Reply saved privately.", result)
@@ -1325,10 +1327,14 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
         description="Show the user's private saved replies when they ask what replies or drafts they kept.",
         annotations=READ_ONLY,
     )
-    async def venn_saved_replies() -> CallToolResult:
+    async def venn_saved_replies() -> Annotated[CallToolResult, SavedRepliesView]:
         async def body():
             replies = await run_as_user([CONNECTIONS], lambda db, user, _: reply_service.list_saved(db, user))
-            return ok("Venn is showing the user's saved replies.", {"view": "saved_replies", "replies": replies})
+            return ok(
+                "Venn is showing the user's saved replies.",
+                SavedRepliesView(count=len(replies)),
+                meta={"replies": replies},
+            )
 
         return await guarded(body)
 
@@ -1339,10 +1345,10 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
         annotations=DESTRUCTIVE,
         meta=app_only_meta("Deleting the reply…", "Reply deleted"),
     )
-    async def venn_delete_saved_reply(reply_id: str) -> CallToolResult:
+    async def venn_delete_saved_reply(reply_id: str) -> Annotated[CallToolResult, DeleteReplyResult]:
         async def body():
             await run_as_user([CONNECTIONS], lambda db, user, _: reply_service.remove(db, user, reply_id))
-            return ok("Reply deleted.", {"deleted": True})
+            return ok("Reply deleted.", DeleteReplyResult())
 
         return await guarded(body)
 

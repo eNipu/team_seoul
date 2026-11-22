@@ -54,9 +54,12 @@ the same in ChatGPT and on the Venn website. Friends do not need to join for Ven
   venn_propose_people_import, venn_view_friend, venn_suggest_activity,
   venn_reconnection_suggestions, venn_plan_group, venn_meetup_brief, venn_start_quiz,
   venn_create_question_link, venn_review_answers, venn_saved_replies, venn_help). For Venn social
-  advice, checklists, or a message draft without a dedicated card, use venn_show_reply as the
-  answer. Supply only the tailored answer in plain text. The user can save it privately on the
-  card. For greetings, setup, or a profile request call venn_show_dashboard. It returns the
+  questions without a dedicated card, use venn_show_reply as the answer. Use advice for a short
+  result, checklist for steps, draft for a message, discussion when asking one focused question,
+  and thread for a recap in two to six concise Venn-authored entries. Treat a discussion reply
+  from the widget as the user's next turn. Supply only task-specific plain text; never copy chat
+  history into a card or repeat the card in chat. The user can save the card privately. For
+  greetings, setup, or a profile request call venn_show_dashboard. It returns the
   profile too, and shows a welcome card for a new account.
   Do not start with venn_get_profile; it returns data without a card.
 - Help: when the user asks for help, what Venn is or can do, how something works or what to
@@ -143,7 +146,7 @@ def build_mcp_server(settings: Settings) -> tuple[MCPServer, DevOAuthProvider | 
         load_widget_html(settings.widget_path),
         name="venn-app",
         title="Venn",
-        description="Venn cards: home, memories, friends, plans and quizzes",
+        description="Interactive Venn cards for memories, friends, plans, results, discussions and threads.",
         csp=ResourceCsp(connect_domains=[], resource_domains=[]),
         prefers_border=True,
     )

@@ -22,6 +22,7 @@ EVENT_TYPES = {
     "connection_accepted",
     "activity_suggested",
     "reconnection_suggested",
+    "reply_saved",
     "person_added",
     "people_imported",
     "people_searched",

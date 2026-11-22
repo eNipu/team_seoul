@@ -7,7 +7,8 @@ from sqlalchemy.orm import Session
 
 from app.ai.extraction import contains_sensitive
 from app.models import SavedReply, User
-from app.schemas.reply import ChecklistReply, Reply
+from app.schemas.reply import ChecklistReply, DiscussionReply, Reply, SaveReplyResult, ThreadReply
+from app.services import analytics
 from app.services.errors import InvalidRequest, NotFound, PrivacyViolation
 
 
@@ -15,6 +16,11 @@ def check_content(reply: Reply) -> None:
     fields = [reply.title, reply.body]
     if isinstance(reply, ChecklistReply):
         fields.extend(reply.steps)
+    if isinstance(reply, DiscussionReply):
+        fields.append(reply.question)
+    if isinstance(reply, ThreadReply):
+        for entry in reply.entries:
+            fields.extend((entry.title, entry.body))
     text = "\n".join(fields)
     if "\0" in text:
         raise InvalidRequest("A Venn reply must be plain text.")
@@ -22,14 +28,18 @@ def check_content(reply: Reply) -> None:
         raise PrivacyViolation("A Venn reply can't include credentials or other sensitive numbers.")
 
 
-def save(db: Session, user: User, reply: Reply) -> dict:
+def save(db: Session, user: User, reply: Reply) -> SaveReplyResult:
     check_content(reply)
     # The same owner and content get the same ID, including when save requests overlap.
     reply_id = uuid5(user.id, reply.model_dump_json())
     insert = sqlite_insert if db.get_bind().dialect.name == "sqlite" else pg_insert
     stmt = insert(SavedReply).values(id=reply_id, owner_user_id=user.id, reply=reply.model_dump(mode="json"))
-    db.execute(stmt.on_conflict_do_nothing(index_elements=[SavedReply.id]))
-    return {"saved": True, "reply_id": str(reply_id)}
+    inserted = db.execute(
+        stmt.on_conflict_do_nothing(index_elements=[SavedReply.id]).returning(SavedReply.id)
+    ).scalar_one_or_none()
+    if inserted is not None:
+        analytics.track(db, "reply_saved", user.id, category=reply.kind, count=1)
+    return SaveReplyResult(reply_id=str(reply_id))
 
 
 def list_saved(db: Session, user: User) -> list[dict]:

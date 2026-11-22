@@ -23,4 +23,40 @@ class DraftReply(ReplyBase):
     kind: Literal["draft"]
 
 
-Reply = Annotated[AdviceReply | ChecklistReply | DraftReply, Field(discriminator="kind")]
+class DiscussionReply(ReplyBase):
+    kind: Literal["discussion"]
+    question: str = Field(min_length=1, max_length=200)
+
+
+class ThreadEntry(ReplyBase):
+    body: str = Field(min_length=1, max_length=400)
+
+
+class ThreadReply(ReplyBase):
+    kind: Literal["thread"]
+    entries: list[ThreadEntry] = Field(min_length=2, max_length=6)
+
+
+Reply = Annotated[
+    AdviceReply | ChecklistReply | DraftReply | DiscussionReply | ThreadReply,
+    Field(discriminator="kind"),
+]
+
+
+class ReplyView(BaseModel):
+    view: Literal["reply"] = "reply"
+    reply: Reply
+
+
+class SavedRepliesView(BaseModel):
+    view: Literal["saved_replies"] = "saved_replies"
+    count: int = Field(ge=0)
+
+
+class SaveReplyResult(BaseModel):
+    saved: Literal[True] = True
+    reply_id: str
+
+
+class DeleteReplyResult(BaseModel):
+    deleted: Literal[True] = True

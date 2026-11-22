@@ -39,7 +39,7 @@ mock bridge (`src/mock.ts`) instead of the ext-apps connection. It also works st
   `dashboard_plans` has two saved plans; `memory_review_people` is a review card whose items name people,
   two of them adding new people)
 - `&tab=profile|memories|friends` opens a dashboard tab
-- `?view=reply_advice|reply_checklist|reply_draft|saved_replies` shows the reply layouts and the saved-reply list
+- `?view=reply_advice|reply_checklist|reply_draft|reply_discussion|reply_thread|saved_replies` shows the reply layouts and the saved-reply list
 - `&theme=dark|light` forces a theme (default: `prefers-color-scheme`)
 - `&flaky=1` makes every other tool call fail, so you can test the error banner and Retry
 - `&nochat=1` makes `sendMessage` fail, so you can test the copy-and-paste fallbacks
@@ -66,7 +66,7 @@ roughly matches the incoming view. A tool result with `isError` shows an error b
 
 | `view` | Produced by | What it shows |
 | --- | --- | --- |
-| `reply` | `venn_show_reply` | Task-specific advice, ordered next steps, or a copyable message draft. **Save privately** keeps the displayed reply. |
+| `reply` | `venn_show_reply` | Advice, steps, a copyable draft, a discussion with **Reply in ChatGPT**, or a thread recap with ordered entries. **Save privately** keeps the displayed card. |
 | `saved_replies` | `venn_saved_replies` | Open or delete your saved replies. Also available through the bookmark button in the header. |
 | `memory_review` | `venn_propose_memories` | Proposed memories (up to 30) with a checkbox, editable title/description, visibility select. More than 3 items adds "N of M selected", **Select all** / **None** and a sticky action bar. Items with `already_saved` start unticked with an "Already in Venn" badge. With `source: "chatgpt_memory"` the card is titled "From your ChatGPT memory" and the success state offers **Open my Venn**. Nothing is saved until **Save selected**. |
 | `memory_import` | `venn_import_chatgpt_memory` | "Bring your ChatGPT memory with you": one checkbox per area, the always-excluded note, **Preview my ChatGPT memory** (sends a prompt into the chat), then "Check the chat" with **Choose again**, or the prompt to copy when the host refuses the message. Nothing is sent to Venn from this card. |
@@ -266,6 +266,7 @@ the local state and show a banner with **Retry**. Buttons are disabled while a c
   the button disappears when the host refuses the message.
   **Preview my ChatGPT memory** sends the import prompt described under "Importing ChatGPT memory".
   If the host doesn't support `message`, the widget shows the text to type in chat instead.
+  A discussion's **Reply in ChatGPT** posts the answer to the chat and uses the same copy fallback.
 - `openLink` (`app.openLink({ url })`, needs the host's `openLinks` capability): **Add to calendar**
   opens a prefilled Google Calendar link built by `buildCalendarUrl` in `src/calendar.ts`
   (default next Saturday 11:00 local, 2 hours). If the host refuses, the widget shows the link itself.
