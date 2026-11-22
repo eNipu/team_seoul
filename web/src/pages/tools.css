@@ -1,0 +1,169 @@
+/* The web app's side pages (Plans, Follow-ups, Answers, Search, Overlap, imports) in the
+   landing's look: white paper, black ink, heavy tight headlines, one black pill, one quiet
+   link, and at most ONE yellow (#FFD400) element per screen. Scoped to .tl so the global
+   theme can change underneath without breaking these pages. */
+
+.tl {
+  --tl-yellow: #ffd400;
+  --tl-ink: #000;
+  --tl-body: #424245;
+  --tl-quiet: #6e6e73;
+  --tl-line: rgba(0, 0, 0, 0.08);
+  --tl-soft: #f5f5f7;
+  display: grid;
+  align-content: start;
+  gap: 1.5rem;
+  max-width: 44rem;
+  color: var(--tl-ink);
+}
+.tl.page { max-width: 44rem; }
+
+.tl .page-head { margin: 0; }
+.tl h1,
+.tl__title {
+  margin: 0;
+  font-size: clamp(2rem, 1.6rem + 1.6vw, 2.75rem);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  color: var(--tl-ink);
+  text-wrap: balance;
+}
+.tl h2 { margin: 0; font-size: 1.0625rem; font-weight: 800; letter-spacing: -0.02em; color: var(--tl-ink); }
+.tl h3 { margin: 0; font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.015em; color: var(--tl-ink); }
+.tl p { margin: 0; color: var(--tl-body); line-height: 1.5; }
+.tl a:not(.btn) { color: var(--tl-ink); }
+.tl h2 a, .tl h3 a { text-decoration: none; }
+.tl h2 a:hover, .tl h3 a:hover { text-decoration: underline; }
+
+/* One black pill. Secondary actions are quiet text links. */
+.tl .btn--primary,
+.tl__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  padding: 0 1.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--tl-ink);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+.tl .btn--primary:hover:not(:disabled),
+.tl__cta:hover:not(:disabled) { background: #2c2c2e; color: #fff; }
+.tl .btn--primary:disabled,
+.tl__cta:disabled { opacity: 0.3; cursor: default; }
+.tl__cta:focus-within { outline: 3px solid var(--focus, #0071e3); outline-offset: 3px; }
+.tl .btn--small.btn--primary { min-height: 36px; padding: 0 1rem; font-size: 0.9375rem; }
+
+.tl__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--tl-quiet) !important;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.tl__link:hover { color: var(--tl-ink) !important; }
+.tl__link:disabled { opacity: 0.4; cursor: default; }
+.tl__link--danger:hover { color: #b42318 !important; }
+
+.tl__row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem 1.25rem; }
+.tl__list { display: grid; gap: 0.75rem; margin: 0; padding: 0; list-style: none; }
+
+/* Plain paper card */
+.tl__card {
+  display: grid;
+  gap: 0.6rem;
+  padding: 1.25rem 1.35rem;
+  border: 1px solid var(--tl-line);
+  border-radius: 20px;
+  background: #fff;
+}
+.tl__meta { font-size: 0.875rem; color: var(--tl-quiet) !important; }
+
+/* The yellow moment: used for exactly one thing per screen */
+.tl__moment { background: var(--tl-yellow); border-color: transparent; }
+.tl__moment p, .tl__moment .tl__meta { color: #1d1d1f !important; }
+.tl__moment .tl__link { color: #1d1d1f !important; }
+
+/* Quiet disclosure */
+.tl__more > summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--tl-quiet);
+}
+.tl__more > summary::-webkit-details-marker { display: none; }
+.tl__more > summary:hover { color: var(--tl-ink); }
+.tl__more[open] > summary { margin-bottom: 0.75rem; }
+
+/* Chips (search examples, overlap interests) */
+.tl__chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.tl__chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 1rem;
+  border: 1px solid var(--tl-line);
+  border-radius: 999px;
+  background: var(--tl-soft);
+  color: var(--tl-ink) !important;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.tl__chip:hover:not(:disabled) { border-color: rgba(0, 0, 0, 0.3); }
+.tl__chip[aria-pressed="true"] { background: var(--tl-yellow); border-color: transparent; }
+.tl__chip:disabled { opacity: 0.4; cursor: default; }
+
+/* Person line: name + one quiet detail */
+.tl__who { display: flex; align-items: center; gap: 0.75rem; }
+.tl__who > div { display: grid; gap: 0.1rem; min-width: 0; }
+
+/* Follow-up items */
+.tl__items { display: grid; gap: 0.25rem; margin: 0; padding: 0; list-style: none; }
+.tl__items li { display: flex; align-items: flex-start; gap: 0.6rem; }
+.tl__items li > span { padding-top: 0.35rem; color: var(--tl-body); }
+
+/* Forms inside these pages */
+.tl__form { display: grid; gap: 0.9rem; }
+.tl__form select, .tl__form input:not([type="checkbox"]), .tl__form textarea { width: 100%; }
+
+/* Answers */
+.tl .answers { margin: 0; padding: 0; border: 0; }
+.tl .answers legend { margin-bottom: 0.5rem; font-weight: 700; }
+
+.tl .answer { border-color: var(--tl-line); background: #fff; }
+.tl .answer--on { border-color: rgba(0, 0, 0, 0.25); background: var(--tl-soft); }
+.tl input[type="checkbox"], .ov-check input { accent-color: #000; }
+
+/* Search draft */
+.tl__draft { display: grid; gap: 0.6rem; padding-top: 0.25rem; }
+.tl__draft textarea { width: 100%; }
+
+@media (max-width: 560px) {
+  .tl { gap: 1.25rem; }
+  .tl__card { padding: 1.1rem 1.1rem; }
+}
+
+/* A label styled as the pill (file pickers) must beat the global label styles. */
+label.tl__cta.tl__cta { background: var(--tl-ink, #000); color: #fff; width: auto; }
+label.tl__cta.tl__cta:hover { background: #2c2c2e; }

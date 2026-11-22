@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { api } from "../api";
-import { Icon } from "../icons";
 import { Link, navigate, useLocation } from "../router";
 import { LIMITS, firstName, formatDateTime, friendPath, joinNames, plural, type Plan, type PlanInput } from "../types";
 import {
@@ -16,12 +15,12 @@ import {
   Loaded,
   PageHeader,
   Skeleton,
-  Tag,
   splitKey,
   useAction,
   useAsync,
   useToast,
 } from "../ui";
+import "./tools.css";
 
 function NewPlanForm({ onSaved, onCancel }: { onSaved: (plan: Plan) => void; onCancel: () => void }) {
   const friends = useAsync(() => api.listFriends(), []);
@@ -78,7 +77,7 @@ function NewPlanForm({ onSaved, onCancel }: { onSaved: (plan: Plan) => void; onC
           <textarea {...p} rows={3} value={details} onChange={(e) => setDetails(e.target.value)} maxLength={LIMITS.planDetails} />
         )}
       </Field>
-      <Field label="When" optional hint="Leave empty if you haven't picked a time.">
+      <Field label="When" optional>
         {(p) => <input {...p} type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} />}
       </Field>
       <FriendPicker
@@ -101,54 +100,45 @@ function NewPlanForm({ onSaved, onCancel }: { onSaved: (plan: Plan) => void; onC
   );
 }
 
-function PlanCard({ plan, onDone, onDelete }: { plan: Plan; onDone: () => void; onDelete: () => void }) {
+function PlanCard({ plan, moment, onDone, onDelete }: { plan: Plan; moment?: boolean; onDone: () => void; onDelete: () => void }) {
   const done = plan.status === "done";
   return (
-    <li className={`plan card ${done ? "plan--done" : ""}`}>
-      <div className="plan__date" aria-hidden="true">
-        <Icon name={done ? "check-circle" : "calendar"} size={22} />
-      </div>
-      <div className="plan__main">
-        <div className="plan__head">
-          <h3>{plan.title}</h3>
-          {done && (
-            <Tag tone="success" icon="check">
-              Done
-            </Tag>
-          )}
-        </div>
-        <p className="muted">{plan.planned_for ? formatDateTime(plan.planned_for) : "No date yet"}</p>
-        {plan.details && <p>{plan.details}</p>}
-        {plan.members.length > 0 && (
-          <p className="plan__with">
-            With{" "}
-            {plan.members.map((m, i) => (
-              <span key={`${m.kind}:${m.id}`}>
-                {i > 0 && ", "}
-                <Link to={friendPath(m.kind, m.id)}>{m.display_name}</Link>
-              </span>
-            ))}
-          </p>
+    <li className={`tl__card ${moment ? "tl__moment" : ""}`}>
+      <p className="tl__meta">{plan.planned_for ? formatDateTime(plan.planned_for) : "No date yet"}</p>
+      <h3>{plan.title}</h3>
+      {plan.members.length > 0 && (
+        <p>
+          With{" "}
+          {plan.members.map((m, i) => (
+            <span key={`${m.kind}:${m.id}`}>
+              {i > 0 && ", "}
+              <Link to={friendPath(m.kind, m.id)}>{m.display_name}</Link>
+            </span>
+          ))}
+        </p>
+      )}
+      <div className="tl__row">
+        {!done && (
+          <button type="button" className="btn btn--small btn--primary" onClick={onDone}>
+            Done
+          </button>
         )}
-        <div className="row">
-          {!done && (
-            <>
-              <button type="button" className="btn btn--small btn--primary" onClick={onDone}>
-                <Icon name="check" size={16} />
-                Done
-              </button>
+        <details className="tl__more">
+          <summary>More</summary>
+          <div className="tl__row">
+            {plan.details && <p>{plan.details}</p>}
+            {!done && (
               <CalendarLink
                 title={plan.title}
                 details={plan.details ?? ""}
                 start={plan.planned_for ? new Date(plan.planned_for) : null}
               />
-            </>
-          )}
-          <button type="button" className="btn btn--small btn--quiet-danger" onClick={onDelete}>
-            <Icon name="trash" size={16} />
-            Delete
-          </button>
-        </div>
+            )}
+            <button type="button" className="tl__link tl__link--danger" onClick={onDelete}>
+              Delete
+            </button>
+          </div>
+        </details>
       </div>
     </li>
   );
@@ -164,20 +154,19 @@ export default function Plans() {
   const close = () => navigate("/plans", {}, { replace: true });
   const newPlan = (
     <Link to="/plans" query={{ new: "1" }} className="btn btn--primary">
-      <Icon name="plus" size={18} />
       New plan
     </Link>
   );
 
   return (
-    <div className="page">
-      <PageHeader title="Plans" lead="Things you mean to do together. Marking one done logs the hangout." actions={newPlan} />
+    <div className="page tl">
+      <PageHeader title="Plans" actions={newPlan} />
       <Loaded state={plans} skeleton={<Skeleton rows={3} />}>
         {(list) => {
           if (list.length === 0) {
             return (
               <EmptyState illustration="ideas" title="No plans yet" actions={newPlan}>
-                <p>Start with something small: a walk, a coffee, a game night.</p>
+                <p>A walk, a coffee, a game night.</p>
               </EmptyState>
             );
           }
@@ -185,31 +174,24 @@ export default function Plans() {
           const done = list.filter((p) => p.status === "done");
           return (
             <>
-              <section className="results-section">
-                <h2>
-                  Planned <span className="count-badge">{planned.length}</span>
-                </h2>
-                {planned.length === 0 ? (
-                  <p className="muted">Nothing planned right now.</p>
-                ) : (
-                  <ul className="plans">
-                    {planned.map((p) => (
-                      <PlanCard key={p.plan_id} plan={p} onDone={() => setFinishing(p)} onDelete={() => setDeleting(p)} />
-                    ))}
-                  </ul>
-                )}
-              </section>
+              {planned.length === 0 ? (
+                <p>Nothing planned right now.</p>
+              ) : (
+                <ul className="tl__list" aria-label="Planned">
+                  {planned.map((p, i) => (
+                    <PlanCard key={p.plan_id} plan={p} moment={i === 0} onDone={() => setFinishing(p)} onDelete={() => setDeleting(p)} />
+                  ))}
+                </ul>
+              )}
               {done.length > 0 && (
-                <section className="results-section">
-                  <h2>
-                    Done <span className="count-badge">{done.length}</span>
-                  </h2>
-                  <ul className="plans">
+                <details className="tl__more">
+                  <summary>Done ({done.length})</summary>
+                  <ul className="tl__list">
                     {done.map((p) => (
                       <PlanCard key={p.plan_id} plan={p} onDone={() => undefined} onDelete={() => setDeleting(p)} />
                     ))}
                   </ul>
-                </section>
+                </details>
               )}
             </>
           );
@@ -234,10 +216,8 @@ export default function Plans() {
           body={
             <p>
               {finishing.members.length > 0
-                ? `This marks “${finishing.title}” as done and logs a hangout today with ${joinNames(
-                    finishing.members.map((m) => firstName(m.display_name)),
-                  )}, so Venn knows when you last saw each of them.`
-                : `This marks “${finishing.title}” as done. No one is on this plan, so no hangout is logged.`}
+                ? `Logs a hangout today with ${joinNames(finishing.members.map((m) => firstName(m.display_name)))}.`
+                : "No one is on this plan, so no hangout is logged."}
             </p>
           }
           confirmLabel="Mark done"

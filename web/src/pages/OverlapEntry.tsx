@@ -20,17 +20,12 @@ export function OverlapEntry() {
 
   const match = enrolled ? data?.match : null;
   const label = match?.status === "introduced" ? "You both said yes"
-    : match?.status === "waiting" ? "You said yes to this plan"
-    : match ? match.title : enrolled ? "Looking for your overlap" : "Meet someone new";
-  const hint = match?.status === "introduced" ? "Open your introduction and see your shared challenge."
-    : match?.status === "waiting" ? "Your name stays private until you both opt in to the plan."
-    : match ? "An activity for two, based on the interests and window you chose."
-    : enrolled ? "You’re opted in for one window. View or withdraw your request."
-    : "Choose a Seoul neighborhood and an activity. Get introduced only if you both say yes.";
+    : match?.status === "waiting" ? "You said yes. Their turn."
+    : match ? match.title : enrolled ? "Your Seoul window is open" : "Meet someone new in Seoul";
   return (
     <Link to="/overlap" className="callout ov-entry">
       <Icon name="users" size={22} />
-      <span className="ov-entry__text"><span className="ov-kicker">Venn Overlap</span><strong>{label}</strong><span className="callout__sub">{hint}</span></span>
+      <span className="ov-entry__text"><strong>{label}</strong><span className="callout__sub">Venn Overlap</span></span>
       <Icon name="chevron-right" size={18} />
     </Link>
   );
