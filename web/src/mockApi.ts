@@ -8,10 +8,12 @@
 
 import type { Api } from "./api";
 import { ApiError } from "./errors";
+import { createOverlapDemo } from "./mockOverlap";
 import { mockQrRows } from "./mockQr";
 import type * as T from "./types";
 
 export interface MockOptions {
+  overlapSeat?: string | null;
   /** Start signed out, to see the sign-in screen. */
   signedOut: boolean;
   /** Sign-in also asks for a passcode (the demo passcode is "venn"). */
@@ -602,6 +604,7 @@ export function createMockApi(options: MockOptions): Api {
   }
 
   const api: Api = {
+    ...createOverlapDemo(options.overlapSeat, wait),
     /* ------------------------------------------------------------ sign-in */
     getSession: () =>
       open(() => ({

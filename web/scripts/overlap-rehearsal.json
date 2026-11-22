@@ -1,0 +1,7 @@
+[
+  {"url":"/app?demo=1&seat=a","w":390,"h":844,"scheme":"dark","steps":["waitFor:Meet someone new","click('Meet someone new')","waitFor:Your Seoul window","click('Photography')","click('I confirm that I’m an adult')","click('Opt in to Overlap')","waitFor:Your window is open.","overflow()","contrastReport()"]},
+  {"url":"/app/overlap?demo=1&seat=b","w":1280,"h":900,"steps":["waitFor:Your Seoul window","click('Photography')","click('Architecture')","click('I confirm that I’m an adult')","click('Opt in to Overlap')","waitFor:One roll, one neighborhood","has('You also picked architecture')","click('Yes to an introduction')","waitFor:You said yes. Now it’s their turn.","overflow()","contrastReport()"]},
+  {"url":"/app/overlap?demo=1&seat=a","w":390,"h":844,"scheme":"dark","steps":["waitFor:Your windows overlap.","has('They also picked architecture')","click('Yes to an introduction')","waitFor:You and Demo Wren both said yes.","has('Your shared challenge')","click('Suggest this spot')","waitFor:You suggested this spot.","overflow()","contrastReport()"]},
+  {"url":"/app/overlap?demo=1&seat=b","w":1280,"h":900,"steps":["waitFor:You and Demo Robin both said yes.","click('Agree to this spot')","waitFor:You both chose this spot.","click('Withdraw from Overlap')","waitFor:Your Seoul window"]},
+  {"url":"/app/overlap?demo=1&seat=a","w":390,"h":844,"scheme":"dark","steps":["waitFor:Your window is open.","document.querySelector('h1').textContent.includes('Demo Wren') ? 'MISSING revocation' : 'identity hidden'"]}
+]

@@ -113,6 +113,22 @@ people notes, through the existing visibility and ownership checks. If a discuss
 durable interest or preference, ChatGPT can propose the specific item with
 `venn_propose_memories`. It becomes a matching signal after the user approves it in the review card.
 
+## Seoul Overlap (migrations 0009–0010)
+
+`overlap_preferences` has one explicitly adult-confirmed opt-in per user: curated district,
+Seoul local date, slot, and 1–3 selected interest codes. Today through today + 6 days are
+selectable. Morning closes at noon, afternoon at 18:00, evening at midnight Seoul time;
+expired rows are invisible and cannot authorize responses. Expiry is not physical deletion.
+
+`overlap_matches` holds an opaque plan ID and one shared interest. Together with the two sets of explicitly selected tags, this picks a curated activity and challenge.
+Two preference rows point to the same plan and each holds its owner's yes. One yes reveals
+nothing to the other member; mutual yes reveals first names, not contact details or friend access.
+`spot_confirmed` is a separate, per-person choice about the suggested public meeting point, only accepted after mutual introduction. A new plan starts with both types of confirmation cleared. Withdrawal deletes the preference and releases the plan for both. Reads never allocate plans.
+Overlap uses neither private notes nor memory data. Existing connections and bilateral social
+blocks are excluded. `overlap_exclusions` records directed account pairs (checked both ways),
+pass/block/report kind, creation time and, only for reports, a structured safety/spam/other
+reason. Exclusions outlive preference withdrawal; user foreign keys cascade on account deletion.
+
 ## Deletion
 
 `venn_delete_account` deletes the user row; profile, memories, proposals, invites, requests,

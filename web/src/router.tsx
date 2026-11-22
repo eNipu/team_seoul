@@ -6,7 +6,7 @@ import { useSyncExternalStore, type AnchorHTMLAttributes, type MouseEvent } from
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, ""); // "/app"
 
 /** Flags that survive in-app navigation (demo mode and its variants). */
-const STICKY = ["demo", "fresh", "passcode"];
+const STICKY = ["demo", "fresh", "passcode", "seat"];
 
 export type Query = Record<string, string | undefined>;
 

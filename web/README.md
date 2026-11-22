@@ -27,7 +27,7 @@ ordinary History-API URLs with a small router of its own (`src/router.tsx`).
 ## Demo mode
 
 Add `?demo=1` to any URL: the app uses an in-memory mock of the API (`src/mockApi.ts`) and skips
-sign-in. The flag is kept across in-app navigation. Nothing is stored; a reload resets the data.
+sign-in. The flag is kept across in-app navigation. A reload resets the mock except for the two explicitly fictional Overlap seats below.
 It is seeded with the investor demo: account "Gene", Maya Chen, the memory "Photo walks with
 Maya", and a search for "photography" that returns Maya with the reason she matched.
 
@@ -44,6 +44,12 @@ Extra demo-only flags:
 Without `?demo=1` and without a backend the app shows "This copy of the site isn't connected to
 a Venn server." with a link to the demo.
 
+### Rehearse a two-person Overlap
+
+Open `/app/overlap?demo=1&seat=a` and `/app/overlap?demo=1&seat=b` side by side in the **same browser profile and origin**. These are fictional seats, not live accounts. Select Seongsu, tomorrow afternoon, and Photography in both; add Architecture on the second. Opt in separately. A plan appears in both views. Accept on one: the other still sees an anonymous offer. Accept on the second to reveal first names and the shared challenge on both screens. Suggest the public station entrance from one seat and agree from the other; neither action books anything. Withdraw in either to close it.
+
+Only these demo seats exchange state via local storage. To reset an excluded pair after a pass/block/report, clear the two `venn.overlap.fictional.v1.a` and `venn.overlap.fictional.v1.b` keys. For a real rehearsal, migrate the backend and use **separate browser profiles** signed into two different accounts, with no demo flags.
+
 ## Sign-in
 
 On load the app calls `GET /api/v1/session`. Signed out and `sign_in_available` → the sign-in
@@ -56,6 +62,7 @@ same URL, so signing in continues where the user was. Sign out is `DELETE /api/v
 | Path | Screen |
 | --- | --- |
 | `/app` | Home (or first-run welcome) |
+| `/app/overlap` | Meet someone new: one optional Seoul activity, mutual introduction |
 | `/app/people` | People (`?new=1` opens "Add a person", `?import=1` opens "Import a list", `?linkedin=1` opens "Import from LinkedIn", `?instagram=1` opens "Instagram demo import") |
 | `/app/people/person/<id>`, `/app/people/connection/<id>` | Person page with the Venn diagram |
 | `/app/memories` | Memories (`?q=` keyword search, `?new=1` opens "Add a memory") |
