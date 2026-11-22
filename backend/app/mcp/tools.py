@@ -65,6 +65,7 @@ from app.services import (
     calendar_service,
     dashboard_service,
     memory_service,
+    onboarding_service,
     people_service,
     plan_service,
     question_service,
@@ -98,6 +99,17 @@ PersonRelationship = Annotated[
 PersonNotes = Annotated[str | None, Field(max_length=1000)]
 PersonInterests = Annotated[list[Annotated[str, Field(max_length=40)]] | None, Field(max_length=12)]
 FollowUpText = Annotated[str, Field(min_length=1, max_length=relationship_service.MAX_FOLLOW_UP_LEN)]
+
+
+def _onboarding_guidance(progress) -> str:
+    """Guide the next deliberate action, independently of the legacy web checklist."""
+    if not progress.memories_ready:
+        return "Step 1 of 3: import memories with venn_import_chatgpt_memory. Wait for the user's choice."
+    if not progress.contacts_ready:
+        return "Step 2 of 3: import contacts from Instagram or LinkedIn. One confirmed import is enough."
+    if not progress.matches_reviewed:
+        return "Step 3 of 3: offer to find connections with similar interests using venn_find_interest_matches."
+    return "Set-up is complete."
 
 
 def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa: C901 - flat list of tool definitions
@@ -356,12 +368,12 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
     async def venn_import_chatgpt_memory() -> CallToolResult:
         async def body():
             view = await run_as_user([MEMORIES_READ], lambda db, user, _: memory_service.import_view(db, user))
-            areas = ", ".join(a.label for a in view.areas if a.selected)
             return ok(
                 "Showing the import card; nothing has been imported and Venn has received nothing. "
-                f"Areas ticked by default: {areas}. {view.always_excluded} "
+                f"{view.always_excluded} "
                 "Wait for the user to press the button on the card (it sends you their choice) or to tell "
-                "you in chat; then list what you remember in the chat and let them pick before calling "
+                "you in chat; show at most three numbered memories there, then wait for their picks or 'more'. "
+                "Send only the items they select by calling "
                 'venn_propose_memories with source "chatgpt_memory".',
                 view.model_dump(mode="json"),
             )
@@ -513,8 +525,8 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
             "view: profile, memories, friends "
             "(connections on Venn and private notes on people who aren't) and pending requests. The "
             "user can edit their profile and memories, open a friend, and accept/decline requests there. "
-            "A brand-new account gets a welcome card with starter actions instead. The result also tells you "
-            "which set-up steps are still open. Start the first one only if the user asked for set-up. "
+            "Welcome and home show the next step: import memories, import contacts, then find interest matches. "
+            "Show the current step and wait for the user. "
             "The result includes "
             "the profile, so there is no need to call venn_get_profile as well."
         ),
@@ -524,20 +536,17 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
         async def body():
             view = await run_as_user(
                 [PROFILE_READ, MEMORIES_READ, CONNECTIONS],
-                lambda db, user, _: dashboard_service.build_home(db, user),
+                lambda db, user, _: dashboard_service.plugin_home(db, user),
             )
-            guidance = dashboard_service.setup_guidance(view.setup)
+            guidance = _onboarding_guidance(view.onboarding)
             if view.view == "welcome":
                 return ok(
-                    "Showing the welcome card with starter actions: guided set-up, ChatGPT memory import, "
-                    "and social profile previews. Let the user choose an action; do not list the card in chat. "
-                    f"{guidance}",
+                    f"Showing the welcome card. Let the user act on the card; do not list it again in chat. {guidance}",
                     view,
                 )
             return ok(
                 f"Dashboard: {len(view.memories)} memories, {len(view.connections)} connections, "
-                f"{len(view.people)} people notes, {len(view.pending_requests)} pending requests. "
-                + (guidance or "Set-up is complete."),
+                f"{len(view.people)} people notes, {len(view.pending_requests)} pending requests. " + guidance,
                 view,
             )
 
@@ -562,15 +571,38 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
         async def body():
             view = await run_as_user(
                 [PROFILE_READ, MEMORIES_READ, CONNECTIONS],
-                lambda db, user, _: dashboard_service.build_help(db, user),
+                lambda db, user, _: dashboard_service.plugin_help(db, user),
             )
             topics = "; ".join(t.title for t in view.topics)
-            guidance = dashboard_service.setup_guidance(view.setup, start=False)
+            guidance = _onboarding_guidance(view.onboarding)
             return ok(
                 f"Showing the help card ({topics}), with examples the user can tap. Do not list them again "
-                "in text; add one short line at most. " + (guidance or "Set-up is complete."),
+                "in text; add one short line at most. " + guidance,
                 view,
             )
+
+        return await guarded(body)
+
+    @apps.tool(
+        resource_uri=WIDGET_URI,
+        visibility=["model", "app"],
+        meta=ui_meta("Finding shared interests…", "Interest matches ready"),
+        name="venn_find_interest_matches",
+        title="Find interest matches",
+        description=(
+            "When the user chooses step 3 after approving memories and importing contacts, show exact or "
+            "related interests with imported people or eligible connections. Records the review even if "
+            "there are no matches. Does not send messages or invitations."
+        ),
+        annotations=WRITE_IDEMPOTENT,
+    )
+    async def venn_find_interest_matches(limit: Annotated[int, Field(ge=1, le=20)] = 10) -> CallToolResult:
+        async def body():
+            view = await run_as_user(
+                [MEMORIES_READ, CONNECTIONS],
+                lambda db, user, _: onboarding_service.find_matches_sync(db, user, limit),
+            )
+            return ok(f"Showing {len(view.matches)} interest matches.", view)
 
         return await guarded(body)
 
@@ -1759,6 +1791,7 @@ ToolName = Literal[
     "venn_delete_memory",
     "venn_show_dashboard",
     "venn_help",
+    "venn_find_interest_matches",
     "venn_create_invite",
     "venn_list_invites",
     "venn_revoke_invite",

@@ -6,6 +6,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from app.schemas.memory import MemoryOut
+from app.schemas.onboarding import InterestMatch, OnboardingState
 
 FriendKind = Literal["connection", "person"]
 """A friend is either a mutual Venn connection or a private note about someone not on Venn."""
@@ -201,6 +202,18 @@ class HelpView(BaseModel):
     note: str = "The card lists what Venn can do with examples to try. Do not repeat it in text."
 
 
+class PluginHelpView(HelpView):
+    onboarding: OnboardingState
+
+
+class PluginWelcomeView(WelcomeView):
+    onboarding: OnboardingState
+
+
+class PluginDashboardView(DashboardView):
+    onboarding: OnboardingState
+
+
 class SimpleOk(BaseModel):
     ok: bool
     message: str
@@ -250,10 +263,8 @@ class PersonCandidate(BaseModel):
     last_met_days_ago: int | None = Field(default=None, ge=0, le=3650)
 
 
-class InterestMatch(BaseModel):
-    my_label: str
-    their_label: str
-    kind: Literal["exact", "related"]
+class LinkedInCandidate(PersonCandidate):
+    """Produced by the platform importer; never accepted as the generic import request type."""
 
 
 class ImportCandidateOut(BaseModel):

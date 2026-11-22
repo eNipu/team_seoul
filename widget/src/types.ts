@@ -208,7 +208,18 @@ export interface SetupStep {
   done: boolean;
 }
 
-export interface DashboardViewData {
+export interface OnboardingProgress {
+  memories_ready: boolean;
+  contacts_ready: boolean;
+  matches_reviewed: boolean;
+}
+
+interface OnboardingData {
+  /** Absent on older tool results. */
+  onboarding?: OnboardingProgress;
+}
+
+export interface DashboardViewData extends OnboardingData {
   view: "dashboard";
   profile: Profile;
   memories: Memory[];
@@ -332,7 +343,7 @@ export interface GoalOption {
   label: string;
 }
 
-export interface WelcomeViewData {
+export interface WelcomeViewData extends OnboardingData {
   view: "welcome";
   display_name: string;
   goal_options: GoalOption[];
@@ -348,7 +359,7 @@ export interface HelpTopic {
   examples: string[];
 }
 
-export interface HelpViewData {
+export interface HelpViewData extends OnboardingData {
   view: "help";
   display_name: string;
   topics: HelpTopic[];
@@ -397,6 +408,24 @@ export interface SearchResult {
   last_interaction_at: string | null;
   /** One plain sentence saying why this person matched; "" when the server sent none. */
   why: string;
+}
+
+export interface InterestMatch {
+  kind: "exact" | "related";
+  my_label: string;
+  their_label: string;
+}
+
+export interface InterestMatchResult {
+  kind: FriendKind;
+  id: string;
+  display_name: string;
+  interest_matches: InterestMatch[];
+}
+
+export interface InterestMatchesViewData {
+  view: "interest_matches";
+  matches: InterestMatchResult[];
 }
 
 export interface PeopleSearchViewData {
@@ -482,6 +511,7 @@ export type ViewData =
   | FriendViewData
   | WelcomeViewData
   | PeopleImportViewData
+  | InterestMatchesViewData
   | PeopleSearchViewData
   | GroupPlanViewData
   | BriefViewData
@@ -878,6 +908,31 @@ export function parsePerson(v: unknown): Person {
   };
 }
 
+function parseOnboarding(v: unknown): OnboardingData {
+  if (!isObj(v)) return {};
+  return { onboarding: {
+    memories_ready: v.memories_ready === true,
+    contacts_ready: v.contacts_ready === true,
+    matches_reviewed: v.matches_reviewed === true,
+  } };
+}
+
+export function parseInterestMatches(v: unknown): InterestMatchResult[] {
+  return objs(v).flatMap((row) => {
+    const { kind } = row;
+    const id = strOrNull(row.id);
+    const display_name = strOrNull(row.display_name);
+    if ((kind !== "person" && kind !== "connection") || !id || !display_name) return [];
+    const interest_matches = objs(row.interest_matches).flatMap((pair): InterestMatch[] => {
+      const my_label = strOrNull(pair.my_label);
+      const their_label = strOrNull(pair.their_label);
+      if ((pair.kind !== "exact" && pair.kind !== "related") || !my_label || !their_label) return [];
+      return [{ kind: pair.kind, my_label, their_label }];
+    });
+    return [{ kind, id, display_name, interest_matches }];
+  });
+}
+
 function parseDashboard(sc: Obj): DashboardViewData {
   return {
     view: "dashboard",
@@ -891,6 +946,7 @@ function parseDashboard(sc: Obj): DashboardViewData {
       created_at: str(r.created_at),
     })),
     setup: parseSetup(sc.setup),
+    ...parseOnboarding(sc.onboarding),
     plans: parsePlans(sc.plans),
     pending_answers: Math.max(0, Math.floor(num(sc.pending_answers))),
     sample_loaded: sc.sample_loaded === true,
@@ -1235,9 +1291,12 @@ export function parseView(sc: unknown, meta?: unknown): ViewData | null {
           .filter((l) => l.link_id !== ""),
         note: str(sc.note),
       };
+    case "interest_matches":
+      return { view: "interest_matches", matches: parseInterestMatches(sc.matches) };
     case "welcome":
       return {
         view: "welcome",
+        ...parseOnboarding(sc.onboarding),
         display_name: str(sc.display_name),
         goal_options: objs(sc.goal_options)
           .map((g) => ({ value: str(g.value), label: str(g.label) || humanize(str(g.value)) }))
@@ -1249,6 +1308,7 @@ export function parseView(sc: unknown, meta?: unknown): ViewData | null {
       return {
         view: "help",
         display_name: str(sc.display_name),
+        ...parseOnboarding(sc.onboarding),
         topics: parseHelpTopics(sc.topics),
         setup: parseSetup(sc.setup),
         privacy: strArr(sc.privacy),

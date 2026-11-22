@@ -49,12 +49,12 @@ export default function Help({ data, bridge, nav }: ViewProps<HelpViewData>) {
         </div>
       </section>
 
-      <SetupCard steps={data.setup} bridge={bridge} nav={nav} />
+      <SetupCard data={data} nav={nav} />
 
       <section className="panel">
         <h3 className="section-title">What you can do</h3>
         <ul className="list topics">
-          {data.topics.map((t, i) => (
+          {data.topics.filter((t) => t.key !== "setup").map((t, i) => (
             <Topic key={`${t.key}-${i}`} topic={t} index={i} states={examples} disabled={sending} onTry={tryIt} />
           ))}
         </ul>

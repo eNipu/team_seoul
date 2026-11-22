@@ -28,8 +28,7 @@ mock bridge (`src/mock.ts`) instead of the ext-apps connection. It also works st
   (`friend`/`brief`/`quiz` use a Venn connection, `friend_person`/`brief_person` a private person
   note, `quiz_circle` is the circle quiz, `memory_review_import` is a 12-item review card with
   `source: "chatgpt_memory"`, two of them already saved, `help` is the help card, `dashboard_setup` is a
-  dashboard with memories but no people or connections, so the set-up card shows "1 of 3 done"; the plain
-  `dashboard` demo has every step done and shows no set-up card); no `view` → empty state with links to every demo view
+  dashboard with memories but no platform import, so the set-up card opens on step 2); no `view` → empty state with links to every demo view
 - `?view=venn|venn_empty|venn_full|this_week|this_week_empty|ask_link|answers|answers_empty|`
   `dashboard_sample|dashboard_plans|memory_review_people`
   (`venn` compares you with Jun: two shared interests; `venn_empty` is a person with no overlap;
@@ -40,7 +39,7 @@ mock bridge (`src/mock.ts`) instead of the ext-apps connection. It also works st
   `dashboard_plans` has two saved plans; `memory_review_people` is a review card whose items name people,
   two of them adding new people)
 - `&tab=profile|memories|friends` opens a dashboard tab
-- In `?view=welcome` or `?view=dashboard`, open **Preview profiles** and choose Instagram or LinkedIn. Each platform offers 100 built-in profiles with five interests each. Exact matches and related interest pairs appear separately; only profiles you select and confirm become private notes. **Clear preview data** removes them.
+- Rehearse the guided flow at `?view=welcome`, or open `?view=onboarding_contacts` to start at step 2. `?view=onboarding_matches` starts at step 3, while `?view=interest_matches` and `?view=interest_matches_empty` show the two outcomes. In step 2 choose Instagram or LinkedIn. Each platform offers 100 built-in profiles with five interests each. Exact matches and related interest pairs appear separately; only profiles you select and confirm become private notes. **Clear preview data** removes them.
 - `?view=weekly_review` shows three editable weekly updates and the audience picker.
 - `?view=reply_nudge|reply_advice|reply_checklist|reply_draft|reply_discussion|reply_thread|saved_replies` shows the reply layouts and the saved-reply list
 - `&theme=dark|light` forces a theme (default: `prefers-color-scheme`)
@@ -71,12 +70,13 @@ roughly matches the incoming view. A tool result with `isError` shows an error b
 | --- | --- | --- |
 | `reply` | `venn_show_reply` | Advice, steps, a copyable draft, a discussion with **Reply in ChatGPT**, a thread recap, or a nudge. Nudges show the proposed activity and person as the title and the reason as the body. **Draft an invite** and **Make it a group** continue in chat. **Maybe later** dismisses the nudge without saving. Other replies offer **Save privately**. |
 | `saved_replies` | `venn_saved_replies` | Open or delete your saved replies. Also available through the bookmark button in the header. |
-| `memory_review` | `venn_propose_memories` | Select drafts and set visibility for the selected updates. **Edit** opens per-item wording and visibility controls. More than 3 items adds bulk selection and a sticky action bar. Previously saved drafts start unchecked. `weekly_update: true` and `source: "chatgpt_memory"` have their own headings. The confirmation lists the saved records and offers **Open my Venn**. |
-| `memory_import` | `venn_import_chatgpt_memory` | "Bring your ChatGPT memory with you": one checkbox per area, the always-excluded note, **Preview my ChatGPT memory** (sends a prompt into the chat), then "Check the chat" with **Choose again**, or the prompt to copy when the host refuses the message. Nothing is sent to Venn from this card. |
-| `dashboard` | `venn_show_dashboard` | "Finish setting up" card above the tabs while a set-up step is open (see "Set-up"). Tabs **Profile** (edit name/bio, at-a-glance tiles for memories / friends / requests that open the matching tab, goals, interests), **Memories** ("Sources" row for ChatGPT memory with **Import from ChatGPT** / **Import more**, search, grouped by category, "From ChatGPT" badge, edit, delete), **Friends** (search "Who do I know who…", invite, reconnect, quick actions **Import friends** / **Play a quiz** / **Plan a group hangout** (pick 2 to 6 friends), pending requests, "On Venn", "Private notes", add a person). |
-| `welcome` | `venn_show_dashboard` (new user) | **Start here** offers **Set up Venn**, **Import my ChatGPT memory**, and **Preview profiles**; guided set-up does not start automatically. Goal chips and the numbered set-up path are optional.  Users can also enter names and optional relationship clues to review on the radar. |
+| `memory_review` | `venn_propose_memories` | Review three drafts per page. **Edit** changes wording and visibility; moving between pages preserves all edits and choices. Imported drafts start unchecked. The confirmation lists only saved records and offers **Continue to contacts** after a ChatGPT import. |
+| `memory_import` | `venn_import_chatgpt_memory` | **Choose memories to preview**: one checkbox per area, the always-excluded note, **Preview in chat** (sends a prompt into the chat), then "Check the chat" with **Choose again**, or the prompt to copy when the host refuses the message. Nothing is sent to Venn from this card. |
+| `dashboard` | `venn_show_dashboard` | Three-step setup guide above the tabs while a set-up step is open (see "Set-up"). Tabs **Profile** (edit name/bio, at-a-glance tiles for memories / friends / requests that open the matching tab, goals, interests), **Memories** ("Sources" row for ChatGPT memory with **Import from ChatGPT** / **Import more**, search, grouped by category, "From ChatGPT" badge, edit, delete), **Friends** (search "Who do I know who…", invite, reconnect, quick actions **Import friends** / **Play a quiz** / **Plan a group hangout** (pick 2 to 6 friends), pending requests, "On Venn", "Private notes", add a person). |
+| `welcome` | `venn_show_dashboard` (new user) | One three-step path, starting with **Choose memory areas**. Later steps have no action until the prerequisites are complete. |
 | `help` | `venn_help` | "How Venn helps": the set-up card (while a step is open), topics with an icon, a description and "try it" examples that are sent into the chat ("Sent — continue in the chat", or the text with **Copy** when the host refuses), then "Your data". `note` is model-facing and not shown. |
 | `invite` | `venn_create_invite` | Code as a ticket, QR code ("Scan to connect", when `qr` is non-empty), copy code / copy invite message / copy link (when `link` is non-empty), expiry, uses, revoke. |
+| `interest_matches` | `venn_find_interest_matches` | Ranked people with exact or related evidence and optional common-ground and activity views. |
 | `activity_ideas` | `venn_suggest_activity` | Shared interests, match ring (`match_score`) with "Why this score?", suggestion cards with **Plan it** / **We did this** / **Add to calendar**. |
 | `reconnect` | `venn_reconnection_suggestions` | Friends not seen for a while, each with a "days since" figure and a bar relative to the longest gap in the list, with **Get ideas** / **Draft a message** / **We met up**. |
 | `friend` | `venn_view_friend` | Profile of a connection or a private person note, "Things to ask about" (tick off / add), interests, shared memories, hangout timeline, actions incl. **Prep for a meetup** and (connections) **Quiz**. |
@@ -94,7 +94,7 @@ roughly matches the incoming view. A tool result with `isError` shows an error b
 The `dashboard` view also shows, above the tabs: **Preview profiles**; a **This week** tile featuring a specific follow-up or the next available action; a highlighted
 "N answers waiting for your review" tile when `pending_answers > 0`; and a **Plans** section when `plans`
 is non-empty (title, date or "No date yet", members, **Done**, delete with inline confirm). The Friends tab
-adds **Ask a friend**, a Common ground shortcut on every friend row, **Preview** tags, and **Explore a starter circle** in its empty state; **Play a quiz** shows when connections + people ≥ 2. `welcome` offers **Explore a starter circle**. When `sample_loaded` is true, **Clear preview data** below the dashboard tabs requires confirmation. `memory_review` shows "About: <names>" and "Also adds <names> to your people";
+adds **Ask a friend**, a Common ground shortcut on every friend row, **Preview** tags, and **Explore a starter circle** in its empty state; **Play a quiz** shows when connections + people ≥ 2. When `sample_loaded` is true, **Clear preview data** below the dashboard tabs requires confirmation. `memory_review` shows "About: <names>" and "Also adds <names> to your people";
 `people_search` shows each result's `why` (in place of the matched labels and snippet, which remain the
 fallback when `why` is empty) and a "From your memories" group. The friend view adds **Common ground** and,
 for private notes, **Ask them a few questions**.
@@ -171,15 +171,7 @@ people.length`), not from `profile.memory_count`.
 
 ### Set-up
 
-`setup` drives onboarding. The dashboard and the help card show a "Finish setting up" card (progress
-ring, "N of 3 done", the steps) while at least one step is open, and nothing once all are done; the
-welcome card shows the same steps as a numbered path. The actions are fixed per step key: `about_you`
-→ **Import from ChatGPT** (opens the import card) and **Answer a few questions** (chat prompt);
-`your_people` → **Add your people** (chat prompt); `connect` → **Invite a friend** (opens the invite
-card). The first open step gets the primary button, later open steps a secondary one, done steps none.
-After a chat prompt is accepted the step shows "Continue in the chat"; if the host refuses, the text is
-shown with **Copy**. The card is updated whenever the dashboard payload is refreshed (after **Back**,
-or after an action that returns a dashboard).
+Welcome, home and help use `onboarding: {memories_ready, contacts_ready, matches_reviewed}`. Only the first unfinished step has a primary action. Import memories (or approve an interest you supplied), confirm at least one Instagram or LinkedIn profile, then run **Find matches**. Opening previews does not advance setup. The match card shows which interests are exact or related; it never invites anyone. A completed search with no results still counts. The legacy `setup` checklist belongs to the signed-in web app.
 
 ## Tool calls made by the widget
 
@@ -189,10 +181,9 @@ or after an action that returns a dashboard).
 | Discard memory draft | `venn_discard_memory_proposal` | `{ proposal_id }` | `{ discarded: true, proposal_id }` |
 | Back to dashboard; after accepting a request; **Open my Venn** (after a memory review) | `venn_show_dashboard` | `{}` | `dashboard` view |
 | Header **Help** (every view except `help`) | `venn_help` | `{}` | `help` view |
-| Set-up → Invite a friend | `venn_create_invite` | `{}` | `invite` view |
+| Set-up → Find matches | `venn_find_interest_matches` | `{}` | `interest_matches` view with grounded pairs of labels |
 | Welcome → Import my ChatGPT memory; Set-up → Import from ChatGPT; Memories tab → Import from ChatGPT / Import more | `venn_import_chatgpt_memory` | `{}` | `memory_import` view |
 | Edit profile | `venn_update_profile` | `{ display_name?, bio? }` (changed fields only) | Profile |
-| Welcome → Set up Venn | `venn_update_profile` | `{ social_goals: string[] }` (if selected) | Profile (result ignored) |
 | Edit memory | `venn_update_memory` | `{ memory_id, title?, description?, visibility? }` | Memory |
 | Delete memory | `venn_delete_memory` | `{ memory_id }` | `{ deleted: true, memory_id }` |
 | Accept / Decline | `venn_respond_to_connection` | `{ request_id, accept }` | `{ request_id, status, connection_id }` |
@@ -216,7 +207,7 @@ or after an action that returns a dashboard).
 | Tick off a thing to ask | `venn_complete_follow_up` | `{ follow_up_id }` | `{ done: true, follow_up_id }` |
 | Common ground (friend view, friend rows) | `venn_compare` | friendArg | `venn` view |
 | Dashboard → This week | `venn_this_week` | `{}` | `this_week` view |
-| Try with sample friends (welcome, Friends tab empty state, This week empty state) | `venn_load_sample_circle` | `{}` | `{ loaded: true, … }`, then `venn_show_dashboard` |
+| Explore a starter circle (Friends tab empty state, This week empty state) | `venn_load_sample_circle` | `{}` | `{ loaded: true, … }`, then `venn_show_dashboard` |
 | Clear preview data | `venn_remove_sample_circle` | `{}` | `{ removed: true, … }`, then `venn_show_dashboard` |
 | Ask a friend; Ask them a few questions; Create a link | `venn_create_question_link` | `{}` or `{ person_id }` | `ask_link` view |
 | N answers waiting for your review; See answers | `venn_review_answers` | `{}` | `answers` view |
@@ -239,10 +230,10 @@ The Venn server cannot read ChatGPT's memory, so the import goes through the cha
 2. The widget sends `buildMemoryImportPrompt(areas, selectedValues, maxItems)` (pure, in
    `src/memoryImport.ts`) with `sendMessage`. The prompt lists the ticked areas as `- <label>: <description>`
    in payload order, adds `Leave out these areas: <label>, <label>.` only when some area is unticked,
-   and asks ChatGPT to list at most `max_items` items in the chat without sending anything to Venn.
+   and asks ChatGPT for at most three numbered items per turn (`max_items` total) without sending anything to Venn.
 3. The user tells ChatGPT which ones to keep; ChatGPT calls `venn_propose_memories` with
    `source: "chatgpt_memory"` for just those.
-4. The `memory_review` card shows them ("From your ChatGPT memory"); the user confirms with the
+4. The `memory_review` card shows three candidates per page, initially unchecked for imports. Choices, edits and visibility persist across pages. The user confirms with the
    unchanged `venn_save_memories` call, and the saved memories carry `source: "chatgpt_memory"`.
 
 If `sendMessage` is refused, the card shows the prompt in a read-only box with **Copy** and

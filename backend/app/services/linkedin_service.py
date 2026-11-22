@@ -34,7 +34,7 @@ from typing import Any
 import httpx
 
 from app.ai.extraction import contains_sensitive
-from app.schemas.social import PersonCandidate
+from app.schemas.social import LinkedInCandidate
 from app.services.errors import InvalidRequest, RateLimited, UpstreamError
 
 log = logging.getLogger(__name__)
@@ -403,7 +403,7 @@ def _sentence(text: str) -> str:
     return f"{text}." if text else ""
 
 
-def candidate(name: str, headline: str | None, profile: dict | None = None) -> PersonCandidate:
+def candidate(name: str, headline: str | None, profile: dict | None = None) -> LinkedInCandidate:
     """A people-import entry for one connection; ``profile`` is the Apify result when there is one."""
     profile = profile or {}
     headline = _text(profile.get("headline")) or headline
@@ -428,7 +428,7 @@ def candidate(name: str, headline: str | None, profile: dict | None = None) -> P
     if about:
         parts.append(_sentence(about[:300] + ("…" if len(about) > 300 else "")))
     notes = " ".join(p for p in parts if p and not contains_sensitive(p))[:1000] or None
-    return PersonCandidate(name=name[:80], relationship=RELATIONSHIP, notes=notes, interests=_skills(profile))
+    return LinkedInCandidate(name=name[:80], relationship=RELATIONSHIP, notes=notes, interests=_skills(profile))
 
 
 # ------------------------------------------------------------------- rate limit

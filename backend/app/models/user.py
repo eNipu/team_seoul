@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, String, Text, Uuid
+from sqlalchemy import DateTime, ForeignKey, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.database import Base, JSONType
@@ -17,6 +17,7 @@ class User(Base):
     # "<issuer>|<sub>" — the only identity source; never derived from names or chat content.
     auth_subject: Mapped[str] = mapped_column(String(512), unique=True, nullable=False)
     display_name: Mapped[str | None] = mapped_column(String(80))
+    matches_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = created_at_col()
     updated_at: Mapped[datetime] = updated_at_col()
 

@@ -15,7 +15,7 @@
       "interface": {
         "displayName": "Venn",
         "shortDescription": "Keep private notes about people you know and plan time together.",
-        "longDescription": "Venn keeps a private, user-approved memory of what matters to you and the people you already know, friends and colleagues alike. Set up in three short steps: tell Venn about you (or bring over what ChatGPT already remembers), add your people, and connect with friends through an invite code, link or QR. Then get ideas for time together, a brief before you meet, nudges when it has been a while, and a quiz on how well you know your friends. Nothing is saved without your approval, and Venn never contacts anyone on your behalf.",
+        "longDescription": "Venn keeps a private, user-approved memory of what matters to you and the people you already know, friends and colleagues alike. Set up in three steps: choose memories to import, review contacts from Instagram or LinkedIn, then find people with similar interests. See which interests matched and why. Then get ideas for time together, a brief before you meet, nudges when it has been a while, and a quiz on how well you know your friends. Nothing is saved without your approval, and Venn never contacts anyone on your behalf.",
         "developerName": "Venn",
         "category": "Lifestyle",
         "capabilities": ["Interactive", "Write"],
@@ -23,7 +23,7 @@
         "privacyPolicyURL": "https://joinvennai.com/privacy",
         "defaultPrompt": [
           "Open Venn",
-          "Preview an Instagram import in Venn",
+          "Guide me through Venn setup",
           "What should I do this week?"
         ],
         "brandColor": "#E86A4A",

@@ -14,7 +14,6 @@ import {
   type PendingRequest,
   type Person,
   type Profile,
-  type SetupStep,
 } from "../types";
 import { ActionError, Avatar, SectionTitle, useAction, type Action, type ViewProps } from "./common";
 import type { HostBridge } from "../mcp/client";
@@ -42,7 +41,7 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
   const [connections, setConnections] = useState<Connection[]>(data.connections);
   const [people, setPeople] = useState<Person[]>(data.people);
   const [pending, setPending] = useState<PendingRequest[]>(data.pending_requests);
-  const [setup, setSetup] = useState<SetupStep[]>(data.setup);
+  const [setupData, setSetupData] = useState(data);
   const [plans, setPlans] = useState<Plan[]>(data.plans);
   const [pendingAnswers, setPendingAnswers] = useState(data.pending_answers);
   const [sampleLoaded, setSampleLoaded] = useState(data.sample_loaded);
@@ -61,7 +60,7 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
     setConnections(d.connections);
     setPeople(d.people);
     setPending(d.pending_requests);
-    setSetup(d.setup);
+    setSetupData(d);
     setPlans(d.plans);
     setPendingAnswers(d.pending_answers);
     setSampleLoaded(d.sample_loaded);
@@ -72,6 +71,7 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
     const res = await bridge.callTool("venn_show_dashboard", {});
     if (!res.ok) return res.errorText;
     const parsed = parseView(res.data);
+    if (parsed?.view === "welcome") return nav.replaceView("venn_show_dashboard", {});
     if (!parsed || parsed.view !== "dashboard") return "Venn couldn't refresh the dashboard.";
     applyDashboard(parsed);
     return null;
@@ -86,10 +86,8 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
 
   return (
     <>
+    <SetupCard data={setupData} nav={nav} />
     <HomeTiles pendingAnswers={pendingAnswers} bridge={bridge} nav={nav} />
-    <DemoImport nav={nav} action={demoAction} />
-    <ActionError action={demoAction} />
-    <SetupCard steps={setup} bridge={bridge} nav={nav} />
     <Plans
       plans={plans}
       bridge={bridge}
@@ -134,8 +132,10 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
             onProfile={setProfile}
           />
         )}
-        {tab === "memories" && <MemoriesTab memories={memories} bridge={bridge} nav={nav} action={action} onChange={setMemories} />}
-        {tab === "friends" && (
+        {tab === "memories" && <MemoriesTab memories={memories} bridge={bridge} nav={nav} action={action} onChange={(next) => { setMemories(next); if (next.length < memories.length) void reload(); }} />}
+        {tab === "friends" && <>
+          <DemoImport nav={nav} action={demoAction} />
+          <ActionError action={demoAction} />
           <FriendsTab
             connections={connections}
             people={people}
@@ -144,12 +144,12 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
             nav={nav}
             action={action}
             onConnections={setConnections}
-            onPeople={setPeople}
+            onPeople={(next) => { setPeople(next); if (next.length < people.length) void reload(); }}
             onPending={setPending}
             onDashboard={applyDashboard}
             sampleLoaded={sampleLoaded}
           />
-        )}
+        </>}
       </div>
     </section>
     {sampleLoaded && <PreviewCleanup bridge={bridge} onChanged={() => nav.replaceView("venn_show_dashboard", {})} />}

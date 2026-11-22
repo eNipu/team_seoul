@@ -31,9 +31,10 @@ export function buildMemoryImportPrompt(
   lines.push(
     "Always leave out health, money, passwords and ID numbers, and anything you are not sure is about me.",
     "",
-    `Show me the list here in the chat, numbered, at most ${maxItems} items, and don't send anything to Venn yet. ` +
-      "If you don't remember anything about me, say so. When I tell you which ones to keep, call venn_propose_memories " +
-      'with source "chatgpt_memory" for just those, so I can confirm them on the card.',
+    `Show at most ${Math.min(3, maxItems)} short, numbered candidates per batch here in chat, one line each. Then stop and wait. ` +
+      `Only show another batch if I ask for more; keep numbering across batches and stop at ${maxItems} candidates total. ` +
+      "If you don’t remember anything, say so. Ask me to pick specific numbers, or none. Don’t send anything to Venn until I choose. " +
+      'Call venn_propose_memories with source "chatgpt_memory" for just my picks, so I can confirm them on the card.',
   );
   return lines.join("\n");
 }

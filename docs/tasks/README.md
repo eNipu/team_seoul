@@ -107,6 +107,7 @@ Read `SCHEDULING.md` before any task in this group.
 | [T50](T50-actionable-home-setup.md) | Complete unfinished setup steps from Home | web | S | – | done |
 | [T53](T53-venn-overlap.md) | Venn Overlap: nearby plans with mutual introductions | web + backend | L | – | done |
 | [T54](T54-social-import-interests.md) | Social import previews and related interests | web + plugin + backend | M | T48, T52 | done |
+| [T55](T55-plugin-onboarding.md) | Three-step plugin onboarding and paginated memory review | plugin + widget + backend | M | T54 | done |
 
 T04 and T12 can start right away, in parallel with the backend tasks, because the shapes they
 render are fixed in `CONTRACTS.md`.

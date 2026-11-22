@@ -3,11 +3,12 @@ import { buildMemoryImportPrompt } from "../memoryImport";
 import { plural, type MemoryImportViewData } from "../types";
 import { EmptyNote, copyText, type ViewProps } from "./common";
 import { Icon, Illustration } from "./icons";
+import "./memoryImportPicker.css";
 
 type Phase = "choosing" | "sending" | "sent" | "manual";
 
 export default function MemoryImport({ data, bridge }: ViewProps<MemoryImportViewData>) {
-  const [picked, setPicked] = useState<Set<string>>(() => new Set(data.areas.filter((a) => a.selected).map((a) => a.value)));
+  const [picked, setPicked] = useState<Set<string>>(() => new Set());
   const [phase, setPhase] = useState<Phase>("choosing");
   const [prompt, setPrompt] = useState("");
   const [copied, setCopied] = useState(false);
@@ -76,10 +77,9 @@ export default function MemoryImport({ data, bridge }: ViewProps<MemoryImportVie
     <section className="panel">
       <div className="hero">
         <Illustration name="import" />
-        <h2>Bring your ChatGPT memory with you</h2>
+        <h2>Choose memories to preview</h2>
         <p className="muted small">
-          Choose what ChatGPT should look for. It lists what it remembers in the chat first — nothing reaches Venn until you
-          pick what to keep.
+          Venn can’t read your ChatGPT memory. Choose topics for a short preview in chat. Nothing is sent to Venn unless you select specific items there.
         </p>
       </div>
       {data.imported_count > 0 && (
@@ -99,8 +99,7 @@ export default function MemoryImport({ data, bridge }: ViewProps<MemoryImportVie
             <Icon name="chat" /> Check the chat
           </h3>
           <p className="small">
-            ChatGPT is listing what it remembers about you below. Tell it which ones to keep — for example “keep all” or “all
-            except 3 and 7” — and they will come back as a card for you to confirm.
+            Read the numbered suggestions a few at a time. Reply with the numbers you want, like “review 1 and 3,” ask for more, or stop. You’ll review your picks before anything is saved.
           </p>
           <div className="button-row">
             <button type="button" className="btn" onClick={chooseAgain}>
@@ -133,8 +132,8 @@ export default function MemoryImport({ data, bridge }: ViewProps<MemoryImportVie
       ) : (
         <>
           <fieldset className="area-picker" disabled={busy}>
-            <legend className="sr-only">Areas to look for</legend>
-            <ul className="list pick-list">
+            <legend className="section-title">Topics to preview</legend>
+            <ul className="list pick-list memory-import-topics">
               {data.areas.map((a) => {
                 const on = picked.has(a.value);
                 return (
@@ -162,7 +161,7 @@ export default function MemoryImport({ data, bridge }: ViewProps<MemoryImportVie
           <div className="sticky-bar">
             <button type="button" className="btn btn--primary btn--block" disabled={busy || count === 0} onClick={() => void preview()}>
               <Icon name="chat" size={18} />
-              {busy ? "Asking ChatGPT…" : "Preview my ChatGPT memory"}
+              {busy ? "Asking ChatGPT…" : `Preview in chat${count ? ` · ${plural(count, "topic", "topics")}` : ""}`}
             </button>
           </div>
           {count === 0 && (

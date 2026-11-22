@@ -30,6 +30,7 @@ from app.schemas.social import (
     ImportCandidateOut,
     ImportPeopleOut,
     InteractionOut,
+    LinkedInCandidate,
     PeopleImportView,
     PeopleListOut,
     PersonCandidate,
@@ -337,6 +338,7 @@ def _propose_import(
                 # Only the server-owned demo proposal sets this; source is untrusted.
                 "is_sample": is_sample,
                 "demo_channel": demo_channel,
+                "import_platform": demo_platform or ("linkedin" if isinstance(candidate, LinkedInCandidate) else None),
             }
         )
     if not items:
@@ -442,6 +444,7 @@ def import_people(
             notes=item.get("notes"),
             interests=list(item.get("interests") or []),
             is_sample=is_sample,
+            import_platform=item.get("import_platform"),
         )
         db.add(person)
         db.flush()

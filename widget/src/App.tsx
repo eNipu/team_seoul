@@ -15,6 +15,7 @@ import Reconnect from "./components/Reconnect";
 import Friend from "./components/Friend";
 import Welcome from "./components/Welcome";
 import PeopleImport from "./components/PeopleImport";
+import { InterestMatches } from "./components/InterestMatches";
 import PeopleSearch from "./components/PeopleSearch";
 import GroupPlan from "./components/GroupPlan";
 import Brief from "./components/Brief";
@@ -24,7 +25,7 @@ import ReplyCard, { SavedReplies } from "./components/Reply";
 import type { McpUiHostContext } from "@modelcontextprotocol/ext-apps";
 import { BrandMark, Icon, Illustration } from "./components/icons";
 import ErrorBanner from "./components/ErrorBanner";
-import { Spinner, type Nav } from "./components/common";
+import { ActionError, Spinner, useAction, type Nav } from "./components/common";
 
 const publicPreview = typeof window !== "undefined" && window.location.pathname === "/widget-preview";
 const inHost = typeof window !== "undefined" && window.parent !== window && !publicPreview;
@@ -76,6 +77,9 @@ function skeletonFor(hint: string | null | undefined): SkeletonKind {
     case "help":
     case "venn_reconnection_suggestions":
     case "reconnect":
+    case "venn_find_interest_matches":
+    case "interest_matches":
+    case "interest_matches_empty":
     case "venn_find_people":
     case "people_search":
     case "venn_propose_people_import":
@@ -105,6 +109,8 @@ function refreshCall(view: ViewData): { tool: string; args: Record<string, unkno
       return view.id ? { tool: "venn_view_friend", args: friendArg(view.kind, view.id) } : null;
     case "brief":
       return view.id ? { tool: "venn_meetup_brief", args: friendArg(view.kind, view.id) } : null;
+    case "interest_matches":
+      return { tool: "venn_find_interest_matches", args: {} };
     case "people_search":
       return view.query ? { tool: "venn_find_people", args: { query: view.query } } : null;
     case "help":
@@ -403,7 +409,10 @@ function renderView(
       return <MemoryReview key={key} data={view} bridge={bridge} nav={nav}
         onPreviewReview={publicPreview && bridge.isMock ? reportPreviewReview : undefined} />;
     case "memory_import":
-      return <MemoryImport key={key} data={view} bridge={bridge} nav={nav} />;
+      return <div key={key}>
+        <MemoryImport data={view} bridge={bridge} nav={nav} />
+        {bridge.isMock && <DemoMemoryHandoff nav={nav} />}
+      </div>;
     case "dashboard":
       return <Dashboard key={key} data={view} bridge={bridge} nav={nav} initialTab={tab} onTabChange={onTabChange} />;
     case "invite":
@@ -418,6 +427,11 @@ function renderView(
       return <Welcome key={key} data={view} bridge={bridge} nav={nav} />;
     case "people_import":
       return <PeopleImport key={key} data={view} bridge={bridge} nav={nav} />;
+    case "interest_matches":
+      return <InterestMatches key={key} matches={view.matches}
+        onRetry={() => nav.replaceView("venn_find_interest_matches", {})}
+        onCommonGround={(row) => nav.openView("venn_compare", friendArg(row.kind, row.id))}
+        onPlan={(row) => nav.openView("venn_suggest_activity", friendArg(row.kind, row.id))} />;
     case "people_search":
       return <PeopleSearch key={key} data={view} bridge={bridge} nav={nav} />;
     case "group_plan":
@@ -437,6 +451,19 @@ function renderView(
     case "answers":
       return <Answers key={key} data={view} bridge={bridge} nav={nav} />;
   }
+}
+
+function DemoMemoryHandoff({ nav }: { nav: Nav }) {
+  const action = useAction();
+  return <aside className="card">
+    <h3>Try the review card</h3>
+    <p className="muted small">There’s no chat in this preview. Use an example interest to try the next step. Nothing is saved until you approve it.</p>
+    <button type="button" className="btn" disabled={action.busy !== null}
+      onClick={() => void action.run("review", () => nav.openView("mock_preview_photo_memory", {}))}>
+      Review “Film photography”
+    </button>
+    <ActionError action={action} />
+  </aside>;
 }
 
 function Skeleton({ kind }: { kind: SkeletonKind }) {
