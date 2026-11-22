@@ -6,8 +6,8 @@ so the approval, ownership and visibility rules are identical. This file describ
 sign-in and the JSON API under `/api/v1`.
 
 What carries over between ChatGPT and the website: everything saved to Venn (approved memories, people,
-plans, follow-ups, connections). What does not: ChatGPT conversations and ChatGPT's own memory. Venn only
-ever holds what the user approved or typed in themselves.
+plans, follow-ups, connections). What does not: ChatGPT conversations and ChatGPT's own memory. Before an inferred memory joins the profile, Venn holds its candidates in an owner-scoped
+proposal for review. See the [consent flow](ARCHITECTURE.md#memory-consent-flow).
 
 ## Sign-in
 

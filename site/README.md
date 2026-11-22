@@ -1,7 +1,7 @@
 # Venn site
 
-The public landing page for Venn ("Venn. Connect your AI memories."), its Founding Circle waitlist, and the launch
-metrics page. A Next.js app (App Router) with its own small API and two tables in Postgres.
+The public landing page for Venn, its Founding Circle waitlist, and the launch
+metrics page. A Next.js app (App Router) with its own small API and a PostgreSQL database.
 
 | Path | What it is |
 | --- | --- |
@@ -11,7 +11,7 @@ metrics page. A Next.js app (App Router) with its own small API and two tables i
 | `app/api/visit/route.ts` | `POST` records one page view |
 | `proxy.ts` | Password check in front of `/metrics` (Next.js 16 calls middleware "proxy") |
 | `app/globals.css` | The page's own styles |
-| `app/venn-kit.css` | Copy of `widget/src/venn-kit.css`: tokens and card primitives shared with the ChatGPT widget. Do not edit here |
+| `app/venn-kit.css` | Site-owned palette, tokens and card primitives |
 | `components/HeroBackdrop.tsx` | What sits behind the join panel: still CSS circles first, then the 3D scene once the page is idle |
 | `components/VennScene.tsx` | The 3D scene: two glass spheres orbiting each other, built with three.js (MIT) |
 | `components/Motion.tsx` | Turns on the scroll reveals for elements marked `data-reveal` |
@@ -71,8 +71,8 @@ pass the password: `METRICS_PASSWORD=... node check.mjs --url https://<host>/`.
 | `ANALYTICS_SALT` | Optional secret mixed into visitor hashes. Falls back to `DATABASE_URL` |
 | `WAITLIST_VERSION` | `pair` (the default) or `open`: the waitlist a visitor gets without `?w=` in the URL |
 | `PORT` | Port for `npm run start` (Railway sets it) |
-| `WIDGET_PREVIEW_URL` | Absolute URL of the Venn demo iframe. Defaults to `https://app.joinvennai.com/widget-preview`. For local end-to-end checks use the local backend URL. |
-| `CHATGPT_PLUGIN_URL` | Verified, published ChatGPT directory listing. When absent the site offers the beta test connection. |
+| `WIDGET_PREVIEW_URL` | Widget origin used by preview checks. Defaults to `https://app.joinvennai.com/widget-preview`. For local end-to-end checks use the local backend URL. |
+| `NEXT_PUBLIC_CLARITY_ID`, `NEXT_PUBLIC_META_PIXEL_ID` | Override the measurement IDs bundled with the site. Script loading follows the effective analytics and advertising preferences. |
 
 `.env.example` lists them; copy it to `.env.local` for local work.
 
@@ -131,7 +131,7 @@ A new signup queues one receipt in the same transaction as the waitlist entry. E
 
 ## Analytics and `/metrics`
 
-First-party only: no third-party scripts, no cookies, nothing stored on the device for tracking.
+The metrics dashboard uses first-party events. Separately, the public site loads Microsoft Clarity when effective analytics consent allows it and Meta Pixel when effective ad consent allows it. Defaults depend on region and browser privacy settings. The browser stores consent preferences. See the [consent logic](lib/consent.ts) and [privacy page](app/privacy/page.tsx).
 
 - `lib/analytics.ts` records two events in `site_events`: `page_view` (from `components/PageView.tsx`) and
   `core_action_completed` (fired by the server when a new email joins the waitlist). Both carry the waitlist
@@ -163,7 +163,7 @@ Motion (`app/globals.css` › Motion) always plays into the finished page, so no
 or with reduced motion: the hero arrives line by line, the underline is drawn and the highlight swept in, and
 sections fade up the first time they scroll into view (`data-reveal="up"`, or `"group"` for children in turn).
 
-The landing page links to [How it works](/how-it-works) and hosts the weekly signal preview.
+The landing page links to the `/how-it-works` walkthrough and hosts the weekly signal preview.
 The old /chatgpt route redirects to that preview.
 
 On /how-it-works, the visitor selects sample memories, sends a simulated invite, accepts it as Maya,
@@ -207,11 +207,11 @@ Keep the page true when the product changes.
 | It never contacts anyone for you | Works | `README.md`, `plugin/skills/venn-social/SKILL.md` |
 | "Connect your AI memories." | Works for approved ChatGPT memories | `venn_import_chatgpt_memory`, memory review and save |
 | Review, accept, and find shared interests | Preview with a sample person | Memory review, invite redemption and acceptance, `venn_compare` |
-| "We only email you about your invite" | A promise the team must keep | `waitlist_signups` holds the emails. New signups queue a transactional receipt |
+| "We only email you about your invite" | A promise the team must keep | `waitlist_signups` holds the emails. New signups receive a transactional signup receipt |
 | "A confirmed place for both of you", "Your places in the Founding Circle are confirmed" | A promise the team must keep | `confirmed_at`. Whoever opens Venn to the list must honour it |
 | "Someone saved you a place" | Works | Shown only when the link exists and has room (`inviteHasRoom`) |
 | "You join with one person you know" | True of the pair version | A place stays pending until a +1 joins; `?w=open` has no such rule |
 | "Planned pricing at launch. Early access is free." | Pricing decision | `site/PRICING-DECISION.md`; billing is not live |
 | "Invited friends are always free" | Pricing decision | `site/PRICING-DECISION.md`; this must remain true when billing launches |
 
-The onboarding uses an example person. The waitlist collects email addresses. There is no privacy page yet (T17).
+The onboarding uses an example person. The waitlist collects email addresses. The site publishes its privacy notice at `/privacy`.
