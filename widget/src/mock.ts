@@ -69,6 +69,7 @@ import { firstName, parseView } from "./types";
 
 export const DEMO_VIEWS = [
   "memory_review",
+  "weekly_review",
   "dashboard",
   "invite",
   "activity_ideas",
@@ -594,13 +595,20 @@ const PEOPLE_PROPOSALS: ProposalSeed[] = [
 
 const proposalStore = new Map<string, MemoryReviewViewData>();
 
-function reviewView(source: ProposalSource, seeds: ProposalSeed[], proposalId: string): MemoryReviewViewData {
+const WEEKLY_PROPOSALS: ProposalSeed[] = [
+  { category: "WORK", title: "Launching our beta in Berlin", description: "We're opening early access next week.", tags: [], suggested_visibility: "PRIVATE" },
+  { category: "SOCIAL_GOAL", title: "Looking for a product designer", description: "I'm looking for someone who knows fintech.", tags: [], suggested_visibility: "PRIVATE" },
+  { category: "EXPERIENCE", title: "In Lisbon this weekend", description: "I'll be in Lisbon from Friday to Sunday.", tags: [], suggested_visibility: "PRIVATE" },
+];
+
+function reviewView(source: ProposalSource, seeds: ProposalSeed[], proposalId: string, weeklyUpdate = false): MemoryReviewViewData {
   const have = new Set(memories.map((m) => m.title.trim().toLowerCase()));
   const view: MemoryReviewViewData = {
     view: "memory_review",
     proposal_id: proposalId,
     expires_at: iso(1),
     source,
+    weekly_update: source === "conversation" && weeklyUpdate,
     proposals: seeds.slice(0, 30).map((p, index) => ({
       ...p,
       people: p.people ?? [],
@@ -1816,6 +1824,8 @@ export function mockInitialView(): ViewData | null {
       return { view: "saved_replies", replies: savedReplies };
     case "memory_review":
       return reviewView("conversation", DEMO_PROPOSALS, "prop_demo_1");
+    case "weekly_review":
+      return reviewView("conversation", WEEKLY_PROPOSALS, "prop_demo_weekly", true);
     case "preview_review":
       return reviewView("conversation", [{ ...DEMO_PROPOSALS[0], suggested_visibility: "PRIVATE" }], "prop_site_demo");
     case "memory_review_import":
@@ -1965,7 +1975,7 @@ export function createMockBridge(): HostBridge {
 
         case "venn_propose_memories": {
           const source: ProposalSource = args.source === "chatgpt_memory" ? "chatgpt_memory" : "conversation";
-          const given: Record<string, unknown>[] = Array.isArray(args.memories) ? args.memories : [];
+          const given: Record<string, unknown>[] = Array.isArray(args.suggested) ? args.suggested : [];
           const seeds: ProposalSeed[] = given.map((m) => ({
             category: (typeof m.category === "string" ? m.category : "PERSONAL_MEMORY") as MemoryCategory,
             title: String(m.title ?? ""),
@@ -1973,8 +1983,9 @@ export function createMockBridge(): HostBridge {
             tags: list(m.tags) ?? [],
             suggested_visibility: (typeof m.suggested_visibility === "string" ? m.suggested_visibility : "PRIVATE") as Visibility,
           }));
-          const fallback = source === "chatgpt_memory" ? IMPORT_PROPOSALS : DEMO_PROPOSALS;
-          return ok(reviewView(source, seeds.length > 0 ? seeds : fallback, nextId("prop")));
+          const weeklyUpdate = args.weekly_update === true;
+          const fallback = source === "chatgpt_memory" ? IMPORT_PROPOSALS : weeklyUpdate ? WEEKLY_PROPOSALS : DEMO_PROPOSALS;
+          return ok(reviewView(source, seeds.length > 0 ? seeds : fallback, nextId("prop"), weeklyUpdate));
         }
 
         case "venn_save_memories": {
@@ -2016,7 +2027,14 @@ export function createMockBridge(): HostBridge {
               peopleAdded.push(person);
             }
           }
+          proposalStore.delete(String(args.proposal_id));
           return ok({ saved, count: saved.length, people_added: peopleAdded });
+        }
+
+        case "venn_discard_memory_proposal": {
+          const proposalId = String(args.proposal_id);
+          proposalStore.delete(proposalId);
+          return ok({ discarded: true, proposal_id: proposalId });
         }
 
         case "venn_update_memory": {
@@ -2363,8 +2381,8 @@ export function createMockBridge(): HostBridge {
           return fail(`UNKNOWN_TOOL: the demo doesn't implement ${name}`);
       }
     },
-    async updateModelContext(message) {
-      console.info("[mock] updateModelContext:", message);
+    async updateModelContext(message, structuredContent) {
+      console.info("[mock] updateModelContext:", message, structuredContent);
       return true;
     },
     async sendMessage(message) {

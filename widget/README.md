@@ -39,6 +39,7 @@ mock bridge (`src/mock.ts`) instead of the ext-apps connection. It also works st
   `dashboard_plans` has two saved plans; `memory_review_people` is a review card whose items name people,
   two of them adding new people)
 - `&tab=profile|memories|friends` opens a dashboard tab
+- `?view=weekly_review` shows three editable weekly updates and the audience picker.
 - `?view=reply_advice|reply_checklist|reply_draft|reply_discussion|reply_thread|saved_replies` shows the reply layouts and the saved-reply list
 - `&theme=dark|light` forces a theme (default: `prefers-color-scheme`)
 - `&flaky=1` makes every other tool call fail, so you can test the error banner and Retry
@@ -68,7 +69,7 @@ roughly matches the incoming view. A tool result with `isError` shows an error b
 | --- | --- | --- |
 | `reply` | `venn_show_reply` | Advice, steps, a copyable draft, a discussion with **Reply in ChatGPT**, or a thread recap with ordered entries. **Save privately** keeps the displayed card. |
 | `saved_replies` | `venn_saved_replies` | Open or delete your saved replies. Also available through the bookmark button in the header. |
-| `memory_review` | `venn_propose_memories` | Proposed memories (up to 30) with a checkbox, editable title/description, visibility select. More than 3 items adds "N of M selected", **Select all** / **None** and a sticky action bar. Items with `already_saved` start unticked with an "Already in Venn" badge. With `source: "chatgpt_memory"` the card is titled "From your ChatGPT memory" and the success state offers **Open my Venn**. Nothing is saved until **Save selected**. |
+| `memory_review` | `venn_propose_memories` | Select drafts and set visibility for the selected updates. **Edit** opens per-item wording and visibility controls. More than 3 items adds bulk selection and a sticky action bar. Previously saved drafts start unchecked. `weekly_update: true` and `source: "chatgpt_memory"` have their own headings. The confirmation lists the saved records and offers **Open my Venn**. |
 | `memory_import` | `venn_import_chatgpt_memory` | "Bring your ChatGPT memory with you": one checkbox per area, the always-excluded note, **Preview my ChatGPT memory** (sends a prompt into the chat), then "Check the chat" with **Choose again**, or the prompt to copy when the host refuses the message. Nothing is sent to Venn from this card. |
 | `dashboard` | `venn_show_dashboard` | "Finish setting up" card above the tabs while a set-up step is open (see "Set-up"). Tabs **Profile** (edit name/bio, at-a-glance tiles for memories / friends / requests that open the matching tab, goals, interests), **Memories** ("Sources" row for ChatGPT memory with **Import from ChatGPT** / **Import more**, search, grouped by category, "From ChatGPT" badge, edit, delete), **Friends** (search "Who do I know who…", invite, reconnect, quick actions **Import friends** / **Play a quiz** / **Plan a group hangout** (pick 2 to 6 friends), pending requests, "On Venn", "Private notes", add a person). |
 | `welcome` | `venn_show_dashboard` (new user) | Start of set-up: hero, the three set-up steps as a numbered path, and inside step 1 the goal chips (max 6), **Get started** (primary) and **Import my ChatGPT memory** (secondary). |
@@ -185,8 +186,9 @@ or after an action that returns a dashboard).
 
 | Trigger | Tool | Arguments | Expected `structuredContent` |
 | --- | --- | --- | --- |
-| Save selected | `venn_save_memories` | `{ proposal_id, approvals: [{ index, visibility, title, description }] }` | `{ saved: Memory[], count }` |
-| Back to dashboard; after accepting a request; **Open my Venn** (after an import) | `venn_show_dashboard` | `{}` | `dashboard` view |
+| Approve selected updates | `venn_save_memories` | `{ proposal_id, approvals: [{ index, visibility, title, description }] }` | `{ saved: Memory[], count, people_added }` |
+| Discard memory draft | `venn_discard_memory_proposal` | `{ proposal_id }` | `{ discarded: true, proposal_id }` |
+| Back to dashboard; after accepting a request; **Open my Venn** (after a memory review) | `venn_show_dashboard` | `{}` | `dashboard` view |
 | Header **Help** (every view except `help`) | `venn_help` | `{}` | `help` view |
 | Set-up → Invite a friend | `venn_create_invite` | `{}` | `invite` view |
 | Welcome → Import my ChatGPT memory; Set-up → Import from ChatGPT; Memories tab → Import from ChatGPT / Import more | `venn_import_chatgpt_memory` | `{}` | `memory_import` view |

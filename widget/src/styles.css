@@ -588,9 +588,6 @@ select:disabled {
 input[aria-invalid="true"] {
   border-color: var(--danger);
 }
-.memory-item--off {
-  opacity: 0.65;
-}
 .search {
   position: relative;
 }
@@ -1222,23 +1219,6 @@ input[type="datetime-local"] {
   /* Keeps Discard / Save reachable while a long review list scrolls. */
   z-index: 1;
   padding-top: var(--s-4);
-}
-
-/* Memory review: header row that wraps on narrow cards */
-.memory-item__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--s-1) var(--s-2);
-}
-.memory-item__badges {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 6px;
-  min-width: 0;
-  margin-left: auto;
 }
 
 /* ChatGPT memory import */

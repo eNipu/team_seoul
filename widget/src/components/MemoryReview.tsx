@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { HostBridge } from "../mcp/client";
 import {
   CATEGORY_LABELS,
@@ -15,7 +15,8 @@ import {
 } from "../types";
 import ErrorBanner from "./ErrorBanner";
 import { ActionError, PeopleChips, useAction, type Nav } from "./common";
-import { CATEGORY_ICONS, Icon, Illustration } from "./icons";
+import { Icon, Illustration } from "./icons";
+import "./memoryReview.css";
 
 interface Props {
   data: MemoryReviewViewData;
@@ -24,16 +25,58 @@ interface Props {
   onPreviewReview?: (review: PreviewReview | null) => void;
 }
 
-/** Above this many items the card shows the selection count and Select all / None. */
 const BULK_CONTROLS_ABOVE = 3;
+const AUDIENCE_LABELS: Record<Visibility, string> = {
+  PRIVATE: "Only you",
+  SHARED_WITH_CONNECTIONS: "Connections",
+  PUBLIC_PROFILE: "Public profile",
+};
 
-type Phase = "editing" | "saving" | "saved" | "discarded";
+type Phase = "editing" | "saving" | "discarding" | "saved" | "discarded";
 type ReviewRecord = Pick<Memory, "category" | "title" | "description" | "tags" | "visibility">;
-type Draft = ReviewRecord & { index: number; checked: boolean };
-export type PreviewReview = { phase: Phase; records: ReviewRecord[] };
+type Draft = ReviewRecord & { index: number; checked: boolean; editing?: boolean };
+export type PreviewReview = { phase: Exclude<Phase, "discarding">; records: ReviewRecord[] };
+
+function ReviewProgress({ saved }: { saved: boolean }) {
+  return (
+    <header className="review-progress">
+      <strong>Inside ChatGPT, with Venn</strong>
+      <span className="muted small">{saved ? 2 : 1} of 2</span>
+      <div className="review-progress__track" data-saved={saved} aria-hidden="true"><span /><span /></div>
+    </header>
+  );
+}
+
+function ReviewMap({ count, visibility }: { count: number; visibility: Visibility | null }) {
+  const audience = count === 0 ? "No one" : visibility ? AUDIENCE_LABELS[visibility] : "Mixed visibility";
+  return (
+    <div className="review-map" aria-hidden="true">
+      <span className="review-map__count">{plural(count, "selected update", "selected updates")}</span>
+      <div className="review-map__nodes">
+        <div className="review-map__node">
+          <span className="review-map__icon review-map__icon--you"><Icon name="plus" size={24} /></span>
+          <strong>You</strong>
+        </div>
+        <div className="review-map__node">
+          <span className="review-map__icon review-map__icon--venn">
+            <Icon name="venn" size={28} />
+            <span className="review-map__signal" data-selected={count > 0} />
+          </span>
+          <strong>Venn</strong>
+        </div>
+        <div className="review-map__node">
+          <span className="review-map__icon"><Icon name={visibility === "PRIVATE" || !count ? "lock" : "users"} size={22} /></span>
+          <strong>{audience}</strong>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function MemoryReview({ data, bridge, nav, onPreviewReview }: Props) {
   const action = useAction();
+  const formId = useId();
+  const outcome = useRef<HTMLHeadingElement>(null);
   const fromChatGpt = data.source === "chatgpt_memory";
   const [drafts, setDrafts] = useState<Draft[]>(() =>
     data.proposals.map((p) => ({
@@ -47,7 +90,7 @@ export default function MemoryReview({ data, bridge, nav, onPreviewReview }: Pro
     })),
   );
   const [phase, setPhase] = useState<Phase>("editing");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; action: "save" | "discard" } | null>(null);
   const [saved, setSaved] = useState<Memory[]>([]);
   const [peopleAdded, setPeopleAdded] = useState<Person[]>([]);
 
@@ -55,7 +98,7 @@ export default function MemoryReview({ data, bridge, nav, onPreviewReview }: Pro
     if (!onPreviewReview) return;
     const records = phase === "saved" ? saved : phase === "discarded" ? [] : drafts.filter((draft) => draft.checked);
     onPreviewReview({
-      phase,
+      phase: phase === "discarding" ? "editing" : phase,
       records: records.map(({ category, title, description, tags, visibility }) => ({
         category, title: title.trim(), description: description.trim(), tags, visibility,
       })),
@@ -63,26 +106,35 @@ export default function MemoryReview({ data, bridge, nav, onPreviewReview }: Pro
   }, [drafts, phase, saved, onPreviewReview]);
 
   useEffect(() => () => onPreviewReview?.(null), [onPreviewReview]);
+  useEffect(() => {
+    if (phase === "saved" || phase === "discarded") outcome.current?.focus();
+  }, [phase]);
 
   const update = (index: number, patch: Partial<Draft>) =>
     setDrafts((ds) => ds.map((d) => (d.index === index ? { ...d, ...patch } : d)));
 
   const setAll = (checked: boolean) =>
     setDrafts((ds) =>
-      ds.map((d) => ({
-        ...d,
-        // Select all skips what Venn already holds, like the people import card.
-        checked: checked && !data.proposals.some((p) => p.index === d.index && p.already_saved),
-      })),
+      ds.map((d, i) => ({ ...d, checked: checked && !data.proposals[i].already_saved })),
     );
 
   const selected = drafts.filter((d) => d.checked);
-  const invalid = selected.some((d) => d.title.trim() === "");
+  const invalid = selected.some((d) => !d.title.trim() || !d.description.trim());
   const expiresAt = data.expires_at ? new Date(data.expires_at) : null;
-  const expired = !!expiresAt && !Number.isNaN(expiresAt.getTime()) && expiresAt.getTime() < Date.now();
+  const hasExpiry = expiresAt !== null && !Number.isNaN(expiresAt.getTime());
+  const expired = hasExpiry && expiresAt.getTime() <= Date.now();
+  const busy = phase === "saving" || phase === "discarding";
+  const firstVisibility = selected[0]?.visibility;
+  const visibility = firstVisibility && selected.every((draft) => draft.visibility === firstVisibility)
+    ? firstVisibility
+    : null;
+
+  function setAudience(visibility: Visibility) {
+    setDrafts((items) => items.map((item) => item.checked ? { ...item, visibility } : item));
+  }
 
   async function save() {
-    if (selected.length === 0 || invalid) return;
+    if (busy || selected.length === 0 || invalid || expired) return;
     setPhase("saving");
     setError(null);
     const res = await bridge.callTool("venn_save_memories", {
@@ -95,52 +147,60 @@ export default function MemoryReview({ data, bridge, nav, onPreviewReview }: Pro
       })),
     });
     if (!res.ok) {
-      setError(res.errorText);
-      setPhase("editing"); // keep all edits so the user can retry
+      setError({ message: res.errorText, action: "save" });
+      setPhase("editing");
       return;
     }
     const result = parseSaveMemories(res.data);
     setSaved(result.saved);
     setPeopleAdded(result.people_added);
     setPhase("saved");
-    const titles = result.saved.map((m) => m.title).join(", ");
     const added = result.people_added.map((p) => p.name);
+    const records = result.saved.map(({ memory_id, title, visibility }) => ({ memory_id, title, visibility }));
     void bridge.updateModelContext(
-      `Saved ${result.count} memories to Venn profile: ${titles}${added.length > 0 ? `. Added to the user's people: ${added.join(", ")}` : ""}`,
+      `Venn saved ${plural(result.count, "memory", "memories")} from the user's approval on the card: ${records.map((record) => record.title).join(", ")}.`,
+      { saved: records, count: result.count, people_added: added },
     );
   }
 
-  function discard() {
+  async function discard() {
+    if (busy) return;
+    setPhase("discarding");
+    setError(null);
+    const res = await bridge.callTool("venn_discard_memory_proposal", { proposal_id: data.proposal_id });
+    if (!res.ok) {
+      setError({ message: res.errorText, action: "discard" });
+      setPhase("editing");
+      return;
+    }
     setPhase("discarded");
     void bridge.updateModelContext("User discarded the proposed memories.");
   }
 
   if (phase === "saved") {
     return (
-      <section className="panel">
+      <section className="memory-review" aria-labelledby={`${formId}-outcome`}>
+        <ReviewProgress saved />
         <ActionError action={action} />
         <div className="success">
-          <span className="success__icon" aria-hidden="true">
-            <Icon name="check" size={22} />
-          </span>
-          <h2 role={fromChatGpt ? "status" : undefined}>
-            {fromChatGpt
-              ? `${plural(saved.length, "memory", "memories")} imported from ChatGPT`
-              : `Saved ${saved.length} ${saved.length === 1 ? "memory" : "memories"}`}
+          <span className="success__icon" aria-hidden="true"><Icon name="check" size={22} /></span>
+          <h2 id={`${formId}-outcome`} ref={outcome} tabIndex={-1}>
+            {fromChatGpt ? `${plural(saved.length, "memory", "memories")} imported from ChatGPT`
+              : `Saved ${plural(saved.length, "update", "updates")} to Venn`}
           </h2>
         </div>
-          <ul className="list">
-            {saved.map((m) => (
-              <li key={m.memory_id} className="card">
-                <div className="row row--between">
-                  <strong>{m.title}</strong>
-                  <span className={`badge badge--vis-${m.visibility.toLowerCase()}`}>{VISIBILITY_LABELS[m.visibility]}</span>
-                </div>
-                {m.description && <p className="muted small">{m.description}</p>}
-                <PeopleChips people={m.people} />
-              </li>
-            ))}
-          </ul>
+        <ul className="list">
+          {saved.map((m) => (
+            <li key={m.memory_id} className="card">
+              <div className="row row--between">
+                <strong>{m.title}</strong>
+                <span className={`badge badge--vis-${m.visibility.toLowerCase()}`}>{VISIBILITY_LABELS[m.visibility]}</span>
+              </div>
+              {m.description && <p className="muted small">{m.description}</p>}
+              <PeopleChips people={m.people} />
+            </li>
+          ))}
+        </ul>
         {peopleAdded.length > 0 && (
           <p className="logged-row" role="status">
             <Icon name="user-plus" size={16} />
@@ -149,183 +209,152 @@ export default function MemoryReview({ data, bridge, nav, onPreviewReview }: Pro
             </span>
           </p>
         )}
-        <p className="muted small">You can review or delete these any time from your Venn dashboard.</p>
-        {fromChatGpt && (
-          <div className="sticky-bar">
-            <button
-              type="button"
-              className="btn btn--primary btn--block"
-              disabled={action.busy !== null}
-              onClick={() => void action.run("dashboard", () => nav.openView("venn_show_dashboard", {}))}
-            >
-              {action.busy === "dashboard" ? "Loading…" : "Open my Venn"}
-            </button>
-          </div>
-        )}
+        <p className="muted small">You can edit visibility or delete an update any time from your Venn dashboard.</p>
+        <button
+          type="button"
+          className="btn btn--primary btn--block"
+          disabled={action.busy !== null}
+          onClick={() => void action.run("dashboard", () => nav.openView("venn_show_dashboard", {}))}
+        >
+          {action.busy === "dashboard" ? "Loading…" : "Open my Venn"}
+        </button>
       </section>
     );
   }
 
   if (phase === "discarded") {
     return (
-      <section className="panel empty">
+      <section className="memory-review empty" aria-labelledby={`${formId}-outcome`}>
         <Illustration name="done" />
-        <p className="empty__title">Discarded</p>
+        <h2 id={`${formId}-outcome`} ref={outcome} tabIndex={-1}>Draft discarded</h2>
         <p className="muted">Nothing was saved to your profile.</p>
       </section>
     );
   }
 
-  const busy = phase === "saving";
+  const title = fromChatGpt ? "From your ChatGPT memory"
+    : data.weekly_update ? "Your week, drafted by your AI."
+    : "Review your Venn updates";
+  const saveLabel = visibility === "SHARED_WITH_CONNECTIONS" ? `Share ${selected.length} with connections`
+    : visibility === "PUBLIC_PROFILE" ? `Save ${selected.length} to your public profile`
+    : visibility === "PRIVATE" ? `Save ${selected.length} privately`
+    : `Save selected (${selected.length})`;
 
   return (
-    <section className="panel">
-      <h2>{fromChatGpt ? "From your ChatGPT memory" : "Review what Venn learned"}</h2>
-      {fromChatGpt ? (
-        <p className="notice">
-          <Icon name="shield" size={18} />
-          <span>
-            ChatGPT picked these from what it remembers about you. <strong>Nothing is saved until you confirm.</strong>
-          </span>
-        </p>
-      ) : (
-        <p className="notice">
-          <Icon name="shield" size={18} />
-          <span>
-            <strong>Nothing is saved until you approve it.</strong> Uncheck anything you don't want remembered, edit the
-            wording, and choose who can see each memory.
-          </span>
-        </p>
-      )}
-      {expiresAt && !Number.isNaN(expiresAt.getTime()) && (
-        <p className={`small ${expired ? "text-danger" : "muted"}`}>
-          {expired ? "This proposal has expired — ask Venn again to save these." : `Review before ${formatDate(data.expires_at)}`}
-        </p>
-      )}
-
-      {error && <ErrorBanner message={error} onRetry={save} onDismiss={() => setError(null)} busy={busy} />}
-
-      {drafts.length === 0 ? (
-        <p className="muted">There are no memories to review.</p>
-      ) : (
-        <>
-          {drafts.length > BULK_CONTROLS_ABOVE && (
-            <div className="pick-bar">
-              <span className="pick-bar__count" role="status">
-                {selected.length} of {drafts.length} selected
-              </span>
-              <button type="button" className="btn btn--ghost btn--small" disabled={busy} onClick={() => setAll(true)}>
-                Select all
-              </button>
-              <button type="button" className="btn btn--ghost btn--small" disabled={busy} onClick={() => setAll(false)}>
-                None
-              </button>
-            </div>
+    <section className="memory-review" aria-labelledby={`${formId}-title`} aria-busy={busy}>
+      <ReviewProgress saved={false} />
+      <div className="memory-review__layout">
+        <div className="memory-review__intro">
+          <h2 id={`${formId}-title`}>{title}</h2>
+          <p className="muted">Keep what you want, edit the wording, and choose who can see each update.</p>
+        </div>
+        <ReviewMap count={selected.length} visibility={visibility} />
+        <div className="memory-review__form">
+          {expired && <p className="text-danger">This proposal has expired. Ask Venn for a new draft.</p>}
+          {error && (
+            <ErrorBanner message={error.message} onRetry={error.action === "discard" ? discard : save}
+              onDismiss={() => setError(null)} busy={busy} />
           )}
-        <ul className="list">
-          {data.proposals.map((p) => {
-            const d = drafts.find((x) => x.index === p.index)!;
-            const id = `mem-${p.index}`;
-            return (
-              <li key={p.index} className={`card memory-item ${d.checked ? "" : "memory-item--off"}`}>
-                <div className="memory-item__head">
-                  <label className="check">
-                    <input
-                      type="checkbox"
-                      checked={d.checked}
-                      disabled={busy}
-                      onChange={(e) => update(p.index, { checked: e.target.checked })}
-                    />
-                    <span>{d.checked ? "Keep" : "Skip"}</span>
-                  </label>
-                  <span className="memory-item__badges">
-                    {p.already_saved && <span className="badge badge--on">Already in Venn</span>}
-                    <span className={`badge badge--cat cat--${p.category.toLowerCase()}`}>
-                      <Icon name={CATEGORY_ICONS[p.category]} size={14} />
-                      {CATEGORY_LABELS[p.category]}
-                    </span>
-                  </span>
+          {drafts.length === 0 ? <p className="muted">There are no memories to review.</p> : (
+            <>
+              {drafts.length > BULK_CONTROLS_ABOVE && (
+                <div className="pick-bar">
+                  <span className="pick-bar__count" role="status">{selected.length} of {drafts.length} selected</span>
+                  <button type="button" className="btn btn--ghost" disabled={busy} onClick={() => setAll(true)}>Select all</button>
+                  <button type="button" className="btn btn--ghost" disabled={busy} onClick={() => setAll(false)}>None</button>
                 </div>
-
-                <label className="field" htmlFor={`${id}-title`}>
-                  <span className="field__label">Title</span>
-                  <input
-                    id={`${id}-title`}
-                    type="text"
-                    value={d.title}
-                    maxLength={200}
-                    disabled={busy || !d.checked}
-                    onChange={(e) => update(p.index, { title: e.target.value })}
-                  />
-                </label>
-                <label className="field" htmlFor={`${id}-desc`}>
-                  <span className="field__label">Description</span>
-                  <textarea
-                    id={`${id}-desc`}
-                    rows={2}
-                    value={d.description}
-                    maxLength={2000}
-                    disabled={busy || !d.checked}
-                    onChange={(e) => update(p.index, { description: e.target.value })}
-                  />
-                </label>
-                <label className="field" htmlFor={`${id}-vis`}>
-                  <span className="field__label">Who can see this</span>
-                  <select
-                    id={`${id}-vis`}
-                    value={d.visibility}
-                    disabled={busy || !d.checked}
-                    onChange={(e) => update(p.index, { visibility: e.target.value as Visibility })}
-                  >
-                    {VISIBILITIES.map((v) => (
-                      <option key={v} value={v}>
-                        {VISIBILITY_LABELS[v]}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                {p.tags.length > 0 && (
-                  <div className="chips">
-                    {p.tags.map((t, i) => (
-                      <span key={`${t}-${i}`} className="chip chip--small">
-                        #{t}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <PeopleChips people={p.people} />
-                {p.new_people.length > 0 && (
-                  <p className="also-adds">
-                    <Icon name="user-plus" size={16} />
-                    <span>
-                      Also adds <strong>{joinNames(p.new_people)}</strong> to your people
-                      <span className="muted"> · as {p.new_people.length === 1 ? "a private note" : "private notes"} only you can see</span>
-                    </span>
-                  </p>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-        </>
-      )}
-
-      {invalid && <p className="small text-danger">Each selected memory needs a title.</p>}
-
-      <div className={`actions ${drafts.length > BULK_CONTROLS_ABOVE ? "sticky-bar sticky-bar--actions" : ""}`}>
-        <button type="button" className="btn btn--ghost" onClick={discard} disabled={busy}>
-          Discard
-        </button>
-        <button
-          type="button"
-          className="btn btn--primary"
-          onClick={save}
-          disabled={busy || selected.length === 0 || invalid}
-        >
-          <Icon name="check" size={18} />
-          {busy ? "Saving…" : `Save selected (${selected.length})`}
-        </button>
+              )}
+              <ul className="list">
+                {drafts.map((draft, i) => {
+                  const proposal = data.proposals[i];
+                  const id = `${formId}-mem-${draft.index}`;
+                  return (
+                    <li key={draft.index} className="review-choice" data-checked={draft.checked}>
+                      <label className="review-choice__label">
+                        <input type="checkbox" checked={draft.checked} disabled={busy}
+                          aria-labelledby={`${id}-label`} aria-describedby={`${id}-description`}
+                          onChange={(e) => update(draft.index, { checked: e.target.checked })} />
+                        <span>
+                          <span className="review-choice__category">{CATEGORY_LABELS[draft.category]}</span>
+                          <strong id={`${id}-label`}>{draft.title || "Untitled update"}</strong>
+                          <span className="review-choice__description" id={`${id}-description`}>{draft.description}</span>
+                          {proposal.already_saved && <span className="badge badge--on">Already in Venn</span>}
+                          {draft.checked && !visibility && <span className="badge">{AUDIENCE_LABELS[draft.visibility]}</span>}
+                        </span>
+                      </label>
+                      <button type="button" className="review-choice__edit" disabled={busy}
+                        aria-label={`Edit ${draft.title || "untitled update"}`} aria-expanded={!!draft.editing}
+                        aria-controls={`${id}-fields`} onClick={() => update(draft.index, { editing: !draft.editing })}>
+                        Edit
+                      </button>
+                      <div className="review-choice__fields" id={`${id}-fields`} hidden={!draft.editing}>
+                        <label className="field">
+                          <span className="field__label">Title</span>
+                          <input id={`${id}-title`} type="text" value={draft.title} maxLength={120}
+                            disabled={busy || !draft.checked} onChange={(e) => update(draft.index, { title: e.target.value })} />
+                        </label>
+                        <label className="field">
+                          <span className="field__label">Description</span>
+                          <textarea rows={2} value={draft.description} maxLength={500}
+                            disabled={busy || !draft.checked} onChange={(e) => update(draft.index, { description: e.target.value })} />
+                        </label>
+                        <label className="field">
+                          <span className="field__label">Who can see this</span>
+                          <select value={draft.visibility} disabled={busy || !draft.checked}
+                            onChange={(e) => update(draft.index, { visibility: e.target.value as Visibility })}>
+                            {VISIBILITIES.map((v) => <option key={v} value={v}>{VISIBILITY_LABELS[v]}</option>)}
+                          </select>
+                        </label>
+                        {draft.tags.length > 0 && (
+                          <div className="chips">
+                            {draft.tags.map((tag, j) => <span key={`${tag}-${j}`} className="chip chip--small">#{tag}</span>)}
+                          </div>
+                        )}
+                      </div>
+                      {(proposal.people.length > 0 || proposal.new_people.length > 0) && (
+                        <div className="review-choice__people">
+                          <PeopleChips people={proposal.people} />
+                          {proposal.new_people.length > 0 && (
+                            <p className="also-adds">
+                              <Icon name="user-plus" size={16} />
+                              <span>Also adds <strong>{joinNames(proposal.new_people)}</strong> to your people as {proposal.new_people.length === 1 ? "a private note" : "private notes"}.</span>
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+              <fieldset className="review-audience" disabled={busy || selected.length === 0}>
+                <legend>Who can see selected updates</legend>
+                <div className="review-audience__options">
+                  {VISIBILITIES.map((v) => (
+                    <label key={v}>
+                      <input name={`${formId}-audience`} type="radio" value={v}
+                        checked={visibility === v} onChange={() => setAudience(v)} />
+                      <span>{AUDIENCE_LABELS[v]}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            </>
+          )}
+          {invalid && <p className="small text-danger">Each selected update needs a title and description.</p>}
+          <div className={`memory-review__actions${drafts.length > BULK_CONTROLS_ABOVE ? " sticky-bar sticky-bar--actions" : ""}`}>
+            <button type="button" className="btn btn--primary btn--block" onClick={save}
+              disabled={busy || expired || selected.length === 0 || invalid}>
+              {phase === "saving" ? "Saving…" : saveLabel}
+            </button>
+            <button type="button" className="btn btn--ghost" onClick={discard} disabled={busy}>
+              {phase === "discarding" ? "Discarding…" : "Discard"}
+            </button>
+          </div>
+        </div>
       </div>
+      <p className="memory-review__foot muted small">
+        Venn saves only the updates you approve.{hasExpiry && !expired && ` Review before ${formatDate(data.expires_at)}.`}
+      </p>
     </section>
   );
 }

@@ -85,9 +85,9 @@ stored: each step is derived from the data it produces.
 
 | Tool | Args | Scope | | Returns |
 | --- | --- | --- | --- | --- |
-| `venn_propose_memories` | `text?` (≤4000), `suggested?[]` (`{category, title, description, tags}`; ≤8, or ≤30 for an import), `source?` (`conversation` default \| `chatgpt_memory`) | memories.write | W, UI | `{view: "memory_review", proposal_id, expires_at, source, proposals[{index, category, title, description, tags, suggested_visibility, already_saved}], note}` — **saves nothing**. `already_saved`: the user already has a memory with that title |
+| `venn_propose_memories` | `text?` (≤4000), `suggested?[]` (`{category, title, description, tags}`; ≤8, or ≤30 for an import), `source?` (`conversation` default \| `chatgpt_memory`), `weekly_update?` | memories.write | W, UI | `{view: "memory_review", proposal_id, expires_at, source, weekly_update?, proposals[{index, category, title, description, tags, suggested_visibility, already_saved}], note}` — creates a draft for approval. `already_saved` means the user already has a memory with that title. |
 | `venn_import_chatgpt_memory` | – | memories.read | R, UI | `{view: "memory_import", areas[{value, label, description, selected}], always_excluded, imported_count, max_items, note}` — a chooser card; takes no data and saves nothing (see below) |
-| `venn_save_memories` | `proposal_id`, `approvals[{index, visibility?, title?, description?}]` | memories.write | W | `{saved: MemoryOut[], count}` |
+| `venn_save_memories` | `proposal_id`, `approvals[{index, visibility?, title?, description?}]` | memories.write | W | `{saved: MemoryOut[], count, people_added}` |
 | `venn_discard_memory_proposal` | `proposal_id` | memories.write | W | `{discarded, proposal_id}` |
 | `venn_list_memories` | `category?`, `limit?` (≤200) | memories.read | R | `{memories: MemoryOut[], count}` |
 | `venn_search_memories` | `query` (2–200 chars), `limit?` (≤50, default 10) | memories.read | R | `{memories: MemoryOut[], count}` — own memories only, best match first; every word must match (title/tags/category weigh more than description) |
@@ -98,6 +98,11 @@ stored: each step is derived from the data it produces.
 `source` is `"chatgpt_memory"` for imported memories, otherwise `null`. Categories: `INTEREST`,
 `DISLIKE`, `PREFERENCE`, `EXPERIENCE`, `WORK`, `PERSONAL_MEMORY`, `SOCIAL_GOAL`,
 `RELATIONSHIP_CONTEXT`.
+
+For weekly updates, set `weekly_update: true` and pass `suggested` candidates based on this
+conversation. The card starts private. Approving it saves the selected records with their chosen
+visibility and returns them. On hosts that support model context updates, the widget passes back
+the saved IDs, titles, and visibilities.
 
 ### Importing from ChatGPT memory
 
