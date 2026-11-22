@@ -19,7 +19,7 @@ def test_new_account_starts_with_all_three_steps_open(alice):
     assert view["view"] == "welcome"
     assert [s["key"] for s in view["setup"]] == ["about_you", "your_people", "connect"]
     assert steps(view) == {"about_you": False, "your_people": False, "connect": False}
-    assert [s["title"] for s in view["setup"]] == ["Connect your AI memories", "Add your person", "Send the spark"]
+    assert [s["title"] for s in view["setup"]] == ["Connect your AI memories", "Import contacts", "Invite someone"]
     assert all(s["title"] and s["description"] for s in view["setup"])
     assert all(len(s["description"].split()) <= 8 for s in view["setup"])
 
@@ -46,7 +46,7 @@ def test_steps_are_ticked_off_by_what_the_user_has_done(alice):
     alice.ok("venn_add_person", name="Maya")
     assert steps(alice.ok("venn_show_dashboard")) == {"about_you": True, "your_people": True, "connect": False}
     said = text(alice, "venn_show_dashboard")
-    assert "Step 2 of 3" in said and "venn_create_invite" in said  # send the spark comes next
+    assert "Step 2 of 3" in said and "venn_create_invite" in said  # invite someone is offered too
 
     alice.ok("venn_create_invite")
     view = alice.ok("venn_show_dashboard")
@@ -87,7 +87,9 @@ def test_help_card(alice):
     assert view["view"] == "help"
     assert view["display_name"] == "Alice"
     keys = [t["key"] for t in view["topics"]]
-    assert keys == ["setup", "memories", "people", "connect", "stay_close", "quiz"]
+    assert keys == ["setup", "memories", "people", "connect", "stay_close"]
+    examples = [e for t in view["topics"] for e in t["examples"]]
+    assert not any("quiz" in e.lower() or "ask a friend" in e.lower() for e in examples)
     for topic in view["topics"]:
         assert topic["title"] and topic["description"]
         assert 1 <= len(topic["examples"]) <= 4
@@ -130,7 +132,7 @@ def test_help_examples_are_requests_the_server_instructions_route(alice):
         "venn_propose_people_import",
         "venn_preview_demo_people_import",
         "venn_create_invite",
-        "venn_start_quiz",
+        "venn_whats_new",
         "venn_find_people",
     ):
         assert tool in instructions
@@ -147,3 +149,15 @@ def test_instructions_start_with_a_question_and_state_the_boundary(client):
         assert tool in instructions, tool
     assert "never sends anything" in instructions
     assert "NOT synced" in instructions
+
+
+def test_instructions_surface_matched_signals_in_plain_text(client):
+    instructions = client.app_state.mcp.instructions
+    assert "venn_whats_new" in instructions
+    assert "Btw, Maya is in Berlin right now" in instructions
+    # No schedule, no drafts, no proactive quiz/ask-link.
+    for phrase in ("every morning", "scheduled task", "offer to draft", "Offer to draft"):
+        assert phrase not in instructions
+    flows = instructions.split("Only on an explicit user request")[0]
+    for tool in ("venn_start_quiz", "venn_create_question_link", "venn_save_plan", "venn_add_follow_up"):
+        assert tool not in flows, tool

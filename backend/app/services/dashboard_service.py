@@ -62,16 +62,17 @@ SETUP_STEPS: tuple[_Step, ...] = (
     ),
     _Step(
         "your_people",
-        "Add your person",
-        "A partner or a friend.",
-        "Add your person: in one short line ask who they want closer - a partner or a friend. They can name "
-        "someone, paste a list or upload a contacts export -> venn_propose_people_import.",
+        "Import contacts",
+        "From a LinkedIn or Instagram export, or a list of names.",
+        "Import contacts: the user uploads a LinkedIn or Instagram export or pastes names -> "
+        "venn_propose_people_import; they confirm on the card. Never infer interests from names or job titles. "
+        "If the user picked Partner on the welcome card, do Invite someone first.",
     ),
     _Step(
         "connect",
-        "Send the spark",
-        "Invite them to Venn.",
-        "Send the spark: create an invite for that person (venn_create_invite; the user shares the link, code "
+        "Invite someone",
+        "Share a link to Venn.",
+        "Invite someone: create an invite (venn_create_invite; the user shares the link, code "
         "or QR themselves), or redeem a code they were given (venn_redeem_invite).",
     ),
 )
@@ -171,7 +172,7 @@ HELP_TOPICS: tuple[HelpTopic, ...] = (
     HelpTopic(
         key="setup",
         title="Getting set up",
-        description="Three short steps: connect your AI memories, add your person, send the spark.",
+        description="Three short steps: connect your AI memories, import contacts, invite someone.",
         examples=["Set up Venn"],
     ),
     HelpTopic(
@@ -194,7 +195,6 @@ HELP_TOPICS: tuple[HelpTopic, ...] = (
         examples=[
             "Who do I know who'd enjoy a photo walk?",
             "Import my friends into Venn",
-            "Ask a friend a few questions for me",
         ],
     ),
     HelpTopic(
@@ -207,27 +207,21 @@ HELP_TOPICS: tuple[HelpTopic, ...] = (
         key="stay_close",
         title="Stay close",
         description=(
-            "What you have in common, three things to do this week, a brief before you meet, a recap after, "
-            "and nudges when it has been a while."
+            "Venn quietly tells you when a friend is nearby, working on something you care about, or "
+            "looking for what you have, from what they chose to share."
         ),
         examples=[
-            "What should I do this week?",
+            "What's new with my people?",
             "What do I have in common with a friend?",
             "I'm seeing a friend tomorrow — brief me",
         ],
-    ),
-    HelpTopic(
-        key="quiz",
-        title="Play",
-        description="A quick quiz on how well you remember your people. It works with your own notes.",
-        examples=["Play the Venn quiz"],
     ),
 )
 
 HELP_PRIVACY: tuple[str, ...] = (
     "Nothing is saved until you approve it.",
     "Memories are private unless you choose to share them.",
-    "Venn never contacts anyone for you. It can draft a message; you send it.",
+    "Venn never contacts anyone for you. It only tells you; reaching out is up to you.",
     "What you save to Venn is there in ChatGPT and on the Venn website. "
     "Your ChatGPT chats and ChatGPT's own memory are not synced.",
     "You can edit or delete anything, or delete your whole account.",
