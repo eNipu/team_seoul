@@ -97,10 +97,26 @@ See `site/README.md` › Waitlist, Analytics.
 | `availability` | id*, user_id* (FK cascade, unique), timezone*, work_days* (JSON, Monday = 0), day_start_minute*, day_end_minute*, buffer_minutes*, min_notice_minutes*, default_length_minutes*, created_at*, updated_at* | When the user takes meetings. Minutes are local wall-clock (0–1440). No row means the defaults. See `docs/tasks/SCHEDULING.md`. |
 | `calendar_connections` | id*, user_id* (FK cascade, unique), provider*, account_email*, refresh_token_enc* (Fernet), calendar_ids* (JSON), created_at*, updated_at* | One calendar grant per user. Busy times and events are never stored. |
 
+## Saved replies
+
+| Table | Columns | Notes |
+| --- | --- | --- |
+| `saved_replies` | id*, owner_user_id* (FK cascade), reply* (JSONB on Postgres), created_at* | Private advice, steps, drafts, discussion prompts, or thread recaps saved from a Venn card. Same typed payload for the same owner has the same ID. |
+
+The reply contract validates `kind` and its fields before rendering or saving. Postgres can group
+saved cards by `reply->>'kind'`. The first successful insert also creates a `reply_saved` event with
+`category` set to the validated reply kind and `count` set to 1. The row and event commit together.
+Retries of an existing save produce the existing reply ID and no additional event.
+
+Matching and activity suggestions use approved memory categories and tags, and interests on private
+people notes, through the existing visibility and ownership checks. If a discussion yields a
+durable interest or preference, ChatGPT can propose the specific item with
+`venn_propose_memories`. It becomes a matching signal after the user approves it in the review card.
+
 ## Deletion
 
 `venn_delete_account` deletes the user row; profile, memories, proposals, invites, requests,
-connections (and their events), people notes (and their hangout logs), pending imports, follow-ups, plans, question links and their responses, availability, calendar connections, blocks and consents cascade; the account's sample friends are deleted with it. Analytics events keep no user link
+connections (and their events), people notes (and their hangout logs), pending imports, follow-ups, plans, saved replies, question links and their responses, availability, calendar connections, blocks and consents cascade; the account's sample friends are deleted with it. Analytics events keep no user link
 (`user_id` set null).
 
 ## Migrations

@@ -71,30 +71,6 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
 
   const startHere = (
     <div className="welcome__start">
-      {data.goal_options.length > 0 && (
-        <fieldset className="goal-picker" disabled={busy}>
-          <legend>What brings you here?</legend>
-          <p className="muted small">Pick any that fit{atLimit ? ` (up to ${LIMITS.goals})` : ""}. You can change this later.</p>
-          <div className="chips">
-            {data.goal_options.map((g) => {
-              const on = selected.includes(g.value);
-              return (
-                <button
-                  key={g.value}
-                  type="button"
-                  className={`chip chip--toggle ${on ? "chip--on" : ""}`}
-                  aria-pressed={on}
-                  disabled={!on && atLimit}
-                  onClick={() => toggle(g.value)}
-                >
-                  <Icon name={on ? "check" : "plus"} size={14} />
-                  {g.label}
-                </button>
-              );
-            })}
-          </div>
-        </fieldset>
-      )}
       <div className="welcome__actions">
         <button type="button" className="btn btn--primary btn--block" disabled={busy} onClick={() => void start()}>
           {phase === "starting" ? "Getting started…" : "Get started"}
@@ -110,6 +86,33 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
           {action.busy === "import" ? "Opening…" : "Import my ChatGPT memory"}
         </button>
       </div>
+      {data.goal_options.length > 0 && (
+        <details className="welcome__goals">
+          <summary>Choose your goals{selected.length > 0 ? ` (${selected.length})` : ""}</summary>
+          <fieldset className="goal-picker" disabled={busy}>
+            <legend className="sr-only">Venn goals</legend>
+            <p className="muted small">Pick any that fit{atLimit ? ` (up to ${LIMITS.goals})` : ""}. You can change this later.</p>
+            <div className="chips">
+              {data.goal_options.map((g) => {
+                const on = selected.includes(g.value);
+                return (
+                  <button
+                    key={g.value}
+                    type="button"
+                    className={`chip chip--toggle ${on ? "chip--on" : ""}`}
+                    aria-pressed={on}
+                    disabled={!on && atLimit}
+                    onClick={() => toggle(g.value)}
+                  >
+                    <Icon name={on ? "check" : "plus"} size={14} />
+                    {g.label}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+        </details>
+      )}
       <p className="muted small welcome__alt">
         Get started asks a few questions in the chat. Importing brings over what ChatGPT already knows; you choose what comes over.
       </p>
@@ -128,9 +131,11 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
   return (
     <section className="panel welcome">
       <div className="welcome__hero">
-        <Illustration name="welcome" size="lg" />
-        <h2 className="welcome__title">{name ? `Welcome to Venn, ${name}` : "Welcome to Venn"}</h2>
-        <p className="muted">Stay in touch and find the common ground with the people you already know.</p>
+        <div>
+          <h2 className="welcome__title">{name ? `Welcome to Venn, ${name}` : "Welcome to Venn"}</h2>
+          <p className="muted">Find common ground with the people you already know.</p>
+        </div>
+        <Illustration name="welcome" size="md" />
       </div>
 
       <ActionError action={action} />

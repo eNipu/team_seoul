@@ -3,7 +3,15 @@
   "mcpServers": {
     "venn": {
       "type": "streamable-http",
-      "url": "http://localhost:8081/mcp"
+      "url": "https://app.joinvennai.com/mcp",
+      "extensions": {
+        "com.openai": {
+          "auth": {
+            "type": "oauth",
+            "client": { "mode": "dcr" }
+          }
+        }
+      }
     }
   }
 }

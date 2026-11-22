@@ -1,9 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 
-import Clarity from "@/components/Clarity";
 import ConsentBanner from "@/components/ConsentBanner";
-import MetaPixel from "@/components/MetaPixel";
+import SiteMeasurement from "@/components/SiteMeasurement";
 import "./venn-kit.css";
 import "./globals.css";
 
@@ -33,8 +32,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         {children}
         <ConsentBanner />
-        <Clarity />
-        <MetaPixel />
+        <SiteMeasurement />
       </body>
     </html>
   );

@@ -5,7 +5,8 @@
 ## Read first
 
 - `site/app/page.tsx`, `site/components/OnboardingPreview.tsx`, `site/components/Waitlist.tsx`
-- `site/app/globals.css`, `site/check.mjs`, `docs/tasks/WAITLIST.md`
+- `site/app/globals.css`, `site/check.mjs` › `exercisePreview`
+- `site/README.md`, `docs/tasks/WAITLIST.md`
 
 ## Done when
 

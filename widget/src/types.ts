@@ -478,7 +478,28 @@ export type ViewData =
   | VennViewData
   | ThisWeekViewData
   | AskLinkViewData
-  | AnswersViewData;
+  | AnswersViewData
+  | ReplyViewData
+  | SavedRepliesViewData;
+
+export type Reply = { title: string; body: string } & (
+  | { kind: "advice" | "draft" }
+  | { kind: "checklist"; steps: string[] }
+  | { kind: "discussion"; question: string }
+  | { kind: "thread"; entries: { title: string; body: string }[] }
+);
+export interface ReplyViewData {
+  view: "reply";
+  reply: Reply;
+}
+export interface SavedReply {
+  reply_id: string;
+  reply: Reply;
+}
+export interface SavedRepliesViewData {
+  view: "saved_replies";
+  replies: SavedReply[];
+}
 
 export type ViewName = ViewData["view"];
 
@@ -864,10 +885,46 @@ function parseDashboard(sc: Obj): DashboardViewData {
   };
 }
 
-/** Parse a tool result's structuredContent into a renderable view, or null. */
-export function parseView(sc: unknown): ViewData | null {
+function parseReply(value: unknown): Reply | null {
+  if (!isObj(value)) return null;
+  const title = strOrNull(value.title);
+  const body = strOrNull(value.body);
+  if (!title || !body) return null;
+  if (value.kind === "advice" || value.kind === "draft") return { kind: value.kind, title, body };
+  if (value.kind === "discussion") {
+    const question = strOrNull(value.question);
+    return question ? { kind: "discussion", title, body, question } : null;
+  }
+  if (value.kind === "thread") {
+    const entries = objs(value.entries).flatMap((entry) => {
+      const title = strOrNull(entry.title);
+      const body = strOrNull(entry.body);
+      return title && body ? [{ title, body }] : [];
+    });
+    return entries.length >= 2 && entries.length <= 6 ? { kind: "thread", title, body, entries } : null;
+  }
+  if (value.kind !== "checklist") return null;
+  const steps = strArr(value.steps);
+  return steps.length ? { kind: "checklist", title, body, steps } : null;
+}
+
+/** Parse the tool result and any widget-only fields. */
+export function parseView(sc: unknown, meta?: unknown): ViewData | null {
   if (!isObj(sc)) return null;
   switch (sc.view) {
+    case "reply": {
+      const reply = parseReply(sc.reply);
+      return reply && { view: "reply", reply };
+    }
+    case "saved_replies":
+      return {
+        view: "saved_replies",
+        replies: objs(isObj(meta) ? meta.replies ?? sc.replies : sc.replies).flatMap((item) => {
+          const reply = parseReply(item.reply);
+          const reply_id = strOrNull(item.reply_id);
+          return reply && reply_id ? [{ reply_id, reply }] : [];
+        }),
+      };
     case "memory_review":
       return {
         view: "memory_review",

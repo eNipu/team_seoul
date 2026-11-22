@@ -1,12 +1,25 @@
+import { PRODUCT_LINKS } from "@/lib/links";
 import VennMark from "./VennMark";
 
-export default function SiteHeader({ note = "For ChatGPT" }: { note?: string }) {
+export default function SiteHeader({ current, note }: { current?: string; note?: string }) {
+  const links = PRODUCT_LINKS.map(({ href, label }) => (
+    <a key={href} href={href} aria-current={current === href ? "page" : undefined}>{label}</a>
+  ));
+
   return (
     <header className="site-header wrap">
-      <span className="brand">
+      <a className="brand" href="/" aria-label="Venn home" aria-current={current === "/" ? "page" : undefined}>
         <VennMark size={104} />
-      </span>
-      <span className="site-header__note">{note}</span>
+      </a>
+      {note ? <span className="site-header__note">{note}</span> : (
+        <div className="site-header__end">
+          <nav className="site-header__nav" aria-label="Main navigation">{links}</nav>
+          <details className="site-header__menu">
+            <summary>Menu</summary>
+            <nav aria-label="Main navigation">{links}</nav>
+          </details>
+        </div>
+      )}
     </header>
   );
 }

@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 const QUESTIONS = [
   {
     question: "What’s an AI memory?",
@@ -16,6 +18,15 @@ const QUESTIONS = [
     answer: "No. Venn is an independent app you’ll use inside ChatGPT. It’s separate from ChatGPT’s built-in memory.",
   },
   {
+    question: "Will Venn be expensive?",
+    answer: (
+      <>
+        No. Early access is free. At launch, your circle shares one subscription: the more people you invite, the less each pays, down to $2 a month.{" "}
+        <a href="/pricing">See planned pricing.</a>
+      </>
+    ),
+  },
+  {
     question: "Will it work with Claude?",
     answer: "ChatGPT comes first. Claude support is planned for later.",
   },
@@ -28,9 +39,9 @@ const QUESTIONS = [
 export default function Faq() {
   return (
     <section className="section section--paper faq" id="faq" aria-labelledby="faq-title">
-      <div className="wrap">
+      <div className="wrap" data-reveal="group">
         <h2 className="h-section" id="faq-title">Frequently asked questions</h2>
-        {QUESTIONS.map(({ question, answer }) => (
+        {QUESTIONS.map(({ question, answer }: { question: string; answer: ReactNode }) => (
           <details className="faq__item" key={question}>
             <summary>{question}</summary>
             <p>{answer}</p>

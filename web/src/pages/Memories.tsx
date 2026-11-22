@@ -1,7 +1,7 @@
 // Memories: what Venn has saved about you, the same here and in ChatGPT.
 
 import { useEffect, useMemo, useState } from "react";
-import { api } from "../api";
+import { api, DEMO } from "../api";
 import { CategoryIcon, Icon, type IconName } from "../icons";
 import { Link, navigate, useLocation } from "../router";
 import {
@@ -352,6 +352,8 @@ export function MemoryCard({
   );
 }
 
+const importPrompt = "Use Venn to import my ChatGPT memories. Show the memory import card so I can choose what to review before saving.";
+
 export default function Memories() {
   const loc = useLocation();
   const q = loc.query.get("q") ?? "";
@@ -362,6 +364,14 @@ export default function Memories() {
   const [editing, setEditing] = useState<Memory | null>(null);
   const [deleting, setDeleting] = useState<Memory | null>(null);
   const adding = loc.query.get("new") === "1";
+  const importing = loc.query.get("import") === "1";
+  const { reload } = memories;
+  useEffect(() => {
+    if (!importing || DEMO) return;
+    const refreshWhenVisible = () => { if (!document.hidden) reload(); };
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => document.removeEventListener("visibilitychange", refreshWhenVisible);
+  }, [importing, reload]);
   const close = () => navigate("/memories", q ? { q } : {}, { replace: true });
   useEffect(() => setDraft(q), [q]);
 
@@ -379,10 +389,13 @@ export default function Memories() {
         title="Memories"
         lead="What Venn has saved about you and your friendships."
         actions={
+          <>
+          <Link to="/memories" query={{ import: "1", q: q || undefined }} className="btn">Import from ChatGPT</Link>
           <Link to="/memories" query={{ new: "1", q: q || undefined }} className="btn btn--primary">
             <Icon name="plus" size={18} />
             Add a memory
           </Link>
+          </>
         }
       />
       <Notice icon="info">
@@ -490,6 +503,21 @@ export default function Memories() {
         }}
       </Loaded>
 
+      {importing && (
+        <Dialog title="Import from ChatGPT" onClose={close}>
+          {DEMO ? <p>This demo uses sample data. Sign in to Venn outside demo mode to import your own memories.</p> : (
+            <>
+              <p>Your website account can’t read private chats. Open ChatGPT with Venn connected to this same Venn account.</p>
+              <p>If the prompt isn’t filled in, send this message:</p>
+              <blockquote>{importPrompt}</blockquote>
+              <p>Choose the topics to preview, then approve the memories you want to keep. ChatGPT can only suggest what it remembers; nothing is synced automatically.</p>
+              <a className="btn btn--primary" href={`https://chatgpt.com/?q=${encodeURIComponent(importPrompt)}`} target="_blank" rel="noopener noreferrer">Open ChatGPT in a new tab</a>
+              <p>After saving in ChatGPT, return here to see your approved memories.</p>
+              <button type="button" className="btn" onClick={() => { setCategory("ALL"); navigate("/memories", {}, { replace: true }); reload(); }}>Show my memories</button>
+            </>
+          )}
+        </Dialog>
+      )}
       {adding && (
         <Dialog title="Add a memory" onClose={close} wide>
           <AddMemoryForm

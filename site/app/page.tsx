@@ -1,15 +1,16 @@
-import OnboardingPreview from "@/components/OnboardingPreview";
+import HeroBackdrop from "@/components/HeroBackdrop";
+import HeroRotator from "@/components/HeroRotator";
+import Motion from "@/components/Motion";
 import PageView from "@/components/PageView";
+import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import Waitlist from "@/components/Waitlist";
-import { CookieSettingsLink } from "@/components/ConsentBanner";
 import Faq from "@/components/sections/Faq";
-import HowItWorks from "@/components/sections/HowItWorks";
-import Moment from "@/components/sections/Moment";
-import PrivacyPrinciples from "@/components/sections/PrivacyPrinciples";
-import UseCases from "@/components/sections/UseCases";
+import OnboardingPreview from "@/components/OnboardingPreview";
+import NextIn from "@/components/sections/NextIn";
 import { cleanRef } from "@/lib/analytics";
 import { hasDatabase } from "@/lib/db";
+import { heroIndex } from "@/lib/heroes";
 import { cleanVersion, defaultVersion } from "@/lib/version";
 import { inviteHasRoom } from "@/lib/waitlist";
 
@@ -38,76 +39,44 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
   return (
     <>
       <main>
-        <section className="section section--dark" id="hero" aria-labelledby="hero-title">
-          <SiteHeader />
-          <div className="wrap">
-            <p className="eyebrow">Early-access waitlist</p>
-            <h1 className="h-display" id="hero-title">Connect your AI memories.</h1>
-            <p className="h-sub"><span>Build your inner circle.</span></p>
-            <p className="lead hero__what">
-              Your ChatGPT tells you which friend, colleague or partner to talk to, from updates they choose to share.
-            </p>
-            <div className="chat hero__chat" aria-label="Example inside ChatGPT">
-              <p className="chat__user">I have no plans this weekend. Ideas?</p>
-              <Moment person="Emma" text="Emma from uni is in Berlin on Saturday. You haven't seen her in 2 years." yellow />
+        <section className="section section--dark" id="hero" aria-labelledby="hero-title" tabIndex={-1}>
+          <SiteHeader current="/" />
+          <div className="wrap hero__grid">
+            <div className="hero__copy">
+              <p className="eyebrow">Early-access waitlist</p>
+              <HeroRotator pinned={heroIndex(first(params.h))} />
             </div>
-            <Waitlist version={version} invite={invite} />
-            <p className="hero__fine">Free early access · Works with ChatGPT · Your friends opt in</p>
+            <div className="hero__join">
+              <HeroBackdrop />
+              <div className="hero__join-card">
+                <Waitlist version={version} invite={invite} />
+                <p className="hero__fine">Free early access · Works with ChatGPT · Your friends opt in</p>
+              </div>
+            </div>
+            <div className="hero__paths">
+              <a className="btn" href="#inside">Try the demo</a>
+              <a className="hero__guide" href="/how-it-works">How it works</a>
+            </div>
           </div>
         </section>
 
-        <section className="section section--dark manifesto" aria-labelledby="manifesto-title">
+        <NextIn />
+        <section className="section section--paper" id="inside" aria-labelledby="inside-title" tabIndex={-1}>
           <div className="wrap">
-            <h2 className="h-display" id="manifesto-title">
-              Connecting is solved.<br />
-              <span className="manifesto__hit">Keeping relationships is not.</span>
-            </h2>
-            <p className="lead">
-              You meet people at every conference, every trip, every job. Then life happens and you lose them. Venn makes sure
-              you don&apos;t forget the people you connected with.
-            </p>
-          </div>
-        </section>
-
-        <HowItWorks />
-        <UseCases />
-
-        <section className="section section--paper" id="inside" aria-labelledby="inside-title">
-          <div className="wrap">
-            <h2 className="h-section" id="inside-title">One week with Venn.</h2>
-            <p className="lead">Your AI drafts your week. You keep what you want. The right friend hears about it.</p>
+            <div className="inside__heading">
+              <div>
+                <h2 className="h-section" id="inside-title">One week with Venn.</h2>
+                <p className="lead">Your AI drafts your week. You keep what you want. The right friend hears about it.</p>
+              </div>
+            </div>
             <OnboardingPreview />
-                      </div>
-        </section>
-
-        <PrivacyPrinciples />
-        <Faq />
-
-        <section className="section" id="early-access" aria-labelledby="closing-title">
-          <div className="closing wrap">
-            <img
-              className="mark mark--faces"
-              src="/brand/mark-faces-circle.webp"
-              width={665}
-              height={700}
-              alt=""
-              aria-hidden="true"
-              loading="lazy"
-            />
-            <h2 className="h-section" id="closing-title">Join the Founding Circle.</h2>
-            <p className="lead">Early access opens by invitation. Get on the list.</p>
-            <a className="btn btn--primary" href="#waitlist">
-              Build your inner circle.
-            </a>
           </div>
         </section>
+        <Faq />
       </main>
-
-      <footer className="wrap">
-        <span>© {new Date().getFullYear()} Venn · <a href="/privacy">Privacy</a> · <CookieSettingsLink /></span>
-        <p>The people in the examples are made up.</p>
-      </footer>
+      <SiteFooter top="#hero" />
       <PageView version={version} />
+      <Motion />
     </>
   );
 }

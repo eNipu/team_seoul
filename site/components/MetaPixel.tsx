@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { CONSENT_EVENT, effectiveConsent } from "@/lib/consent";
 
 export default function MetaPixel() {
-  const id = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+  const id = process.env.NEXT_PUBLIC_META_PIXEL_ID || "1763977548006273";
   const [allowed, setAllowed] = useState(false);
 
   useEffect(() => {
