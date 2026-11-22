@@ -19,8 +19,8 @@ import { ActionError, Avatar, SectionTitle, useAction, type Action, type ViewPro
 import type { HostBridge } from "../mcp/client";
 import MemoriesTab from "./MemoriesTab";
 import FriendsTab from "./FriendsTab";
-import { HomeMoment, SampleBanner } from "./DashboardHome";
-import { OpenMyVenn } from "./Moment";
+import { SampleBanner } from "./DashboardHome";
+import { QuietHome } from "./Moment";
 import { Icon, type IconName } from "./icons";
 
 export type DashboardTab = "profile" | "memories" | "friends";
@@ -74,7 +74,7 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
 
   return (
     <>
-    <HomeMoment bridge={bridge} nav={nav} footer={<OpenMyVenn bridge={bridge} />} />
+    <QuietHome bridge={bridge} nav={nav} />
     {/* Lists (friends, memories, plans, setup) only when the chat asked for them. */}
     {showAll && (
     <div className="home-more">

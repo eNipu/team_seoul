@@ -1,21 +1,17 @@
-import { useId, useState, type FormEvent } from "react";
+import { useState } from "react";
 import {
   CATEGORY_LABELS,
-  LIMITS,
-  friendArg,
   hasId,
   isObj,
-  parseLogInteraction,
   parsePerson,
   type FriendViewData,
-  type Interaction,
 } from "../types";
 import { OpenMyVenn, momentText, signalsFrom } from "./Moment";
-import { ActionError, ChatStatus, SectionTitle, useAction, useChatPrompt, type ViewProps } from "./common";
+import { ActionError, SectionTitle, useAction, type ViewProps } from "./common";
 import { CategoryIcon, Icon, Illustration } from "./icons";
 import PersonForm, { type PersonValues } from "./PersonForm";
 
-type Mode = "view" | "log" | "edit" | "confirm-remove";
+type Mode = "view" | "edit" | "confirm-remove";
 
 interface Details {
   name: string;
@@ -27,11 +23,8 @@ interface Details {
 const sameList = (a: string[], b: string[]) => a.length === b.length && a.every((x, i) => x === b[i]);
 
 export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>) {
-  const formId = useId();
   const action = useAction();
-  const chat = useChatPrompt(bridge);
   const isPerson = data.kind === "person";
-  const arg = friendArg(data.kind, data.id);
 
   const [mode, setMode] = useState<Mode>("view");
   const [details, setDetails] = useState<Details>({
@@ -40,52 +33,16 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
     notes: data.notes,
     interests: data.interests,
   });
-  const [, setInteractions] = useState<Interaction[]>(data.recent_interactions);
-  const [, setLastAt] = useState<string | null>(data.last_interaction_at);
-  const [activity, setActivity] = useState("");
-  const [justLogged, setJustLogged] = useState(false);
   const [gone, setGone] = useState(false);
 
   const busy = action.busy !== null;
   const shared = new Set(data.shared_interests.map((s) => s.toLowerCase()));
 
-  function ideas() {
-    void action.run("ideas", () => nav.openView("venn_suggest_activity", arg));
-  }
 
-  function prep() {
-    void action.run("prep", () => nav.openView("venn_meetup_brief", arg));
-  }
 
-  function compare() {
-    void action.run("compare", () => nav.openView("venn_compare", arg));
-  }
 
-  function ask() {
-    void action.run("ask", () => nav.openView("venn_create_question_link", { person_id: data.id }));
-  }
 
-  function quiz() {
-    void action.run("quiz", () => nav.openView("venn_start_quiz", { connection_id: data.id }));
-  }
 
-  function logHangout(e: FormEvent) {
-    e.preventDefault();
-    const what = activity.trim();
-    void action.run("log", async () => {
-      const res = await bridge.callTool("venn_log_interaction", what ? { ...arg, activity: what } : arg);
-      if (!res.ok) return res.errorText;
-      const result = parseLogInteraction(res.data);
-      if (!result.recorded) return "Venn couldn't log that.";
-      const at = result.last_interaction_at ?? new Date().toISOString();
-      setInteractions((list) => [{ occurred_at: at, activity: what || null }, ...list]);
-      setLastAt(at);
-      setActivity("");
-      setJustLogged(true);
-      setMode("view");
-      return null;
-    });
-  }
 
   function saveEdit(values: PersonValues) {
     // Send only what changed. Cleared optional fields are sent as "" / [].
@@ -181,64 +138,11 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
             <p>{moment}</p>
             {signals.signal && <small>{signals.signal.source}</small>}
           </div>
-          <button type="button" className="onb__cta" disabled={chat.state === "sending"}
-            onClick={() => void chat.send(`Help me say hi to ${details.name}. Keep it short and warm, mention: ${moment.replace(/^Btw, /, "")} I'll send it myself.`)}>
-            {chat.state === "sending" ? "Asking…" : `Say hi to ${details.name.split(/\s+/)[0]}`}
-          </button>
-          {justLogged && <p className="onb__done" role="status">Logged.</p>}
-          {mode === "log" && (
-            <form className="inline-form form" onSubmit={logHangout}>
-              <label className="field" htmlFor={`${formId}-activity`}>
-                <span className="field__label">What did you do? (optional)</span>
-                <input
-                  id={`${formId}-activity`}
-                  type="text"
-                  value={activity}
-                  maxLength={LIMITS.activity}
-                  placeholder="Coffee, a walk, a long call…"
-                  autoComplete="off"
-                  disabled={busy}
-                  onChange={(e) => setActivity(e.target.value)}
-                />
-              </label>
-              <div className="actions actions--compact">
-                <button type="button" className="btn btn--ghost" disabled={busy} onClick={() => setMode("view")}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn btn--primary" disabled={busy}>
-                  {action.busy === "log" ? "Logging…" : "Log it"}
-                </button>
-              </div>
-            </form>
-          )}
           <div className="onb__row">
             <OpenMyVenn bridge={bridge} />
             <details className="onb__more">
               <summary>More</summary>
               <div className="onb__more-body">
-            <button type="button" className="btn btn--block" disabled={busy} onClick={ideas}>
-              {action.busy === "ideas" ? "Loading…" : "Plan something"}
-            </button>
-            <button type="button" className="btn btn--block" disabled={busy} aria-expanded={mode === "log"}
-              onClick={() => setMode(mode === "log" ? "view" : "log")}>
-              We met up
-            </button>
-            <button type="button" className="btn btn--block" disabled={busy} onClick={prep}>
-              {action.busy === "prep" ? "Loading…" : "Prep for a meetup"}
-            </button>
-            <button type="button" className="btn btn--block" disabled={busy} onClick={compare}>
-              {action.busy === "compare" ? "Loading…" : "Common ground"}
-            </button>
-            {isPerson ? (
-              <button type="button" className="btn btn--block" disabled={busy} onClick={ask}>
-                {action.busy === "ask" ? "Creating…" : "Ask them a few questions"}
-              </button>
-            ) : (
-              <button type="button" className="btn btn--block" disabled={busy} onClick={quiz}>
-                {action.busy === "quiz" ? "Loading…" : "Quiz"}
-              </button>
-            )}
-          <ChatStatus state={chat.state} prompt={chat.prompt} />
 
 
           <SectionTitle>Interests</SectionTitle>

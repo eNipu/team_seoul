@@ -1,8 +1,7 @@
-import { useEffect, useState, type ReactNode } from "react";
-import { ChatMoment } from "./Moment";
-import { firstName, formatDateTime, isObj, joinNames, parseView, plural, type Plan, type WeekAction } from "../types";
+import { useState } from "react";
+import { firstName, formatDateTime, isObj, joinNames, plural, type Plan } from "../types";
 import type { HostBridge } from "../mcp/client";
-import { ActionError, Avatar, SectionTitle, useAction, type Nav } from "./common";
+import { ActionError, Avatar, SectionTitle, useAction } from "./common";
 import { Icon } from "./icons";
 
 /** Slim banner shown while the made-up sample circle is loaded. */
@@ -50,51 +49,6 @@ export function SampleBanner({ bridge, onChanged }: { bridge: HostBridge; onChan
       <ActionError action={action} />
     </section>
   );
-}
-
-/**
- * The dashboard's home: ChatGPT telling you one moment in plain words, with one action.
- * Falls back to "Invite your person" while there is nobody to talk about.
- */
-export function HomeMoment({ bridge, nav, footer }: { bridge: HostBridge; nav: Nav; footer: ReactNode }) {
-  const [first, setFirst] = useState<WeekAction | null | undefined>(undefined);
-  useEffect(() => {
-    let active = true;
-    setFirst(undefined);
-    async function load() {
-      const res = await bridge.callTool("venn_this_week", {});
-      const week = res.ok ? parseView(res.data, res.meta) : null;
-      if (active) setFirst(week?.view === "this_week" ? week.actions[0] ?? null : null);
-    }
-    void load().catch(() => { if (active) setFirst(null); });
-    return () => { active = false; };
-  }, [bridge]);
-
-  const action = useAction();
-  const busy = action.busy !== null;
-  if (first === undefined) {
-    return (
-      <section className="onb moment-chat" aria-busy="true">
-        <p className="onb__context">ChatGPT</p>
-        <div className="onb__bubble onb__bubble--in"><p aria-label="Typing">…</p></div>
-      </section>
-    );
-  }
-  if (first === null) {
-    return (
-      <section className="onb">
-        <h2 className="onb__title">Bring your person in.</h2>
-        <ActionError action={action} />
-        <button type="button" className="onb__cta" disabled={busy}
-          onClick={() => void action.run("invite", () => nav.openView("venn_create_invite", {}))}>
-          {action.busy === "invite" ? "Opening…" : "Invite your person"}
-        </button>
-        <div className="onb__row">{footer}</div>
-      </section>
-    );
-  }
-  return <ChatMoment key={`${first.kind}:${first.id}`} bridge={bridge} kind={first.kind} id={first.id}
-    name={first.display_name} idea={first.suggestion?.title} footer={footer} />;
 }
 
 function PlanRow({

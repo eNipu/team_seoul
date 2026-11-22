@@ -1,7 +1,7 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import type { HostBridge } from "../mcp/client";
 import { firstName, friendArg, parseView, type FriendKind, type FriendViewData } from "../types";
-import { ChatStatus, ManualCopy, useChatPrompt } from "./common";
+import { ActionError, ManualCopy, useAction, type Nav } from "./common";
 import "./onboarding.css";
 
 /** The web app: a side path for seeing and editing everything. Never a required step. */
@@ -88,45 +88,22 @@ export function momentText(name: string, f: FriendSignals | null, idea?: string 
 }
 
 /**
- * The moment: ChatGPT telling you, in one message, who to reach out to and why.
- * One action, Say hi, which hands the message to the chat.
+ * After onboarding there is nothing to manage here: ChatGPT itself messages the user when
+ * something matters. One line, then two quiet links: the generic invite and the web app.
  */
-export function ChatMoment({
-  bridge,
-  kind,
-  id,
-  name,
-  idea,
-  footer,
-}: {
-  bridge: HostBridge;
-  kind: FriendKind;
-  id: string;
-  name: string;
-  idea?: string | null;
-  footer?: ReactNode;
-}) {
-  const signals = useFriendSignals(bridge, kind, id);
-  const chat = useChatPrompt(bridge);
-  const first = firstName(name);
-  const text = momentText(name, signals, idea);
+export function QuietHome({ bridge, nav }: { bridge: HostBridge; nav: Nav }) {
+  const action = useAction();
   return (
-    <section className="onb moment-chat" aria-label="A message from Venn" aria-busy={signals === null}>
-      <p className="onb__context">ChatGPT</p>
-      {signals === null ? (
-        <div className="onb__bubble onb__bubble--in"><p aria-label="Typing">…</p></div>
-      ) : (
-        <div className="onb__bubble onb__bubble--in">
-          <p>{text}</p>
-          {signals.signal && <small>{signals.signal.source}</small>}
-        </div>
-      )}
-      <button type="button" className="onb__cta" disabled={signals === null || chat.state === "sending"}
-        onClick={() => void chat.send(`Help me say hi to ${name}. Keep it short and warm, mention: ${text.replace(/^Btw, /, "")} I'll send it myself.`)}>
-        {chat.state === "sending" ? "Asking…" : `Say hi to ${first}`}
-      </button>
-      <ChatStatus state={chat.state} prompt={chat.prompt} />
-      {footer && <div className="onb__row">{footer}</div>}
+    <section className="onb">
+      <h2 className="onb__title">Venn will tell you here, in ChatGPT, when something matters.</h2>
+      <ActionError action={action} />
+      <div className="onb__row">
+        <button type="button" className="onb__link" disabled={action.busy !== null}
+          onClick={() => void action.run("invite", () => nav.openView("venn_create_invite", {}))}>
+          {action.busy === "invite" ? "Opening…" : "Invite someone"}
+        </button>
+        <OpenMyVenn bridge={bridge} />
+      </div>
     </section>
   );
 }
