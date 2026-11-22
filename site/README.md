@@ -17,6 +17,7 @@ metrics page. A Next.js app (App Router) with its own small API and two tables i
 | `components/Motion.tsx` | Turns on the scroll reveals for elements marked `data-reveal` |
 | `components/Waitlist.tsx` | The email form and its states after joining |
 | `components/OnboardingPreview.tsx`, `components/ConnectionMap.tsx` | The weekly signal preview and its animated connection map |
+| `components/ChatGptPreview.tsx` | Embeds the actual Venn widget using its in-memory sample bridge |
 | `lib/db.ts`, `lib/waitlist.ts`, `lib/analytics.ts` | Postgres pool and schema, waitlist logic, events and metrics |
 | `lib/version.ts` | The two waitlist versions, `pair` and `open`, and which one is the default |
 | `lib/rate-limit.ts` | Per-address request limit for the API routes |
@@ -69,6 +70,8 @@ pass the password: `METRICS_PASSWORD=... node check.mjs --url https://<host>/`.
 | `ANALYTICS_SALT` | Optional secret mixed into visitor hashes. Falls back to `DATABASE_URL` |
 | `WAITLIST_VERSION` | `pair` (the default) or `open`: the waitlist a visitor gets without `?w=` in the URL |
 | `PORT` | Port for `npm run start` (Railway sets it) |
+| `WIDGET_PREVIEW_URL` | Absolute URL of the Venn demo iframe. Defaults to `https://app.joinvennai.com/widget-preview`. For local end-to-end checks use the local backend URL. |
+| `CHATGPT_PLUGIN_URL` | Verified, published ChatGPT directory listing. When absent the site offers the beta test connection. |
 
 `.env.example` lists them; copy it to `.env.local` for local work.
 
@@ -157,6 +160,12 @@ sections fade up the first time they scroll into view (`data-reveal="up"`, or `"
 
 The section arrows link from the hero to the weekly preview, from there to the Founding Circle, and from
 the footer back to the hero. The links move keyboard focus to the destination and respect reduced motion.
+
+The hero arrow first opens [Venn inside ChatGPT](#chatgpt-ui), then continues to the weekly preview.
+The three screens use the same built widget that the MCP resource serves. The sandboxed iframe uses
+sample data, has no network access after loading, and stores changes only in its own tab state.
+`My Venn` goes directly to `https://app.joinvennai.com/app/account`. The web app keeps that URL
+through sign-in. The separate waitlist flow is for early-access interest.
 
 The weekly preview animates paths through one persistent SVG connection map. The visitor keeps sample
 signals and picks their audience. The approved routes draw as they reach that circle, and the link to Maya

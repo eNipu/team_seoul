@@ -348,7 +348,7 @@ async function exerciseNavigation() {
   if (getComputedStyle(document.documentElement).scrollBehavior !== (motion ? "auto" : "smooth")) {
     failures.push("section navigation does not follow the motion preference");
   }
-  for (const href of ["#inside", "#early-access", "#hero"]) {
+  for (const href of ["#chatgpt-ui", "#inside", "#early-access", "#hero"]) {
     const link = document.querySelector(`.scroll-arrow[href="${href}"]`);
     const target = document.querySelector(href);
     if (!link || !target) {
@@ -373,6 +373,33 @@ async function exerciseNavigation() {
     if (location.hash !== href || document.activeElement !== target || rect.top >= window.innerHeight || rect.bottom <= 0) {
       failures.push(`section link did not move focus and view to ${href}`);
     }
+  }
+  return failures;
+}
+
+async function exerciseChatGptPreview() {
+  const root = document.querySelector("#chatgpt-ui");
+  if (!root) return ["ChatGPT preview is missing"];
+  const failures = [];
+  const buttons = [...root.querySelectorAll(".chatgpt-preview__switch button")];
+  if (buttons.length !== 3) failures.push("expected three widget preview screens");
+  for (const button of buttons) {
+    if (button.getAttribute("aria-pressed") !== "true") button.click();
+    const deadline = performance.now() + 5500;
+    let frame;
+    do {
+      frame = root.querySelector("iframe");
+      if (frame?.style.height && frame.title.endsWith(button.textContent.trim())) break;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    } while (performance.now() < deadline);
+    if (!frame?.style.height || !frame.title.endsWith(button.textContent.trim())) {
+      failures.push(`the ${button.textContent.trim()} widget did not report a rendered height`);
+    }
+    if (frame?.getAttribute("sandbox") !== "allow-scripts") failures.push("the widget preview is not isolated");
+  }
+  if (!root.querySelector("pre")?.textContent.includes('"visibility": "PRIVATE"')) failures.push("sample data example is missing");
+  if (document.querySelector(".site-header__account")?.getAttribute("href") !== "https://app.joinvennai.com/app/account") {
+    failures.push("header does not link directly to the connected account route");
   }
   return failures;
 }
@@ -479,7 +506,10 @@ async function main() {
       if (message.sessionId !== sessionId) return;
       const p = message.params;
       if (message.method === "Network.requestWillBeSent" && !p.request.url.startsWith("data:")) {
-        if (new URL(p.request.url).origin !== origin) failures.push(`${label}: request to another site: ${p.request.url}`);
+        const url = new URL(p.request.url);
+        const preview = new URL(process.env.WIDGET_PREVIEW_URL ?? "https://app.joinvennai.com/widget-preview");
+        const widgetFrame = p.type === "Document" && url.origin === preview.origin && url.pathname === preview.pathname;
+        if (url.origin !== origin && !widgetFrame) failures.push(`${label}: request to another site: ${p.request.url}`);
       }
       if (message.method === "Runtime.exceptionThrown") failures.push(`${label}: script error: ${p.exceptionDetails.text}`);
       if (message.method === "Log.entryAdded" && p.entry.level === "error") {
@@ -546,6 +576,9 @@ async function main() {
 
       for (const problem of await run(exerciseNavigation)) failures.push(`${label}: ${problem}`);
       for (const problem of await run(exercisePreview)) failures.push(`${label}: ${problem}`);
+      if (["phone", "desktop"].includes(label)) {
+        for (const problem of await run(exerciseChatGptPreview)) failures.push(`${label}: ${problem}`);
+      }
       console.log(`checked ${label}`);
     }
 
@@ -635,7 +668,9 @@ async function main() {
       // submit with the keyboard and verify that focus moves to the answer.
       await open(pairUrl, small);
       await tab();
-      await focusIs("Go to One week with Venn");
+      await focusIs("My Venn");
+      await tab();
+      await focusIs("Go to the ChatGPT preview");
       await tab();
       await focusIs("#waitlist-email");
       await send("Input.insertText", { text: `check+${stamp}@example.com` });

@@ -1816,6 +1816,8 @@ export function mockInitialView(): ViewData | null {
       return { view: "saved_replies", replies: savedReplies };
     case "memory_review":
       return reviewView("conversation", DEMO_PROPOSALS, "prop_demo_1");
+    case "preview_review":
+      return reviewView("conversation", [{ ...DEMO_PROPOSALS[0], suggested_visibility: "PRIVATE" }], "prop_site_demo");
     case "memory_review_import":
       return reviewView("chatgpt_memory", IMPORT_PROPOSALS, "prop_demo_import");
     case "memory_import":

@@ -26,7 +26,8 @@ import { BrandMark, Icon, Illustration } from "./components/icons";
 import ErrorBanner from "./components/ErrorBanner";
 import { Spinner, type Nav } from "./components/common";
 
-const inHost = typeof window !== "undefined" && window.parent !== window;
+const publicPreview = typeof window !== "undefined" && window.location.pathname === "/widget-preview";
+const inHost = typeof window !== "undefined" && window.parent !== window && !publicPreview;
 
 /** One entry of the in-widget view stack. `key` changes whenever the data is replaced. */
 interface Entry {
@@ -137,6 +138,16 @@ export default function App() {
   const generation = useRef(0);
   // Remembers the dashboard tab across navigation and refreshes.
   const dashboardTab = useRef<DashboardTab | null>(inHost ? null : demoTab());
+
+  useEffect(() => {
+    const root = document.querySelector(".venn");
+    if (!publicPreview || window.parent === window || !root) return;
+    const observer = new ResizeObserver(() => {
+      window.parent.postMessage({ type: "venn:preview-height", height: Math.ceil(root.getBoundingClientRect().height) }, "*");
+    });
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, []);
 
   const setStack = useCallback((next: Entry[]) => {
     stackRef.current = next;
