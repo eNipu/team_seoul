@@ -3357,6 +3357,7 @@ input[type="radio"] {
 
 .tabs {
   display: inline-flex;
+  flex-wrap: wrap;
   gap: 4px;
   padding: 4px;
   border-radius: var(--radius);
@@ -3364,6 +3365,7 @@ input[type="radio"] {
 }
 
 .tabs__tab {
+  min-height: 44px;
   padding: 7px 14px;
   border: 0;
   border-radius: calc(var(--radius) - 4px);
@@ -3372,6 +3374,10 @@ input[type="radio"] {
   font: inherit;
   font-weight: 600;
   cursor: pointer;
+}
+
+.tabs__tab:disabled {
+  cursor: default;
 }
 
 .tabs__tab--on {

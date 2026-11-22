@@ -302,8 +302,12 @@ export default function People() {
         <Dialog title="Import from LinkedIn" onClose={close} wide>
           <LinkedInFlow
             onCancel={close}
-            onDone={(n) => {
-              toast(`Added ${plural(n, "person", "people")} from LinkedIn.`);
+            onDone={(n, kind) => {
+              if (kind === "demo") {
+                toast(n ? `Added ${plural(n, "demo connection", "demo connections")}.` : "No new demo connections to add.");
+              } else {
+                toast(`Added ${plural(n, "person", "people")} from LinkedIn.`);
+              }
               close();
               friends.reload();
             }}

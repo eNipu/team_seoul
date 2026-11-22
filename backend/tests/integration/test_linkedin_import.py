@@ -6,6 +6,8 @@ LinkedIn and Apify are replaced by canned responses; nothing here touches the ne
 from __future__ import annotations
 
 import json
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
 
 import httpx
 import pytest
@@ -215,3 +217,101 @@ def test_the_linkedin_export_file_is_the_other_way_in(web) -> None:
     preview = me.ok("POST", "/linkedin/import-preview", {"people": picked})
     assert [c["name"] for c in preview["candidates"]] == ["Tom Becker", "Sofia Rossi"]
     assert me.ok("POST", "/people/import", {"import_id": preview["import_id"], "indexes": [0, 1]})["count"] == 2
+
+
+def test_demo_imports_100_private_samples_only_after_confirmation(web, alice, monkeypatch) -> None:
+    def no_external_call(*args, **kwargs):
+        pytest.fail("The demo must not contact LinkedIn or Apify")
+
+    monkeypatch.setattr(li, "fetch_connections", no_external_call)
+    monkeypatch.setattr(li, "fetch_profiles", no_external_call)
+    assert web().err("POST", "/linkedin/demo-preview")[0] == 401
+    me, other = web("alice"), web("bob")
+    real = me.ok("POST", "/people", {"name": "My real friend"})
+    preview = me.ok("POST", "/linkedin/demo-preview")
+    candidates = preview["candidates"]
+    assert preview["source"] == "linkedin_demo" and preview["skipped"] == 0
+    assert len(candidates) == len({c["name"].lower() for c in candidates}) == 100
+    assert all(not c["already_added"] for c in candidates)
+    assert me.ok("GET", "/people")["count"] == 1
+    assert alice.ok("venn_find_people", query=candidates[0]["name"])["results"] == []
+
+    payload = {"import_id": preview["import_id"], "indexes": list(range(100))}
+    assert other.err("POST", "/people/import", payload) == (404, "NOT_FOUND")
+    assert me.err("POST", "/people/import", {**payload, "indexes": [0, 100]}) == (400, "INVALID_REQUEST")
+    assert me.ok("GET", "/people")["count"] == 1
+    added = me.ok("POST", "/people/import", payload)
+    assert added["count"] == 100 and all(p["is_sample"] for p in added["imported"])
+    assert me.err("POST", "/people/import", payload) == (400, "INVALID_REQUEST")
+    assert other.ok("GET", "/people")["count"] == 0
+    assert me.ok("GET", "/home")["sample_loaded"] is True
+    results = alice.ok("venn_find_people", query=candidates[0]["name"])["results"]
+    assert results[0]["display_name"] == candidates[0]["name"] and results[0]["is_sample"]
+    pending = me.ok("POST", "/linkedin/demo-preview")
+    assert all(c["already_added"] for c in pending["candidates"])
+
+    assert me.ok("DELETE", "/sample")["people"] == 100
+    assert me.err("POST", "/people/import", {"import_id": pending["import_id"], "indexes": [0]}) == (404, "NOT_FOUND")
+    assert [p["person_id"] for p in me.ok("GET", "/people")["people"]] == [real["person_id"]]
+
+
+def test_demo_respects_partial_selection_and_existing_names(web) -> None:
+    me = web("alice")
+    preview = me.ok("POST", "/linkedin/demo-preview")
+    stale = me.ok("POST", "/linkedin/demo-preview")
+    name = preview["candidates"][0]["name"]
+    me.ok("POST", "/people", {"name": name, "notes": "An existing private note."})
+    picked = [0, 42, 99]
+    added = me.ok("POST", "/people/import", {"import_id": preview["import_id"], "indexes": picked})
+    assert [p["name"] for p in added["imported"]] == [preview["candidates"][i]["name"] for i in picked[1:]]
+    assert me.ok("POST", "/people/import", {"import_id": stale["import_id"], "indexes": picked})["count"] == 0
+    assert me.ok("GET", "/people")["count"] == 3
+
+
+def test_demo_name_collision_does_not_block_real_linkedin_import(web) -> None:
+    me = web("alice")
+    demo = me.ok("POST", "/linkedin/demo-preview")
+    name = demo["candidates"][0]["name"]
+    first, last = name.split(" ", 1)
+    me.ok("POST", "/people/import", {"import_id": demo["import_id"], "indexes": [0]})
+    csv = f"First Name,Last Name,Position\n{first},{last},Engineer\n"
+    assert me.ok("POST", "/linkedin/export", {"csv": csv})["connections"][0]["already_added"] is False
+    preview = me.ok("POST", "/linkedin/import-preview", {"people": [{"name": name}]})
+    assert preview["candidates"][0]["already_added"] is False
+    real = me.ok("POST", "/people/import", {"import_id": preview["import_id"], "indexes": [0]})["imported"][0]
+    assert not real["is_sample"]
+    assert me.ok("DELETE", "/sample")["people"] == 1
+    assert [p["person_id"] for p in me.ok("GET", "/people")["people"]] == [real["person_id"]]
+
+
+@pytest.mark.parametrize("same_preview", [True, False])
+def test_concurrent_demo_confirmations_do_not_duplicate_profiles(settings, web, same_preview) -> None:
+    if settings.database_url.startswith("sqlite"):
+        pytest.skip("Tests PostgreSQL row locking")
+    me = web("alice")
+    first = me.ok("POST", "/linkedin/demo-preview")["import_id"]
+    second = first if same_preview else me.ok("POST", "/linkedin/demo-preview")["import_id"]
+    start = Barrier(2)
+
+    def confirm(import_id: str) -> tuple[int, int]:
+        start.wait(timeout=5)
+        response = me.send("POST", "/people/import", {"import_id": import_id, "indexes": list(range(100))})
+        return response.status_code, response.json().get("count", 0)
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = sorted(pool.map(confirm, [first, second]))
+    assert results == ([(200, 100), (400, 0)] if same_preview else [(200, 0), (200, 100)])
+    assert me.ok("GET", "/people")["count"] == 100
+
+
+def test_demo_does_not_change_regular_import_limit_or_allow_spoofing_samples(web) -> None:
+    me = web("alice")
+    people = [{"name": f"Connection {i}"} for i in range(51)]
+    assert me.err("POST", "/linkedin/import-preview", {"people": people}) == (400, "INVALID_REQUEST")
+    assert me.err("POST", "/people/import-preview", {"people": people}) == (400, "INVALID_REQUEST")
+
+    preview = me.ok("POST", "/people/import-preview", {"people": people[:1], "source": "linkedin_demo"})
+    payload = {"import_id": preview["import_id"], "indexes": [0] * 51}
+    assert me.err("POST", "/people/import", payload) == (400, "INVALID_REQUEST")
+    result = me.ok("POST", "/people/import", {**payload, "indexes": [0]})
+    assert result["imported"][0]["is_sample"] is False

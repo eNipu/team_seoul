@@ -5,7 +5,7 @@ import { api } from "../api";
 import { Icon } from "../icons";
 import { Link, useLocation } from "../router";
 import { firstName, formatLastSeen, friendPath, plural, type SearchResult } from "../types";
-import { Avatar, Chips, CopyButton, EmptyState, KindTag, Loaded, PageHeader, Skeleton, useAsync } from "../ui";
+import { Avatar, Chips, CopyButton, EmptyState, KindTag, Loaded, PageHeader, Skeleton, Tag, useAsync } from "../ui";
 import { MemoryCard } from "./Memories";
 
 const EXAMPLES = ["photography", "board games", "climbing", "pottery", "Lisbon"];
@@ -29,6 +29,7 @@ function ResultRow({ r, query }: { r: SearchResult; query: string }) {
           </h3>
           {r.relationship && <span className="muted">{r.relationship}</span>}
           <KindTag onVenn={r.on_venn} />
+          {r.is_sample && <Tag tone="info">Sample</Tag>}
         </div>
         <p className="why">
           <span className="why__label">Why {firstName(r.display_name)} came up</span>
@@ -56,7 +57,7 @@ function ResultRow({ r, query }: { r: SearchResult; query: string }) {
             onClick={() => setOpen((o) => !o)}
           >
             <Icon name="send" size={16} />
-            Draft an invitation
+            {r.is_sample ? "Draft a sample invitation" : "Draft an invitation"}
           </button>
         </div>
         {open && (

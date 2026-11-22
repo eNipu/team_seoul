@@ -272,6 +272,7 @@ export interface Friend {
   shared_memories: SharedMemory[];
   recent_interactions: Interaction[];
   follow_ups: FollowUp[];
+  is_sample: boolean;
 }
 
 export interface ActivitySuggestion {
@@ -336,6 +337,7 @@ export interface SearchResult {
   snippet: string | null;
   why: string;
   last_interaction_at: string | null;
+  is_sample: boolean;
 }
 
 export interface PeopleSearch {
@@ -906,6 +908,7 @@ export function parseFriend(v: unknown): Friend {
       .map((i) => ({ occurred_at: str(i.occurred_at), activity: strOrNull(i.activity) }))
       .filter((i) => i.occurred_at !== ""),
     follow_ups: parseFollowUps(o.follow_ups),
+    is_sample: bool(o.is_sample),
   };
 }
 
@@ -980,6 +983,7 @@ export function parseSearch(v: unknown): PeopleSearch {
         snippet: strOrNull(r.snippet),
         why: str(r.why),
         last_interaction_at: strOrNull(r.last_interaction_at),
+        is_sample: bool(r.is_sample),
       };
     })
     .filter((r) => r.id !== "");

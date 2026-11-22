@@ -31,11 +31,12 @@ from app.schemas.social import (
     PersonCandidate,
     PersonOut,
 )
-from app.services import analytics
+from app.services import analytics, linkedin_demo
 from app.services.errors import InvalidRequest, NotFound, PrivacyViolation
 
 MAX_PEOPLE_PER_USER = 500
 MAX_IMPORT_CANDIDATES = 50
+MAX_DEMO_IMPORT_CANDIDATES = 100
 IMPORT_TTL = timedelta(hours=24)
 # Venn keeps notes about people, not ways to reach them.
 _CONTACT_DETAIL = re.compile(
@@ -129,6 +130,11 @@ def to_out(db: Session, person: Person) -> PersonOut:
     )
 
 
+def lock_people_writes(db: Session, user: User) -> None:
+    """Serialize count and duplicate checks for people writes in PostgreSQL."""
+    db.scalar(select(User.id).where(User.id == user.id).with_for_update(key_share=True))
+
+
 def add_person(
     db: Session,
     user: User,
@@ -143,6 +149,7 @@ def add_person(
         raise InvalidRequest("A name is required.")
     notes_clean = (notes or "").strip()[:MAX_NOTES_LEN] or None
     reject_sensitive(clean_name, relationship, notes_clean, *(interests or []))
+    lock_people_writes(db, user)
     count = db.scalar(select(func.count()).select_from(Person).where(Person.owner_user_id == user.id)) or 0
     if count >= MAX_PEOPLE_PER_USER:
         raise InvalidRequest(f"You can keep notes on up to {MAX_PEOPLE_PER_USER} people.")
@@ -212,15 +219,53 @@ def log_interaction(db: Session, person: Person, activity: str | None = None) ->
 
 
 # ---------------------------------------------------------------------- imports
+def existing_names(db: Session, user: User, *, include_samples: bool = False) -> set[str]:
+    query = select(Person.name).where(Person.owner_user_id == user.id)
+    if not include_samples:
+        query = query.where(Person.is_sample.is_(False))
+    return {name.lower() for name in db.scalars(query)}
+
+
+def _is_sample_import(items: list[dict]) -> bool:
+    return bool(items and items[0].get("is_sample"))
+
+
+def _clear_demo_previews(db: Session, user: User, *, expired_only: bool) -> None:
+    query = select(PeopleImport).where(PeopleImport.user_id == user.id, PeopleImport.source == linkedin_demo.SOURCE)
+    if expired_only:
+        query = query.where(PeopleImport.expires_at < utcnow())
+    for row in db.scalars(query):
+        if _is_sample_import(row.items):
+            db.delete(row)
+
+
+def clear_demo_previews(db: Session, user: User) -> None:
+    _clear_demo_previews(db, user, expired_only=False)
+
+
 def propose_import(
     db: Session, user: User, people: list[PersonCandidate], source: str | None = None
 ) -> PeopleImportView:
     """Store a list of people for the user to review. Adds nothing to their notes yet."""
-    existing = {name.lower() for name in db.scalars(select(Person.name).where(Person.owner_user_id == user.id)).all()}
+    return _propose_import(db, user, people[:MAX_IMPORT_CANDIDATES], source)
+
+
+def propose_linkedin_demo(db: Session, user: User) -> PeopleImportView:
+    lock_people_writes(db, user)
+    _clear_demo_previews(db, user, expired_only=True)
+    return _propose_import(
+        db, user, linkedin_demo.candidates()[:MAX_DEMO_IMPORT_CANDIDATES], linkedin_demo.SOURCE, is_sample=True
+    )
+
+
+def _propose_import(
+    db: Session, user: User, people: list[PersonCandidate], source: str | None, *, is_sample: bool = False
+) -> PeopleImportView:
+    existing = existing_names(db, user, include_samples=is_sample)
     items: list[dict] = []
     seen: set[tuple[str, str]] = set()
     skipped = 0
-    for candidate in people[:MAX_IMPORT_CANDIDATES]:
+    for candidate in people:
         raw = (candidate.name, candidate.relationship, candidate.notes, *candidate.interests)
         if any(v and contains_sensitive(v) for v in raw):
             skipped += 1
@@ -242,6 +287,8 @@ def propose_import(
                 "notes": notes,
                 "interests": interests,
                 "last_met_days_ago": candidate.last_met_days_ago,
+                # Only the server-owned demo proposal sets this; source is untrusted.
+                "is_sample": is_sample,
             }
         )
     if not items:
@@ -272,6 +319,7 @@ def import_people(db: Session, user: User, import_id: str, indexes: list[int]) -
         iid = uuid.UUID(str(import_id))
     except (ValueError, TypeError):
         raise NotFound("import not found") from None
+    lock_people_writes(db, user)
     row = db.scalar(select(PeopleImport).where(PeopleImport.id == iid, PeopleImport.user_id == user.id))
     if row is None:
         raise NotFound("import not found")
@@ -280,11 +328,19 @@ def import_people(db: Session, user: User, import_id: str, indexes: list[int]) -
     if as_aware(row.expires_at) < utcnow():
         raise InvalidRequest("This import expired. Propose a new one.")
     items = list(row.items or [])
+    is_sample = _is_sample_import(items)
+    limit = MAX_DEMO_IMPORT_CANDIDATES if is_sample else MAX_IMPORT_CANDIDATES
+    if len(indexes) > limit:
+        raise InvalidRequest(f"You can import up to {limit} people at a time.")
     picked = list(dict.fromkeys(indexes))
     if not picked:
         raise InvalidRequest("Pick at least one person to add.")
     if any(not isinstance(i, int) or i < 0 or i >= len(items) for i in picked):
         raise InvalidRequest("Unknown entry in this import.")
+    if is_sample:
+        # A demo proposal can outlive another import (or a new real note with the same name).
+        existing = existing_names(db, user, include_samples=True)
+        picked = [i for i in picked if items[i]["name"].lower() not in existing]
     count = db.scalar(select(func.count()).select_from(Person).where(Person.owner_user_id == user.id)) or 0
     if count + len(picked) > MAX_PEOPLE_PER_USER:
         raise InvalidRequest(f"You can keep notes on up to {MAX_PEOPLE_PER_USER} people.")
@@ -299,6 +355,7 @@ def import_people(db: Session, user: User, import_id: str, indexes: list[int]) -
             relationship=item.get("relationship"),
             notes=item.get("notes"),
             interests=list(item.get("interests") or []),
+            is_sample=is_sample,
         )
         db.add(person)
         db.flush()

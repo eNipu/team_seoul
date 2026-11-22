@@ -362,6 +362,7 @@ def view_friend(db: Session, user: User, connection_id: str | None = None, perso
             shared_memories=[],
             recent_interactions=people_service.recent_interactions(db, person.id),
             follow_ups=open_follow_ups(db, user, friend),
+            is_sample=friend.is_sample,
         )
     profile = friend.friend_user.profile if friend.friend_user else None
     bio = profile.bio if profile and profile.visibility in ("CONNECTIONS", "PUBLIC") else None
@@ -378,6 +379,7 @@ def view_friend(db: Session, user: User, connection_id: str | None = None, perso
         shared_memories=_shared_memories(friend),
         recent_interactions=_connection_events(db, friend.connection.id),
         follow_ups=open_follow_ups(db, user, friend),
+        is_sample=friend.is_sample,
     )
 
 
@@ -817,6 +819,7 @@ def find_people(db: Session, user: User, query: str, limit: int = 8) -> PeopleSe
                     snippet=snippet,
                     last_interaction_at=friend.last_interaction_at,
                     why=_why(friend, origin, label, _snippet(quote, query_stems, width=100) if quote else None),
+                    is_sample=friend.is_sample,
                 ),
             )
         )

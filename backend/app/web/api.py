@@ -108,7 +108,7 @@ class ImportPreviewBody(BaseModel):
 
 class ImportBody(BaseModel):
     import_id: str = Field(max_length=64)
-    indexes: list[int] = Field(min_length=1, max_length=people_service.MAX_IMPORT_CANDIDATES)
+    indexes: list[int] = Field(min_length=1, max_length=people_service.MAX_DEMO_IMPORT_CANDIDATES)
 
 
 class LinkedInConnectionsBody(BaseModel):
@@ -447,6 +447,11 @@ def build_api(settings: Settings) -> APIRouter:  # noqa: C901 - flat list of rou
         return run(who, lambda db, user: people_service.import_people(db, user, body.import_id, body.indexes))
 
     # --------------------------------------------------------------- linkedin
+    @api.post("/linkedin/demo-preview")
+    def linkedin_demo_preview(who: Identity = Who) -> Any:
+        """Preview 100 fictional connections without contacting LinkedIn or an enrichment service."""
+        return run(who, people_service.propose_linkedin_demo)
+
     @api.post("/linkedin/connections")
     def linkedin_connections(body: LinkedInConnectionsBody, who: Identity = Who) -> Any:
         """The user's own LinkedIn connections, read with the cookies they pasted. Saves nothing."""
@@ -458,7 +463,7 @@ def build_api(settings: Settings) -> APIRouter:  # noqa: C901 - flat list of rou
         page = linkedin_service.fetch_connections(body.cookies, settings.linkedin_max_connections)
 
         def result(db: Session, user: User) -> dict:
-            known = {p.name.lower() for p in people_service.list_people(db, user).people}
+            known = people_service.existing_names(db, user)
             return {
                 "connections": [
                     {
@@ -488,7 +493,7 @@ def build_api(settings: Settings) -> APIRouter:  # noqa: C901 - flat list of rou
         rows = linkedin_service.parse_export(body.csv, settings.linkedin_max_connections)
 
         def result(db: Session, user: User) -> dict:
-            known = {p.name.lower() for p in people_service.list_people(db, user).people}
+            known = people_service.existing_names(db, user)
             return {
                 "connections": [
                     {

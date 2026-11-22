@@ -54,7 +54,7 @@ interface State {
   links: MockLink[];
   responses: T.AnswerResponse[];
   sampleLoaded: boolean;
-  imports: Map<string, T.ImportCandidate[]>;
+  imports: Map<string, { candidates: T.ImportCandidate[]; isSample: boolean; expires: number }>;
 }
 
 const DAY = 86_400_000;
@@ -383,6 +383,22 @@ const LINKEDIN_DEMO: [string, string, string, string, string[]][] = [
   ["sam-rivera", "Sam Rivera", "Recruiter at Brightside", "Based in Austin, Texas", ["Hiring", "Running"]],
 ];
 
+// A compact fictional network for the browser-only demo. The live API supplies its own fixture.
+const DEMO_NAMES = ["Hana", "Mateo", "Amara", "Tobias", "Yuna", "Priya", "Nico", "Leila", "Adaeze", "Felix"];
+const DEMO_SURNAMES = ["Moon", "Ibarra", "Mensah", "Kern", "Baek", "Deshmukh", "Ferretti", "Nassar", "Nwosu", "Moreau"];
+const DEMO_ROLES = [
+  ["Product designer at Pebbleloom Studio", "accessibility", "design systems"],
+  ["Climate data scientist at Rainspoke Analytics", "climate tech", "data visualization"],
+  ["Documentary producer at Lantern Field Films", "documentaries", "photography"],
+  ["Robotics engineer at Copper Finch Labs", "robotics", "open source"],
+  ["UX researcher at Mossbridge Design", "user research", "accessibility"],
+  ["Founder at Saffron Grid Energy", "clean energy", "startups"],
+  ["Coffee roaster at Second Rill Coffee", "specialty coffee", "cycling"],
+  ["Urban planner at Canopy Dial", "urban planning", "public transit"],
+  ["Backend engineer at Driftline Systems", "Python", "developer tools"],
+  ["Sound designer at Paper Current Audio", "sound design", "independent film"],
+];
+
 const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
 function unique(values: string[]): string[] {
@@ -503,7 +519,7 @@ export function createMockApi(options: MockOptions): Api {
       key: "your_people",
       title: "Add the people you care about",
       description: "A name is enough. Notes stay private to you.",
-      done: state.friends.some((f) => f.kind === "person"),
+      done: state.friends.some((f) => f.kind === "person" && !f.isSample),
     },
     {
       key: "connect",
@@ -674,7 +690,7 @@ export function createMockApi(options: MockOptions): Api {
             .filter((p) => p.status === "planned")
             .sort((a, b) => (a.planned_for ?? "9999").localeCompare(b.planned_for ?? "9999")),
           pending_answers: state.responses.length,
-          sample_loaded: state.sampleLoaded,
+          sample_loaded: state.sampleLoaded || state.friends.some((f) => f.isSample),
         };
       }),
     getHelp: () =>
@@ -793,14 +809,15 @@ export function createMockApi(options: MockOptions): Api {
             notes: p.notes?.trim() || null,
             interests: unique(p.interests ?? []),
             last_met_days_ago: p.last_met_days_ago ?? null,
-            already_added: state.friends.some((f) => same(f.name, p.name)),
+            already_added: state.friends.some((f) => f.kind === "person" && !f.isSample && same(f.name, p.name)),
           }));
         const importId = newId("imp");
-        state.imports.set(importId, candidates);
+        const expires = Date.now() + DAY;
+        state.imports.set(importId, { candidates, isSample: false, expires });
         return {
           view: "people_import" as const,
           import_id: importId,
-          expires_at: ahead(1, 12),
+          expires_at: new Date(expires).toISOString(),
           source: source ?? null,
           candidates,
           skipped: people.length - candidates.length,
@@ -818,7 +835,7 @@ export function createMockApi(options: MockOptions): Api {
           headline,
           profile_url: `https://www.linkedin.com/in/${public_identifier}`,
           connected_on: ago(20 + i * 37).slice(0, 10),
-          already_added: state.friends.some((f) => same(f.name, name)),
+          already_added: state.friends.some((f) => f.kind === "person" && !f.isSample && same(f.name, name)),
         }));
         return {
           connections,
@@ -843,7 +860,7 @@ export function createMockApi(options: MockOptions): Api {
           headline,
           profile_url: `https://www.linkedin.com/in/${public_identifier}`,
           connected_on: null,
-          already_added: state.friends.some((f) => same(f.name, name)),
+          already_added: state.friends.some((f) => f.kind === "person" && !f.isSample && same(f.name, name)),
         }));
         return {
           connections,
@@ -867,15 +884,16 @@ export function createMockApi(options: MockOptions): Api {
             notes: [p.headline, demo?.[3]].filter(Boolean).join(". ") + ".",
             interests: demo?.[4] ?? [],
             last_met_days_ago: null,
-            already_added: state.friends.some((f) => same(f.name, p.name)),
+            already_added: state.friends.some((f) => f.kind === "person" && !f.isSample && same(f.name, p.name)),
           };
         });
         const importId = newId("imp");
-        state.imports.set(importId, candidates);
+        const expires = Date.now() + DAY;
+        state.imports.set(importId, { candidates, isSample: false, expires });
         return {
           view: "people_import" as const,
           import_id: importId,
-          expires_at: ahead(1, 12),
+          expires_at: new Date(expires).toISOString(),
           source: "linkedin",
           candidates,
           skipped: 0,
@@ -884,23 +902,67 @@ export function createMockApi(options: MockOptions): Api {
           details_error: null,
         };
       }),
+    linkedinDemoPreview: () =>
+      wait(() => {
+        const candidates = DEMO_SURNAMES.flatMap((_, group) =>
+          DEMO_NAMES.map((firstName, i): T.ImportCandidate => {
+            const name = `${firstName} ${DEMO_SURNAMES[(i + group) % DEMO_SURNAMES.length]}`;
+            const [headline, ...interests] = DEMO_ROLES[(i + 3 * group) % DEMO_ROLES.length];
+            return {
+              index: group * DEMO_NAMES.length + i,
+              name,
+              relationship: "LinkedIn connection",
+              notes: `${headline}.`,
+              interests,
+              already_added: state.friends.some((f) => f.kind === "person" && same(f.name, name)),
+              last_met_days_ago: null,
+            };
+          }),
+        );
+        const importId = newId("imp");
+        const expires = Date.now() + DAY;
+        state.imports.set(importId, { candidates, isSample: true, expires });
+        return {
+          view: "people_import" as const,
+          import_id: importId,
+          expires_at: new Date(expires).toISOString(),
+          source: "linkedin_demo",
+          candidates,
+          skipped: 0,
+          note: "Nothing is added until you confirm.",
+        };
+      }),
     importPeople: (importId, indexes) =>
       wait(() => {
-        const candidates = state.imports.get(importId);
-        if (!candidates) fail("NOT_FOUND", "This import has expired. Paste the list again.", 404);
-        const imported = candidates
-          .filter((c) => indexes.includes(c.index))
-          .map((c) =>
-            toPerson(
-              addPerson({
+        const proposal = state.imports.get(importId);
+        if (!proposal) fail("NOT_FOUND", "This import is no longer available. Prepare a new one.", 404);
+        if (proposal.expires < Date.now()) fail("INVALID_REQUEST", "This import expired. Propose a new one.", 400);
+        const { candidates, isSample } = proposal;
+        const limit = isSample ? 100 : 50;
+        if (indexes.length === 0 || indexes.length > limit || indexes.some((i) => !candidates[i])) {
+          fail("INVALID_REQUEST", `Choose between 1 and ${limit} people from this review.`, 400);
+        }
+        const selected = candidates.filter(
+          (c) => indexes.includes(c.index) &&
+            !(isSample && state.friends.some((f) => f.kind === "person" && same(f.name, c.name))),
+        );
+        if (state.friends.filter((f) => f.kind === "person").length + selected.length > 500) {
+          fail("INVALID_REQUEST", "You can keep notes on up to 500 people.", 400);
+        }
+        const imported = selected.map((c) =>
+          toPerson(
+            addPerson(
+              {
                 name: c.name,
                 relationship: c.relationship ?? undefined,
                 notes: c.notes ?? undefined,
                 interests: c.interests,
                 last_met_days_ago: c.last_met_days_ago ?? undefined,
-              }),
+              },
+              isSample,
             ),
-          );
+          ),
+        );
         state.imports.delete(importId);
         return imported;
       }),
@@ -940,6 +1002,7 @@ export function createMockApi(options: MockOptions): Api {
           shared_memories: f.shared.map((m) => ({ ...m })),
           recent_interactions: f.hangouts.slice(0, 5),
           follow_ups: f.followUps.map((x) => ({ ...x })),
+          is_sample: f.isSample,
         };
       }),
     getVenn: (kind, id) =>
@@ -1071,6 +1134,7 @@ export function createMockApi(options: MockOptions): Api {
               snippet: fromMemory ? fromMemory.description : (shared?.description ?? null),
               why,
               last_interaction_at: f.last,
+              is_sample: f.isSample,
             });
           }
         }
@@ -1487,6 +1551,9 @@ export function createMockApi(options: MockOptions): Api {
         state.friends = state.friends.filter((f) => !f.isSample);
         state.memories = state.memories.filter((m) => m.source !== "sample");
         state.requests = state.requests.filter((r) => !r.isSample);
+        for (const [id, proposal] of state.imports) {
+          if (proposal.isSample) state.imports.delete(id);
+        }
         state.plans.forEach((p) => {
           p.members = p.members.filter((m) => !ids.has(m.id));
         });

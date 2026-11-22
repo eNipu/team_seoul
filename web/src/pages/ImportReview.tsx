@@ -1,6 +1,6 @@
 // The last step of every people import: tick who to add. Nothing is added before this.
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { api } from "../api";
 import { plural, type PeopleImport } from "../types";
 import { Avatar, InlineError, Tag, useAction } from "../ui";
@@ -8,27 +8,47 @@ import { Avatar, InlineError, Tag, useAction } from "../ui";
 export function ImportReview({
   preview,
   intro,
+  selectionTools = false,
   onBack,
   onDone,
 }: {
   preview: PeopleImport;
   intro?: ReactNode;
+  selectionTools?: boolean;
   onBack: () => void;
   onDone: (count: number) => void;
 }) {
   const [checked, setChecked] = useState<number[]>(() =>
-    preview.candidates.filter((c) => !c.already_added).map((c) => c.index),
+    selectionTools ? [] : preview.candidates.filter((c) => !c.already_added).map((c) => c.index),
   );
   const action = useAction();
   const selectable = preview.candidates.filter((c) => !c.already_added);
+  const allSelected = checked.length === selectable.length;
+  const instructions = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (selectionTools) instructions.current?.focus();
+  }, [selectionTools]);
 
   return (
     <div className="stack">
-      <p className="dialog__text">
+      <p className="dialog__text" ref={instructions} tabIndex={selectionTools ? -1 : undefined}>
         Check who to add. Nothing is added until you confirm.
         {preview.skipped > 0 && ` ${plural(preview.skipped, "entry was", "entries were")} skipped.`}
       </p>
       {intro}
+      {selectionTools && (
+        <div className="row row--between">
+          <p className="count" aria-live="polite">{checked.length} of {preview.candidates.length} selected</p>
+          <button
+            type="button"
+            className="btn btn--small"
+            disabled={action.busy || selectable.length === 0}
+            onClick={() => setChecked(allSelected ? [] : selectable.map((c) => c.index))}
+          >
+            {allSelected && selectable.length > 0 ? "Clear selection" : "Select all"}
+          </button>
+        </div>
+      )}
       <ul className="review">
         {preview.candidates.map((c) => {
           const on = checked.includes(c.index);
@@ -38,7 +58,7 @@ export function ImportReview({
                 <input
                   type="checkbox"
                   checked={on}
-                  disabled={c.already_added}
+                  disabled={action.busy || c.already_added}
                   onChange={() => setChecked(on ? checked.filter((i) => i !== c.index) : [...checked, c.index])}
                 />
                 <Avatar name={c.name} size="small" />

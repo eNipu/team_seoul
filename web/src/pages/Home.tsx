@@ -99,8 +99,8 @@ export function SampleBanner({ onRemoved }: { onRemoved: () => void }) {
           title="Remove the sample friends?"
           body={
             <p>
-              This removes the sample friends, their notes, follow-ups and the sample memories. Anything you added yourself
-              stays.
+              This removes sample friends, their notes and follow-ups (including edits), and sample memories. Your own
+              contacts and memories stay.
             </p>
           }
           confirmLabel="Remove sample data"

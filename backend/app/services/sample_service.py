@@ -34,7 +34,7 @@ from app.models import (
 )
 from app.models._base import utcnow
 from app.schemas.social import SampleLoadedOut, SampleRemovedOut
-from app.services import analytics
+from app.services import analytics, people_service
 from app.services.user_service import SAMPLE_SUBJECT_PREFIX
 
 SOURCE = "sample"
@@ -196,7 +196,9 @@ def is_loaded(db: Session, owner: User) -> bool:
 
 
 def remove(db: Session, owner: User) -> SampleRemovedOut:
-    """Delete the caller's sample circle. Their connections, hangouts and follow-ups cascade."""
+    """Delete the caller's sample circle and discard pending demo imports."""
+    people_service.lock_people_writes(db, owner)
+    people_service.clear_demo_previews(db, owner)
     friends = sample_users(db, owner)
     for friend in friends:
         db.delete(friend)

@@ -1,9 +1,9 @@
-// Import from LinkedIn: paste your session cookies, pick connections, review, add.
+// Import from a LinkedIn export, a session, or a fictional demo network.
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { api } from "../api";
 import { Icon } from "../icons";
-import { plural, type LinkedInConnections, type LinkedInImport } from "../types";
+import { plural, type LinkedInConnections, type LinkedInImport, type PeopleImport } from "../types";
 import { Avatar, Field, InlineError, Notice, Tag, useAction } from "../ui";
 import { ImportReview } from "./ImportReview";
 
@@ -11,16 +11,27 @@ const MAX_COOKIE_CHARS = 20000;
 
 const MAX_FILE_BYTES = 4_000_000;
 
-export function LinkedInFlow({ onDone, onCancel }: { onDone: (count: number) => void; onCancel: () => void }) {
-  const [way, setWay] = useState<"file" | "cookies">("file");
+const METHODS = { file: "Export file", cookies: "Session cookies", demo: "Demo connections" } as const;
+type Method = keyof typeof METHODS;
+type Preview = { kind: "linkedin"; data: LinkedInImport } | { kind: "demo"; data: PeopleImport };
+
+export function LinkedInFlow({
+  onDone,
+  onCancel,
+}: {
+  onDone: (count: number, kind: Preview["kind"]) => void;
+  onCancel: () => void;
+}) {
+  const [way, setWay] = useState<Method>("file");
   const [fileName, setFileName] = useState<string | null>(null);
   const [cookies, setCookies] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [list, setList] = useState<LinkedInConnections | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
   const [filter, setFilter] = useState("");
-  const [preview, setPreview] = useState<LinkedInImport | null>(null);
+  const [preview, setPreview] = useState<Preview | null>(null);
   const action = useAction();
+  const returnedFromDemo = useRef(false);
 
   const shown = useMemo(() => {
     const q = filter.trim().toLowerCase();
@@ -28,22 +39,38 @@ export function LinkedInFlow({ onDone, onCancel }: { onDone: (count: number) => 
     return q ? all.filter((c) => `${c.name} ${c.headline ?? ""}`.toLowerCase().includes(q)) : all;
   }, [list, filter]);
 
-  if (preview) {
+  if (preview?.kind === "demo") {
     return (
       <ImportReview
-        preview={preview}
+        preview={preview.data}
+        selectionTools
+        onBack={() => {
+          returnedFromDemo.current = true;
+          setPreview(null);
+        }}
+        onDone={(count) => onDone(count, "demo")}
+        intro={<Notice tone="quiet">These profiles are fictional. Any you add will be marked as samples.</Notice>}
+      />
+    );
+  }
+
+  if (preview?.kind === "linkedin") {
+    const data = preview.data;
+    return (
+      <ImportReview
+        preview={data}
         onBack={() => setPreview(null)}
-        onDone={onDone}
+        onDone={(count) => onDone(count, "linkedin")}
         intro={
-          preview.details_error ? (
+          data.details_error ? (
             <Notice icon="alert" tone="quiet">
-              Profile details could not be fetched ({preview.details_error}) These people have their LinkedIn
-              headline only.
+              Profile details could not be fetched ({data.details_error}) These people have their LinkedIn headline
+              only.
             </Notice>
-          ) : list?.details_available && preview.details_for < preview.candidates.length ? (
+          ) : list?.details_available && data.details_for < data.candidates.length ? (
             <Notice tone="quiet">
-              Profile details were found for {preview.details_for} of {preview.candidates.length}. The others have
-              their LinkedIn headline only.
+              Profile details were found for {data.details_for} of {data.candidates.length}. The others have their
+              LinkedIn headline only.
             </Notice>
           ) : undefined
         }
@@ -131,7 +158,7 @@ export function LinkedInFlow({ onDone, onCancel }: { onDone: (count: number) => 
                 const people = list.connections
                   .filter((c) => picked.includes(c.public_identifier ?? c.name))
                   .map((c) => ({ public_identifier: c.public_identifier, name: c.name, headline: c.headline }));
-                setPreview(await api.linkedinPreview(people));
+                setPreview({ kind: "linkedin", data: await api.linkedinPreview(people) });
               })
             }
           >
@@ -149,24 +176,60 @@ export function LinkedInFlow({ onDone, onCancel }: { onDone: (count: number) => 
   }
 
   const tabs = (
-    <div className="tabs" role="tablist" aria-label="How to import">
-      {(["file", "cookies"] as const).map((t) => (
+    <div className="tabs" role="group" aria-label="How to import">
+      {(Object.keys(METHODS) as Method[]).map((t) => (
         <button
           key={t}
           type="button"
-          role="tab"
-          aria-selected={way === t}
+          aria-pressed={way === t}
+          disabled={action.busy}
           className={`tabs__tab ${way === t ? "tabs__tab--on" : ""}`}
           onClick={() => {
             setWay(t);
             action.clear();
           }}
         >
-          {t === "file" ? "Export file" : "Session cookies"}
+          {METHODS[t]}
         </button>
       ))}
     </div>
   );
+
+  if (way === "demo") {
+    return (
+      <div className="stack">
+        {tabs}
+        <p className="dialog__text">
+          Try the import with 100 fictional, AI-generated LinkedIn-style profiles. No LinkedIn account, cookies,
+          or export file needed.
+        </p>
+        <Notice tone="quiet">
+          Review who to add before saving. On Home, <strong>Remove sample data</strong> clears these profiles along
+          with any other sample data.
+        </Notice>
+        <InlineError message={action.error} />
+        <div className="dialog__actions">
+          <button type="button" className="btn" onClick={onCancel} disabled={action.busy}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="btn btn--primary"
+            disabled={action.busy}
+            ref={(button) => {
+              if (button && returnedFromDemo.current) {
+                returnedFromDemo.current = false;
+                button.focus();
+              }
+            }}
+            onClick={() => void action.run(async () => setPreview({ kind: "demo", data: await api.linkedinDemoPreview() }))}
+          >
+            {action.busy ? "Loading…" : "Review 100 demo connections"}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (way === "file") {
     return (
