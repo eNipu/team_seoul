@@ -367,10 +367,6 @@ export function ManualCopy({ text }: { text: string }) {
   );
 }
 
-/** Marks a made-up friend, person or memory from the sample circle. */
-export function SampleTag() {
-  return <span className="badge badge--sample">Preview</span>;
-}
 
 /** The people a memory is about, as small chips. Renders nothing for an empty list. */
 export function PeopleChips({ people, label = "About" }: { people: string[]; label?: string }) {

@@ -17,7 +17,6 @@ import {
 } from "../types";
 import { ActionError, Avatar, SectionTitle, useAction, type Action, type ViewProps } from "./common";
 import type { HostBridge } from "../mcp/client";
-import DemoImport from "./DemoImport";
 import MemoriesTab from "./MemoriesTab";
 import FriendsTab from "./FriendsTab";
 import SetupCard from "./Setup";
@@ -34,7 +33,6 @@ interface Props extends ViewProps<DashboardViewData> {
 export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }: Props) {
   const id = useId();
   const action = useAction();
-  const demoAction = useAction();
   const [tab, setTabState] = useState<DashboardTab>(initialTab ?? "profile");
   const [profile, setProfile] = useState<Profile>(data.profile);
   const [memories, setMemories] = useState<Memory[]>(data.memories);
@@ -133,9 +131,7 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
           />
         )}
         {tab === "memories" && <MemoriesTab memories={memories} bridge={bridge} nav={nav} action={action} onChange={(next) => { setMemories(next); if (next.length < memories.length) void reload(); }} />}
-        {tab === "friends" && <>
-          <DemoImport nav={nav} action={demoAction} />
-          <ActionError action={demoAction} />
+        {tab === "friends" && (
           <FriendsTab
             connections={connections}
             people={people}
@@ -149,7 +145,7 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
             onDashboard={applyDashboard}
             sampleLoaded={sampleLoaded}
           />
-        </>}
+        )}
       </div>
     </section>
     {sampleLoaded && <PreviewCleanup bridge={bridge} onChanged={() => nav.replaceView("venn_show_dashboard", {})} />}

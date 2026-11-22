@@ -108,6 +108,8 @@ Read `SCHEDULING.md` before any task in this group.
 | [T53](T53-venn-overlap.md) | Venn Overlap: nearby plans with mutual introductions | web + backend | L | – | done |
 | [T54](T54-social-import-interests.md) | Social import previews and related interests | web + plugin + backend | M | T48, T52 | done |
 | [T55](T55-plugin-onboarding.md) | Three-step plugin onboarding and paginated memory review | plugin + widget + backend | M | T54 | done |
+| [T56](T56-plugin-profile-import.md) | Open either platform directly from Add your people | plugin + widget | S | T55 | done |
+| [T57](T57-quiet-circle-presentation.md) | Show the starter circle without load notices or per-row badges | widget + plugin | S | T56 | done |
 
 T04 and T12 can start right away, in parallel with the backend tasks, because the shapes they
 render are fixed in `CONTRACTS.md`.
