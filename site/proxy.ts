@@ -4,7 +4,7 @@ import { type NextRequest, NextResponse } from "next/server";
 // METRICS_PASSWORD. In production it stays closed until that variable is set,
 // so a forgotten setting can never publish the numbers.
 
-export const config = { matcher: "/metrics/:path*" };
+export const config = { matcher: "/:path*" };
 
 const HEADERS = { "Cache-Control": "no-store", "X-Robots-Tag": "noindex" };
 
@@ -26,21 +26,34 @@ function passwordFrom(request: NextRequest): string | null {
 }
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
+  const country =
+    request.headers.get("x-vercel-ip-country") ?? request.headers.get("cf-ipcountry") ?? request.cookies.get("venn_cc")?.value ?? "XX";
+  const setCountry = (response: NextResponse) => {
+    response.cookies.set("venn_cc", /^[A-Za-z]{2}$/.test(country) ? country.toUpperCase() : "XX", {
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 180,
+    });
+    return response;
+  };
+
+  if (!request.nextUrl.pathname.startsWith("/metrics")) return setCountry(NextResponse.next());
+
   const expected = process.env.METRICS_PASSWORD;
   if (!expected) {
-    if (process.env.NODE_ENV !== "production") return NextResponse.next();
-    return new NextResponse("Metrics are locked. Set METRICS_PASSWORD on the server to open them.", {
+    if (process.env.NODE_ENV !== "production") return setCountry(NextResponse.next());
+    return setCountry(new NextResponse("Metrics are locked. Set METRICS_PASSWORD on the server to open them.", {
       status: 503,
       headers: HEADERS,
-    });
+    }));
   }
 
   const given = passwordFrom(request);
   // Comparing digests keeps the comparison time independent of where the strings differ.
-  if (given !== null && (await digest(given)) === (await digest(expected))) return NextResponse.next();
+  if (given !== null && (await digest(given)) === (await digest(expected))) return setCountry(NextResponse.next());
 
-  return new NextResponse("Password required.", {
+  return setCountry(new NextResponse("Password required.", {
     status: 401,
     headers: { ...HEADERS, "WWW-Authenticate": 'Basic realm="Venn metrics", charset="UTF-8"' },
-  });
+  }));
 }
