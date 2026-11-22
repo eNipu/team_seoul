@@ -1289,3 +1289,8 @@ html[data-motion] [data-reveal="group"]:not([data-in]) .usecase .moment { opacit
   .hero-rot { gap: 0.5rem; }
   #hero .hero__chat, #hero .hero-rot__controls { display: none; }
 }
+
+/* same email signup at the end of How it works and Pricing */
+.join-circle__grid { display: grid; gap: 2rem; align-items: center; }
+@media (min-width: 900px) { .join-circle__grid { grid-template-columns: 1fr minmax(20rem, 28rem); } }
+.join-circle .hero__join { position: relative; }
