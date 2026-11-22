@@ -22,7 +22,6 @@ import { inviteHasRoom } from "@/lib/waitlist";
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
-const PROFILE_URL = "https://app.joinvennai.com/app/account";
 
 
 // Someone who arrives with `?ref=` is told whether that link still holds a place for them.
@@ -46,8 +45,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
     <>
       <main>
         <section className="section section--dark" id="hero" aria-labelledby="hero-title" tabIndex={-1}>
-          <SiteHeader note={<a className="site-header__account" href={PROFILE_URL}>My Venn</a>}
-            action={<ScrollArrow href="#inside" label="Go to One week with Venn" />} />
+          <SiteHeader action={<ScrollArrow href="#inside" label="Go to One week with Venn" />} />
           <div className="wrap hero__grid">
             <div className="hero__copy">
               <p className="eyebrow">Early-access waitlist</p>
@@ -123,7 +121,6 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
             <span>© {new Date().getFullYear()} Venn</span>
             <a href="/privacy">Privacy</a>
             <a href="/pricing">Pricing</a>
-            <a href={PROFILE_URL}>My Venn</a>
             <CookieSettingsLink />
           </div>
           <p>The people in the examples are made up.</p>
