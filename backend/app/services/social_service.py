@@ -193,6 +193,21 @@ def redeem_invite(db: Session, user: User, code: str) -> RedeemInviteOut:
     """
     settings = get_settings()
     invite = db.scalar(select(Invite).where(Invite.code == normalize_code(code)).with_for_update())
+    # Scanning a used or expired code again is fine when you are already connected to its owner:
+    # say so instead of an error (this reveals nothing new to the two people already connected).
+    if invite is not None and invite.revoked_at is None and invite.created_by_user_id != user.id:
+        owner = db.get(User, invite.created_by_user_id)
+        if owner is not None and not is_blocked(db, user.id, owner.id):
+            already = get_connection_between(db, user.id, owner.id)
+            if already:
+                owner_name = display_name(owner)
+                return RedeemInviteOut(
+                    status="ALREADY_CONNECTED",
+                    request_id=None,
+                    connection_id=str(already.id),
+                    inviter_display_name=owner_name,
+                    message=f"You and {owner_name} are connected.",
+                )
     # Same error for unknown / revoked / expired / used-up codes: no oracle for code guessing.
     if (
         invite is None

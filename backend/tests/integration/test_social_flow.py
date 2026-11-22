@@ -171,3 +171,12 @@ def test_delete_account_requires_confirmation(alice, bob):
     profile = alice.ok("venn_get_profile")
     assert profile["is_new"] is True
     assert profile["memory_count"] == 0
+
+
+def test_scanning_a_used_code_again_when_already_connected_says_connected(alice, bob):
+    code = alice.ok("venn_create_invite")["code"]
+    first = bob.ok("venn_redeem_invite", code=code)
+    assert first["status"] in ("CONNECTED", "ALREADY_CONNECTED")
+    again = bob.ok("venn_redeem_invite", code=code)
+    assert again["status"] == "ALREADY_CONNECTED"
+    assert "are connected" in again["message"]
