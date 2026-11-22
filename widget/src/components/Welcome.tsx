@@ -148,7 +148,7 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
     <section className="onb">
       <StepCount n={2} />
       <h2 className="onb__title">Connect your AI memories.</h2>
-      <p className="onb__body">ChatGPT sends Venn drafts to review. You import what you want on the next card.</p>
+      <p className="onb__body">Private. You choose what to save.</p>
       <ActionError action={action} />
       <button type="button" className="onb__cta" disabled={busy} onClick={() => void connect()}>
         {phase === "starting" ? "Connecting…" : "Connect"}

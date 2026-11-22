@@ -31,32 +31,23 @@ export default function Help({ data, bridge, nav }: ViewProps<HelpViewData>) {
     .slice(0, 3);
   const failed = picks.filter((p) => examples[p.id] === "failed");
 
+  // Help is one line and quiet links: the setup guide and every example sit one tap away, never stacked.
+  const guide = data.onboarding && [data.onboarding.memories_ready, data.onboarding.contacts_ready, data.onboarding.matches_reviewed].some((r) => r !== true);
   return (
     <>
-      <SetupCard data={data} nav={nav} />
-
       <section className="vc">
         <h2 className="vc__title">Just ask Venn.</h2>
-        <ul className="vc__picks" aria-label="Things to try">
-          {picks.map(({ topic, id, text }) => (
-            <li key={id}>
-              {examples[id] === "sent" ? (
-                <span className="vc__pick" role="status">
-                  <span>Sent. Continue in the chat.</span>
-                  <Icon name="check" size={16} />
-                </span>
-              ) : (
-                <button type="button" className="vc__pick" disabled={sending} onClick={() => void tryIt(id, text)}
-                  aria-label={`${topic.title}: ${text}`}>
-                  <span>{examples[id] === "sending" ? "Sending…" : `“${text}”`}</span>
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
+        <p className="vc__muted">Say what you need in the chat. Venn will tell you here when something matters.</p>
         {failed.map((e) => (
           <ChatFallback key={e.id} text={e.text} />
         ))}
+
+        {guide && (
+          <details className="vc__more">
+            <summary>Getting started</summary>
+            <SetupCard data={data} nav={nav} />
+          </details>
+        )}
 
         <details className="vc__more">
           <summary>Everything Venn can do</summary>

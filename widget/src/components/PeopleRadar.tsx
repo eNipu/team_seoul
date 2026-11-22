@@ -78,8 +78,8 @@ export default function PeopleRadar({ candidates, picked, busy, toggle }: Props)
         {person.notes && <p className="small">{person.notes}</p>}
         <ImportInterests {...person} />
         {person.already_added && <p className="radar-warning">Same name in your people{person.existing_relationships?.length ? ` · ${person.existing_relationships.join(", ")}` : ""}. Select only to add a separate person.</p>}
-        <button type="button" className="btn" disabled={busy} aria-pressed={selected} onClick={() => toggle(person)}>
-          <Icon name={selected ? "check" : "plus"} size={17} />{selected ? "Selected to add" : "Select to add"}
+        <button type="button" className="onb__link" disabled={busy} aria-pressed={selected} onClick={() => toggle(person)}>
+          {selected ? `Leave ${person.name.split(/\s+/)[0]} out` : `Add ${person.name.split(/\s+/)[0]} back`}
         </button>
       </section>
     </div>
