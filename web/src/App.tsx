@@ -26,7 +26,8 @@ interface NavItem {
   icon: IconName;
 }
 
-// Three places, nothing more. Follow-ups, plans, answers and account live in the account menu.
+// Three places, nothing more. Account and sign out live in the avatar menu. Follow-ups, plans and
+// answers still open by URL; nothing links to follow-ups or plans.
 const PRIMARY_NAV: NavItem[] = [
   { to: "/", label: "Home", icon: "home" },
   { to: "/people", label: "Circle", icon: "users" },
@@ -126,15 +127,6 @@ function AccountMenu() {
               <span>{session.username.includes("@") ? session.username : `@${session.username}`}</span>
             )}
           </div>
-          <Link to="/follow-ups" className="menu__item">
-            Follow-ups
-          </Link>
-          <Link to="/plans" className="menu__item">
-            Plans
-          </Link>
-          <Link to="/answers" className="menu__item">
-            Answers from friends
-          </Link>
           <Link to="/account" className="menu__item">
             Account
           </Link>

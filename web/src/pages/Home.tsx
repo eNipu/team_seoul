@@ -1,20 +1,19 @@
-// Home: the next moment (who to reach out to, why, one action) and your circle. Nothing else.
+// Home: one recommendation from what a friend chose to share (their AI's signal meets yours),
+// one action, then your circle. No reminders, no dashboard.
 
 import { useState } from "react";
 import { api } from "../api";
 import { Icon } from "../icons";
 import { Link } from "../router";
 import { useSession } from "../session";
-import { LIMITS, firstName, friendPath, joinNames, plural, type DashboardHome, type WeekAction } from "../types";
+import { firstName, friendPath, joinNames, plural, type DashboardHome, type FriendKind } from "../types";
 import {
   Avatar,
   ConfirmDialog,
   CopyButton,
   ErrorState,
-  InlineError,
   Loaded,
   Skeleton,
-  useAction,
   useAsync,
   useToast,
 } from "../ui";
@@ -46,117 +45,96 @@ export function SampleBanner({ onRemoved }: { onRemoved: () => void }) {
   );
 }
 
-/** What the yellow card says: the message to send, the thing to ask, or the plan. */
-function momentText(a: WeekAction): string {
-  if (a.type === "reach_out" && a.draft_message) return a.draft_message;
-  if (a.type === "follow_up" && a.follow_up) return a.follow_up.text;
-  if (a.type === "plan" && a.suggestion) return a.suggestion.title;
-  return a.reason;
+interface Signal {
+  kind: FriendKind;
+  id: string;
+  name: string;
+  /** One plain message, the way ChatGPT would say it. */
+  message: string;
+  draft: string;
+  /** "Shared by Priya's AI · via venn", or Venn's own suggestion. */
+  provenance: string;
 }
 
-function MomentAction({ action, onChanged }: { action: WeekAction; onChanged: () => void }) {
-  const toast = useToast();
-  const act = useAction();
-  const [saved, setSaved] = useState(false);
-  const s = action.suggestion;
-  let button = (
-    <Link to={friendPath(action.kind, action.id)} className="btn btn--primary btn--pill">
-      Open {firstName(action.display_name)}
-    </Link>
-  );
-  if (action.type === "reach_out" && action.draft_message) {
-    button = <CopyButton text={action.draft_message} label="Copy message" className="btn btn--primary btn--pill" icon={false} />;
-  } else if (action.type === "follow_up" && action.follow_up) {
-    button = (
-      <button
-        type="button"
-        className="btn btn--primary btn--pill"
-        disabled={act.busy}
-        onClick={() =>
-          void act.run(async () => {
-            await api.completeFollowUp(action.follow_up?.follow_up_id ?? "");
-            toast("Done.");
-            onChanged();
-          })
-        }
-      >
-        Mark done
-      </button>
-    );
-  } else if (action.type === "plan" && s) {
-    button = (
-      <button
-        type="button"
-        className="btn btn--primary btn--pill"
-        disabled={act.busy || saved}
-        onClick={() =>
-          void act.run(async () => {
-            await api.createPlan({
-              title: s.title.slice(0, LIMITS.planTitle),
-              details: s.description.slice(0, LIMITS.planDetails) || undefined,
-              ...(action.kind === "connection" ? { connection_ids: [action.id] } : { person_ids: [action.id] }),
-            });
-            setSaved(true);
-            toast(`Plan saved with ${firstName(action.display_name)}.`);
-            onChanged();
-          })
-        }
-      >
-        {saved ? "Plan saved" : "Save plan"}
-      </button>
-    );
+const lower = (s: string) => s.trim().toLowerCase();
+
+/** "Shoots medium format." -> "Jun shoots medium format."; first-person lines are quoted. */
+function retell(first: string, said: string): string {
+  const t = said.trim().replace(/[.!]+$/, "");
+  if (/^(I|I'm|I've|My|We|We're|Our)\b/.test(t)) return `${first} shared “${t}.”`;
+  return `${first} ${t.charAt(0).toLowerCase()}${t.slice(1)}.`;
+}
+
+/** Pick the strongest thing a friend chose to share that meets something you care about. */
+async function findSignal(): Promise<Signal | null> {
+  const friends = await api.listFriends();
+  const onVenn = friends.filter((f) => f.on_venn).slice(0, 6);
+  const details = await Promise.all(onVenn.map((f) => api.getFriend(f.kind, f.id).catch(() => null)));
+  let best: { score: number; signal: Signal } | null = null;
+  for (const f of details) {
+    if (!f) continue;
+    const mine = new Set(f.shared_interests.map(lower));
+    for (const m of f.shared_memories) {
+      const overlap = m.tags.find((t) => mine.has(lower(t)));
+      const score =
+        (overlap ? 2 : 0) + (m.category === "INTEREST" || m.category === "PREFERENCE" ? 0 : 1) + (m.description ? 1 : 0);
+      const first = firstName(f.display_name);
+      const signal: Signal = {
+        kind: f.kind,
+        id: f.id,
+        name: f.display_name,
+        message: `Btw, ${retell(first, m.description || m.title)}${overlap ? ` You're into ${overlap} too.` : ""} I think you should reconnect.`,
+        draft: `Hey ${first}, saw you're into ${lower(m.title)}. I'm in, when are you free?`,
+        provenance: `Shared by ${first}'s AI · via venn`,
+      };
+      if (!best || score > best.score) best = { score, signal };
+    }
   }
-  return (
-    <>
-      {button}
-      <InlineError message={act.error} />
-    </>
-  );
+  if (best) return best.signal;
+  // Nobody has shared anything yet: fall back to Venn's own idea from your saved interests.
+  const { idea } = await api.getCircleIdea();
+  if (!idea) return null;
+  return {
+    kind: idea.person.kind,
+    id: idea.person.id,
+    name: idea.person.display_name,
+    message: `Btw, ${firstName(idea.person.display_name)} is into ${idea.topic}, like you. I think you should reach out.`,
+    draft: idea.draft,
+    provenance: "Suggested by Venn · only you see this",
+  };
 }
 
-function NextMoment({ onChanged }: { onChanged: () => void }) {
-  const week = useAsync(() => api.getThisWeek(), []);
-  
+function NextMoment() {
+  const signal = useAsync(async () => ({ s: await findSignal() }), []);
   return (
-    <Loaded state={week} skeleton={<Skeleton rows={2} />}>
-      {(w) => {
-        const actions = [...w.actions].sort((a, b) => Number(b.type === "follow_up") - Number(a.type === "follow_up"));
-        if (actions.length === 0) {
-          return (
-            <section className="next">
-              <h1 id="page-title" className="next__title">
-                You're all caught up.
-              </h1>
-            </section>
-          );
-        }
-        const a = actions[0];
-        return (
-          <section className="next" aria-labelledby="page-title">
+    <Loaded state={signal} skeleton={<Skeleton rows={2} />}>
+      {({ s }) =>
+        s === null ? (
+          <section className="next">
             <h1 id="page-title" className="next__title">
-              {a.title}.
+              Nothing new from your circle yet.
             </h1>
-            <Link to={friendPath(a.kind, a.id)} className="moment" aria-label={`${a.display_name}: ${a.reason}`}>
-              <span className="moment__who">
-                <Avatar name={a.display_name} size="small" />
-                <span>{a.type === "follow_up" ? a.display_name : a.reason}</span>
-              </span>
-              <span className="moment__text">{momentText(a)}</span>
-              <small>Only you see this · via venn.</small>
-            </Link>
             <div className="next__actions">
-              <MomentAction
-                key={`${a.type}:${a.id}`}
-                action={a}
-                onChanged={() => {
-                  week.reload();
-                  onChanged();
-                }}
-              />
+              <Link to="/account" query={{ section: "connect" }} className="btn btn--primary btn--pill">
+                Invite a friend
+              </Link>
             </div>
           </section>
-        );
-      }}
+        ) : (
+          <section className="next" aria-labelledby="page-title">
+            <h1 id="page-title" className="sr-only">
+              From your circle
+            </h1>
+            <Link to={friendPath(s.kind, s.id)} className="say">
+              <span className="say__text">{s.message}</span>
+              <small>{s.provenance}</small>
+            </Link>
+            <div className="next__actions">
+              <CopyButton text={s.draft} label="Say hi" className="btn btn--primary btn--pill" icon={false} />
+            </div>
+          </section>
+        )
+      }
     </Loaded>
   );
 }
@@ -189,7 +167,7 @@ function Circle() {
 function Dashboard({ home, reloadHome }: { home: DashboardHome; reloadHome: () => void }) {
   return (
     <div className="page page--home">
-      <NextMoment onChanged={reloadHome} />
+      <NextMoment />
       <Circle />
       {(home.pending_requests.length > 0 || home.pending_answers > 0) && (
         <div className="quiet-lines">

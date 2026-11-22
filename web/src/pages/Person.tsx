@@ -1,38 +1,28 @@
-// One friend: what you know, what you share, what to do next.
+// One friend: what they shared, what you have in common, one action.
 
 import { useState } from "react";
 import { api } from "../api";
-import { CategoryIcon, Icon } from "../icons";
+import { CategoryIcon } from "../icons";
 import { navigate } from "../router";
-import {
-  LIMITS,
-  firstName,
-  formatDate,
-  formatLastSeen,
-  type ActivitySuggestion,
-  type AskLink,
-  type Friend,
-  type FriendKind,
-} from "../types";
+import { firstName, type FriendKind } from "../types";
 import {
   Avatar,
   Card,
   Chips,
   ConfirmDialog,
+  CopyButton,
   Dialog,
   ErrorState,
-  InlineError,
   Loaded,
   Notice,
   PageHeader,
   Skeleton,
   Tag,
-  useAction,
   useAsync,
   useToast,
 } from "../ui";
 import VennDiagram from "../VennDiagram";
-import { AskLinkPanel, PersonForm, TickButton } from "./shared";
+import { PersonForm } from "./shared";
 
 interface Props {
   kind: FriendKind;
@@ -77,277 +67,11 @@ function VennSection({ kind, id, name, version }: Props & { name: string; versio
   );
 }
 
-function IdeaItem({ idea, kind, id, name }: Props & { idea: ActivitySuggestion; name: string }) {
-  const act = useAction();
-  const toast = useToast();
-  const [saved, setSaved] = useState(false);
-  return (
-    <li className="idea">
-      <div className="idea__text">
-        <h3>{idea.title}</h3>
-        <p>{idea.description}</p>
-      </div>
-      <div className="row">
-        <button
-          type="button"
-          className="btn btn--small"
-          disabled={act.busy || saved}
-          onClick={() =>
-            void act.run(async () => {
-              await api.createPlan({
-                title: idea.title.slice(0, LIMITS.planTitle),
-                details: idea.description.slice(0, LIMITS.planDetails) || undefined,
-                ...(kind === "connection" ? { connection_ids: [id] } : { person_ids: [id] }),
-              });
-              setSaved(true);
-              toast(`Plan saved with ${firstName(name)}.`);
-            })
-          }
-        >
-          {saved ? "Plan saved" : "Save plan"}
-        </button>
-      </div>
-      <InlineError message={act.error} />
-    </li>
-  );
-}
 
-function IdeasSection({ kind, id, name, version }: Props & { name: string; version: number }) {
-  const ideas = useAsync(() => api.getIdeas(kind, id), [kind, id, version]);
-  return (
-    <Card title="Something to do together" icon="bulb">
-      <Loaded state={ideas} skeleton={<Skeleton rows={2} />}>
-        {(d) =>
-          d.suggestions.length === 0 ? (
-            <p className="muted">Add an interest or two and Venn will suggest things to do together.</p>
-          ) : (
-            <>
-              <ul className="ideas">
-                {d.suggestions.slice(0, 1).map((s) => (
-                  <IdeaItem key={s.title} idea={s} kind={kind} id={id} name={name} />
-                ))}
-              </ul>
-            </>
-          )
-        }
-      </Loaded>
-    </Card>
-  );
-}
 
-function BriefSection({ kind, id, name, version }: Props & { name: string; version: number }) {
-  const brief = useAsync(() => api.getBrief(kind, id), [kind, id, version]);
-  return (
-    <Card title="Prep for a meetup" icon="chat">
-      <Loaded state={brief} skeleton={<Skeleton rows={2} />}>
-        {(b) => (
-          <div className="brief">
-            <div>
-              <h3 className="subhead">Things to ask</h3>
-              {b.things_to_ask.length === 0 ? (
-                <p className="muted small">No open follow-ups with {firstName(name)}.</p>
-              ) : (
-                <ul className="bullets">
-                  {b.things_to_ask.map((t) => (
-                    <li key={t.follow_up_id}>{t.text}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            <div>
-              <h3 className="subhead">Conversation starters</h3>
-              {b.conversation_starters.length === 0 ? (
-                <p className="muted small">Add interests or notes to get starters.</p>
-              ) : (
-                <ul className="bullets">
-                  {b.conversation_starters.map((t) => (
-                    <li key={t}>{t}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-            {b.last_activity && (
-              <p className="muted small brief__last">
-                Last time: {b.last_activity}
-                {b.days_since_last_interaction !== null && ` (${b.days_since_last_interaction} days ago)`}
-              </p>
-            )}
-          </div>
-        )}
-      </Loaded>
-    </Card>
-  );
-}
 
-function FollowUpsSection({ friend, onChanged }: { friend: Friend; onChanged: () => void }) {
-  const [text, setText] = useState("");
-  const act = useAction();
-  const toast = useToast();
-  const [busyId, setBusyId] = useState<string | null>(null);
-  return (
-    <Card title="Follow-ups" icon="flag">
-      {friend.follow_ups.length === 0 ? (
-        <p className="muted">Nothing open. Note something to ask {firstName(friend.display_name)} next time.</p>
-      ) : (
-        <ul className="list">
-          {friend.follow_ups.map((f) => (
-            <li key={f.follow_up_id} className="list__item">
-              <TickButton
-                label={`Mark done: ${f.text}`}
-                busy={busyId === f.follow_up_id}
-                onClick={async () => {
-                  setBusyId(f.follow_up_id);
-                  try {
-                    await api.completeFollowUp(f.follow_up_id);
-                    toast("Follow-up done.");
-                    onChanged();
-                  } catch (e) {
-                    toast(e instanceof Error ? e.message : "That didn't work.", "error");
-                  } finally {
-                    setBusyId(null);
-                  }
-                }}
-              />
-              <div className="list__text">
-                <span>{f.text}</span>
-                <span className="muted small">Added {formatDate(f.created_at)}</span>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-      <form
-        className="add-row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const t = text.trim();
-          if (!t) return;
-          void act.run(async () => {
-            await api.addFollowUp(friend.kind, friend.id, t);
-            setText("");
-            toast("Follow-up added.");
-            onChanged();
-          });
-        }}
-      >
-        <input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          maxLength={LIMITS.followUp}
-          placeholder="Something to ask or do next time"
-          aria-label={`Add a follow-up for ${friend.display_name}`}
-        />
-        <button type="submit" className="btn" disabled={act.busy || !text.trim()}>
-          Add
-        </button>
-      </form>
-      <InlineError message={act.error} />
-    </Card>
-  );
-}
 
-function HangoutsSection({ friend, onChanged }: { friend: Friend; onChanged: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [activity, setActivity] = useState("");
-  const act = useAction();
-  const toast = useToast();
-  return (
-    <Card
-      title="Recent hangouts"
-      icon="clock"
-      action={
-        !open && (
-          <button type="button" className="btn btn--small" onClick={() => setOpen(true)}>
-            <Icon name="plus" size={16} />
-            Log a hangout
-          </button>
-        )
-      }
-    >
-      {open && (
-        <form
-          className="add-row"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void act.run(async () => {
-              await api.logInteraction(friend.kind, friend.id, activity.trim() || undefined);
-              setActivity("");
-              setOpen(false);
-              toast(`Logged a hangout with ${firstName(friend.display_name)}.`);
-              onChanged();
-            });
-          }}
-        >
-          <input
-            value={activity}
-            onChange={(e) => setActivity(e.target.value)}
-            maxLength={LIMITS.activity}
-            placeholder="What did you do? (optional)"
-            aria-label="What did you do? Optional"
-            autoFocus
-          />
-          <button type="submit" className="btn btn--primary" disabled={act.busy}>
-            {act.busy ? "Logging…" : "Log for today"}
-          </button>
-          <button type="button" className="btn" onClick={() => setOpen(false)} disabled={act.busy}>
-            Cancel
-          </button>
-        </form>
-      )}
-      <InlineError message={act.error} />
-      {friend.recent_interactions.length === 0 ? (
-        <p className="muted">No hangouts logged yet.</p>
-      ) : (
-        <ul className="list">
-          {friend.recent_interactions.map((i, n) => (
-            <li key={`${i.occurred_at}:${n}`} className="list__item">
-              <span className="list__icon">
-                <Icon name="check-circle" size={18} />
-              </span>
-              <div className="list__text">
-                <span>{i.activity ?? "Spent time together"}</span>
-                <span className="muted small">{formatDate(i.occurred_at)}</span>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-    </Card>
-  );
-}
 
-function AskSection({ friend }: { friend: Friend }) {
-  const [link, setLink] = useState<AskLink | null>(null);
-  const act = useAction();
-  const first = firstName(friend.display_name);
-  return (
-    <Card title={`Ask ${first} a few questions`} icon="help">
-      {link ? (
-        <AskLinkPanel link={link} />
-      ) : (
-        <>
-          <p>
-            Send {first} a link with four short questions — what they're into, what they'd like to do together. They don't
-            need an account.
-          </p>
-          <Notice icon="shield" tone="quiet">
-            Nothing is saved until you approve it. Answers wait for your review.
-          </Notice>
-          <InlineError message={act.error} />
-          <button
-            type="button"
-            className="btn"
-            disabled={act.busy}
-            onClick={() => void act.run(async () => setLink(await api.createQuestionLink({ person_id: friend.id })))}
-          >
-            <Icon name="link" size={18} />
-            {act.busy ? "Creating…" : "Create a question link"}
-          </button>
-        </>
-      )}
-    </Card>
-  );
-}
 
 export default function PersonPage({ kind, id }: Props) {
   const friend = useAsync(() => api.getFriend(kind, id), [kind, id]);
@@ -389,76 +113,57 @@ export default function PersonPage({ kind, id }: Props) {
             {f.relationship && <span>{f.relationship}</span>}
             {f.is_sample && <Tag tone="info">Sample</Tag>}
           </p>
-          <p className="muted">
-            <Icon name="clock" size={16} /> {formatLastSeen(f.last_interaction_at)}
-          </p>
           <p className="muted small">{f.on_venn ? `Shares with you on Venn` : `Only you see this`}</p>
         </div>
-        {kind === "person" && (
-          <div className="profile__actions">
+        <div className="profile__actions">
+          <CopyButton
+            text={`Hey ${first}, I was just thinking about you. Free for a catch-up soon?`}
+            label="Say hi"
+            className="btn btn--primary btn--pill"
+            icon={false}
+          />
+          {kind === "person" && (
+            <>
             <button type="button" className="link-btn" onClick={() => setEditing(true)}>
               Edit
             </button>
-          </div>
-        )}
+            <button type="button" className="link-btn" onClick={() => setDeleting(true)}>
+              Delete
+            </button>
+            </>
+          )}
+        </div>
       </section>
 
-      <VennSection kind={kind} id={id} name={f.display_name} version={version} />
-
-      <div className="grid-2 grid-2--even">
-        <div className="stack">
-          {kind === "person" ? (
-            <Card title="Your notes" icon="note">
-              {f.notes ? <p className="notes">{f.notes}</p> : <p className="muted">No notes yet.</p>}
-              <h3 className="subhead">Interests</h3>
-              {f.interests.length ? <Chips items={f.interests} /> : <p className="muted small">None added yet.</p>}
-            </Card>
+      {kind === "connection" && (
+            <Card title={`${first} shared`} icon="users" className="signals">
+          {f.shared_memories.length === 0 ? (
+            !f.bio && f.interests.length === 0 && <p className="muted">{first} hasn't shared anything with you yet.</p>
           ) : (
-            <Card title={`What ${first} shares with you`} icon="users">
-              {f.bio && <p className="notes">{f.bio}</p>}
-              {f.interests.length > 0 && (
-                <>
-                  <h3 className="subhead">Interests</h3>
-                  <Chips items={f.interests} />
-                </>
-              )}
-              {f.shared_memories.length === 0 ? (
-                !f.bio && f.interests.length === 0 && <p className="muted">{first} hasn't shared anything with you yet.</p>
-              ) : (
-                <ul className="shared-memories">
-                  {f.shared_memories.map((m) => (
-                    <li key={`${m.category}:${m.title}`}>
-                      <CategoryIcon category={m.category} small />
-                      <div>
-                        <strong>{m.title}</strong>
-                        <p>{m.description}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Card>
+            <ul className="shared-memories">
+              {f.shared_memories.map((m) => (
+                <li key={`${m.category}:${m.title}`}>
+                  <CategoryIcon category={m.category} small />
+                  <div>
+                    <strong>{m.title}</strong>
+                    <p>{m.description}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
           )}
-          <FollowUpsSection friend={f} onChanged={changed} />
-        </div>
-        <div className="stack">
-          <IdeasSection kind={kind} id={id} name={f.display_name} version={version} />
-        </div>
-      </div>
+          {f.bio && <p className="muted">{f.bio}</p>}
+        </Card>
+      )}
 
-      <details className="more">
-        <summary>More about {first}</summary>
-        <div className="grid-2 grid-2--even">
-          <HangoutsSection friend={f} onChanged={changed} />
-          <BriefSection kind={kind} id={id} name={f.display_name} version={version} />
-          {kind === "person" && <AskSection friend={f} />}
-        </div>
-        {kind === "person" && (
-          <button type="button" className="link-btn link-btn--danger" onClick={() => setDeleting(true)}>
-            Delete {first}
-          </button>
-        )}
-      </details>
+      {kind === "person" && (
+        <Card title="Your notes" icon="note">
+          {f.notes ? <p className="notes">{f.notes}</p> : <p className="muted">No notes yet.</p>}
+          {f.interests.length > 0 && <Chips items={f.interests} />}
+        </Card>
+      )}
+
+      <VennSection kind={kind} id={id} name={f.display_name} version={version} />
 
       {editing && (
         <Dialog title={`Edit ${f.display_name}`} onClose={() => setEditing(false)}>

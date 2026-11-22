@@ -3757,3 +3757,14 @@ input[type="datetime-local"], input:not([type]), select, textarea {
 /* person: only the overlap is yellow */
 :root { --venn-you: #f5f5f7; --venn-them: #f5f5f7; --venn-lens: #ffd400; }
 .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #000; }
+.next__why { margin-bottom: -8px; color: #6e6e73; font-size: 1rem; font-weight: 600; }
+
+/* Home: one message, as ChatGPT would say it, in a yellow bubble */
+.say {
+  display: grid; gap: 12px; max-width: 620px; padding: 22px 26px;
+  border-radius: 28px 28px 28px 8px; background: var(--yellow); color: #000; text-decoration: none;
+}
+.say__text { font-size: clamp(1.375rem, 1.1rem + 1vw, 1.875rem); font-weight: 700; line-height: 1.22; letter-spacing: -0.025em; }
+.say small { font-size: 0.8125rem; color: #4c4000; font-weight: 500; }
+.say:hover .say__text { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+.profile__actions { align-items: center; gap: 12px 20px; }
