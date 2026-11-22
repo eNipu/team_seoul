@@ -13,7 +13,7 @@ import hashlib
 import secrets
 import time
 from dataclasses import dataclass
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 
 import anyio
 import httpx
@@ -51,14 +51,31 @@ class GoogleAuthError(Exception):
         self.code = code
 
 
-def _safe_next(raw: str | None) -> str:
-    """Only allow same-origin paths inside /app to prevent open redirects."""
+def _safe_next(raw: str | None, *, allow_mcp_login: bool = False) -> str:
+    """Only allow same-origin paths inside /app (or /dev/login for MCP OAuth) to prevent open redirects."""
     if not raw:
         return "/app/"
     target = raw.strip()
-    if not target.startswith("/app") or target.startswith("//") or "\\" in target or "\r" in target or "\n" in target:
+    if (
+        not target
+        or len(target) > 2048
+        or target.startswith("//")
+        or "\\" in target
+        or "\r" in target
+        or "\n" in target
+    ):
         return "/app/"
-    return target
+    parsed = urlparse(target)
+    if parsed.scheme or parsed.netloc:
+        return "/app/"
+    path = parsed.path
+    if ".." in path.split("/"):
+        return "/app/"
+    if path == "/app" or path.startswith("/app/"):
+        return target
+    if allow_mcp_login and path == "/dev/login":
+        return target
+    return "/app/"
 
 
 def _pkce_challenge(verifier: str) -> str:
@@ -160,7 +177,8 @@ def _error_redirect(code: str, next_url: str = "/app/") -> RedirectResponse:
 def install_google_auth(app: FastAPI, settings: Settings) -> None:
     @app.get("/auth/google/start", include_in_schema=False)
     def google_start(request: Request) -> Response:
-        next_url = _safe_next(request.query_params.get("next"))
+        allow_mcp_login = settings.auth_mode == "dev"
+        next_url = _safe_next(request.query_params.get("next"), allow_mcp_login=allow_mcp_login)
         if not settings.google_sso_enabled:
             return _error_redirect("google_not_configured", next_url)
 
@@ -191,8 +209,9 @@ def install_google_auth(app: FastAPI, settings: Settings) -> None:
 
     @app.get("/auth/google/callback", include_in_schema=False)
     async def google_callback(request: Request) -> Response:
+        allow_mcp_login = settings.auth_mode == "dev"
         saved = _decode_state(settings, request.cookies.get(STATE_COOKIE))
-        next_url = _safe_next(saved.get("next") if saved else None)
+        next_url = _safe_next(saved.get("next") if saved else None, allow_mcp_login=allow_mcp_login)
 
         if not settings.google_sso_enabled:
             return _error_redirect("google_not_configured", next_url)

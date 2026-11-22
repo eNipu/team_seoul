@@ -2,15 +2,21 @@
 
 from __future__ import annotations
 
+import base64
+import hashlib
+import html
+import re
+import secrets
 from urllib.parse import parse_qs, urlparse
 
 from fastapi.testclient import TestClient
 
-from app.config import Settings
+from app.config import ALL_SCOPES, Settings
 from app.db.database import session_scope
 from app.main import create_app
 from app.models import User
 from app.web import google_auth
+from tests.conftest import MCPUser
 
 
 def _sso_client(tmp_path, *, passcode: str | None = "team-secret", configured: bool = True) -> TestClient:
@@ -148,3 +154,157 @@ def test_optional_server_passcode_fallback_still_works_alongside_google_sso(tmp_
         )
         assert ok.status_code == 200
         assert ok.json()["username"] == "dana"
+
+
+def _start_mcp_oauth(client: TestClient) -> tuple[str, str, str]:
+    redirect_uri = "https://chatgpt.com/connector_platform_oauth_redirect"
+    reg = client.post(
+        "/register",
+        json={
+            "client_name": "ChatGPT",
+            "redirect_uris": [redirect_uri],
+            "grant_types": ["authorization_code", "refresh_token"],
+            "response_types": ["code"],
+            "token_endpoint_auth_method": "none",
+        },
+    )
+    assert reg.status_code == 201, reg.text
+    client_id = reg.json()["client_id"]
+    verifier = secrets.token_urlsafe(48)
+    challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b"=").decode()
+    auth = client.get(
+        "/authorize",
+        params={
+            "response_type": "code",
+            "client_id": client_id,
+            "redirect_uri": redirect_uri,
+            "code_challenge": challenge,
+            "code_challenge_method": "S256",
+            "state": "mcp-state",
+            "scope": " ".join(ALL_SCOPES),
+            "resource": "http://localhost:8081/mcp",
+        },
+        follow_redirects=False,
+    )
+    assert auth.status_code in (302, 307), auth.text
+    login_url = urlparse(auth.headers["location"])
+    assert login_url.path == "/dev/login"
+    txn = parse_qs(login_url.query)["txn"][0]
+    return client_id, verifier, txn
+
+
+def test_mcp_plugin_login_uses_google_sso_and_shares_account_with_website(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        google_auth,
+        "exchange_code",
+        lambda settings, code, verifier, redirect_uri: google_auth.GoogleProfile(
+            sub="109876543210",
+            email="maya@example.com",
+            email_verified=True,
+            display_name="Maya Chen",
+        ),
+    )
+
+    with _sso_client(tmp_path, passcode="shared-secret") as client:
+        client_id, verifier, txn = _start_mcp_oauth(client)
+
+        # /dev/login shows Continue with Google first and tucks server sign-in inside <details>.
+        login_page = client.get("/dev/login", params={"txn": txn})
+        assert login_page.status_code == 200
+        assert "Continue with Google" in login_page.text
+        assert "Use server sign-in instead" in login_page.text
+        match = re.search(r'href="(/auth/google/start\?[^"]+)"', login_page.text)
+        assert match is not None
+        google_href = html.unescape(match.group(1))
+
+        # Click "Continue with Google" -> Google -> /auth/google/callback -> back to /dev/login?txn=...
+        start = client.get(google_href, follow_redirects=False)
+        assert start.status_code == 302
+        google_loc = urlparse(start.headers["location"])
+        assert google_loc.netloc == "accounts.google.com"
+        state = parse_qs(google_loc.query)["state"][0]
+
+        cb = client.get(f"/auth/google/callback?code=fake-code&state={state}", follow_redirects=False)
+        assert cb.status_code == 302
+        returned = urlparse(cb.headers["location"])
+        assert returned.path == "/dev/login"
+        assert parse_qs(returned.query)["txn"] == [txn]
+
+        # Back on /dev/login, the user's Google session is recognized and offered in one click.
+        confirm_page = client.get(cb.headers["location"])
+        assert confirm_page.status_code == 200
+        assert "Continue as Maya Chen" in confirm_page.text
+        assert "maya@example.com" in confirm_page.text
+
+        # Confirming issues the MCP authorization code and keeps the Google website session intact.
+        finish = client.post("/dev/login", data={"txn": txn, "session": "1"}, follow_redirects=False)
+        assert finish.status_code == 302
+        redirect = urlparse(finish.headers["location"])
+        q = parse_qs(redirect.query)
+        assert q["state"] == ["mcp-state"]
+
+        # Exchange code for MCP access + refresh tokens.
+        tok = client.post(
+            "/token",
+            data={
+                "grant_type": "authorization_code",
+                "code": q["code"][0],
+                "redirect_uri": "https://chatgpt.com/connector_platform_oauth_redirect",
+                "client_id": client_id,
+                "code_verifier": verifier,
+                "resource": "http://localhost:8081/mcp",
+            },
+        )
+        assert tok.status_code == 200, tok.text
+        tokens = tok.json()
+
+        # Website and MCP plugin see the exact same Google account and data.
+        added = client.post(
+            "/api/v1/people",
+            json={"name": "Daniel Park", "interests": ["bouldering"]},
+            headers={"X-Venn-Request": "1"},
+        )
+        assert added.status_code == 200, added.text
+
+        mcp_user = MCPUser(client, tokens["access_token"])
+        assert mcp_user.ok("venn_get_profile")["display_name"] == "Maya Chen"
+        assert mcp_user.ok("venn_find_people", query="bouldering")["results"][0]["display_name"] == "Daniel Park"
+
+        # Refreshing the MCP token preserves the Google auth_subject (does not create a second dev user).
+        refreshed = client.post(
+            "/token",
+            data={"grant_type": "refresh_token", "refresh_token": tokens["refresh_token"], "client_id": client_id},
+        )
+        assert refreshed.status_code == 200, refreshed.text
+        refreshed_mcp = MCPUser(client, refreshed.json()["access_token"])
+        assert refreshed_mcp.ok("venn_find_people", query="bouldering")["results"][0]["display_name"] == "Daniel Park"
+
+        with session_scope() as db:
+            assert [u.auth_subject for u in db.query(User)] == ["google|109876543210"]
+
+
+def test_mcp_login_handles_google_cancel_and_blocks_next_traversal(tmp_path):
+    with _sso_client(tmp_path) as client:
+        _, _, txn = _start_mcp_oauth(client)
+
+        # Path traversal under /dev/login is rejected back to /app/.
+        bad_next = client.get("/auth/google/start?next=/dev/login/../evil", follow_redirects=False)
+        assert bad_next.status_code == 302
+        bad_state = parse_qs(urlparse(bad_next.headers["location"]).query)["state"][0]
+        bad_cb = client.get(f"/auth/google/callback?error=access_denied&state={bad_state}", follow_redirects=False)
+        assert bad_cb.headers["location"] == "/app/?auth_error=cancelled"
+
+        # Cancelling Google SSO from /dev/login returns to /dev/login with the txn preserved and an alert.
+        start = client.get(f"/auth/google/start?next=/dev/login?txn={txn}", follow_redirects=False)
+        state = parse_qs(urlparse(start.headers["location"]).query)["state"][0]
+        cb = client.get(f"/auth/google/callback?error=access_denied&state={state}", follow_redirects=False)
+        assert cb.status_code == 302
+        returned = urlparse(cb.headers["location"])
+        assert returned.path == "/dev/login"
+        assert parse_qs(returned.query)["txn"] == [txn]
+        assert parse_qs(returned.query)["auth_error"] == ["cancelled"]
+
+        retry_page = client.get(cb.headers["location"])
+        assert retry_page.status_code == 200
+        assert "Google sign-in was cancelled" in retry_page.text
+        assert "Continue with Google" in retry_page.text

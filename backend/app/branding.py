@@ -24,6 +24,15 @@ MARK_SVG = (
     "</svg>"
 )
 
+MARK_SVG_BLUE = (
+    '<svg class="mark" viewBox="0 0 64 64" width="32" height="32" aria-hidden="true" focusable="false">'
+    '<rect width="64" height="64" rx="15" fill="#2E73B8"/>'
+    '<circle cx="23.5" cy="32" r="17" fill="#fff" fill-opacity=".5"/>'
+    '<circle cx="40.5" cy="32" r="17" fill="#fff" fill-opacity=".5"/>'
+    '<path fill="#fff" d="M32 17.28a17 17 0 0 1 0 29.44 17 17 0 0 1 0-29.44z"/>'
+    "</svg>"
+)
+
 # Plain string (not a format template), so braces are literal CSS.
 PAGE_CSS = """
 :root { color-scheme: light dark; --fg: #1d1d1f; --muted: #5f5f66; --bg: #f6f3f1; --card: #ffffff;
@@ -56,8 +65,11 @@ ol.steps li::before { content: counter(step); position: absolute; left: 0; top: 
 .button, button { display: block; width: 100%; text-align: center; text-decoration: none; font: inherit;
   font-weight: 650; padding: 14px 16px; min-height: 48px; border: 0; border-radius: 14px; background: var(--accent);
   color: var(--accent-fg); cursor: pointer; }
+.button--google { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.google-icon { width: 18px; height: 18px; flex-shrink: 0; border-radius: 50%; background: #ffffff; padding: 2px; }
 .button:hover, button:hover { filter: brightness(1.06); }
-.button:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--fg); outline-offset: 2px; }
+.button:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible {
+  outline: 3px solid var(--fg); outline-offset: 2px; }
 small { display: block; margin-top: 16px; color: var(--muted); font-size: 13px; line-height: 1.45; text-align: center; }
 label { display: block; margin: 0 0 16px; font-size: 14px; font-weight: 600; }
 input { display: block; width: 100%; margin-top: 6px; padding: 12px 14px; min-height: 48px; font: inherit;
@@ -68,6 +80,16 @@ input::placeholder { color: var(--muted); opacity: .7; }
 .err { color: #b3261e; background: #fdecea; padding: 10px 12px; border-radius: 12px; font-size: 14px;
   font-weight: 600; margin: 0 0 20px; }
 @media (prefers-color-scheme: dark) { .err { color: #ffb4ab; background: #3a1512; } }
+.divider { display: flex; align-items: center; gap: 12px; margin: 18px 0; color: var(--muted); font-size: 13px; }
+.divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+details.alt { margin-top: 4px; }
+details.alt summary { list-style: none; display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--field);
+  color: var(--muted); font-size: 14px; font-weight: 500; cursor: pointer; }
+details.alt summary::-webkit-details-marker { display: none; }
+details.alt summary::after { content: "▾"; font-size: 12px; transition: transform .15s ease; }
+details.alt[open] summary::after { transform: rotate(180deg); }
+details.alt .alt-body { padding-top: 16px; }
 input[type="checkbox"] { display: inline-block; width: 22px; min-width: 22px; height: 22px; min-height: 0;
   margin: 1px 0 0; padding: 0; accent-color: var(--accent); }
 label.check { display: flex; gap: 12px; align-items: flex-start; font-weight: 500; font-size: 15px; margin: 0 0 20px; }
@@ -83,13 +105,23 @@ a.quiet { color: var(--tint-fg); font-weight: 600; }
 @media (max-width: 360px) { main { padding: 24px 18px 20px; } h1 { font-size: 23px; } .code { font-size: 25px; } }
 """
 
+LIGHT_PALETTE_CSS = """
+:root { color-scheme: light; --fg: #191919; --muted: #525866; --bg: #F9F7F7; --card: #ffffff;
+  --line: #DBE2EF; --field: #F9F7F7; --accent: #2E73B8; --accent-fg: #ffffff; --tint: #DBE2EF; --tint-fg: #255FA0;
+  --shadow: 0 1px 2px rgba(25, 25, 25, .05), 0 12px 32px rgba(46, 115, 184, .08); }
+body { background: radial-gradient(700px 420px at 50% -10%, rgba(219, 226, 239, .55), transparent 70%), var(--bg); }
+.err { color: #b3261e; background: #fdecea; }
+"""
 
-def page(title: str, body: str, *, noindex: bool = True) -> str:
+
+def page(title: str, body: str, *, noindex: bool = True, theme: str = "default") -> str:
     """Wrap `body` (trusted HTML: callers escape what they interpolate) in the shared page shell."""
     robots = '<meta name="robots" content="noindex">\n' if noindex else ""
+    extra_css = LIGHT_PALETTE_CSS if theme == "light" else ""
+    mark = MARK_SVG_BLUE if theme == "light" else MARK_SVG
     return (
         '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
-        f"{robots}<title>{title}</title>\n<style>{PAGE_CSS}</style>\n</head>\n<body>\n<main>\n"
-        f'<div class="brand">{MARK_SVG}<span>Venn</span></div>\n{body}\n</main>\n</body>\n</html>\n'
+        f"{robots}<title>{title}</title>\n<style>{PAGE_CSS}{extra_css}</style>\n</head>\n<body>\n<main>\n"
+        f'<div class="brand">{mark}<span>Venn</span></div>\n{body}\n</main>\n</body>\n</html>\n'
     )
