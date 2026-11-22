@@ -10,7 +10,9 @@ import Waitlist from "@/components/Waitlist";
 import { CookieSettingsLink } from "@/components/ConsentBanner";
 import Faq from "@/components/sections/Faq";
 import HowItWorks from "@/components/sections/HowItWorks";
-import Moment from "@/components/sections/Moment";
+import NextIn from "@/components/sections/NextIn";
+import HeroRotator from "@/components/HeroRotator";
+import { heroIndex } from "@/lib/heroes";
 import PrivacyPrinciples from "@/components/sections/PrivacyPrinciples";
 import UseCases from "@/components/sections/UseCases";
 import { cleanRef } from "@/lib/analytics";
@@ -61,22 +63,14 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           <div className="wrap hero__grid">
             <div className="hero__copy">
               <p className="eyebrow">Early-access waitlist</p>
-              <h1 className="h-display" id="hero-title">Connect your AI memories.</h1>
-              <p className="h-sub"><span>Build your inner circle.</span></p>
+              <HeroRotator pinned={heroIndex(first(params.h))} />
             </div>
-            <p className="lead hero__what">
-              Your ChatGPT tells you which friend, colleague or partner to talk to, from updates they choose to share.
-            </p>
             <div className="hero__join">
               <HeroBackdrop />
               <div className="hero__join-card">
                 <Waitlist version={version} invite={invite} />
                 <p className="hero__fine">Free early access · Works with ChatGPT · Your friends opt in</p>
               </div>
-            </div>
-            <div className="chat hero__chat" aria-label="Example inside ChatGPT">
-              <p className="chat__user">I have no plans this weekend. Ideas?</p>
-              <Moment person="Emma" text="Emma from uni is in Berlin on Saturday. You haven't seen her in 2 years." yellow />
             </div>
           </div>
         </section>
@@ -94,6 +88,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           </div>
         </section>
 
+        <NextIn />
         <HowItWorks />
         <UseCases />
 
