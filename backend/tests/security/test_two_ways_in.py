@@ -162,6 +162,16 @@ def test_site_serves_the_build_and_nothing_else(settings, client, tmp_path):
     assert client.post("/mcp", json={}).status_code == 401
 
 
+def test_readiness_identifies_deployed_revision(client, monkeypatch):
+    monkeypatch.delenv("RAILWAY_GIT_COMMIT_SHA", raising=False)
+    assert client.get("/readyz").json()["revision"] is None
+    sha = "0123456789abcdef" * 2 + "01234567"
+    monkeypatch.setenv("RAILWAY_GIT_COMMIT_SHA", sha)
+    ready = client.get("/readyz")
+    assert ready.json()["status"] == "ready" and ready.json()["revision"] == sha
+    assert ready.headers["cache-control"] == "no-store"
+
+
 # ----------------------------------------------------------------- the public answer page
 def test_answer_page_escapes_what_friends_and_owners_type(make_user, client):
     owner = make_user("mallory", name='<script>alert("o")</script>')

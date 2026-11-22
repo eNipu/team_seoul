@@ -25,6 +25,41 @@ def test_heuristic_extract_categories():
 
 def test_heuristic_extract_empty():
     assert heuristic_extract("ok") == []
+    assert heuristic_extract("hello") == []
+
+
+def test_heuristic_extract_work_lists_and_plain_statements():
+    text = (
+        "1. Building an AI social companion in Seoul\n2. Weekend coffee and film photography\n3. my password is hunter2"
+    )
+    out = heuristic_extract(text)
+    assert len(out) == 2
+    assert out[0].category == MemoryCategory.WORK
+    assert all("password" not in c.description.lower() for c in out)
+
+
+def test_memory_candidate_and_approval_normalize_llm_formatting():
+    from app.schemas.memory import MemoryApproval, MemoryVisibility
+
+    c = MemoryCandidate(
+        category="personal memory",
+        title="  Long hike in Bukhansan  ",
+        description="  Great Saturday morning ridge walk  ",
+        tags=[f"tag-{i}" for i in range(12)],
+        people=["Maya", "Alex", "Sam", "Jules", "Priya", "Extra"],
+    )
+    assert c.category == MemoryCategory.PERSONAL_MEMORY
+    assert c.title == "Long hike in Bukhansan"
+    assert len(c.tags) == 8
+    assert len(c.people) == 5
+
+    alias = MemoryCandidate(category="hobby", title="Bouldering", description="Climbs weekly")
+    assert alias.category == MemoryCategory.INTEREST
+
+    approval = MemoryApproval(index=0, visibility="shared", title="   ", description="")
+    assert approval.visibility == MemoryVisibility.SHARED_WITH_CONNECTIONS
+    assert approval.title is None
+    assert approval.description is None
 
 
 @pytest.mark.parametrize(

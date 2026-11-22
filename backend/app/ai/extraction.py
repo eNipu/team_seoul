@@ -68,33 +68,89 @@ def sanitize_candidates(candidates: list[MemoryCandidate], limit: int = MAX_CAND
 _PATTERNS: list[tuple[MemoryCategory, re.Pattern[str]]] = [
     (
         MemoryCategory.DISLIKE,
-        re.compile(r"\bi (?:really )?(?:hate|dislike|can't stand|don't like|do not like)\s+(.+)", re.I),
+        re.compile(
+            r"\b(?:i|you) (?:really )?(?:hate|dislike|can't stand|don't like|do not like|avoid)\s+(.+)",
+            re.I,
+        ),
     ),
     (
         MemoryCategory.SOCIAL_GOAL,
         re.compile(
-            r"\bi (?:want|would like|hope|'d like) to\s+((?:make|meet|find|reconnect|spend|see|keep|stay).+)",
+            r"\b(?:i|you) (?:want|would like|hope|'d like|am looking|'m looking|plan) to\s+"
+            r"((?:make|meet|find|reconnect|spend|see|keep|stay|hang|catch up).+)",
+            re.I,
+        ),
+    ),
+    (
+        MemoryCategory.WORK,
+        re.compile(
+            r"\b(?:i|you) (?:work|am working|'m working|build|am building|'m building|founded|co-founded|study|"
+            r"am studying|'m studying)\s+(.+)"
+            r"|\b(?:works?)\s+(?:as|at|on|in)\s+(.+)"
+            r"|\b(?:building|studying|co-founded|founded)\s+(.+)",
             re.I,
         ),
     ),
     (
         MemoryCategory.INTEREST,
-        re.compile(r"\bi (?:really )?(?:love|like|enjoy|am into|'m into|am obsessed with|adore)\s+(.+)", re.I),
+        re.compile(
+            r"\b(?:i|you) (?:really )?(?:love|like|enjoy|am into|'m into|are into|am obsessed with|adore|"
+            r"am interested in|'m interested in|am passionate about|'m passionate about|play|collect)\s+(.+)"
+            r"|\bmy favou?rite\s+(.+)"
+            r"|\b(?:enjoys?|loves?|likes?)\s+(.+)",
+            re.I,
+        ),
     ),
     (
         MemoryCategory.PREFERENCE,
-        re.compile(r"\bi (?:prefer|usually prefer|'d rather|would rather)\s+(.+)", re.I),
+        re.compile(r"\b(?:i|you) (?:prefer|usually prefer|'d rather|would rather)\s+(.+)", re.I),
     ),
     (
         MemoryCategory.RELATIONSHIP_CONTEXT,
-        re.compile(r"\bmy (?:best )?(?:friend|partner|brother|sister|roommate|coworker)\s+(.+)", re.I),
+        re.compile(
+            r"\bmy (?:best |close |old )?(?:friend|partner|wife|husband|brother|sister|"
+            r"roommate|coworker|colleague)\s+(.+)",
+            re.I,
+        ),
     ),
     (
         MemoryCategory.EXPERIENCE,
-        re.compile(r"\bi (?:went|visited|traveled|travelled|tried|learned|started|finished|ran|hiked)\s+(.+)", re.I),
+        re.compile(
+            r"\b(?:i|you) (?:went|visited|traveled|travelled|tried|learned|started|finished|"
+            r"ran|hiked|moved|graduated)\s+(.+)",
+            re.I,
+        ),
     ),
-    (MemoryCategory.PERSONAL_MEMORY, re.compile(r"\bi (?:remember|still remember|grew up)\s+(.+)", re.I)),
+    (
+        MemoryCategory.PERSONAL_MEMORY,
+        re.compile(
+            r"\b(?:i|you) (?:remember|still remember|grew up|live in|am based in|'m based in|am from|'m from)\s+(.+)"
+            r"|\b(?:based in|lives? in)\s+(.+)",
+            re.I,
+        ),
+    ),
 ]
+
+_FILLER = {
+    "ok",
+    "okay",
+    "yes",
+    "no",
+    "hi",
+    "hello",
+    "hey",
+    "thanks",
+    "thank you",
+    "sure",
+    "maybe",
+    "later",
+    "skip",
+    "none",
+    "nothing",
+    "test",
+    "done",
+}
+_BULLET_PREFIX = re.compile(r"^\s*(?:[-*•–—]\s+|\d+[.)]\s+)+")
 
 # "Maya and I used to take photo walks": something the user does with a named person.
 _TOGETHER = re.compile(
@@ -131,6 +187,7 @@ _TITLE_PREFIX = {
     MemoryCategory.INTEREST: "Enjoys",
     MemoryCategory.DISLIKE: "Dislikes",
     MemoryCategory.PREFERENCE: "Prefers",
+    MemoryCategory.WORK: "Work:",
     MemoryCategory.SOCIAL_GOAL: "Wants to",
     MemoryCategory.EXPERIENCE: "Experience:",
     MemoryCategory.PERSONAL_MEMORY: "Memory:",
@@ -145,12 +202,28 @@ def _tags(phrase: str) -> list[str]:
     return words[:4]
 
 
+def _first_group(match: re.Match[str]) -> str:
+    for group in match.groups():
+        if group:
+            return group
+    return ""
+
+
 def heuristic_extract(text: str) -> list[MemoryCandidate]:
     candidates: list[MemoryCandidate] = []
-    sentences = re.split(r"(?<=[.!?;\n])\s+|,\s+(?:and|but)\s+|\s+but\s+", text)
-    for raw in sentences:
+    # Split lines first so numbered/bulleted lists stay separate, then split multi-sentence lines.
+    raw_chunks: list[str] = []
+    for line in (text or "").splitlines():
+        cleaned = _BULLET_PREFIX.sub("", line).strip()
+        if not cleaned:
+            continue
+        raw_chunks.extend(re.split(r"(?<=[.!?;\n])\s+|,\s+(?:and|but)\s+|\s+but\s+", cleaned))
+
+    for raw in raw_chunks:
         sentence = raw.strip().strip(".!?;")
-        if not sentence or len(sentence) < 6:
+        if not sentence or len(sentence) < 4:
+            continue
+        if sentence.lower() in _FILLER or contains_sensitive(sentence):
             continue
         together = _TOGETHER.match(sentence)
         if together and together.group(1) not in _NOT_NAMES:
@@ -167,11 +240,12 @@ def heuristic_extract(text: str) -> list[MemoryCandidate]:
                     )
                 )
                 continue
+        matched = False
         for category, pattern in _PATTERNS:
             m = pattern.search(sentence)
             if not m:
                 continue
-            phrase = m.group(1).strip().strip(".!?,;")[:100]
+            phrase = _first_group(m).strip().strip(".!?,;")[:100]
             if not phrase:
                 break
             title = f"{_TITLE_PREFIX[category]} {phrase}"
@@ -185,7 +259,20 @@ def heuristic_extract(text: str) -> list[MemoryCandidate]:
                     tags=_tags(phrase),
                 )
             )
+            matched = True
             break
+        if not matched and (len(sentence.split()) >= 2 or len(sentence) >= 12):
+            # Fallback for direct user statements (e.g. "Seoul AI founder", "Weekend coffee & photography")
+            # when OPENAI_API_KEY is not configured.
+            title = f"{sentence[0].upper()}{sentence[1:]}" if sentence else sentence
+            candidates.append(
+                MemoryCandidate(
+                    category=MemoryCategory.PERSONAL_MEMORY,
+                    title=title[:80],
+                    description=sentence[:300],
+                    tags=_tags(sentence),
+                )
+            )
     return sanitize_candidates(candidates)
 
 

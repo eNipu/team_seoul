@@ -173,12 +173,20 @@ Railway project `heldly` (the old product name), environment `production`:
 
 | Service | Build and watch paths |
 | --- | --- |
-| `backend` | Serves MCP and My Venn. Builds from the root `Dockerfile` and watches `backend/`, `widget/`, `web/`, `Dockerfile`, and `.dockerignore`. |
+| `backend` | Serves MCP, the widget, and My Venn. Keep the repo root as the build context for `Dockerfile`. Use `/backend/railway.toml` for production: watch all changed files and check `/readyz` before switching traffic. |
 | `site` | Serves the landing page and waitlist. Builds with Railpack from `/site` and watches `site/`. |
 | `Postgres` | Private database used by both services. |
 
-Both services track `main` in `eNipu/team_seoul`. Railway builds a service when a push or
-merge into `main` changes one of its watched paths.
+**One-time Railway settings:** In `heldly` → `production` → `backend` → **Settings**, connect the GitHub source `eNipu/team_seoul`, select branch `main`, and enable automatic deployments. Set the service's **Railway Config File** to `/backend/railway.toml` and apply the settings. Do not change the build root to `/backend` or apply this file to `site`. Without this binding, the existing dashboard watch paths may skip pushes (for example a `shared/`-only change). The source and branch are Railway settings, not fields in the TOML. Railway is the only deploy trigger; no second GitHub Actions deploy job or token is needed.
+
+**Verify a release:** For the pushed SHA, check GitHub's `heldly - backend` status description, not just its green check: `No deployment needed` means Railway skipped it. After rollout, compare the actual serving revision with `main`:
+
+```bash
+gh api repos/eNipu/team_seoul/commits/main --jq .sha
+curl -fsS https://app.joinvennai.com/readyz | jq '{status, revision}'
+```
+
+For a GitHub-sourced deploy the revisions should match. If they differ, inspect the backend deployment/build logs and the source, branch and watch settings above.
 
 Branch feature and fix work from `dev` and open pull requests against `dev`. To release,
 open a pull request from `dev` into `main`. Merge any direct production fix back into `dev`.

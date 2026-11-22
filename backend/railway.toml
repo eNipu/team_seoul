@@ -1,0 +1,10 @@
+# Production backend only. In Railway, set this service's config file to
+# /backend/railway.toml and keep its build root at the repository root.
+[environments.production.build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+watchPatterns = ["/**"]
+
+[environments.production.deploy]
+healthcheckPath = "/readyz"
+healthcheckTimeout = 300
