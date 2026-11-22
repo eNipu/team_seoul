@@ -29,7 +29,7 @@ function ResultRow({ r, query }: { r: SearchResult; query: string }) {
           </h3>
           {r.relationship && <span className="muted">{r.relationship}</span>}
           <KindTag onVenn={r.on_venn} />
-          {r.is_sample && <Tag tone="info">Sample</Tag>}
+          {r.is_sample && <Tag tone="info">Preview</Tag>}
         </div>
         <p className="why">
           <span className="why__label">Why {firstName(r.display_name)} came up</span>

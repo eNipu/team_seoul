@@ -37,6 +37,7 @@ from app.schemas.social import (
     GroupMember,
     GroupPlanView,
     InteractionOut,
+    InterestMatch,
     LogInteractionOut,
     NudgeLookup,
     NudgeMatch,
@@ -55,6 +56,7 @@ from app.schemas.social import (
 from app.services import analytics, memory_service, people_service, social_service
 from app.services.activity_topics import activity_topic as normalize_activity
 from app.services.errors import InvalidRequest, NotFound
+from app.services.interest_matching import interest_family, match_interests, my_interest_labels
 from app.services.user_service import display_name, is_sample_user
 
 DEFAULT_RECONNECT_DAYS = 21
@@ -372,9 +374,29 @@ def _ideas_from(
     return out[:limit]
 
 
-def ideas_for(shared: list[str], friend: Friend) -> list[tuple[str, str, list[str]]]:
-    """(title, description, grounded_in). Shared interests first, then the friend's own."""
-    return _ideas_from([shared, sorted(friend.terms)], _DEFAULT_IDEAS)
+def _related(db: Session, user: User, friend: Friend) -> list[InterestMatch]:
+    theirs = (
+        friend.interest_labels
+        if friend.person
+        else [
+            label
+            for m in friend.memories
+            if m.category == "INTEREST" and not m.people
+            for label in (m.title, *(m.tags or []))
+        ]
+    )
+    return [m for m in match_interests(my_interest_labels(db, user), theirs) if m.kind == "related"]
+
+
+def ideas_for(
+    shared: list[str], friend: Friend, related: Iterable[InterestMatch] = ()
+) -> list[tuple[str, str, list[str]]]:
+    """Prefer common ground; keep both original labels for a related-interest suggestion."""
+    evidence = {}
+    for match in related:
+        evidence.setdefault(interest_family(match.their_label.casefold()), [match.my_label, match.their_label])
+    ideas = _ideas_from([shared, list(evidence), sorted(friend.terms)], _DEFAULT_IDEAS)
+    return [(title, description, evidence.get(terms[0], terms) if terms else []) for title, description, terms in ideas]
 
 
 def _shared_memories(friend: Friend) -> list[SharedMemory]:
@@ -439,7 +461,13 @@ def suggest_activity(
         score += bonus
         explanation.append(f"{len(shared)} shared interest(s): {', '.join(shared[:5])} (+{bonus:.2f}).")
     else:
-        explanation.append("No shared interests saved yet.")
+        explanation.append("No exact shared interests on record.")
+    related = _related(db, user, friend)
+    if related:
+        pair = related[0]
+        bonus = min(0.1, max(0.0, 0.8 - score))
+        score += bonus
+        explanation.append(f"Related interests: your {pair.my_label} and their {pair.their_label} (+{bonus:.2f}).")
     if days > DEFAULT_RECONNECT_DAYS:
         score += 0.2
         explanation.append(f"No logged hangout in {days} days (+0.2).")
@@ -451,7 +479,7 @@ def suggest_activity(
             grounded_in=grounded,
             suggested_action=_NO_CONTACT if grounded else "Send a quick message to check in.",
         )
-        for title, description, grounded in ideas_for(shared, friend)
+        for title, description, grounded in ideas_for(shared, friend, related)
     ]
     analytics.track(db, "activity_suggested", user.id, count=len(suggestions))
     return ActivityIdeasView(
@@ -843,11 +871,11 @@ def find_nudge(
             evidence = text.strip()
             label = normalize_activity(evidence)
             bridge = group and label and bridge_for_topics(key, label)
-            if key != label and not bridge:
+            if not label or (interest_family(key) != interest_family(label) and not bridge):
                 continue
-            rank = (friend.is_sample, not bridge, friend.display_name.casefold(), friend.id)
+            rank = (friend.is_sample, not bridge, key != label, friend.display_name.casefold(), friend.id)
             if best is None or rank < best[0]:
-                prefix = "Sample circle (fictional): " if friend.is_sample else ""
+                prefix = "Starter circle: " if friend.is_sample else ""
                 best = (
                     rank,
                     NudgeMatch(
@@ -1109,7 +1137,11 @@ def compare(db: Session, user: User, connection_id: str | None = None, person_id
     them_only = [label for label in dict.fromkeys(their_labels) if not terms_of(label) & (my | shared_set)]
 
     first = first_name(friend.display_name)
-    if shared:
+    related = _related(db, user, friend)
+    if related:
+        pair = related[0]
+        summary = f"Your interest in {pair.my_label} connects with {first}'s interest in {pair.their_label}."
+    elif shared:
         things = "1 thing" if len(shared) == 1 else f"{len(shared)} things"
         summary = f"You and {first} have {things} in common."
     elif them_only or you_only:
@@ -1119,7 +1151,7 @@ def compare(db: Session, user: User, connection_id: str | None = None, person_id
 
     suggestions = [
         ActivitySuggestion(title=title, description=description, grounded_in=grounded, suggested_action=_NO_CONTACT)
-        for title, description, grounded in ideas_for(shared, friend)
+        for title, description, grounded in ideas_for(shared, friend, related)
         if grounded
     ][:2]
     all_labels = [label for label, _ in own] + their_labels

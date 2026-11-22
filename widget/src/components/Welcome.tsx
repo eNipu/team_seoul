@@ -146,9 +146,9 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
         <div className="sample-offer">
           <button type="button" className="btn btn--ghost btn--block" disabled={busy} onClick={trySample}>
             <Icon name="sparkle" size={18} />
-            {action.busy === "sample" ? "Loading sample friends…" : "Try with sample friends"}
+            {action.busy === "sample" ? "Loading starter circle…" : "Explore a starter circle"}
           </button>
-          <p className="muted small">See every card with a made-up circle. Remove it with one tap.</p>
+          <p className="muted small">Try Venn with fictional people instead of importing your contacts.</p>
         </div>
       )}
     </section>

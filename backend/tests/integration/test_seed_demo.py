@@ -50,7 +50,7 @@ def test_seed_fills_every_card(alice):
     assert {r["display_name"] for r in found["results"]} >= {"Jun Park", "Priya Nair"}
 
     nudge = alice.ok("venn_find_nudge", topic="photography")["match"]
-    assert nudge["id"] == jun and "fictional" in nudge["reason"]
+    assert nudge["id"] == jun and "Starter circle" in nudge["reason"]
     extra = alice.ok("venn_find_nudge", topic="photography", connection_id=jun)["match"]
     assert extra["id"] == diego and "Hiking" in extra["evidence"]
     follow_on = alice.ok("venn_plan_group", connection_ids=[jun, diego], activity_topic="photography")

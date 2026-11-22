@@ -1,6 +1,8 @@
+import { strongestFirst } from "../../../shared/importInterests";
 import { useState } from "react";
 import { DEMO_PLATFORM_LABELS, formatDaysAgo, parseImportPeople, plural, type ImportCandidate, type PeopleImportViewData } from "../types";
 import { ActionError, Avatar, EmptyNote, useAction, type ViewProps } from "./common";
+import ImportInterests from "./ImportInterests";
 import PeopleRadar from "./PeopleRadar";
 import { Illustration } from "./icons";
 
@@ -15,7 +17,7 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
 
   const busy = action.busy !== null;
   const count = picked.size;
-  const selection = platform ? plural(count, "sample profile", "sample profiles") : plural(count, "person", "people");
+  const selection = platform ? plural(count, "profile", "profiles") : plural(count, "person", "people");
   const confirmLabel = action.busy === "import" ? "Adding…" :
     platform && fresh.length === 0 ? "All profiles already added" : count === 0 ? "Pick someone to add" : `Add ${selection}`;
   const skippedLine =
@@ -48,14 +50,14 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
         : await bridge.callTool("venn_import_people", args);
       if (!res.ok) {
         if (platform && /mcp resource not found/i.test(res.errorText)) {
-          return "ChatGPT couldn't reach the Add action. Refresh Venn in Plugins, then open a fresh demo in a new chat.";
+          return "ChatGPT couldn't reach the Add action. Refresh Venn in Plugins, then open a fresh preview in a new chat.";
         }
         return res.errorText;
       }
       const result = parseImportPeople(res.data);
       if (!result) return "Venn couldn't verify what was added. Check Friends before trying again.";
       if (result.count === 0) {
-        return platform ? "Those profiles are already in Venn. Open a fresh demo to review again." : "Venn didn't add anyone. Try again.";
+        return platform ? "Those profiles are already in Venn. Open a fresh preview to review again." : "Venn didn't add anyone. Try again.";
       }
       setAdded({ count: result.count, names: result.imported.map((p) => p.name) });
       window.scrollTo?.(0, 0);
@@ -69,9 +71,9 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
       <section className="panel celebrate">
         <ActionError action={action} />
         <Illustration name="friends" />
-        <h2 role="status">Added {platform ? plural(added.count, "sample profile", "sample profiles") : plural(added.count, "person", "people")}</h2>
+        <h2 role="status">Added {platform ? plural(added.count, "profile", "profiles") : plural(added.count, "person", "people")}</h2>
         <p className="muted">
-          {platform ? "Only you can see these notes. To clear them, choose Remove sample data on the dashboard." :
+          {platform ? "Only you can see these notes. To clear them, choose Clear preview data on the dashboard." :
             "They're saved as private notes. Only you can see them."}
         </p>
         {shown.length > 0 && (
@@ -113,9 +115,9 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
 
   return (
     <section className="panel">
-      <h2>{platform ? `${platform} demo import` : "Your people radar"}</h2>
+      <h2>{platform ? `${platform} import` : "Your people radar"}</h2>
       <p className="muted small lead">
-        {platform ? `${plural(data.candidates.length, "fictional profile", "fictional profiles")}, not from a real ${platform} account. Pick the ones you want to add as private sample notes.` :
+        {platform ? `These built-in profiles aren’t from your ${platform} account. Add the ones you choose as private notes.` :
           `Tap a person to see what connects you. People you add become private notes.`}
       </p>
 
@@ -164,15 +166,15 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
               <ul
                 className="list pick-list pick-list--demo"
                 tabIndex={0}
-                aria-label="Fictional profiles"
+                aria-label="Preview profiles"
               >
-                {data.candidates.map((c, i) => {
+                {strongestFirst(data.candidates).map((c) => {
                   const on = picked.has(c.index);
                   const meta = [c.relationship, c.last_met_days_ago !== null ? `Last met ${approxDays(c.last_met_days_ago)}` : null]
                     .filter(Boolean)
                     .join(" · ");
                   return (
-                    <li key={`${c.index}-${i}`}>
+                    <li key={c.index}>
                       <label className={`pick ${on ? "pick--on" : ""}`}>
                         <input type="checkbox" checked={on} disabled={busy || c.already_added} onChange={() => toggle(c)} />
                         <Avatar name={c.name} size="small" />
@@ -183,15 +185,7 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
                           </span>
                           {meta && <span className="muted small">{meta}</span>}
                           {c.notes && <span className="muted small pick__notes">{c.notes}</span>}
-                          {c.interests.length > 0 && (
-                            <span className="chips">
-                              {c.interests.map((it, j) => (
-                                <span key={`${it}-${j}`} className="chip chip--small">
-                                  {it}
-                                </span>
-                              ))}
-                            </span>
-                          )}
+                          <ImportInterests {...c} />
                         </span>
                       </label>
                     </li>

@@ -130,7 +130,7 @@ def test_help_examples_are_requests_the_server_instructions_route(alice):
     ).json()["result"]["instructions"]
     assert "venn_help" in instructions
     assert "let the user choose an" in instructions
-    assert "Do not begin set-up or load sample data unless they ask" in instructions
+    assert "Do not begin set-up or add a starter circle unless they ask" in instructions
     for tool in (
         "venn_import_chatgpt_memory",
         "venn_propose_people_import",

@@ -36,11 +36,11 @@ mock bridge (`src/mock.ts`) instead of the ext-apps connection. It also works st
   `venn_full` has 8 labels in every region, for layout checks; `this_week` has one action of each type,
   `this_week_empty` has no friends; `ask_link` is a question link for Maya Chen; `answers` has two
   responses, one for an existing person and one from someone new, plus three links; `answers_empty` has
-  neither; `dashboard_sample` has the sample circle loaded (banner, Sample tags, sample memories);
+  neither; `dashboard_sample` has the sample circle loaded (Preview tags, starter memories, and a cleanup control, without a banner);
   `dashboard_plans` has two saved plans; `memory_review_people` is a review card whose items name people,
   two of them adding new people)
 - `&tab=profile|memories|friends` opens a dashboard tab
-- In `?view=welcome` or `?view=dashboard`, open **Try a demo import** and choose either platform. Review 100 fictional profiles, select one or more, and confirm. The mock marks saved profiles **Sample** and supports **Remove sample data**.
+- In `?view=welcome` or `?view=dashboard`, open **Preview profiles** and choose Instagram or LinkedIn. Each platform offers 100 built-in profiles with five interests each. Exact matches and related interest pairs appear separately; only profiles you select and confirm become private notes. **Clear preview data** removes them.
 - `?view=weekly_review` shows three editable weekly updates and the audience picker.
 - `?view=reply_nudge|reply_advice|reply_checklist|reply_draft|reply_discussion|reply_thread|saved_replies` shows the reply layouts and the saved-reply list
 - `&theme=dark|light` forces a theme (default: `prefers-color-scheme`)
@@ -74,13 +74,13 @@ roughly matches the incoming view. A tool result with `isError` shows an error b
 | `memory_review` | `venn_propose_memories` | Select drafts and set visibility for the selected updates. **Edit** opens per-item wording and visibility controls. More than 3 items adds bulk selection and a sticky action bar. Previously saved drafts start unchecked. `weekly_update: true` and `source: "chatgpt_memory"` have their own headings. The confirmation lists the saved records and offers **Open my Venn**. |
 | `memory_import` | `venn_import_chatgpt_memory` | "Bring your ChatGPT memory with you": one checkbox per area, the always-excluded note, **Preview my ChatGPT memory** (sends a prompt into the chat), then "Check the chat" with **Choose again**, or the prompt to copy when the host refuses the message. Nothing is sent to Venn from this card. |
 | `dashboard` | `venn_show_dashboard` | "Finish setting up" card above the tabs while a set-up step is open (see "Set-up"). Tabs **Profile** (edit name/bio, at-a-glance tiles for memories / friends / requests that open the matching tab, goals, interests), **Memories** ("Sources" row for ChatGPT memory with **Import from ChatGPT** / **Import more**, search, grouped by category, "From ChatGPT" badge, edit, delete), **Friends** (search "Who do I know who…", invite, reconnect, quick actions **Import friends** / **Play a quiz** / **Plan a group hangout** (pick 2 to 6 friends), pending requests, "On Venn", "Private notes", add a person). |
-| `welcome` | `venn_show_dashboard` (new user) | **Start here** offers **Set up Venn**, **Import my ChatGPT memory**, and **Try a demo import**; guided set-up does not start automatically. Goal chips and the numbered set-up path are optional.  Users can also enter names and optional relationship clues to review on the radar. |
+| `welcome` | `venn_show_dashboard` (new user) | **Start here** offers **Set up Venn**, **Import my ChatGPT memory**, and **Preview profiles**; guided set-up does not start automatically. Goal chips and the numbered set-up path are optional.  Users can also enter names and optional relationship clues to review on the radar. |
 | `help` | `venn_help` | "How Venn helps": the set-up card (while a step is open), topics with an icon, a description and "try it" examples that are sent into the chat ("Sent — continue in the chat", or the text with **Copy** when the host refuses), then "Your data". `note` is model-facing and not shown. |
 | `invite` | `venn_create_invite` | Code as a ticket, QR code ("Scan to connect", when `qr` is non-empty), copy code / copy invite message / copy link (when `link` is non-empty), expiry, uses, revoke. |
 | `activity_ideas` | `venn_suggest_activity` | Shared interests, match ring (`match_score`) with "Why this score?", suggestion cards with **Plan it** / **We did this** / **Add to calendar**. |
 | `reconnect` | `venn_reconnection_suggestions` | Friends not seen for a while, each with a "days since" figure and a bar relative to the longest gap in the list, with **Get ideas** / **Draft a message** / **We met up**. |
 | `friend` | `venn_view_friend` | Profile of a connection or a private person note, "Things to ask about" (tick off / add), interests, shared memories, hangout timeline, actions incl. **Prep for a meetup** and (connections) **Quiz**. |
-| `people_import` | `venn_propose_people_import` | Interactive radar of proposed people, four at a time. Recent contacts appear on the inner ring. Tap a person to inspect relationship clues and matching interests, select people, then confirm **Add N people**. Nothing is saved until confirmed.  Fictional demo imports use the dedicated sample checklist. |
+| `people_import` | `venn_propose_people_import` | Interactive radar of proposed people, four at a time. Recent contacts appear on the inner ring. Tap a person to inspect relationship clues and matching interests, select people, then confirm **Add N people**. Nothing is saved until confirmed.  Platform previews use the dedicated profile checklist. |
 | `people_search` | `venn_find_people` | The query, an editable search field that re-runs in place, result rows with matched labels, **Plan something together** (2+ results). |
 | `group_plan` | `venn_plan_group` | Avatar stack, "Everyone's into", partial overlaps, group ideas with **Plan it** / **Add to calendar**. |
 | `brief` | `venn_meetup_brief` | "Before you see <name>": last time, common ground, things to ask about, copyable conversation starters, notes or shared memories. |
@@ -91,13 +91,10 @@ roughly matches the incoming view. A tool result with `isError` shows an error b
 | `answers` | `venn_review_answers` | One card per response: who answered and when, a name field (new person) or "Updates your note on <name>", each answer as a checkbox (on by default) with its question and a "Saves as" tag, **Save selected** / **Discard** (inline confirm); after saving, what was added and **Open <name>**. Below, the question links with Active / Expired, **Copy link**, **Revoke**, and **Create a link**. Answer text is rendered as plain text. |
 | anything else | | Empty state |
 
-The `dashboard` view also shows, above the tabs: **Try a demo import**; the sample banner with
-**Remove sample data** (inline confirm) while `sample_loaded` is true; a **This week** tile featuring a specific follow-up or the next available action; a highlighted
+The `dashboard` view also shows, above the tabs: **Preview profiles**; a **This week** tile featuring a specific follow-up or the next available action; a highlighted
 "N answers waiting for your review" tile when `pending_answers > 0`; and a **Plans** section when `plans`
 is non-empty (title, date or "No date yet", members, **Done**, delete with inline confirm). The Friends tab
-adds **Ask a friend**, a Common ground shortcut on every friend row, "Sample" tags, and **Try with sample
-friends** in its empty state; **Play a quiz** shows when connections + people ≥ 2. `welcome` offers **Try
-with sample friends**. `memory_review` shows "About: <names>" and "Also adds <names> to your people";
+adds **Ask a friend**, a Common ground shortcut on every friend row, **Preview** tags, and **Explore a starter circle** in its empty state; **Play a quiz** shows when connections + people ≥ 2. `welcome` offers **Explore a starter circle**. When `sample_loaded` is true, **Clear preview data** below the dashboard tabs requires confirmation. `memory_review` shows "About: <names>" and "Also adds <names> to your people";
 `people_search` shows each result's `why` (in place of the matched labels and snippet, which remain the
 fallback when `why` is empty) and a "From your memories" group. The friend view adds **Common ground** and,
 for private notes, **Ask them a few questions**.
@@ -209,8 +206,8 @@ or after an action that returns a dashboard).
 | We did this / We met up / Log a hangout | `venn_log_interaction` | `{ ...friendArg, activity? }` | `{ recorded: true, kind, id, last_interaction_at }` |
 | Invite a friend | `venn_create_invite` | `{}` | `invite` view |
 | Revoke code | `venn_revoke_invite` | `{ code }` | `{ revoked: true }` |
-| Try a demo import → Instagram / LinkedIn demo | `venn_preview_demo_people_import` | `{ platform: "instagram" or "linkedin" }` | `people_import` view plus widget-only `_meta["venn/demoImportConfirmation"]` |
-| Add N sample profiles | `venn_import_demo_people` | `{ import_id, indexes: number[], confirmation_token }` | `{ imported: Person[], count }`; the widget forwards the token from that review only on **Add** |
+| Preview profiles → Instagram / LinkedIn import | `venn_preview_demo_people_import` | `{ platform: "instagram" or "linkedin" }` | `people_import` view plus widget-only `_meta["venn/demoImportConfirmation"]` |
+| Add N profiles | `venn_import_demo_people` | `{ import_id, indexes: number[], confirmation_token }` | `{ imported: Person[], count }`; the widget forwards the token from that review only on **Add** |
 | Add N people (regular import) | `venn_import_people` | `{ import_id, indexes: number[] }` | `{ imported: Person[], count }` |
 | Friends tab search; search again | `venn_find_people` | `{ query }` | `people_search` view |
 | Plan a group hangout; Plan something together | `venn_plan_group` | `{ connection_ids: string[], person_ids: string[] }` (2 to 6 in total) | `group_plan` view |
@@ -220,7 +217,7 @@ or after an action that returns a dashboard).
 | Common ground (friend view, friend rows) | `venn_compare` | friendArg | `venn` view |
 | Dashboard → This week | `venn_this_week` | `{}` | `this_week` view |
 | Try with sample friends (welcome, Friends tab empty state, This week empty state) | `venn_load_sample_circle` | `{}` | `{ loaded: true, … }`, then `venn_show_dashboard` |
-| Remove sample data | `venn_remove_sample_circle` | `{}` | `{ removed: true, … }`, then `venn_show_dashboard` |
+| Clear preview data | `venn_remove_sample_circle` | `{}` | `{ removed: true, … }`, then `venn_show_dashboard` |
 | Ask a friend; Ask them a few questions; Create a link | `venn_create_question_link` | `{}` or `{ person_id }` | `ask_link` view |
 | N answers waiting for your review; See answers | `venn_review_answers` | `{}` | `answers` view |
 | Save selected (answers) | `venn_save_answers` | `{ response_id, keys: string[], name? }` (`name` only for a new person) | `{ saved: true, response_id, person, added_interests, follow_up }` |

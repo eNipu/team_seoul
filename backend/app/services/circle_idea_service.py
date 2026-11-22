@@ -8,10 +8,12 @@ from sqlalchemy.orm import Session
 from app.models import Memory, User
 from app.services import relationship_service as rel
 from app.services.activity_topics import activity_topic
+from app.services.interest_matching import match_interests
 
 
 def _topics(labels: Iterable[str]) -> set[str]:
-    return {topic for label in labels if (topic := activity_topic(label))}
+    # Keep the saved wording: an allowlisted alias isn't an exact label match.
+    return {" ".join(label.casefold().split()) for label in labels if activity_topic(label)}
 
 
 def _interest_topics(memories: Iterable[Memory]) -> set[str]:
@@ -32,14 +34,26 @@ def _suggest(db: Session, mine: set[str], friends: list[rel.Friend]) -> dict | N
         for term in theirs:
             holders[term].append(friend)
 
-    # Prefer a shared, actionable topic; the ID tiebreaker handles duplicate names.
-    topics = sorted(mine & holders.keys(), key=lambda t: (len(holders[t]) < 2, -len(t.split()), t))
-    ideas = rel._ideas_from([topics], [], limit=1)
-    if not ideas:
+    # Only whole, allowlisted topics reach the matcher on either side.
+    matches = sorted(
+        match_interests(sorted(mine), sorted(holders)),
+        key=lambda m: (
+            m.kind != "exact",
+            len(holders[m.their_label]) < 2,
+            -len(m.their_label.split()),
+            m.their_label,
+            m.my_label,
+        ),
+    )
+    for match in matches:
+        topic = activity_topic(match.their_label)
+        if topic and (ideas := rel._ideas_from([[topic]], [], limit=1)):
+            activity = ideas[0][0]
+            break
+    else:
         return None
-    activity, _, [topic] = ideas[0]
-    first = holders[topic][0]
-    prefix = "Sample circle: " if first.is_sample else ""
+    first = holders[match.their_label][0]
+    prefix = "Starter circle: " if first.is_sample else ""
     compatible = {(f.kind, f.id) for f in rel.compatible_companions(db, first, friends)}
 
     def companion(label: str) -> rel.Friend | None:
@@ -47,7 +61,7 @@ def _suggest(db: Session, mine: set[str], friends: list[rel.Friend]) -> dict | N
 
     group = None
     for label in sorted(holders):
-        bridge = rel.bridge_for_topics(topic, label)
+        bridge = rel.bridge_for_topics(topic, activity_topic(label) or label)
         extra = companion(label) if bridge else None
         if bridge and extra:
             title, description = bridge
@@ -58,18 +72,28 @@ def _suggest(db: Session, mine: set[str], friends: list[rel.Friend]) -> dict | N
                 "draft": f"How about a {title.lower()} together?",
             }
             break
-    if group is None and (extra := companion(topic)) is not None:
-        group = {
-            "person": _person(extra),
-            "activity": activity,
-            "reason": f"{extra.display_name} also has {topic} as a saved interest.",
-            "draft": f"Group idea: {activity.lower()}. Want to pick a day?",
-        }
+    if group is None:
+        for label in sorted(holders):
+            if activity_topic(label) == topic and (extra := companion(label)):
+                group = {
+                    "person": _person(extra),
+                    "activity": activity,
+                    "reason": f"{extra.display_name} has {label} as a saved interest.",
+                    "draft": f"Group idea: {activity.lower()}. Want to pick a day?",
+                }
+                break
+    if match.kind == "exact":
+        reason = f"Your saved interests and {first.display_name}'s both include {match.my_label}."
+    else:
+        reason = (
+            f"Your saved interest in {match.my_label} is related to "
+            f"{first.display_name}'s interest in {match.their_label}."
+        )
     return {
         "topic": topic,
         "person": _person(first),
         "activity": activity,
-        "reason": f"{prefix}Your saved interests and {first.display_name}'s both include {topic}.",
+        "reason": prefix + reason,
         "draft": f"Hey {rel.first_name(first.display_name)}! Catch-up idea: {activity.lower()}. Interested?",
         "group": group,
     }

@@ -3,6 +3,8 @@
 // coerce unknown JSON into well-typed objects with safe defaults so React never
 // receives non-string children or undefined arrays.
 
+import { relatedLabels } from "../../shared/importInterests";
+
 export const MEMORY_CATEGORIES = [
   "INTEREST",
   "DISLIKE",
@@ -358,6 +360,7 @@ export interface HelpViewData {
 
 export interface ImportCandidate {
   shared_interests?: string[];
+  related_interests?: string[];
   existing_relationships?: string[];
   index: number;
   name: string;
@@ -1050,6 +1053,7 @@ export function parseView(sc: unknown, meta?: unknown): ViewData | null {
           last_met_days_ago: daysOrNull(c.last_met_days_ago),
           already_added: c.already_added === true,
           shared_interests: strArr(c.shared_interests),
+          related_interests: relatedLabels(c.interest_matches),
           existing_relationships: strArr(c.existing_relationships),
         })),
         skipped: Math.max(0, Math.floor(num(sc.skipped))),

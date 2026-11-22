@@ -23,7 +23,7 @@
         "privacyPolicyURL": "https://joinvennai.com/privacy",
         "defaultPrompt": [
           "Open Venn",
-          "Preview an Instagram demo import in Venn",
+          "Preview an Instagram import in Venn",
           "What should I do this week?"
         ],
         "brandColor": "#E86A4A",

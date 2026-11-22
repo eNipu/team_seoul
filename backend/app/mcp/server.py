@@ -42,19 +42,19 @@ the same in ChatGPT and on the Venn website. Friends do not need to join for Ven
   If there's no strong match, continue normally: no card, no mention of the search, no substitute
   person. Otherwise show ONE venn_show_reply of kind nudge: title = a small proposed activity with
   the returned person; body = the one supported reason, attributed to its source. Don't infer a
-  friend's preferences from a dislike or claim anyone is available. Label sample matches as fictional.
+  friend's preferences from a dislike or claim anyone is available. Identify preview profiles as such.
   Offer this once, not every turn.
   On "Draft an invite", use venn_show_reply(kind=draft); don't copy private grounding into the
   invitation. Drafting is not permission to send, save or book.
 - On "make it a group thing", keep the original person and activity in context. Find one other
   relevant person via venn_find_nudge with the original topic and the first person's connection_id
-  or person_id. Label sample matches as fictional. Use only returned ids; if there is no match,
+  or person_id. Keep preview profiles distinct from actual acquaintances. Use only returned ids; if there is no match,
   ask whom to include. Call venn_plan_group with the 2–6 friends, not the user, and activity_topic
   set to the original topic, not the full message. Highlight one
   feasible idea from the card that fits the original activity, naming whose interests it brings
   together; never call a two-person overlap something everybody likes.
 - For a generic greeting or "Open Venn", call venn_show_dashboard and let the user choose an
-  action on the card. Do not begin set-up or load sample data unless they ask. When they ask to set
+  action on the card. Do not begin set-up or add a starter circle unless they ask. When they ask to set
   up Venn, use the open steps from the dashboard result and start with the first one:
   1. About you (no memories yet): ask the opening question supplied by venn_show_dashboard.
      Accept a partial answer and use venn_propose_memories with structured candidates drawn
@@ -67,11 +67,12 @@ the same in ChatGPT and on the Venn website. Friends do not need to join for Ven
      code -> venn_redeem_invite.
   In set-up, ask one short question at a time. If the user finishes or skips a step, go to the
   next one. When set-up is done, offer one thing to try (for example venn_this_week).
-- For an explicit Instagram or LinkedIn demo import, call venn_preview_demo_people_import with
-  platform "instagram" or "linkedin". Show the 100 fictional profiles for review; do not confirm
-  on the user's behalf or request social credentials. The user confirms on the card.
-  For "try with sample friends", use venn_load_sample_circle instead. Sample data is not the
-  user's own and does not count as set-up; remove it when asked with venn_remove_sample_circle.
+- For an Instagram or LinkedIn import preview, call venn_preview_demo_people_import with the
+  requested platform. This opens a built-in profile collection, not a connected account. For the
+  user's own contacts, use their supplied export instead. Don't request credentials or confirm
+  on their behalf: the user picks profiles and presses Add on the card. For an explicit request
+  to explore a starter circle, use venn_load_sample_circle; clear it with venn_remove_sample_circle
+  when asked. Preview profiles do not count toward set-up.
 - Answer requests directed to Venn with a dedicated card whenever one fits, including follow-ups.
   If the request maps to a specific card, call that tool (venn_find_people, venn_this_week,
   venn_compare, venn_propose_memories, venn_import_chatgpt_memory, venn_create_invite,
@@ -176,7 +177,7 @@ class VennMCPServer(MCPServer):
             if name == "venn_import_demo_people" and isinstance(exc.__cause__, ValidationError):
                 # SDK validation errors can echo arguments, including the review's private capability.
                 return error(
-                    InvalidRequest("Open a fresh demo review and use its Add button to confirm your selection.")
+                    InvalidRequest("Open a fresh import review and use its Add button to confirm your selection.")
                 )
             raise
 

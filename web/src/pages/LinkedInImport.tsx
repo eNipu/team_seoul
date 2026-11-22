@@ -11,7 +11,7 @@ const MAX_COOKIE_CHARS = 20000;
 
 const MAX_FILE_BYTES = 4_000_000;
 
-const METHODS = { file: "Export file", cookies: "Session cookies", demo: "Demo connections" } as const;
+const METHODS = { file: "Export file", cookies: "Session cookies", demo: "Built-in preview" } as const;
 type Method = keyof typeof METHODS;
 type Preview = { kind: "linkedin"; data: LinkedInImport } | { kind: "demo"; data: PeopleImport };
 
@@ -49,7 +49,7 @@ export function LinkedInFlow({
           setPreview(null);
         }}
         onDone={(count) => onDone(count, "demo")}
-        intro={<Notice tone="quiet">These profiles are fictional. Any you add will be marked as samples.</Notice>}
+        intro={<Notice tone="quiet">Selected profiles are saved as private notes.</Notice>}
       />
     );
   }
@@ -200,12 +200,10 @@ export function LinkedInFlow({
       <div className="stack">
         {tabs}
         <p className="dialog__text">
-          Try the import with 100 fictional, AI-generated LinkedIn-style profiles. No LinkedIn account, cookies,
-          or export file needed.
+          This preview uses built-in profiles, not your LinkedIn account or an uploaded export.
         </p>
         <Notice tone="quiet">
-          Review who to add before saving. On Home, <strong>Remove sample data</strong> clears these profiles along
-          with any other sample data.
+          Review who to add before saving. To remove these profiles later, choose <strong>Clear preview data</strong> on Home.
         </Notice>
         <InlineError message={action.error} />
         <div className="dialog__actions">
@@ -226,7 +224,7 @@ export function LinkedInFlow({
               void action.run(async () => setPreview({ kind: "demo", data: await api.demoPeoplePreview("linkedin") }))
             }
           >
-            {action.busy ? "Loading…" : "Review 100 demo connections"}
+            {action.busy ? "Loading…" : "Preview profiles"}
           </button>
         </div>
       </div>

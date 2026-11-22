@@ -443,7 +443,10 @@ def build_api(settings: Settings) -> APIRouter:  # noqa: C901 - flat list of rou
 
     @api.post("/people/import-preview")
     def import_preview(body: ImportPreviewBody, who: Identity = Who) -> Any:
-        return run(who, lambda db, user: people_service.propose_import(db, user, body.people, body.source))
+        return run(
+            who,
+            lambda db, user: people_service.propose_import(db, user, body.people, body.source, match_interests=True),
+        )
 
     @api.post("/people/import")
     def import_people(body: ImportBody, who: Identity = Who) -> Any:
@@ -454,13 +457,23 @@ def build_api(settings: Settings) -> APIRouter:  # noqa: C901 - flat list of rou
     @api.post("/instagram/demo-preview")
     def instagram_demo_preview(who: Identity = Who) -> Any:
         """Preview fictional profiles without contacting Instagram."""
-        return run(who, lambda db, user: people_service.propose_demo_import(db, user, "instagram", channel="web"))
+        return run(
+            who,
+            lambda db, user: people_service.propose_demo_import(
+                db, user, "instagram", channel="web", match_interests=True
+            ),
+        )
 
     # --------------------------------------------------------------- linkedin
     @api.post("/linkedin/demo-preview")
     def linkedin_demo_preview(who: Identity = Who) -> Any:
         """Preview 100 fictional connections without contacting LinkedIn or an enrichment service."""
-        return run(who, lambda db, user: people_service.propose_demo_import(db, user, "linkedin", channel="web"))
+        return run(
+            who,
+            lambda db, user: people_service.propose_demo_import(
+                db, user, "linkedin", channel="web", match_interests=True
+            ),
+        )
 
     @api.post("/linkedin/connections")
     def linkedin_connections(body: LinkedInConnectionsBody, who: Identity = Who) -> Any:
@@ -552,7 +565,7 @@ def build_api(settings: Settings) -> APIRouter:  # noqa: C901 - flat list of rou
         ]
 
         def result(db: Session, user: User) -> dict:
-            view = people_service.propose_import(db, user, candidates, linkedin_service.SOURCE)
+            view = people_service.propose_import(db, user, candidates, linkedin_service.SOURCE, match_interests=True)
             return {
                 **view.model_dump(mode="json"),
                 "details_for": len(profiles),

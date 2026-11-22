@@ -3,6 +3,8 @@ FROM node:22-alpine AS widget
 WORKDIR /widget
 COPY widget/package.json widget/package-lock.json ./
 RUN npm ci
+COPY shared/ /shared/
+COPY backend/app/services/interest_families.json /backend/app/services/interest_families.json
 COPY widget/ ./
 RUN npm run build
 
@@ -11,6 +13,8 @@ FROM node:22-alpine AS web
 WORKDIR /web
 COPY web/package.json web/package-lock.json ./
 RUN npm ci
+COPY shared/ /shared/
+COPY backend/app/services/interest_families.json /backend/app/services/interest_families.json
 COPY web/ ./
 RUN npm run build
 

@@ -22,7 +22,7 @@ import DemoImport from "./DemoImport";
 import MemoriesTab from "./MemoriesTab";
 import FriendsTab from "./FriendsTab";
 import SetupCard from "./Setup";
-import { HomeTiles, Plans, SampleBanner } from "./DashboardHome";
+import { HomeTiles, Plans, PreviewCleanup } from "./DashboardHome";
 import { Icon, type IconName } from "./icons";
 
 export type DashboardTab = "profile" | "memories" | "friends";
@@ -86,7 +86,6 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
 
   return (
     <>
-    {sampleLoaded && <SampleBanner bridge={bridge} onChanged={() => nav.replaceView("venn_show_dashboard", {})} />}
     <HomeTiles pendingAnswers={pendingAnswers} bridge={bridge} nav={nav} />
     <DemoImport nav={nav} action={demoAction} />
     <ActionError action={demoAction} />
@@ -153,6 +152,7 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
         )}
       </div>
     </section>
+    {sampleLoaded && <PreviewCleanup bridge={bridge} onChanged={() => nav.replaceView("venn_show_dashboard", {})} />}
     </>
   );
 }

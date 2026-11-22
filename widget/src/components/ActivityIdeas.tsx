@@ -63,7 +63,7 @@ export default function ActivityIdeas({ data, bridge }: ViewProps<ActivityIdeasV
                 ))}
               </div>
             ) : (
-              <p className="muted small">No shared interests yet, so these are general ideas.</p>
+              <p className="muted small">No exact shared interests on record yet.</p>
             )}
           </div>
         </div>

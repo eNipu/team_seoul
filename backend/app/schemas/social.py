@@ -250,7 +250,14 @@ class PersonCandidate(BaseModel):
     last_met_days_ago: int | None = Field(default=None, ge=0, le=3650)
 
 
+class InterestMatch(BaseModel):
+    my_label: str
+    their_label: str
+    kind: Literal["exact", "related"]
+
+
 class ImportCandidateOut(BaseModel):
+    interest_matches: list[InterestMatch] = Field(default_factory=list)
     shared_interests: list[str] = Field(default_factory=list)
     index: int
     name: str

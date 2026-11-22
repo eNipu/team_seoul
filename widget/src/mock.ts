@@ -16,6 +16,7 @@
 // friend view and coming back).
 
 import type { HostBridge, ToolOutcome } from "./mcp/client";
+import { previewInterests } from "../../shared/importInterests";
 import { mockQrRows } from "./mockQr";
 import type {
   ActivityIdeasViewData,
@@ -445,8 +446,20 @@ const DEMO_SURNAMES = {
   linkedin: ["Ames", "Pereira", "Silva", "Duarte", "Laurent", "Novak", "Qadir", "Verma", "Molina", "Tan"],
 };
 const DEMO_TOPICS = {
-  instagram: ["Film photography", "Ceramics", "Plant care", "Food illustration", "Streetwear"],
-  linkedin: ["UX research", "Climate tech", "Data visualization", "Design systems", "Social enterprise"],
+  instagram: [
+    ["Film photography", "Architecture", "Walking tours", "Darkroom printing", "Zines"],
+    ["Ceramics", "Espresso", "Glaze chemistry", "Surface design", "Tea"],
+    ["Plant care", "Container gardening", "Macro photography", "Pollinators", "Nature journaling"],
+    ["Food illustration", "Watercolor", "Cookbooks", "Food markets", "Hand lettering"],
+    ["Streetwear", "Embroidery", "Upcycling", "Sewing", "Portrait photography"],
+  ],
+  linkedin: [
+    ["UX research", "Interviews", "Accessibility", "Public transit", "Wayfinding"],
+    ["Climate tech", "Clean energy", "Cycling", "Weather maps", "Open source"],
+    ["Data visualization", "Cartography", "Rail travel", "Data journalism", "Typography"],
+    ["Design systems", "Prototyping", "Typography", "Creative coding", "Accessibility"],
+    ["Coffee roasting", "Social enterprise", "Mentorship", "Fundraising", "Hosting"],
+  ],
 };
 
 const invites = new Map<string, { max_uses: number; expires_at: string }>();
@@ -1425,12 +1438,13 @@ function importView(platform: DemoPlatform | null = null, entries: ImportCandida
     name: `${first} ${last}`,
     relationship: null,
     notes: null,
-    interests: [DEMO_TOPICS[platform][(row + col) % DEMO_TOPICS[platform].length]],
+    interests: [...DEMO_TOPICS[platform][(row + col) % DEMO_TOPICS[platform].length]],
     last_met_days_ago: null,
   }))) : entries;
+  const mine = memories.filter(m => m.category === "INTEREST" && m.source !== "sample" && !m.people?.length).flatMap(m => [m.title, ...m.tags]);
   const candidates = profiles.map((c) => {
     const matches = people.filter((p) => (platform || !p.is_sample) && p.name.toLowerCase() === c.name.toLowerCase());
-    return { ...c, shared_interests: c.interests.filter((interest) => profile.interests.some((mine) => mine.toLowerCase() === interest.toLowerCase())), already_added: matches.length > 0, existing_relationships: matches.flatMap((p) => p.relationship ? [p.relationship] : []) };
+    return { ...c, ...previewInterests(mine, c.interests), already_added: matches.length > 0, existing_relationships: matches.flatMap((p) => p.relationship ? [p.relationship] : []) };
   });
 
   const confirmationToken = platform ? import_id.padEnd(43, "_") : null;
@@ -2257,7 +2271,7 @@ export function createMockBridge(): HostBridge {
             return fail("INVALID_ARGUMENT: use the Add button on the matching import review card");
           }
           if (isSample && args.confirmation_token !== confirmationToken) {
-            return fail("INVALID_ARGUMENT: Open a fresh demo review and use its Add button to confirm your selection.");
+            return fail("INVALID_ARGUMENT: Open a fresh import review and use its Add button to confirm your selection.");
           }
           const wanted = new Set(Array.isArray(args.indexes) ? args.indexes : []);
           if (!wanted.size) return fail("INVALID_ARGUMENT: pick at least one person");
