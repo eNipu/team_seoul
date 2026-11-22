@@ -268,8 +268,7 @@ def build_api(settings: Settings) -> APIRouter:  # noqa: C901 - flat list of rou
                 name=name if isinstance(name, str) else None,
                 provision=True,
             )
-        username = web_session.username_from(request, settings)
-        return Identity(subject=web_session.dev_subject(username), username=username) if username else None
+        return web_session.identity_from(request, settings)
 
     async def identity(found: Identity | None = Depends(maybe_identity)) -> Identity:
         if found is None:
@@ -297,7 +296,9 @@ def build_api(settings: Settings) -> APIRouter:  # noqa: C901 - flat list of rou
         state: dict[str, Any] = {
             "signed_in": False,
             "auth_mode": settings.auth_mode,
-            "sign_in_available": dev,
+            "sign_in_available": settings.google_sso_enabled or dev,
+            "google_sso_available": settings.google_sso_enabled,
+            "dev_sign_in_available": dev,
             "passcode_required": dev and bool(settings.dev_auth_passcode),
             "display_name": None,
             "username": None,

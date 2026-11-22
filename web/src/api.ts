@@ -12,6 +12,7 @@ export interface Api {
   // Sign-in
   getSession(): Promise<T.Session>;
   signIn(input: T.SignInInput): Promise<T.SignInResult>;
+  signInWithGoogle?(mode: "signin" | "signup"): Promise<T.SignInResult>;
   signOut(): Promise<void>;
   // Account
   getMe(): Promise<T.Me>;
@@ -321,11 +322,19 @@ const realApi: Api = {
   removeSample: async () => T.parseSampleRemoved(await request("DELETE", "/sample")),
 };
 
+export function googleAuthStartUrl(mode: "signin" | "signup"): string {
+  const next = `${window.location.pathname}${window.location.search}`;
+  const safeNext = next.startsWith("/app") ? next : "/app/";
+  const query = new URLSearchParams({ mode, next: safeNext });
+  return `/auth/google/start?${query.toString()}`;
+}
+
 export const api: Api = DEMO
   ? createMockApi({
       signedOut: params.get("signedout") === "1",
       passcode: params.get("passcode") === "1",
       fresh: params.get("fresh") === "1",
       external: params.get("external") === "1",
+      googleSso: params.get("nogoogle") !== "1",
     })
   : realApi;
