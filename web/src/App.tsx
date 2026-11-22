@@ -10,6 +10,7 @@ import { LIMITS, type Session } from "./types";
 import { Avatar, EmptyState, Skeleton, ToastProvider, useToast } from "./ui";
 import SignIn, { NotConnected, SignInUnavailable } from "./pages/SignIn";
 import Home from "./pages/Home";
+import Overlap from "./pages/Overlap";
 import People from "./pages/People";
 import PersonPage from "./pages/Person";
 import Memories from "./pages/Memories";
@@ -50,6 +51,7 @@ interface Route {
 function matchRoute(loc: Location): Route {
   const { path } = loc;
   if (path === "/") return { title: "Home", element: <Home /> };
+  if (path === "/overlap") return { title: "Venn Overlap", element: <Overlap /> };
   if (path === "/people") return { title: "People", element: <People /> };
   const person = /^\/people\/(connection|person)\/([^/]+)$/.exec(path);
   if (person) {

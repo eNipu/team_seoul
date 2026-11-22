@@ -81,6 +81,60 @@ export type FriendKind = (typeof FRIEND_KINDS)[number];
 
 /* ------------------------------------------------------------------ shapes */
 
+import { openSlots, seoulWeek } from "./overlapWindow";
+
+export const OVERLAP_AREAS = ["seongsu", "hongdae", "yeonnam"] as const;
+export const OVERLAP_INTERESTS = ["photography", "architecture", "walking", "coffee", "books", "art"] as const;
+
+export interface OverlapPreference {
+  area: string;
+  date: string;
+  slot: string;
+  interests: string[];
+}
+export type OverlapInput = OverlapPreference & { adults_confirmed: true };
+export type OverlapAction = "yes" | "pass" | "block" | "suggest_spot";
+export interface OverlapMeetingPoint {
+  label: string;
+  status: "available" | "suggested_by_you" | "suggested_to_you" | "agreed";
+}
+export type OverlapReportReason = "safety" | "spam" | "other";
+export interface OverlapMatch {
+  id: string;
+  status: "offered" | "waiting" | "introduced";
+  title: string;
+  reason: string;
+  challenge: string;
+  other_name: string | null;
+  meeting_point: OverlapMeetingPoint | null;
+}
+export interface OverlapState {
+  preference: OverlapPreference | null;
+  match: OverlapMatch | null;
+}
+
+export function parseOverlapState(value: unknown): OverlapState {
+  const empty = { preference: null, match: null };
+  if (!isObj(value) || !isObj(value.preference)) return empty;
+  const { area, date, slot, interests } = value.preference;
+  const text = (s: unknown): s is string => typeof s === "string" && !!s.trim();
+  if (!OVERLAP_AREAS.some(a => a === area) || !text(area) || !text(date) || !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+      !Number.isFinite(Date.parse(date)) || new Date(date).toISOString().slice(0, 10) !== date ||
+      !seoulWeek().includes(date) || !text(slot) || !openSlots(date).includes(slot) ||
+      !Array.isArray(interests) || !interests.length || interests.length > 3 || new Set(interests).size !== interests.length ||
+      !interests.every(i => OVERLAP_INTERESTS.some(code => code === i))) return empty;
+  const preference = { area, date, slot, interests: [...interests] };
+  const m = value.match;
+  if (!isObj(m) || !text(m.id) || !text(m.title) || !text(m.reason) || !text(m.challenge) ||
+      (m.status !== "offered" && m.status !== "waiting" && m.status !== "introduced")) return { preference, match: null };
+  const point = m.meeting_point;
+  const meeting_point: OverlapMeetingPoint | null = m.status === "introduced" && isObj(point) && text(point.label) &&
+    (point.status === "available" || point.status === "suggested_by_you" || point.status === "suggested_to_you" || point.status === "agreed")
+    ? { label: point.label, status: point.status } : null;
+  return { preference, match: { id: m.id, status: m.status, title: m.title, reason: m.reason, challenge: m.challenge, meeting_point,
+    other_name: m.status === "introduced" && text(m.other_name) ? m.other_name : null } };
+}
+
 export interface Session {
   signed_in: boolean;
   auth_mode: string;
@@ -416,6 +470,7 @@ export interface Quiz {
 }
 
 export interface ImportCandidate {
+  existing_relationships?: string[];
   index: number;
   name: string;
   relationship: string | null;
@@ -1145,6 +1200,7 @@ export function parsePeopleImport(v: unknown): PeopleImport {
         notes: strOrNull(c.notes),
         interests: strArr(c.interests),
         last_met_days_ago: numOrNull(c.last_met_days_ago),
+        existing_relationships: strArr(c.existing_relationships),
         already_added: bool(c.already_added),
       }))
       .filter((c) => c.name !== ""),

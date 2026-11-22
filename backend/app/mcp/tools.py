@@ -30,6 +30,7 @@ from mcp.server.mcpserver import MCPServer
 from mcp_types import CallToolResult
 from pydantic import Field
 
+from app.auth.context import current_token
 from app.mcp.common import (
     CALENDAR,
     CONNECTIONS,
@@ -870,8 +871,12 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
         ] = None,
     ) -> CallToolResult:
         async def body():
+            can_read_interests = MEMORIES_READ in current_token([CONNECTIONS]).scopes
             view = await run_as_user(
-                [CONNECTIONS], lambda db, user, _: people_service.propose_import(db, user, people, source)
+                [CONNECTIONS],
+                lambda db, user, _: people_service.propose_import(
+                    db, user, people, source, match_interests=can_read_interests
+                ),
             )
             text = (
                 f"Showing {len(view.candidates)} people to review (import_id {view.import_id}). Nothing is "

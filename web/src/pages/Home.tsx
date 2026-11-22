@@ -34,6 +34,7 @@ import {
 } from "../ui";
 import { TickButton } from "./shared";
 import { CircleIdea } from "./CircleIdea";
+import { OverlapEntry } from "./OverlapEntry";
 
 const EXAMPLES = ["photography", "board games", "climbing", "lives in Lisbon"];
 
@@ -292,6 +293,7 @@ function Welcome({ name, steps, onLoaded }: { name: string; steps: SetupStep[]; 
         </button>
       </div>
       <InlineError message={act.error} />
+      <OverlapEntry />
       {steps.length > 0 && (
         <Card title="Getting set up" icon="sprout">
           <SetupSteps steps={steps} />
@@ -346,6 +348,7 @@ function Dashboard({ home, reloadHome }: { home: DashboardHome; reloadHome: () =
       </Card>
 
       <CircleIdea key={String(home.sample_loaded)} onDismiss={() => document.getElementById("circle-search")?.focus()} />
+      <OverlapEntry />
       <HeroSearch />
 
       {home.pending_answers > 0 && (

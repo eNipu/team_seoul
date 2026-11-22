@@ -94,6 +94,8 @@ Read `SCHEDULING.md` before any task in this group.
 | [T44](T44-product-navigation.md) | Focused landing page and live ChatGPT review | both | M | T43 | done |
 | [T45](T45-plugin-weekly-review.md) | Review and save weekly updates in ChatGPT | both | M | – | done |
 | [T47](T47-chatgpt-starter-demo-import.md) | Add ChatGPT starter actions and demo contact imports | both | S | T46 | done |
+| [T51](T51-onboarding-question.md) | Ask a default question on the first Venn interaction | backend | S | – | done |
+| [T52](T52-people-radar.md) | Review people on a radar with shared interests | both | S | T51 | done |
 
 ### G. Website experience
 
@@ -103,6 +105,7 @@ Read `SCHEDULING.md` before any task in this group.
 | [T48](T48-instagram-web-demo-import.md) | Preview and import fictional Instagram profiles on the web | web + backend | S | T46, T47 | done |
 | [T49](T49-proactive-suggestions.md) | Suggest a person and a plan before the user asks | web + widget + backend | M | T39 | done |
 | [T50](T50-actionable-home-setup.md) | Complete unfinished setup steps from Home | web | S | – | done |
+| [T53](T53-venn-overlap.md) | Venn Overlap: nearby plans with mutual introductions | web + backend | L | – | done |
 
 T04 and T12 can start right away, in parallel with the backend tasks, because the shapes they
 render are fixed in `CONTRACTS.md`.

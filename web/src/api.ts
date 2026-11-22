@@ -14,6 +14,11 @@ export interface Api {
   signIn(input: T.SignInInput): Promise<T.SignInResult>;
   signInWithGoogle?(mode: "signin" | "signup"): Promise<T.SignInResult>;
   signOut(): Promise<void>;
+  getOverlap(): Promise<T.OverlapState>;
+  optInOverlap(input: T.OverlapInput): Promise<T.OverlapState>;
+  withdrawOverlap(): Promise<T.OverlapState>;
+  respondOverlap(id: string, action: T.OverlapAction): Promise<T.OverlapState>;
+  reportOverlap(id: string, reason: T.OverlapReportReason): Promise<T.OverlapState>;
   // Account
   getMe(): Promise<T.Me>;
   updateMe(patch: { display_name?: string; bio?: string; social_goals?: string[] }): Promise<T.Profile>;
@@ -182,6 +187,12 @@ const realApi: Api = {
     await request("DELETE", "/session", { quiet401: true });
   },
 
+  getOverlap: async () => T.parseOverlapState(await request("GET", "/overlap")),
+  optInOverlap: async (input) => T.parseOverlapState(await request("POST", "/overlap/preference", { body: input })),
+  withdrawOverlap: async () => T.parseOverlapState(await request("DELETE", "/overlap/preference")),
+  respondOverlap: async (id, action) => T.parseOverlapState(await request("POST", `/overlap/matches/${enc(id)}/respond`, { body: { action } })),
+  reportOverlap: async (id, reason) => T.parseOverlapState(await request("POST", `/overlap/matches/${enc(id)}/report`, { body: { reason } })),
+
   // GET /me
   getMe: async () => T.parseMe(await request("GET", "/me")),
   // PATCH /me
@@ -331,6 +342,7 @@ export function googleAuthStartUrl(mode: "signin" | "signup"): string {
 
 export const api: Api = DEMO
   ? createMockApi({
+      overlapSeat: params.get("seat"),
       signedOut: params.get("signedout") === "1",
       passcode: params.get("passcode") === "1",
       fresh: params.get("fresh") === "1",

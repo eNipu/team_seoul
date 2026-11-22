@@ -1,0 +1,134 @@
+import { useEffect, useState } from "react";
+import { api, DEMO } from "../api";
+import { href } from "../router";
+import { openSlots, seoulWeek as week } from "../overlapWindow";
+import { OVERLAP_AREAS, OVERLAP_INTERESTS, type OverlapPreference, type OverlapReportReason, type OverlapState } from "../types";
+import { Dialog, InlineError, Loaded, useAction, useAsync, useToast } from "../ui";
+import "../overlap.css";
+
+const label = (code: string) => code.charAt(0).toUpperCase() + code.slice(1);
+
+const dayLabel = new Intl.DateTimeFormat("en", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
+const showDay = (iso: string) => dayLabel.format(new Date(`${iso}T00:00:00Z`));
+
+
+function WindowSummary({ area, date, slot, interests }: OverlapPreference) {
+  return <div className="ov-summary"><strong>{label(area)} · {showDay(date)} · {label(slot)}</strong>
+    <span>{interests.length ? interests.map(label).join(" · ") : "Choose at least one interest"}</span></div>;
+}
+
+function OptIn({ busy, save }: { busy: boolean; save: (p: OverlapPreference) => void }) {
+  const days = week();
+  const [area, setArea] = useState<string>(OVERLAP_AREAS[0]);
+  // Tomorrow always has a full set of windows, regardless of the current time in Seoul.
+  const [chosenDay, setDay] = useState(days[1]);
+  const date = days.includes(chosenDay) ? chosenDay : days[0];
+  const slots = openSlots(date);
+  const [chosenSlot, setSlot] = useState("afternoon");
+  const slot = slots.includes(chosenSlot) ? chosenSlot : slots[0];
+  const [interests, setInterests] = useState<string[]>([]);
+  const [adult, setAdult] = useState(false);
+  const preference = { area, date, slot, interests };
+  return <form className="ov-card" onSubmit={e => {
+    e.preventDefault();
+    if (!busy && adult && interests.length && interests.length <= 3 && week().includes(date)) save(preference);
+  }}>
+    <h2>Your Seoul window</h2>
+    <p>Choose a neighborhood you’d like to visit, not your current location.</p>
+    <div className="ov-fields">
+      <label>District<select value={area} onChange={e => setArea(e.target.value)}>{OVERLAP_AREAS.map(a => <option key={a} value={a}>{label(a)}</option>)}</select></label>
+      <label>Day in Seoul<select value={date} onChange={e => setDay(e.target.value)}>{days.map(d => <option key={d} value={d}>{showDay(d)}</option>)}</select></label>
+      <label>Time of day<select value={slot} onChange={e => setSlot(e.target.value)}>{slots.map(s => <option key={s} value={s}>{label(s)}</option>)}</select></label>
+    </div>
+    <fieldset className="ov-interests"><legend>What would you enjoy? Choose 1–3.</legend><div className="ov-row">
+      {OVERLAP_INTERESTS.map(i => { const on = interests.includes(i); return <button key={i} type="button" className="btn" aria-pressed={on} disabled={!on && interests.length >= 3}
+        onClick={() => setInterests(old => on ? old.filter(x => x !== i) : [...old, i])}>{on && <span aria-hidden="true">✓ </span>}{label(i)}</button>; })}
+    </div></fieldset>
+    <section className="ov-note"><h3>What a match can see</h3><WindowSummary {...preference} />
+      <p>Venn can use these interests to explain a plan to one other member in this window. It won’t share your location, contacts or memories. Your first name appears only if you both say yes to that plan.</p></section>
+    <label className="ov-check"><input type="checkbox" checked={adult} onChange={e => setAdult(e.target.checked)} required /> I confirm that I’m an adult.</label>
+    <div><button className="btn btn--primary" disabled={busy || !adult || !interests.length}>Opt in to Overlap</button></div>
+  </form>;
+}
+
+type Run = (action: () => Promise<OverlapState>, message: string) => Promise<boolean>;
+function Match({ match, busy, run, error }: { match: NonNullable<OverlapState["match"]>; busy: boolean; run: Run; error: string | null }) {
+  const [panel, setPanel] = useState<"report" | "block" | null>(null);
+  const [reason, setReason] = useState<OverlapReportReason>("safety");
+  const introduced = match.status === "introduced";
+  const point = introduced ? match.meeting_point : null;
+  return <section className="ov-card">
+    <div className="ov-kicker">{introduced ? "Your public plan idea" : "A possible public plan"}</div>
+    <h2>{match.title}</h2><p>{match.reason}</p>
+    {introduced && <div className="ov-note"><h3>Your shared challenge</h3><p>{match.challenge}</p></div>}
+    {point && <div className="ov-note"><h3>Optional public meeting point</h3><strong>{point.label}</strong>
+      <p aria-live="polite">{point.status === "agreed" ? "You both chose this spot." : point.status === "suggested_by_you" ? "You suggested this spot. They haven’t agreed yet." : point.status === "suggested_to_you" ? `${match.other_name || "Your match"} suggested this spot.` : "Neither of you has suggested this spot yet."}</p>
+      <p>You can leave it there. Neither person’s location is shared, and nothing is booked.</p>
+      {(point.status === "available" || point.status === "suggested_to_you") && <button className="btn" disabled={busy}
+        onClick={() => void run(() => api.respondOverlap(match.id, "suggest_spot"), "Your choice was saved.")}>
+        {point.status === "available" ? "Suggest this spot" : "Agree to this spot"}</button>}
+    </div>}
+    {match.status === "offered" && <p>Say yes to share your name only if the other person says yes too. It’s an introduction, not a commitment to meet.</p>}
+    <div className="ov-row">
+      {match.status === "offered" && <button className="btn btn--primary" disabled={busy} onClick={() => void run(() => api.respondOverlap(match.id, "yes"), "You said yes.")}>Yes to an introduction</button>}
+      {!introduced && <button className="btn" disabled={busy} onClick={() => void run(() => api.respondOverlap(match.id, "pass"), "Passed on this overlap.")}>Pass</button>}
+      <button className="btn" disabled={busy} onClick={() => setPanel("block")}>Block</button>
+      <button className="btn" disabled={busy} onClick={() => setPanel("report")}>Report</button>
+    </div>
+    {panel && <Dialog title={panel === "block" ? "Block this person?" : "Report this overlap"} onClose={() => setPanel(null)}>
+      {panel === "report" ? <label className="ov-select">Reason<select value={reason} onChange={e => setReason(e.target.value as OverlapReportReason)}>
+        <option value="safety">Safety concern</option><option value="spam">Spam</option><option value="other">Other</option></select></label> : <p>You won’t be matched with this person again.</p>}
+      <InlineError message={error} /><div className="ov-row"><button className="btn" disabled={busy} onClick={() => setPanel(null)}>Cancel</button>
+      <button className="btn btn--danger" disabled={busy} onClick={async () => {
+        const ok = panel === "block" ? await run(() => api.respondOverlap(match.id, "block"), "Person blocked.") : await run(() => api.reportOverlap(match.id, reason), "Report sent.");
+        if (ok) setPanel(null);
+      }}>{panel === "block" ? "Block person" : "Send report"}</button></div></Dialog>}
+  </section>;
+}
+
+export default function Overlap() {
+  const state = useAsync<OverlapState>(() => api.getOverlap(), []);
+  const action = useAction();
+  const toast = useToast();
+  const { reload } = state;
+  useEffect(() => {
+    if (state.loading || action.busy) return;
+    const refresh = () => { if (!document.hidden) reload(); };
+    const timer = state.data?.preference ? window.setInterval(refresh, 4000) : undefined;
+    if (DEMO) window.addEventListener("storage", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => { window.clearInterval(timer); document.removeEventListener("visibilitychange", refresh); window.removeEventListener("storage", refresh); };
+  }, [reload, state.loading, state.data, action.busy]);
+  const run: Run = (fn, message) => action.run(async () => {
+    try {
+      state.setData(await fn());
+      toast(message);
+    } finally {
+      // Invalidate any poll that began before this write.
+      reload();
+    }
+  });
+  // The shared demo seats deliberately require a full navigation: the mock client
+  // binds its seat once at startup, just like signing into a separate account.
+  const seat = DEMO ? new URLSearchParams(window.location.search).get("seat") : null;
+  const demoSeat = seat === "a" || seat === "b" ? seat : null;
+  const match = !state.error ? state.data?.match : null;
+  const status = match?.status;
+  const headline = status === "introduced" ? `You and ${match?.other_name || "your match"} both said yes.` : status === "waiting" ? "You said yes. Now it’s their turn." : status === "offered" ? "Your windows overlap." : state.data?.preference ? "Your window is open." : "Find an overlap in Seoul.";
+  return <div className="overlap">
+    <header className="ov-hero"><div className={`ov-rings ${status === "introduced" ? "ov-mutual" : ""}`} aria-hidden="true"><i /><i /></div>
+      <div><div className="ov-kicker">Venn Overlap · Seoul</div><h1 aria-live="polite">{headline}</h1>
+      <p>{status === "waiting" ? "Names stay hidden unless you both agree. This page updates automatically." : state.data?.preference && !match ? "We’ll show a suggestion here if another adult shares your window and an interest." : "One neighborhood, a little free time and something you both enjoy."}</p></div>
+    </header>
+    {DEMO && <aside className="ov-note"><h3>{demoSeat ? `Fictional demo · ${demoSeat === "a" ? "Robin" : "Wren"}’s view` : "Try the two-person demo"}</h3>
+      <p>Open both views in the same browser. Pick the same window and a shared interest, then say yes separately.</p>
+      <div className="ov-row">{(["a", "b"] as const).filter(s => s !== demoSeat).map(s => <a key={s} className="btn" href={href("/overlap", { seat: s })} target={demoSeat || s === "b" ? "_blank" : "_self"} rel="noopener noreferrer">Open {s === "a" ? "Robin" : "Wren"}’s view</a>)}</div></aside>}
+    <p className="ov-consent">An Overlap doesn’t add a friend, send a message or book a meetup. You can withdraw at any time.</p>
+    <InlineError message={action.error} />
+    {(!DEMO || demoSeat) && <Loaded state={state.error ? { ...state, data: null } : state}>{({ preference, match }) => preference ? <>
+      {match && <Match key={match.id} match={match} busy={action.busy} run={run} error={action.error} />}
+      <section className="ov-card"><h2>Your active window</h2><WindowSummary {...preference} />
+        <div><button className="btn" disabled={action.busy} onClick={() => void run(() => api.withdrawOverlap(), "You withdrew from Overlap.")}>Withdraw from Overlap</button></div></section>
+    </> : <OptIn busy={action.busy} save={p => void run(() => api.optInOverlap({ ...p, adults_confirmed: true }), "Your window is open.")} />}</Loaded>}
+  </div>;
+}

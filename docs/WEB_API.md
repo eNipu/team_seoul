@@ -128,6 +128,18 @@ last_interaction_at|null, since, is_sample, open_follow_ups: number}`
 | `GET /api/v1/reconnect` | the reconnect payload (`view: "reconnect"`) |
 | `GET /api/v1/quiz?connection_id=` | the quiz payload (`view: "quiz"`); without `connection_id`, a quiz on the whole circle |
 
+### Venn Overlap: meet someone new (signed-in web only)
+
+| Route | Body | Effect |
+|---|---|---|
+| `GET /api/v1/overlap` | — | Read your live window/offer. Never opts in or creates a match. |
+| `POST /api/v1/overlap/preference` | `{area,date,slot,interests,adults_confirmed:true}` | Open a window in Seoul and look for another eligible opted-in member. |
+| `DELETE /api/v1/overlap/preference` | — | Withdraw and close any current introduction. |
+| `POST /api/v1/overlap/matches/{id}/respond` | `{action}` | `yes`, `pass`, `block` or (only after mutual yes) `suggest_spot` on the caller’s current offer. |
+| `POST /api/v1/overlap/matches/{id}/report` | `{reason}` | `safety`, `spam` or `other`; exclude the pair. |
+
+All return `{preference,match}` (each nullable). Area is `seongsu`, `hongdae` or `yeonnam`. Send an ISO calendar `date` and `morning`, `afternoon` or `evening` in **Asia/Seoul**, plus one to three of `photography`, `architecture`, `walking`, `coffee`, `books`, `art`. An offer has an opaque match `id`, `title`, `reason`, `challenge`, `status` (`offered` / `waiting` / `introduced` from the caller's perspective) and `other_name` (only after mutual yes). After mutual consent, an optional `meeting_point` has a predefined public place/time `label` and caller-relative `status` (`available`, `suggested_by_you`, `suggested_to_you`, `agreed`); otherwise it is null. Each person confirms independently with `suggest_spot`. Nothing is booked. No other user's ID, exact position or contact details. The window closes at slot expiry. See `web/README.md` for the two-seat rehearsal.
+
 ### Follow-ups
 | Route | Body | Returns |
 |---|---|---|

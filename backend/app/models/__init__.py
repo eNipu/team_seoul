@@ -14,6 +14,7 @@ from app.models.connection import (
 )
 from app.models.invite import Invite
 from app.models.memory import Memory, MemoryProposal
+from app.models.overlap import OverlapExclusion, OverlapMatch, OverlapPreference
 from app.models.person import FollowUp, PeopleImport, Person, PersonInteraction
 from app.models.plan import Plan, PlanMember
 from app.models.question import QuestionLink, QuestionResponse
@@ -35,6 +36,9 @@ __all__ = [
     "Invite",
     "Memory",
     "MemoryProposal",
+    "OverlapExclusion",
+    "OverlapMatch",
+    "OverlapPreference",
     "PeopleImport",
     "Person",
     "PersonInteraction",

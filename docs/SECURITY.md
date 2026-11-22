@@ -100,6 +100,12 @@
   the OpenAI API for extraction (structured output). Without a key, a local heuristic is used.
 - Logs do not include tokens or memory text.
 
+### Nearby introductions (Venn Overlap)
+
+Overlap is web-only. A signed-in adult explicitly chooses a Seoul district to visit, a day/time window, and interests approved for discovery. A district is **not** a claim about the person's home or current location. No GPS, contact list, private notes, memory visibility change, or device location permission is involved. Adult confirmation is self-attestation, not age verification.
+
+The API returns only the caller's current offer, not a user directory or candidate IDs. One person's yes is not disclosed to the other. An active mutual yes permits a first-name introduction, not friendship, profile access, messaging, or booking. An expired/withdrawn window no longer permits the introduction; this cannot undo information already seen. Passing, blocking and reporting exclude the pair from future discovery. Reports use fixed categories, not free text. Before a public rollout, assign report review and abuse-response ownership; this pilot is not a staffed safety service.
+
 ### LinkedIn import
 
 - The user pastes their own LinkedIn session cookies on the website. They are a full LinkedIn login,

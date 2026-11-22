@@ -51,6 +51,7 @@ from app.services.errors import (
     VennError,
 )
 from app.web import session as web_session
+from app.web.overlap import build_overlap_api
 from app.web.session import Identity
 
 STATUS = {
@@ -288,6 +289,7 @@ def build_api(settings: Settings) -> APIRouter:  # noqa: C901 - flat list of rou
             return _json(fn(db, account(db, who)))
 
     api = APIRouter(prefix="/api/v1", dependencies=[Depends(same_site_only)])
+    api.include_router(build_overlap_api(identity, run))
     Who = Depends(identity)  # noqa: N806 - reads like a type in the signatures below
 
     # ---------------------------------------------------------------- sign-in

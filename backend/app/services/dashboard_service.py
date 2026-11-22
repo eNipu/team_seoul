@@ -44,8 +44,9 @@ SETUP_STEPS: tuple[_Step, ...] = (
         "about_you",
         "Tell Venn about you",
         "Bring over what ChatGPT already remembers, or answer a couple of questions.",
-        "About you: offer to bring over what you already remember about them (venn_import_chatgpt_memory), "
-        "or ask what they enjoy and what they avoid and call venn_propose_memories with their answers.",
+        'About you: ask "Who would you like to spend more time with, and what would you enjoy doing together?" '
+        "Accept a partial answer. Use venn_propose_memories to present the details they shared for review. "
+        "If they ask to use what ChatGPT already remembers, open venn_import_chatgpt_memory.",
     ),
     _Step(
         "your_people",
