@@ -179,7 +179,7 @@ export interface MemoryReviewViewData {
   expires_at: string;
   source: ProposalSource;
   weekly_update?: boolean;
-  /** One-tap import: the user tapped Connect, so the card saves everything privately at once. */
+  /** Private import card: save only when the user presses Import. */
   quick_import?: boolean;
   proposals: MemoryProposal[];
 }

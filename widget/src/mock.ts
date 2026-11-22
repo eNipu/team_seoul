@@ -675,7 +675,7 @@ function memoryImportView() {
     always_excluded: "Health, money, passwords and ID numbers are never imported.",
     imported_count: memories.filter((m) => m.source === "chatgpt_memory").length,
     max_items: 30,
-    note: "The user chooses areas on the card; list matching memories in the chat before proposing anything.",
+    note: "Propose matching drafts for private import on the card. Do not list them in chat.",
   };
 }
 
@@ -2166,11 +2166,17 @@ export function createMockBridge(): HostBridge {
           }));
           const weeklyUpdate = args.weekly_update === true;
           const fallback = source === "chatgpt_memory" ? IMPORT_PROPOSALS : weeklyUpdate ? WEEKLY_PROPOSALS : DEMO_PROPOSALS;
-          return ok(reviewView(source, seeds.length > 0 ? seeds : fallback, nextId("prop"), weeklyUpdate));
+          const review = reviewView(source, seeds.length > 0 ? seeds : fallback, nextId("prop"), weeklyUpdate);
+          return ok({ ...review, quick_import: source === "chatgpt_memory" && args.quick_import === true });
         }
 
-        case "mock_preview_photo_memory":
-          return ok(reviewView("chatgpt_memory", IMPORT_PROPOSALS.filter(p => p.title === "Film photography"), nextId("prop")));
+        case "mock_prepare_memory_import": {
+          const areas = list(args.areas);
+          const sample = areas && !areas.includes("interests")
+            ? IMPORT_PROPOSALS.filter(p => p.category === "WORK" && areas.includes("work")).slice(0, 1)
+            : IMPORT_PROPOSALS.filter(p => p.title === "Film photography");
+          return ok({ ...reviewView("chatgpt_memory", sample, nextId("prop")), quick_import: true });
+        }
 
         case "venn_save_memories": {
           const approvals: Record<string, unknown>[] = Array.isArray(args.approvals) ? args.approvals : [];

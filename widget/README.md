@@ -70,7 +70,7 @@ roughly matches the incoming view. A tool result with `isError` shows an error b
 | `reply` | `venn_show_reply` | Advice, steps, a copyable draft, a discussion with **Reply in ChatGPT**, a thread recap, or a nudge. Nudges show the proposed activity and person as the title and the reason as the body. **Draft an invite** and **Make it a group** continue in chat. **Maybe later** dismisses the nudge without saving. Other replies offer **Save privately**. |
 | `saved_replies` | `venn_saved_replies` | Open or delete your saved replies. Also available through the bookmark button in the header. |
 | `memory_review` | `venn_propose_memories` | Review three drafts per page. **Edit** changes wording and visibility; moving between pages preserves all edits and choices. Imported drafts start unchecked. The confirmation lists only saved records and offers **Continue to contacts** after a ChatGPT import. |
-| `memory_import` | `venn_import_chatgpt_memory` | **Choose memories to preview**: one checkbox per area, the always-excluded note, **Preview in chat** (sends a prompt into the chat), then "Check the chat" with **Choose again**, or the prompt to copy when the host refuses the message. Nothing is sent to Venn from this card. |
+| `memory_import` | `venn_import_chatgpt_memory` | Pick topics and press **Find memories** to ask ChatGPT to stage drafts. Confirm privately on the import card, not in chat. If the host refuses the prompt, copy it to start. |
 | `dashboard` | `venn_show_dashboard` | Three-step setup guide above the tabs while a set-up step is open (see "Set-up"). Tabs **Profile** (edit name/bio, at-a-glance tiles for memories / friends / requests that open the matching tab, goals, interests, **Add interest** for review and explicit save), **Memories** ("Sources" row for ChatGPT memory with **Import from ChatGPT** / **Import more**, search, grouped by category, "From ChatGPT" badge, edit, delete), **Friends** (search "Who do I know who…", invite, reconnect, quick actions **Import contacts** / **Play a quiz** / **Plan a group hangout** (pick 2 to 6 friends), pending requests, "On Venn", "Private notes", add a person). |
 | `welcome` | `venn_show_dashboard` (new user) | One three-step path, starting with **Choose memory areas**. Later steps have no action until the prerequisites are complete. |
 | `help` | `venn_help` | "How Venn helps": the set-up card (while a step is open), topics with an icon, a description and "try it" examples that are sent into the chat ("Sent — continue in the chat", or the text with **Copy** when the host refuses), then "Your data". `note` is model-facing and not shown. |
@@ -223,17 +223,14 @@ Welcome, home and help use `onboarding: {memories_ready, contacts_ready, matches
 
 ### Importing ChatGPT memory
 
-The Venn server cannot read ChatGPT's memory, so the import goes through the chat:
+The Venn server cannot read ChatGPT's memory. **Find memories** sends the host a prompt
+for just the chosen topics. Welcome **Connect** also requests drafts. ChatGPT calls
+`venn_propose_memories` with `source: "chatgpt_memory"` and `quick_import: true`; it does not
+list the drafts or ask for confirmation in chat.
 
-1. `memory_import` card: the user ticks areas and presses **Preview my ChatGPT memory**.
-2. The widget sends `buildMemoryImportPrompt(areas, selectedValues, maxItems)` (pure, in
-   `src/memoryImport.ts`) with `sendMessage`. The prompt lists the ticked areas as `- <label>: <description>`
-   in payload order, adds `Leave out these areas: <label>, <label>.` only when some area is unticked,
-   and asks ChatGPT for at most three numbered items per turn (`max_items` total) without sending anything to Venn.
-3. The user tells ChatGPT which ones to keep; ChatGPT calls `venn_propose_memories` with
-   `source: "chatgpt_memory"` for just those.
-4. The `memory_review` card shows three candidates per page, initially unchecked for imports. Choices, edits and visibility persist across pages. The user confirms with the
-   unchanged `venn_save_memories` call, and the saved memories carry `source: "chatgpt_memory"`.
+The import card preselects new drafts and lets the user uncheck any. **Import** calls
+`venn_save_memories` with the selected proposal indexes and private visibility. Saved memories
+carry `source: "chatgpt_memory"`, and the profile derives its interests from `INTEREST` titles.
 
 If `sendMessage` is refused, the card shows the prompt in a read-only box with **Copy** and
 "Paste this into the chat to start."
@@ -251,10 +248,10 @@ the local state and show a banner with **Retry**. Buttons are disabled while a c
   and **Set up Venn** (`Let's set up Venn. Start with my first unfinished step and ask me one question at a time.`).
   Also group **Plan it** (`Help me plan "<title>" with <names>. I will reach out to everyone myself.`) and
   **Tell <name> my score** (`I just scored X out of N on Venn's "How well do you know <name>?" quiz. Help me draft a short, playful message telling <name> my score. I will send it myself.`).
-  **Import contacts** after one-tap Connect and on the Friends tab offers the same Instagram and LinkedIn sample reviews as **Add your people**. No chat message, file, or social account is needed. A help example sends its own text unchanged.
+  **Import contacts** after memory import and on the Friends tab offers the same Instagram and LinkedIn sample reviews as **Add your people**. No chat message, file, or social account is needed. A help example sends its own text unchanged.
   This week **Ask ChatGPT to rewrite** (`Rewrite this message to <name> in my voice, keep it short: “<draft>”`);
   the button disappears when the host refuses the message.
-  **Preview my ChatGPT memory** sends the import prompt described under "Importing ChatGPT memory".
+  **Find memories** sends the import prompt described under "Importing ChatGPT memory".
   If the host doesn't support `message`, the widget shows the text to type in chat instead.
   A nudge’s **Draft an invite** asks ChatGPT for a draft using only the proposal title, never the grounding. It does not contact the person. With `?view=reply_nudge&nochat=1`, the same request appears for copying instead.
   A discussion's **Reply in ChatGPT** posts the answer to the chat and uses the same copy fallback.

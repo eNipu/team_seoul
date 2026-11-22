@@ -66,13 +66,12 @@
   when the user selects **Reply in ChatGPT**. The reply tools have no transcript input, and
   reply-save analytics record the reply kind and a count.
 - Importing from ChatGPT memory: Venn's server cannot read ChatGPT's memory and never
-  receives it wholesale. ChatGPT lists what it remembers in the chat; only the items the user
-  picks there are sent to `venn_propose_memories`, and only the ones confirmed on the card are
-  saved. Picked-but-unconfirmed items sit in the proposal for at most 24 hours and are deleted
-  when the user confirms or discards. Health, money, credentials and ID numbers are not offered
-  as areas, the model is told to leave them out, and the server drops credential and card/ID
-  patterns. The "list in the chat first" step is guidance to the model, not something the server
-  can verify — the guarantee the server gives is that nothing is saved without confirmation.
+  receives it wholesale. When the user requests an import, ChatGPT sends scoped drafts to
+  `venn_propose_memories`. Only the items approved with Import on the card become saved memories.
+  Drafts are owner-scoped, expire for use after 24 hours, and are cleared on save or discard.
+  Health, money, credentials and ID numbers are not offered as topics, the model is told to
+  exclude them, and the server filters sensitive patterns. The widget waits for the button click;
+  the server validates the authenticated owner, unexpired proposal, and submitted indexes, not the click itself.
 - People notes describe someone who has not agreed to anything, so they are kept deliberately
   small (name, how you know them, free-text notes, interests, hangout dates) and strictly
   private to their author. Unlike memories they are saved without a review card, because the

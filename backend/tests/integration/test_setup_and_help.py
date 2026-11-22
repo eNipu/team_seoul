@@ -29,9 +29,9 @@ def test_model_opens_with_one_memory_import_step(alice):
     assert "Step 1 of 3: Connect" in said
     assert "Wait for the user's choice" in said
     assert alice.ok("venn_list_people")["count"] == 0
-    # The first open step is the one-tap Connect: propose everything remembered, flagged quick_import.
+    # Connect prepares a quick_import card; the user chooses what to save there.
     assert "venn_propose_memories" in said and "quick_import: true" in said
-    assert "Do not list them in chat first" in said
+    assert "Do not list them in chat" in said and "Import button" in said
     assert "venn_propose_people_import" not in said
 
 
@@ -126,7 +126,7 @@ def test_help_examples_are_requests_the_server_instructions_route(alice):
         {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "t", "version": "0"}},
     ).json()["result"]["instructions"]
     assert "venn_help" in instructions
-    assert "one-tap Connect" in instructions
+    assert "Welcome -> Connect" in instructions
     assert "venn_find_interest_matches" in instructions
     for tool in (
         "venn_import_chatgpt_memory",

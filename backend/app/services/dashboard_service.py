@@ -54,11 +54,10 @@ SETUP_STEPS: tuple[_Step, ...] = (
     _Step(
         "about_you",
         "Connect your AI memories",
-        "One tap. Saved privately.",
-        "Connect your AI memories: when the user taps Connect, call venn_propose_memories at once with "
-        'source "chatgpt_memory", quick_import: true and everything you remember about them (up to 30; never '
-        "health, money, credentials or ID numbers). Do not list them in chat first; the card saves them "
-        "privately and offers Review. If you remember nothing, ask one short question about them instead.",
+        "Import privately on the card.",
+        "When the user taps Connect, call venn_propose_memories with "
+        'source "chatgpt_memory", quick_import: true and up to 30 in-scope remembered drafts. '
+        "Do not list them in chat. The user presses Import on the card to save the selection privately.",
     ),
     _Step(
         "your_people",

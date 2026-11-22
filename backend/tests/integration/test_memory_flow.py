@@ -293,7 +293,7 @@ def test_import_card_takes_no_data_and_saves_nothing(alice):
     assert [a["value"] for a in card["areas"] if not a["selected"]] == ["personal"]
     assert "never imported" in card["always_excluded"]
     assert card["imported_count"] == 0 and card["max_items"] == 30
-    # The model is told the order: list in chat first, send only what the user picked.
+    # The model is told to stage in-scope drafts, not save them or ask for chat picks.
     assert "venn_propose_memories" in result["content"][0]["text"]
     assert alice.ok("venn_list_memories")["count"] == 0
 
@@ -333,11 +333,13 @@ def test_quick_import_flags_the_card_and_tells_the_model_not_to_list(alice):
     assert len(card["proposals"]) == 12
     assert all(p["suggested_visibility"] == "PRIVATE" for p in card["proposals"])
     said = result["content"][0]["text"]
-    assert "saving them privately" in said and "Do NOT list" in said
+    assert "Nothing saved yet" in said and "Import button" in said and "Do NOT list" in said
     assert "Hobby 0" not in said  # the memories are not echoed back for the model to repeat
-    assert alice.ok("venn_list_memories")["count"] == 0  # the card does the save
-    saved = alice.ok("venn_save_memories", proposal_id=card["proposal_id"], approvals=[{"index": i} for i in range(12)])
-    assert saved["count"] == 12
+    assert alice.ok("venn_list_memories")["count"] == 0
+    assert alice.ok("venn_get_profile")["interests"] == []
+    saved = alice.ok("venn_save_memories", proposal_id=card["proposal_id"], approvals=[{"index": 1}])
+    assert saved["count"] == 1
+    assert alice.ok("venn_get_profile")["interests"] == ["Hobby 1"]
     assert {m["visibility"] for m in saved["saved"]} == {"PRIVATE"}
     assert {m["source"] for m in saved["saved"]} == {"chatgpt_memory"}
 

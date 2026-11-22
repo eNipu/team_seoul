@@ -98,24 +98,15 @@ the saved IDs, titles, and visibilities.
 
 ### Importing from ChatGPT memory
 
-An MCP server cannot read ChatGPT's saved memories or other chats; only the model can see what
-it remembers. So the import is a conversation, with Venn's cards at both ends:
+Venn cannot read ChatGPT's saved memories or other chats. `venn_import_chatgpt_memory` shows
+six topics; personal life is unticked, and sensitive topics are not offered. **Find memories**
+sends a host message asking the model to call `venn_propose_memories` with `source: "chatgpt_memory"`,
+`quick_import: true`, and up to 30 drafts in the chosen topics. The model does not list drafts or
+ask the user to confirm in chat. **Connect** on the welcome card also requests the draft card.
 
-1. `venn_import_chatgpt_memory` shows a card with six areas (interests, preferences, work,
-   goals, experiences ticked; personal life unticked). Health, money, passwords and ID numbers
-   are not offered.
-2. "Preview my ChatGPT memory" posts a message into the chat (`ui/message`) asking ChatGPT to
-   **list in the chat** what it remembers in those areas — up to three numbered items per turn, at most 30 total — and to send
-   nothing to Venn yet.
-3. The user says which ones to keep ("all except 3 and 7").
-4. ChatGPT calls `venn_propose_memories` with `source: "chatgpt_memory"` and only those items.
-   The usual review card appears, labelled as an import.
-5. The user confirms; `venn_save_memories` stores them with `source = "chatgpt_memory"`.
-   Items left unticked are deleted with the proposal.
-
-Steps 2–4 are instructions to the model (tool descriptions, server instructions, skill, and the
-message the card sends). The server cannot verify that the list was shown in the chat first; what
-it does enforce is that nothing is saved without the user's confirmation on the card or in chat.
+The user can uncheck drafts before pressing **Import**. The widget calls `venn_save_memories`
+with the approved indexes and private visibility. Saved `INTEREST` titles appear on the user's
+profile. Saving or discarding clears the proposal, including any unselected drafts.
 
 ## Home
 

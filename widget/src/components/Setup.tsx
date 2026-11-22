@@ -5,7 +5,7 @@ import { Icon } from "./icons";
 
 type SetupData = DashboardViewData | HelpViewData | WelcomeViewData;
 const titles = ["Import memories", "Add your people", "Find connections with similar interests"];
-const memoryDescription = "Choose which interests to preview in chat. Only the memories you select and approve are saved.";
+const memoryDescription = "Import memories privately. Interests you import appear on your profile.";
 const matchesDescription = "Compare your saved interests with your circle. Looking at a match doesn’t contact anyone.";
 
 export default function SetupCard({ data, nav }: { data: SetupData; nav: Nav }) {

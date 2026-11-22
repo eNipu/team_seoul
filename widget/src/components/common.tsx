@@ -12,8 +12,8 @@ export interface Nav {
   openView(tool: string, args: Record<string, unknown>): Promise<string | null>;
   /** Like openView, but swaps the current view in place (no new Back step). */
   replaceView(tool: string, args: Record<string, unknown>): Promise<string | null>;
-  /** Open the dashboard on a given tab. Resolves like openView. */
-  openDashboard(tab: "profile" | "memories" | "friends"): Promise<string | null>;
+  /** Open the dashboard on a given tab, optionally replacing the current view. */
+  openDashboard(tab: "profile" | "memories" | "friends", replace?: boolean): Promise<string | null>;
   back(): void;
   canGoBack: boolean;
 }

@@ -2,9 +2,9 @@
   {
     "url": "/?view=welcome", "w": 360, "h": 740, "scheme": "dark",
     "steps": [
-      "waitFor:Who is Venn for?", "click('Friends and family')", "click('Preview first')", "click('Pick what to import')", "waitFor:Choose memories to preview",
-      "click('Review “Film photography”')", "waitFor:Memory review", "document.querySelector('.review-choice input').click()",
-      "click('Save 1 privately')", "waitFor:Continue to contacts", "click('Continue to contacts')", "waitFor:Step 2 of 3",
+      "waitFor:Who is Venn for?", "click('Friends and family')", "click('Preview first')", "click('Pick what to import')", "waitFor:Find memories",
+      "click('Find memories')", "waitFor:Profile interest", "click('Import 1 memory')", "waitFor:1 memory imported",
+      "click('Import contacts')",
       "click('Instagram import')", "waitFor:Instagram import", "click('Nadia Amari')", "clickLabel('Next profiles')", "waitFor:Page 2 of", "clickLabel('Previous profiles')",
       "click('Add 1 profile')", "waitFor:Added 1 profile", "click('Continue to interest matches')", "waitFor:Interest matches", "has('Nadia Amari')", "has('In common:')", "overflow()"
     ]
@@ -28,7 +28,7 @@
   {
     "url": "/?view=memory_quick_import&nochat=1", "w": 375, "h": 740, "scheme": "light",
     "steps": [
-      "waitFor:Import contacts", "click('Import contacts')", "has('Import sample contacts from Instagram or LinkedIn.')",
+      "waitFor:will appear on your profile automatically", "document.querySelector('.sticky-bar .btn--primary').click()", "waitFor:Import contacts", "click('Import contacts')", "has('Import sample contacts from Instagram or LinkedIn.')",
       "click('Instagram import')", "waitFor:0 of 100 selected", "has('Choose fictional Instagram contacts')",
       "!/upload|export|csv/i.test(document.body.innerText) ? 'ok' : 'UNEXPECTED upload copy'", "overflow()"
     ]

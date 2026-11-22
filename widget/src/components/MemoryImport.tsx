@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { buildMemoryImportPrompt } from "../memoryImport";
 import { plural, type MemoryImportViewData } from "../types";
-import { EmptyNote, copyText, type ViewProps } from "./common";
+import { ActionError, EmptyNote, copyText, useAction, type ViewProps } from "./common";
 import { Icon, Illustration } from "./icons";
 import "./memoryImportPicker.css";
 
 type Phase = "choosing" | "sending" | "sent" | "manual";
 
-export default function MemoryImport({ data, bridge }: ViewProps<MemoryImportViewData>) {
-  const [picked, setPicked] = useState<Set<string>>(() => new Set());
+export default function MemoryImport({ data, bridge, nav }: ViewProps<MemoryImportViewData>) {
+  const action = useAction();
+  const [picked, setPicked] = useState(() => new Set(data.areas.filter((a) => a.selected).map((a) => a.value)));
   const [phase, setPhase] = useState<Phase>("choosing");
   const [prompt, setPrompt] = useState("");
   const [copied, setCopied] = useState(false);
@@ -25,7 +26,7 @@ export default function MemoryImport({ data, bridge }: ViewProps<MemoryImportVie
   }, [phase]);
 
   const count = data.areas.filter((a) => picked.has(a.value)).length;
-  const busy = phase === "sending";
+  const busy = phase === "sending" || action.busy !== null;
 
   function toggle(value: string) {
     setPicked((prev) => {
@@ -46,6 +47,11 @@ export default function MemoryImport({ data, bridge }: ViewProps<MemoryImportVie
       sent = await bridge.sendMessage(text);
     } catch {
       sent = false;
+    }
+    if (sent && bridge.isMock) {
+      setPhase("choosing");
+      await action.run("preview", () => nav.openView("mock_prepare_memory_import", { areas: [...picked] }));
+      return;
     }
     setPhase(sent ? "sent" : "manual");
   }
@@ -77,9 +83,9 @@ export default function MemoryImport({ data, bridge }: ViewProps<MemoryImportVie
     <section className="panel">
       <div className="hero">
         <Illustration name="import" />
-        <h2>Choose memories to preview</h2>
+        <h2>Import from ChatGPT</h2>
         <p className="muted small">
-          Venn can’t read your ChatGPT memory. Choose topics for a short preview in chat. Nothing is sent to Venn unless you select specific items there.
+          Choose topics. ChatGPT will send matching drafts to Venn for review. Only what you import on the next card becomes a saved memory.
         </p>
       </div>
       {data.imported_count > 0 && (
@@ -89,6 +95,7 @@ export default function MemoryImport({ data, bridge }: ViewProps<MemoryImportVie
         </p>
       )}
 
+      <ActionError action={action} />
       {data.areas.length === 0 ? (
         <EmptyNote art="search" title="Nothing to choose from">
           Venn didn't offer any areas to import. Ask Venn to try again.
@@ -96,10 +103,10 @@ export default function MemoryImport({ data, bridge }: ViewProps<MemoryImportVie
       ) : phase === "sent" ? (
         <div className="handoff handoff--ok">
           <h3 ref={resultRef} tabIndex={-1} role="status">
-            <Icon name="chat" /> Check the chat
+            <Icon name="chat" /> Looking for memories
           </h3>
           <p className="small">
-            Read the numbered suggestions a few at a time. Reply with the numbers you want, like “review 1 and 3,” ask for more, or stop. You’ll review your picks before anything is saved.
+            ChatGPT will open the import card if it finds anything. You don’t need to reply in chat.
           </p>
           <div className="button-row">
             <button type="button" className="btn" onClick={chooseAgain}>
@@ -161,7 +168,7 @@ export default function MemoryImport({ data, bridge }: ViewProps<MemoryImportVie
           <div className="sticky-bar">
             <button type="button" className="btn btn--primary btn--block" disabled={busy || count === 0} onClick={() => void preview()}>
               <Icon name="chat" size={18} />
-              {busy ? "Asking ChatGPT…" : `Preview in chat${count ? ` · ${plural(count, "topic", "topics")}` : ""}`}
+              {busy ? "Finding memories…" : "Find memories"}
             </button>
           </div>
           {count === 0 && (

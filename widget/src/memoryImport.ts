@@ -1,6 +1,4 @@
-// Pure prompt builder for "Import my ChatGPT memory". Venn cannot read ChatGPT's memory, so the
-// widget asks ChatGPT (in the chat) to list what it remembers; nothing reaches Venn until the
-// user picks what to keep. No imports here, so the file also runs directly under node.
+// Venn cannot read ChatGPT's memory. Ask the host model to prepare a card, not a chat checklist.
 
 export interface ImportAreaLike {
   value: string;
@@ -21,9 +19,9 @@ export function buildMemoryImportPrompt(
   const included = areas.filter((a) => selected.has(a.value));
   const excluded = areas.filter((a) => !selected.has(a.value));
   const lines = [
-    "Import my ChatGPT memory into Venn — preview first.",
+    "Prepare my ChatGPT memories for private import into Venn.",
     "",
-    "From what you already remember about me (saved memories and past chats), list what fits these areas:",
+    "From what you already remember about me (saved memories and past chats), use only these areas:",
     ...included.map((a) => (a.description ? `- ${a.label}: ${a.description}` : `- ${a.label}`)),
     "",
   ];
@@ -31,17 +29,20 @@ export function buildMemoryImportPrompt(
   lines.push(
     "Always leave out health, money, passwords and ID numbers, and anything you are not sure is about me.",
     "",
-    `Show at most ${Math.min(3, maxItems)} short, numbered candidates per batch here in chat, one line each. Then stop and wait. ` +
-      `Only show another batch if I ask for more; keep numbering across batches and stop at ${maxItems} candidates total. ` +
-      "If you don’t remember anything, say so. Ask me to pick specific numbers, or none. Don’t send anything to Venn until I choose. " +
-      'Call venn_propose_memories with source "chatgpt_memory" for just my picks, so I can confirm them on the card.',
+    `Call venn_propose_memories with source "chatgpt_memory", quick_import: true, and up to ${maxItems} structured candidates.`,
+    INTEREST_INSTRUCTION,
+    "Don't list them in chat or ask me to reply with picks. I’ll choose and import on the card. If you don't remember anything in these areas, say so without guessing.",
   );
   return lines.join("\n");
 }
 
-/** One tap on "Connect": no list in the chat first. Everything is saved privately; the user can review after. */
+const INTEREST_INSTRUCTION =
+  "When interests are in scope, create one INTEREST candidate per clear hobby or topic I enjoy, using a short topic title and leaving people off my own interests. Do not infer interests from my job, acquaintances, or a one-off activity.";
+
+/** Give ChatGPT a turn to prepare the import. Only the Import button on that card saves. */
 export const QUICK_IMPORT_PROMPT =
-  "Connect my AI memories to Venn. Call venn_propose_memories now with quick_import: true, source \"chatgpt_memory\" " +
-  "and everything you remember about me (saved memories and past chats, up to 30). Don't list them in the chat first. " +
-  "Leave out health, money, passwords, ID numbers and anything you're not sure is about me. " +
-  "If you don't remember anything about me, just ask me one short question about who I want to keep in touch with.";
+  'Find my ChatGPT memories for Venn. Call venn_propose_memories with quick_import: true, source "chatgpt_memory", ' +
+  "and up to 30 structured candidates from what you already remember about me. Prioritize my interests and hobbies. " +
+  INTEREST_INSTRUCTION + " Leave out health, money, passwords, ID numbers and anything you're not sure is about me. " +
+  "Don't list memories in chat or ask me to verify them there. I'll choose and import privately on the card. " +
+  "If you don't remember anything about me, say so instead of guessing.";

@@ -27,7 +27,7 @@ import ReplyCard, { SavedReplies } from "./components/Reply";
 import type { McpUiHostContext } from "@modelcontextprotocol/ext-apps";
 import { Icon, Illustration } from "./components/icons";
 import ErrorBanner from "./components/ErrorBanner";
-import { ActionError, Spinner, useAction, type Nav } from "./components/common";
+import { Spinner, type Nav } from "./components/common";
 
 const publicPreview = typeof window !== "undefined" && window.location.pathname === "/widget-preview";
 const inHost = typeof window !== "undefined" && window.parent !== window && !publicPreview;
@@ -290,14 +290,14 @@ export default function App() {
 
   const canGoBack = stack.length > 1;
   const openDashboard = useCallback(
-    async (tab: DashboardTab) => {
+    async (tab: DashboardTab, replace = false) => {
       const previous = dashboardTab.current;
       dashboardTab.current = tab;
-      const message = await openView("venn_show_dashboard", {});
+      const message = await loadView("venn_show_dashboard", {}, replace);
       if (message !== null) dashboardTab.current = previous;
       return message;
     },
-    [openView],
+    [loadView],
   );
   const nav: Nav = useMemo(
     () => ({ openView, replaceView, openDashboard, back, canGoBack }),
@@ -410,10 +410,7 @@ function renderView(
       return <MemoryReview key={key} data={view} bridge={bridge} nav={nav}
         onPreviewReview={publicPreview && bridge.isMock ? reportPreviewReview : undefined} />;
     case "memory_import":
-      return <div key={key}>
-        <MemoryImport data={view} bridge={bridge} nav={nav} />
-        {bridge.isMock && <DemoMemoryHandoff nav={nav} />}
-      </div>;
+      return <MemoryImport key={key} data={view} bridge={bridge} nav={nav} />;
     case "dashboard":
       return <Dashboard key={key} data={view} bridge={bridge} nav={nav} initialTab={tab} onTabChange={onTabChange} />;
     case "invite":
@@ -452,19 +449,6 @@ function renderView(
     case "answers":
       return <Answers key={key} data={view} bridge={bridge} nav={nav} />;
   }
-}
-
-function DemoMemoryHandoff({ nav }: { nav: Nav }) {
-  const action = useAction();
-  return <aside className="card">
-    <h3>Try the review card</h3>
-    <p className="muted small">There’s no chat in this preview. Use an example interest to try the next step. Nothing is saved until you approve it.</p>
-    <button type="button" className="btn" disabled={action.busy !== null}
-      onClick={() => void action.run("review", () => nav.openView("mock_preview_photo_memory", {}))}>
-      Review “Film photography”
-    </button>
-    <ActionError action={action} />
-  </aside>;
 }
 
 function Skeleton({ kind }: { kind: SkeletonKind }) {

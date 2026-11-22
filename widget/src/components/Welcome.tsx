@@ -93,8 +93,7 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
     });
   }
 
-  // One tap, Boardy-simple: Connect imports privately. Everything else (preview, sample circle,
-  // goals, names) sits behind "More ways in" so the first screen has one decision.
+  // Connect requests a draft card; nothing is imported until the user taps Import there.
   async function connect() {
     if (busy) return;
     setPhase("starting");
@@ -105,6 +104,11 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
     } catch {
       sent = false;
     }
+    if (sent && bridge.isMock) {
+      setPhase("choosing");
+      await action.run("preview", () => nav.openView("mock_prepare_memory_import", {}));
+      return;
+    }
     setConnecting(sent ? "sent" : "fallback");
     setPhase("choosing");
   }
@@ -112,8 +116,10 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
   if (connecting) {
     return (
       <section className="onb" aria-live="polite">
-        <h2 className="onb__title">Connecting…</h2>
-        {connecting === "fallback" && <ChatFallback text={QUICK_IMPORT_PROMPT} />}
+        <h2 className="onb__title">{connecting === "sent" ? "Looking for memories…" : "Open the import card"}</h2>
+        {connecting === "sent" ? <p className="onb__body">If ChatGPT finds memories, you can import them on the next card without replying in chat.</p> :
+          <ChatFallback text={QUICK_IMPORT_PROMPT} />}
+        <button type="button" className="onb__link" onClick={() => setConnecting(null)}>Back</button>
       </section>
     );
   }
@@ -142,6 +148,7 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
     <section className="onb">
       <StepCount n={2} />
       <h2 className="onb__title">Connect your AI memories.</h2>
+      <p className="onb__body">ChatGPT sends Venn drafts to review. You import what you want on the next card.</p>
       <ActionError action={action} />
       <button type="button" className="onb__cta" disabled={busy} onClick={() => void connect()}>
         {phase === "starting" ? "Connecting…" : "Connect"}

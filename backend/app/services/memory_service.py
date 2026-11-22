@@ -60,17 +60,11 @@ IMPORT_AREAS: tuple[tuple[str, str, str, bool], ...] = (
 )
 IMPORT_ALWAYS_EXCLUDED = "Health, money, passwords and ID numbers are never imported."
 IMPORT_NOTE = (
-    "Venn cannot read ChatGPT's memory; only you can. Nothing has been imported. When the user presses "
-    "the button on this card (or asks in chat), list in the chat what you already remember about them in "
-    "the areas they chose — three numbered items per turn, up to 30 total. Wait for their picks or 'more'. "
-    "Leave out health, money, credentials, ID numbers and "
-    "anything you are not sure is about them — and do NOT call a Venn tool with those items yet. Only "
-    'after the user says which ones to keep, call venn_propose_memories with source "chatgpt_memory" '
-    "and just those items. Exception: if the user tapped Connect (one-tap import), call "
-    'venn_propose_memories with source "chatgpt_memory", quick_import: true and everything you remember '
-    "(up to 30, same exclusions) without listing it first; the card saves them PRIVATE because the tap is "
-    "the user's consent. Never share beyond PRIVATE without explicit approval. If you remember nothing "
-    "about the user, say so instead of guessing."
+    "Venn cannot read ChatGPT's memory. When the user presses Find memories, propose up to 30 drafts "
+    'in the selected areas via venn_propose_memories with source "chatgpt_memory" and quick_import: true. '
+    "Leave out sensitive or uncertain details. Do not list the drafts in chat or ask for chat confirmation. "
+    "Only the Import button on the next card saves the selection privately. If you remember nothing in "
+    "the selected areas, say so instead of guessing."
 )
 
 
