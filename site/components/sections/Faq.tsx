@@ -21,7 +21,7 @@ const QUESTIONS = [
     question: "Will Venn be expensive?",
     answer: (
       <>
-        No. Early access is free, and launch pricing is planned to stay inexpensive for the person growing a circle.{" "}
+        No. Early access is free. At launch, your circle shares one subscription: the more people you invite, the less each pays, down to $2 a month.{" "}
         <a href="/pricing">See planned pricing.</a>
       </>
     ),
