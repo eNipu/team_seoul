@@ -26,9 +26,9 @@
           "Guide me through Venn setup",
           "What should I do this week?"
         ],
-        "brandColor": "#E86A4A",
-        "composerIcon": "./assets/icon.svg",
-        "logo": "./assets/logo.svg"
+        "brandColor": "#FCD305",
+        "composerIcon": "./assets/icon.png",
+        "logo": "./assets/logo.png"
       },
       "onboardingSkill": "./skills/venn-social/SKILL.md"
     }
