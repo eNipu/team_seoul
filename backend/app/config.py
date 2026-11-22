@@ -66,6 +66,8 @@ class Settings(BaseSettings):
     auth_mode: Literal["dev", "jwt"] = "dev"
     dev_auth_secret: str = "dev-only-insecure-secret-change-me-0123456789"  # noqa: S105
     dev_auth_passcode: str | None = None
+    # Signing key for website session and OAuth state cookies (falls back to dev_auth_secret in dev).
+    session_secret: str | None = None
     access_token_ttl_seconds: int = 3600
     refresh_token_ttl_seconds: int = 60 * 60 * 24 * 30
 
@@ -81,13 +83,27 @@ class Settings(BaseSettings):
     max_invites_per_day: int = 30
     invite_ttl_hours: int = 72
 
-    # Calendar (docs/tasks/SCHEDULING.md › Providers). "fake" keeps everything in memory.
+    # Google OAuth (shared by website Google SSO and optional Google Calendar API v3).
     calendar_provider: Literal["fake", "google"] = "fake"
     google_client_id: str | None = None
     google_client_secret: str | None = None
+    # Override for website Google SSO redirect URI. Defaults to $PUBLIC_BASE_URL/auth/google/callback.
+    google_auth_redirect_uri: str | None = None
     # Fernet key for refresh tokens; also keys the connect-link signature. Dev falls back to
     # a key derived from DEV_AUTH_SECRET.
     calendar_token_key: str | None = None
+
+    @property
+    def google_sso_enabled(self) -> bool:
+        return bool(self.google_client_id and self.google_client_secret)
+
+    @property
+    def google_sso_redirect_uri(self) -> str:
+        return (self.google_auth_redirect_uri or f"{self.public_base_url.rstrip('/')}/auth/google/callback").rstrip("/")
+
+    @property
+    def web_session_secret(self) -> str:
+        return self.session_secret or self.dev_auth_secret
 
     @property
     def mcp_resource_url(self) -> str:

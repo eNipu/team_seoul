@@ -1,12 +1,12 @@
 """The website's sign-in session.
 
 The website and the ChatGPT plugin are two ways into the same Venn account. An account is
-identified by its `auth_subject`; with development sign-in that is `dev|<username>` for both, so
-the same username opens the same account in either place.
+identified by its `auth_subject`:
+- Google Single Sign-On accounts use `google|<google_sub>`
+- Development sign-in accounts use `dev|<username>`
 
-The session is a signed cookie holding only the username. It is HttpOnly (scripts cannot read it)
-and SameSite=Lax; requests that change something must also carry the `X-Venn-Request` header,
-which a page on another site cannot send.
+The session is a signed HttpOnly, SameSite=Lax cookie. Mutating API requests must also carry
+the `X-Venn-Request` header, which a page on another site cannot send.
 """
 
 from __future__ import annotations
@@ -27,6 +27,7 @@ from app.models import User
 COOKIE = "venn_session"
 SESSION_TTL_SECONDS = 30 * 24 * 3600
 DEV_ISSUER = "dev"  # development accounts are `dev|<username>`
+GOOGLE_ISSUER = "google"  # Google SSO accounts are `google|<sub_id>`
 USERNAME_RE = re.compile(r"^[a-z0-9][a-z0-9_.-]{1,31}$")
 _AUDIENCE = "venn-web"
 _ALGORITHM = "HS256"
@@ -48,6 +49,10 @@ def dev_subject(username: str) -> str:
     return f"{DEV_ISSUER}|{username}"
 
 
+def google_subject(google_sub: str) -> str:
+    return f"{GOOGLE_ISSUER}|{google_sub}"
+
+
 def find_user(db: Session, subject: str) -> User | None:
     return db.scalar(select(User).where(User.auth_subject == subject))
 
@@ -62,17 +67,31 @@ def issue(settings: Settings, username: str) -> str:
         "iat": now,
         "exp": now + SESSION_TTL_SECONDS,
     }
-    return jwt.encode(claims, settings.dev_auth_secret, algorithm=_ALGORITHM)
+    return jwt.encode(claims, settings.web_session_secret, algorithm=_ALGORITHM)
 
 
-def read(settings: Settings, value: str | None) -> str | None:
-    """The username in a session cookie, or None when it is missing, forged, expired or of another kind."""
-    if not value or settings.auth_mode != "dev":
+def issue_google(settings: Settings, subject: str, email: str | None = None) -> str:
+    now = int(time.time())
+    claims: dict[str, object] = {
+        "iss": settings.public_base_url.rstrip("/"),
+        "aud": _AUDIENCE,
+        "sub": subject,
+        "typ": "web_google",
+        "iat": now,
+        "exp": now + SESSION_TTL_SECONDS,
+    }
+    if email:
+        claims["email"] = email
+    return jwt.encode(claims, settings.web_session_secret, algorithm=_ALGORITHM)
+
+
+def _decode_cookie(settings: Settings, value: str | None) -> dict | None:
+    if not value:
         return None
     try:
-        claims = jwt.decode(
+        return jwt.decode(
             value,
-            settings.dev_auth_secret,
+            settings.web_session_secret,
             algorithms=[_ALGORITHM],
             audience=_AUDIENCE,
             issuer=settings.public_base_url.rstrip("/"),
@@ -80,8 +99,17 @@ def read(settings: Settings, value: str | None) -> str | None:
         )
     except jwt.PyJWTError:
         return None
+
+
+def read(settings: Settings, value: str | None) -> str | None:
+    """The dev username in a session cookie, or None when missing, forged, expired or of another kind."""
+    if settings.auth_mode != "dev":
+        return None
+    claims = _decode_cookie(settings, value)
+    if not claims or claims.get("typ") != "web":
+        return None
     username = str(claims.get("sub", ""))
-    if claims.get("typ") != "web" or not USERNAME_RE.fullmatch(username):
+    if not USERNAME_RE.fullmatch(username):
         return None
     return username
 
@@ -90,7 +118,28 @@ def username_from(request: Request, settings: Settings) -> str | None:
     return read(settings, request.cookies.get(COOKIE))
 
 
-def _secure(request: Request) -> bool:
+def identity_from(request: Request, settings: Settings) -> Identity | None:
+    """Resolve the website session identity from the signed cookie (Google SSO or dev sign-in)."""
+    claims = _decode_cookie(settings, request.cookies.get(COOKIE))
+    if not claims:
+        return None
+    typ = claims.get("typ")
+    sub = str(claims.get("sub", ""))
+    if typ == "web_google":
+        if (
+            not settings.google_sso_enabled
+            or not sub.startswith(f"{GOOGLE_ISSUER}|")
+            or len(sub) <= len(GOOGLE_ISSUER) + 1
+        ):
+            return None
+        email = claims.get("email")
+        return Identity(subject=sub, username=email if isinstance(email, str) and email else None)
+    if typ == "web" and settings.auth_mode == "dev" and USERNAME_RE.fullmatch(sub):
+        return Identity(subject=dev_subject(sub), username=sub)
+    return None
+
+
+def is_secure_request(request: Request) -> bool:
     return request.headers.get("x-forwarded-proto", request.url.scheme).split(",")[0].strip() == "https"
 
 
@@ -101,7 +150,21 @@ def set_cookie(response: Response, request: Request, settings: Settings, usernam
         max_age=SESSION_TTL_SECONDS,
         httponly=True,
         samesite="lax",
-        secure=_secure(request),
+        secure=is_secure_request(request),
+        path="/",
+    )
+
+
+def set_google_cookie(
+    response: Response, request: Request, settings: Settings, subject: str, email: str | None = None
+) -> None:
+    response.set_cookie(
+        COOKIE,
+        issue_google(settings, subject, email),
+        max_age=SESSION_TTL_SECONDS,
+        httponly=True,
+        samesite="lax",
+        secure=is_secure_request(request),
         path="/",
     )
 

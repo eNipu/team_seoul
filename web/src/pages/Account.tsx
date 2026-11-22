@@ -57,7 +57,11 @@ function ProfileCard({ me, onSaved }: { me: Me; onSaved: () => void }) {
           <button type="submit" className="btn btn--primary" disabled={act.busy || !dirty || !name.trim()}>
             {act.busy ? "Saving…" : "Save profile"}
           </button>
-          {me.username && <span className="muted small">Signed in as @{me.username}</span>}
+          {me.username && (
+            <span className="muted small">
+              Signed in as {me.username.includes("@") ? me.username : `@${me.username}`}
+            </span>
+          )}
         </div>
       </form>
     </Card>

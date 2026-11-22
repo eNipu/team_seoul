@@ -22,6 +22,8 @@ export interface MockOptions {
   fresh: boolean;
   /** Pretend the server uses an external identity provider. */
   external: boolean;
+  /** Whether Google Single Sign-On is enabled on this server (default true in demo). */
+  googleSso?: boolean;
 }
 
 interface MockFriend {
@@ -607,14 +609,45 @@ export function createMockApi(options: MockOptions): Api {
     ...createOverlapDemo(options.overlapSeat, wait),
     /* ------------------------------------------------------------ sign-in */
     getSession: () =>
-      open(() => ({
-        signed_in: signedIn,
-        auth_mode: options.external ? "jwt" : "dev",
-        sign_in_available: !options.external,
-        passcode_required: options.passcode,
-        display_name: signedIn ? state.displayName : null,
-        username: signedIn ? state.username : null,
-      })),
+      open(() => {
+        const googleSso = options.googleSso ?? true;
+        const devAvailable = !options.external;
+        return {
+          signed_in: signedIn,
+          auth_mode: options.external ? "jwt" : "dev",
+          sign_in_available: googleSso || devAvailable,
+          google_sso_available: googleSso,
+          dev_sign_in_available: devAvailable,
+          passcode_required: devAvailable && options.passcode,
+          display_name: signedIn ? state.displayName : null,
+          username: signedIn ? state.username : null,
+        };
+      }),
+    signInWithGoogle: (mode) =>
+      open(() => {
+        if (mode === "signup") {
+          state = emptyState("Maya Chen", "maya@gmail.com");
+          accounts.set("maya@gmail.com", "Maya Chen");
+          signedIn = true;
+          return {
+            signed_in: true,
+            user_id: "usr_google_maya",
+            display_name: "Maya Chen",
+            username: "maya@gmail.com",
+            created: true,
+          };
+        }
+        state = options.fresh ? emptyState("Gene", "gene@gmail.com") : seedState();
+        state.username = "gene@gmail.com";
+        signedIn = true;
+        return {
+          signed_in: true,
+          user_id: "usr_google_gene",
+          display_name: state.displayName,
+          username: state.username,
+          created: false,
+        };
+      }),
     signIn: (input) =>
       open(() => {
         const username = input.username.trim().toLowerCase();
