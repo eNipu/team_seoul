@@ -73,8 +73,20 @@ function parseConsent(value: string | null): Consent | null {
   }
 }
 
+// Railway sends no country header, so fall back to the browser's timezone: Europe/* (plus the UK,
+// Ireland and Switzerland, which are under Europe/* too) means opt-in; everywhere else default-on.
+function regionFromTimezone(): ConsentRegion {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+    if (tz.startsWith("Europe/") || tz === "Atlantic/Reykjavik" || tz === "Atlantic/Canary" || tz === "Atlantic/Madeira" || tz === "Atlantic/Azores") return "opt-in";
+    return tz ? "default-on" : "opt-in";
+  } catch {
+    return "opt-in";
+  }
+}
+
 export function consentRegion(country = cleanCountry(readCookie("venn_cc"))): ConsentRegion {
-  if (!country || country === "XX") return "opt-in";
+  if (!country || country === "XX") return regionFromTimezone();
   return OPT_IN_COUNTRIES.has(country) ? "opt-in" : "default-on";
 }
 
