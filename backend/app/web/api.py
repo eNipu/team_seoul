@@ -29,6 +29,7 @@ from app.schemas.social import PersonCandidate
 from app.services import (
     analytics,
     dashboard_service,
+    linkedin_service,
     memory_service,
     people_service,
     plan_service,
@@ -39,7 +40,15 @@ from app.services import (
     user_service,
 )
 from app.services import relationship_service as rel
-from app.services.errors import Forbidden, InvalidRequest, NotFound, RateLimited, Unauthenticated, VennError
+from app.services.errors import (
+    Forbidden,
+    InvalidRequest,
+    NotFound,
+    RateLimited,
+    Unauthenticated,
+    UpstreamError,
+    VennError,
+)
 from app.web import session as web_session
 from app.web.session import Identity
 
@@ -51,6 +60,7 @@ STATUS = {
     "VERSION_CONFLICT": 409,
     "PRIVACY_VIOLATION": 422,
     "RATE_LIMITED": 429,
+    "UPSTREAM_ERROR": 502,
 }
 _MUTATING = {"POST", "PUT", "PATCH", "DELETE"}
 _MAX_FAILED_SIGN_INS = 10
@@ -99,6 +109,26 @@ class ImportPreviewBody(BaseModel):
 class ImportBody(BaseModel):
     import_id: str = Field(max_length=64)
     indexes: list[int] = Field(min_length=1, max_length=people_service.MAX_IMPORT_CANDIDATES)
+
+
+class LinkedInConnectionsBody(BaseModel):
+    cookies: str = Field(min_length=1, max_length=linkedin_service.MAX_COOKIE_INPUT)
+
+
+class LinkedInExportBody(BaseModel):
+    """LinkedIn's own Connections.csv (Settings → Get a copy of your data), as text."""
+
+    csv: str = Field(min_length=1, max_length=4_000_000)
+
+
+class LinkedInPick(BaseModel):
+    public_identifier: str | None = Field(default=None, max_length=200)
+    name: str = Field(min_length=1, max_length=120)
+    headline: str | None = Field(default=None, max_length=300)
+
+
+class LinkedInPreviewBody(BaseModel):
+    people: list[LinkedInPick] = Field(min_length=1, max_length=people_service.MAX_IMPORT_CANDIDATES)
 
 
 class InteractionBody(BaseModel):
@@ -214,6 +244,7 @@ def build_api(settings: Settings) -> APIRouter:  # noqa: C901 - flat list of rou
         else None
     )
     failed = _FailedSignIns()
+    linkedin_fetches = linkedin_service.FetchLimiter(settings.linkedin_fetches_per_hour)
     dev = settings.auth_mode == "dev"
 
     def same_site_only(request: Request) -> None:
@@ -414,6 +445,106 @@ def build_api(settings: Settings) -> APIRouter:  # noqa: C901 - flat list of rou
     @api.post("/people/import")
     def import_people(body: ImportBody, who: Identity = Who) -> Any:
         return run(who, lambda db, user: people_service.import_people(db, user, body.import_id, body.indexes))
+
+    # --------------------------------------------------------------- linkedin
+    @api.post("/linkedin/connections")
+    def linkedin_connections(body: LinkedInConnectionsBody, who: Identity = Who) -> Any:
+        """The user's own LinkedIn connections, read with the cookies they pasted. Saves nothing."""
+        with session_scope() as db:
+            user_id = str(account(db, who).id)
+        linkedin_service.parse_cookies(body.cookies)  # a typo should not count against the limit
+        linkedin_fetches.check(user_id)
+        # No database session is held while LinkedIn is being read.
+        page = linkedin_service.fetch_connections(body.cookies, settings.linkedin_max_connections)
+
+        def result(db: Session, user: User) -> dict:
+            known = {p.name.lower() for p in people_service.list_people(db, user).people}
+            return {
+                "connections": [
+                    {
+                        "public_identifier": c.public_identifier,
+                        "name": c.name,
+                        "headline": c.headline,
+                        "profile_url": c.profile_url,
+                        "connected_on": c.connected_on,
+                        "already_added": c.name.lower() in known,
+                    }
+                    for c in page.connections
+                ],
+                "count": len(page.connections),
+                "total": page.total,
+                "truncated": page.truncated,
+                "stopped": page.stopped,
+                "details_available": bool(settings.apify_token),
+                "max_details": settings.linkedin_max_enriched,
+                "max_import": people_service.MAX_IMPORT_CANDIDATES,
+            }
+
+        return run(who, result)
+
+    @api.post("/linkedin/export")
+    def linkedin_export(body: LinkedInExportBody, who: Identity = Who) -> Any:
+        """Read LinkedIn's own connections export file (no cookies needed). Saves nothing."""
+        rows = linkedin_service.parse_export(body.csv, settings.linkedin_max_connections)
+
+        def result(db: Session, user: User) -> dict:
+            known = {p.name.lower() for p in people_service.list_people(db, user).people}
+            return {
+                "connections": [
+                    {
+                        **row,
+                        "profile_url": (
+                            f"https://www.linkedin.com/in/{row['public_identifier']}"
+                            if row["public_identifier"]
+                            else ""
+                        ),
+                        "connected_on": None,
+                        "already_added": row["name"].lower() in known,
+                    }
+                    for row in rows
+                ],
+                "count": len(rows),
+                "total": len(rows),
+                "truncated": False,
+                "stopped": None,
+                "details_available": bool(settings.apify_token),
+                "max_details": settings.linkedin_max_enriched,
+                "max_import": people_service.MAX_IMPORT_CANDIDATES,
+            }
+
+        return run(who, result)
+
+    @api.post("/linkedin/import-preview")
+    def linkedin_import_preview(body: LinkedInPreviewBody, who: Identity = Who) -> Any:
+        """Turn the connections the user ticked into a people import to review. Adds nobody yet."""
+        with session_scope() as db:
+            account(db, who)
+        picks = list({(p.public_identifier or p.name.lower()): p for p in body.people}.values())
+        profiles: dict[str, dict] = {}
+        details_error: str | None = None
+        if settings.apify_token:
+            try:
+                profiles = linkedin_service.fetch_profiles(
+                    [p.public_identifier for p in picks[: settings.linkedin_max_enriched] if p.public_identifier],
+                    token=settings.apify_token,
+                    actor=settings.apify_profile_actor,
+                    timeout=settings.apify_timeout_seconds,
+                )
+            except UpstreamError as exc:
+                details_error = exc.message  # still import with what the list gave us
+        candidates = [
+            linkedin_service.candidate(p.name, p.headline, profiles.get(p.public_identifier or "")) for p in picks
+        ]
+
+        def result(db: Session, user: User) -> dict:
+            view = people_service.propose_import(db, user, candidates, linkedin_service.SOURCE)
+            return {
+                **view.model_dump(mode="json"),
+                "details_for": len(profiles),
+                "details_error": details_error,
+            }
+
+        return run(who, result)
 
     @api.patch("/people/{person_id}")
     def update_person(person_id: str, body: PersonUpdateBody, who: Identity = Who) -> Any:

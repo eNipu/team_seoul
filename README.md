@@ -245,6 +245,7 @@ See [.env.example](.env.example). Key settings:
 | `AUTH_MODE` | `dev` (built-in OAuth server, refused in production) or `jwt` (your IdP) |
 | `OAUTH_ISSUER`, `OAUTH_AUDIENCE`, `OAUTH_JWKS_URL` | Required for `jwt` / production |
 | `OPENAI_API_KEY`, `OPENAI_MODEL` | Optional LLM memory extraction (heuristic fallback otherwise) |
+| `APIFY_TOKEN` | Optional. Lets the website's "Import from LinkedIn" fetch company, location and skills for the connections you pick; without it they are imported with name and headline |
 
 ## Production
 
