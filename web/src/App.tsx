@@ -3,10 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { DEMO, api, setUnauthenticatedHandler } from "./api";
 import { errorMessage } from "./errors";
-import { BrandMark, Icon, type IconName } from "./icons";
+import { BrandMark, type IconName } from "./icons";
 import { Link, href, navigate, useLocation, type Location } from "./router";
 import { SessionContext, useSession, type SessionValue } from "./session";
-import { LIMITS, type Session } from "./types";
+import type { Session } from "./types";
 import { Avatar, EmptyState, Skeleton, ToastProvider, useToast } from "./ui";
 import SignIn, { NotConnected, SignInUnavailable } from "./pages/SignIn";
 import Home from "./pages/Home";
@@ -20,6 +20,8 @@ import Plans from "./pages/Plans";
 import Answers from "./pages/Answers";
 import Account from "./pages/Account";
 import ConnectChatGpt, { PublicConnectChatGpt } from "./pages/ConnectChatGpt";
+import Invite from "./pages/Invite";
+import Join from "./pages/Join";
 
 interface NavItem {
   to: string;
@@ -27,18 +29,12 @@ interface NavItem {
   icon: IconName;
 }
 
+// Three places, nothing more. Account and sign out live in the avatar menu. Follow-ups, plans and
+// answers still open by URL; nothing links to follow-ups or plans.
 const PRIMARY_NAV: NavItem[] = [
   { to: "/", label: "Home", icon: "home" },
-  { to: "/people", label: "People", icon: "users" },
+  { to: "/people", label: "Circle", icon: "users" },
   { to: "/memories", label: "Memories", icon: "bookmark" },
-  { to: "/follow-ups", label: "Follow-ups", icon: "flag" },
-  { to: "/plans", label: "Plans", icon: "calendar" },
-];
-
-const SECONDARY_NAV: NavItem[] = [
-  { to: "/answers", label: "Answers", icon: "chat" },
-  { to: "/connect", label: "Connect ChatGPT", icon: "sparkle" },
-  { to: "/account", label: "Account", icon: "user" },
 ];
 
 function isCurrent(path: string, to: string): boolean {
@@ -54,7 +50,7 @@ function matchRoute(loc: Location): Route {
   const { path } = loc;
   if (path === "/") return { title: "Home", element: <Home /> };
   if (path === "/overlap") return { title: "Venn Overlap", element: <Overlap /> };
-  if (path === "/people") return { title: "People", element: <People /> };
+  if (path === "/people") return { title: "Circle", element: <People /> };
   const person = /^\/people\/(connection|person)\/([^/]+)$/.exec(path);
   if (person) {
     const kind = person[1] === "connection" ? "connection" : "person";
@@ -67,6 +63,8 @@ function matchRoute(loc: Location): Route {
   if (path === "/plans") return { title: "Plans", element: <Plans /> };
   if (path === "/answers") return { title: "Answers", element: <Answers /> };
   if (path === "/connect") return { title: "Connect ChatGPT", element: <ConnectChatGpt /> };
+  if (path === "/invite" || path === "/qr") return { title: "My QR", element: <Invite /> };
+  if (path === "/join") return { title: "Join", element: <Join /> };
   if (path === "/account") return { title: "Account", element: <Account /> };
   return { title: "Page not found", element: <NotFound /> };
 }
@@ -78,69 +76,12 @@ function NotFound() {
         illustration="search"
         title="This page doesn't exist"
         actions={
-          <>
-            <Link to="/" className="btn btn--primary">
-              Go to Home
-            </Link>
-            <Link to="/people" className="btn">
-              See your people
-            </Link>
-          </>
+          <Link to="/" className="btn btn--primary">
+            Go home
+          </Link>
         }
-      >
-        <p>The link may be old, or the address was mistyped.</p>
-      </EmptyState>
-    </div>
-  );
-}
-
-/* --------------------------------------------------------- global search */
-
-function GlobalSearch() {
-  const loc = useLocation();
-  const urlQuery = loc.path === "/search" ? (loc.query.get("q") ?? "") : "";
-  const [value, setValue] = useState(urlQuery);
-  const ref = useRef<HTMLInputElement>(null);
-  useEffect(() => setValue(urlQuery), [urlQuery, loc.key]);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "/" || e.metaKey || e.ctrlKey || e.altKey) return;
-      const el = e.target as HTMLElement | null;
-      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT" || el.isContentEditable))
-        return;
-      if (document.querySelector("dialog[open]")) return;
-      e.preventDefault();
-      ref.current?.focus();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-  return (
-    <form
-      className="search"
-      role="search"
-      onSubmit={(e) => {
-        e.preventDefault();
-        const q = value.trim();
-        navigate("/search", q ? { q } : {});
-      }}
-    >
-      <Icon name="search" size={18} />
-      <input
-        ref={ref}
-        type="search"
-        className="search__input"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder="Who do I know who…"
-        aria-label="Search your circle: who do I know who…"
-        maxLength={LIMITS.searchQuery}
-        enterKeyHint="search"
       />
-      <kbd className="search__kbd" aria-hidden="true">
-        /
-      </kbd>
-    </form>
+    </div>
   );
 }
 
@@ -183,8 +124,6 @@ function AccountMenu() {
         onClick={() => setOpen((o) => !o)}
       >
         <Avatar name={displayName} size="small" />
-        <span className="account__name">{displayName}</span>
-        <Icon name="chevron-down" size={16} />
       </button>
       {open && (
         <div className="menu">
@@ -195,16 +134,7 @@ function AccountMenu() {
             )}
           </div>
           <Link to="/account" className="menu__item">
-            <Icon name="user" size={18} />
             Account
-          </Link>
-          <Link to="/answers" className="menu__item">
-            <Icon name="chat" size={18} />
-            Answers from friends
-          </Link>
-          <Link to="/connect" className="menu__item">
-            <Icon name="sparkle" size={18} />
-            Connect ChatGPT
           </Link>
           <button
             type="button"
@@ -220,7 +150,6 @@ function AccountMenu() {
               }
             }}
           >
-            <Icon name="log-out" size={18} />
             {busy ? "Signing out…" : "Sign out"}
           </button>
         </div>
@@ -251,14 +180,13 @@ function Shell() {
   }, [loc.path]);
 
   return (
-    <div className="shell">
+    <div className={loc.path === "/join" || loc.path === "/invite" || loc.path === "/qr" ? "shell shell--task" : "shell"}>
       <a className="skip-link" href="#main">
         Skip to content
       </a>
-      <aside className="sidebar">
-        <Link to="/" className="brand" aria-label="Venn, home">
+      <header className="topbar">
+        <Link to="/" className="topbar__brand" aria-label="Venn, home">
           <BrandMark size={32} />
-          <span className="brand__name">Venn</span>
         </Link>
         <nav className="nav" aria-label="Main">
           {PRIMARY_NAV.map((item) => (
@@ -268,59 +196,26 @@ function Shell() {
               className="nav__item"
               aria-current={isCurrent(loc.path, item.to) ? "page" : undefined}
             >
-              <Icon name={item.icon} size={20} />
               {item.label}
             </Link>
           ))}
         </nav>
-        <nav className="nav nav--secondary" aria-label="More">
-          {SECONDARY_NAV.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={item.to === "/connect" ? "nav__item nav__item--connect" : "nav__item"}
-              aria-current={isCurrent(loc.path, item.to) ? "page" : undefined}
-            >
-              <Icon name={item.icon} size={20} />
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </nav>
-        <p className="sidebar__foot">
-          <Icon name="lock" size={14} />
-          Private by default. Venn never sends anything for you.
-        </p>
-      </aside>
-      <div className="shell__main">
-        <header className="topbar">
-          <Link to="/" className="topbar__brand" aria-label="Venn, home">
-            <BrandMark size={32} />
-          </Link>
-          <GlobalSearch />
-          {DEMO && (
-            <span className="demo-pill" title="Demo mode: sample data in this browser tab, nothing is saved.">
-              Demo
-            </span>
-          )}
-          <AccountMenu />
-        </header>
-        <main className="main" id="main" tabIndex={-1} ref={mainRef}>
-          {route.element}
-        </main>
-      </div>
-      <nav className="tabbar" aria-label="Main">
-        {PRIMARY_NAV.map((item) => (
-          <Link
-            key={item.to}
-            to={item.to}
-            className="tabbar__item"
-            aria-current={isCurrent(loc.path, item.to) ? "page" : undefined}
-          >
-            <Icon name={item.icon} size={22} />
-            <span>{item.label}</span>
-          </Link>
-        ))}
-      </nav>
+        {DEMO && (
+          <span className="demo-pill" title="Demo mode: sample data in this browser tab, nothing is saved.">
+            Demo
+          </span>
+        )}
+        <Link to="/qr" className="topbar__qr" aria-label="My QR code">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" /><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3" />
+          </svg>
+        </Link>
+        <AccountMenu />
+      </header>
+      <main className="main" id="main" tabIndex={-1} ref={mainRef}>
+        {route.element}
+      </main>
     </div>
   );
 }

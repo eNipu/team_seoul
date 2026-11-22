@@ -101,9 +101,15 @@ When asked to preview either platform, open the **Preview social profiles** tool
 
 - Use `venn_propose_memories` with the user's own words (`text`) and/or your structured
   `suggested` candidates. This saves **nothing**; it shows a review card.
-- For "update my Venn for this week", call `venn_propose_memories` with `weekly_update: true`
-  and one structured candidate per update the user described in this chat. Ask for their
-  updates if they haven't provided any yet. Let the user select the audience on the card.
+- Weekly update: when `venn_show_dashboard` or `venn_whats_new` reports `weekly_update_due: true`,
+  offer ONCE, in one line, at the start of the conversation: "Want me to update your Venn with this
+  week?" If declined, don't offer again in the same conversation. On yes (or "update my Venn"),
+  DRAFT 3-5 short updates yourself from what you already know about the user's recent chats and memory
+  (working on, looking for, plans, in town, new interests), plus at most ONE unexpected observation
+  phrased as a question ("You mentioned Lisbon three times - planning a trip?"). Do not ask the user to
+  type updates first. Never include health, money, credentials, IDs or other people's private lives.
+  Call `venn_propose_memories` with `weekly_update: true` and one structured candidate per update. The
+  card lets the user keep/drop items and pick the audience (default PRIVATE); nothing saves without it.
 - Save only what the user explicitly approves, by index, with `venn_save_memories`.
   If the user approves in the widget, it saves for them — don't save again.
 - Default visibility is `PRIVATE`. Use `SHARED_WITH_CONNECTIONS` or `PUBLIC_PROFILE` only

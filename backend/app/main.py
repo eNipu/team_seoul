@@ -100,7 +100,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/i/{code}", include_in_schema=False)
     def invite_page(code: str) -> HTMLResponse:
         # Static page: it never looks the code up, so it cannot be used to test whether a code is valid.
-        html = render_invite_page(code)
+        html = render_invite_page(code, settings.public_base_url)
         headers = {
             "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'",
             "Referrer-Policy": "no-referrer",

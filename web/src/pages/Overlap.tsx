@@ -6,6 +6,7 @@ import { cityWeek, openSlots } from "../overlapWindow";
 import { OVERLAP_INTERESTS, type OverlapPreference, type OverlapReportReason, type OverlapState } from "../types";
 import { Dialog, InlineError, Loaded, useAction, useAsync, useToast } from "../ui";
 import "../overlap.css";
+import "./tools.css";
 
 const label = (code: string) => code.charAt(0).toUpperCase() + code.slice(1);
 
@@ -50,13 +51,12 @@ function OptIn({ city, setCity, busy, save }: { city: OverlapCity; setCity: (cit
     }
     setArea(nextArea);
   };
-  return <form className="ov-card" onSubmit={e => {
+  return <form className="tl__card tl__form" onSubmit={e => {
     e.preventDefault();
     const submittedAt = Date.now();
     if (canOptIn && preference && cityWeek(city, submittedAt).includes(date) && openSlots(city, date, submittedAt).includes(preference.slot)) save(preference);
   }}>
-    <h2>Your Overlap window</h2>
-    <p id="overlap-neighborhood-hint">Choose a neighborhood you’d visit. We look for someone who picks the same one. No address or GPS needed.</p>
+    <p id="overlap-neighborhood-hint" className="sr-only">Choose a neighborhood you’d visit. No address or GPS needed.</p>
     <div className="ov-fields">
       <label>City<select value={city} onChange={e => {
         const next = OVERLAP_CITIES.find(code => code === e.target.value);
@@ -71,19 +71,17 @@ function OptIn({ city, setCity, busy, save }: { city: OverlapCity; setCity: (cit
       <label>Day in {cityName}<select value={date} onChange={e => setDay(e.target.value)}>{days.map(d => <option key={d} value={d}>{showDay(d)}</option>)}</select></label>
       <label>Time of day<select value={slot} onChange={e => setSlot(e.target.value)}>{slots.map(s => <option key={s} value={s}>{label(s)}</option>)}</select></label>
     </div>
-    {savedPlace && <div>
-      <button type="button" className="btn" disabled={busy} onClick={() => changeCity(savedPlace.city, savedPlace.code)}>
-        Use saved neighborhood: {savedPlace.name}, {overlapCityInfo(savedPlace.city).name}
-      </button>
-    </div>}
-    <fieldset className="ov-interests"><legend>What would you enjoy? Choose 1–3.</legend><div className="ov-row">
-      {OVERLAP_INTERESTS.map(i => { const on = interests.includes(i); return <button key={i} type="button" className="btn" aria-pressed={on} disabled={!on && interests.length >= 3}
-        onClick={() => setInterests(old => on ? old.filter(x => x !== i) : [...old, i])}>{on && <span aria-hidden="true">✓ </span>}{label(i)}</button>; })}
+    {savedPlace && <p className="tl__meta"><button type="button" className="tl__link" disabled={busy} onClick={() => changeCity(savedPlace.city, savedPlace.code)}>
+      Use {savedPlace.name}, {overlapCityInfo(savedPlace.city).name}
+    </button></p>}
+    <fieldset className="ov-interests"><legend>Pick 1–3</legend><div className="tl__chips">
+      {OVERLAP_INTERESTS.map(i => { const on = interests.includes(i); return <button key={i} type="button" className="tl__chip" aria-pressed={on} disabled={!on && interests.length >= 3}
+        onClick={() => setInterests(old => on ? old.filter(x => x !== i) : [...old, i])}>{label(i)}</button>; })}
     </div></fieldset>
-    <section className="ov-note"><h3>Before you opt in</h3>{preference && <WindowSummary {...preference} />}
-      <p>A suggested plan can mention the neighborhood and shared interests, but not your current location, contacts or memories. Your first name appears only if you both say yes.</p></section>
-    <label className="ov-check"><input type="checkbox" checked={adult} onChange={e => setAdult(e.target.checked)} required /> I confirm that I’m an adult.</label>
-    <div><button className="btn btn--primary" disabled={!canOptIn}>Opt in to Overlap</button></div>
+    <label className="ov-check"><input type="checkbox" checked={adult} onChange={e => setAdult(e.target.checked)} required /> I’m an adult.</label>
+    <div><button className="btn btn--primary" disabled={!canOptIn}>Opt in</button></div>
+    {preference && <details className="tl__more"><summary>What a match sees</summary><div className="tl__form"><WindowSummary {...preference} />
+      <p>Only this window and your interests. Never your location, contacts or memories. Your first name only if you both say yes.</p></div></details>}
   </form>;
 }
 
@@ -93,23 +91,21 @@ function Match({ match, busy, run, error }: { match: NonNullable<OverlapState["m
   const [reason, setReason] = useState<OverlapReportReason>("safety");
   const introduced = match.status === "introduced";
   const point = introduced ? match.meeting_point : null;
-  return <section className="ov-card">
-    <div className="ov-kicker">{introduced ? "Your public plan idea" : "A possible public plan"}</div>
+  return <section className="tl__card tl__moment">
     <h2>{match.title}</h2><p>{match.reason}</p>
-    {introduced && <div className="ov-note"><h3>Your shared challenge</h3><p>{match.challenge}</p></div>}
-    {point && <div className="ov-note"><h3>Optional public meeting point</h3><strong>{point.label}</strong>
+    {introduced && <p><strong>Your challenge:</strong> {match.challenge}</p>}
+    {point && <div className="tl__form"><p><strong>Meet at:</strong> {point.label}</p>
       <p aria-live="polite">{point.status === "agreed" ? "You both chose this spot." : point.status === "suggested_by_you" ? "You suggested this spot. They haven’t agreed yet." : point.status === "suggested_to_you" ? `${match.other_name || "Your match"} suggested this spot.` : "Neither of you has suggested this spot yet."}</p>
-      <p>You can leave it there. Neither person’s location is shared, and nothing is booked.</p>
       {(point.status === "available" || point.status === "suggested_to_you") && <button className="btn" disabled={busy}
         onClick={() => void run(() => api.respondOverlap(match.id, "suggest_spot"), "Your choice was saved.")}>
         {point.status === "available" ? "Suggest this spot" : "Agree to this spot"}</button>}
     </div>}
-    {match.status === "offered" && <p>Say yes to share your name only if the other person says yes too. It’s an introduction, not a commitment to meet.</p>}
-    <div className="ov-row">
-      {match.status === "offered" && <button className="btn btn--primary" disabled={busy} onClick={() => void run(() => api.respondOverlap(match.id, "yes"), "You said yes.")}>Yes to an introduction</button>}
-      {!introduced && <button className="btn" disabled={busy} onClick={() => void run(() => api.respondOverlap(match.id, "pass"), "Passed on this overlap.")}>Pass</button>}
-      <button className="btn" disabled={busy} onClick={() => setPanel("block")}>Block</button>
-      <button className="btn" disabled={busy} onClick={() => setPanel("report")}>Report</button>
+    {match.status === "offered" && <p>Names stay hidden unless you both say yes.</p>}
+    <div className="tl__row">
+      {match.status === "offered" && <button className="btn btn--primary" disabled={busy} onClick={() => void run(() => api.respondOverlap(match.id, "yes"), "You said yes.")}>Say yes</button>}
+      {!introduced && <button className="tl__link" disabled={busy} onClick={() => void run(() => api.respondOverlap(match.id, "pass"), "Passed on this overlap.")}>Pass</button>}
+      <button className="tl__link" disabled={busy} onClick={() => setPanel("block")}>Block</button>
+      <button className="tl__link" disabled={busy} onClick={() => setPanel("report")}>Report</button>
     </div>
     {panel && <Dialog title={panel === "block" ? "Block this person?" : "Report this overlap"} onClose={() => setPanel(null)}>
       {panel === "report" ? <label className="ov-select">Reason<select value={reason} onChange={e => setReason(e.target.value as OverlapReportReason)}>
@@ -154,20 +150,17 @@ export default function Overlap() {
   const activeArea = state.error ? null : state.data?.preference?.area;
   const cityName = overlapCityInfo(activeArea ? overlapAreaInfo(activeArea).city : city).name;
   const headline = status === "introduced" ? `You and ${match?.other_name || "your match"} both said yes.` : status === "waiting" ? "You said yes. Now it’s their turn." : status === "offered" ? "Your windows overlap." : activeArea ? "Your window is open." : `Find an overlap in ${cityName}.`;
-  return <div className="overlap">
-    <header className="ov-hero"><div className={`ov-rings ${status === "introduced" ? "ov-mutual" : ""}`} aria-hidden="true"><i /><i /></div>
-      <div><div className="ov-kicker">Venn Overlap · {cityName}</div><h1 aria-live="polite">{headline}</h1>
-      <p>{status === "waiting" ? "Names stay hidden unless you both agree. This page updates automatically." : state.data?.preference && !match ? "We’ll show a suggestion if another adult picks the same neighborhood and time slot and shares an interest." : "One neighborhood, a little free time and something you both enjoy."}</p></div>
+  return <div className="page overlap tl">
+    <header className="page-head"><h1 aria-live="polite" tabIndex={-1} id="page-title">{headline}</h1>
+      {status === "waiting" ? <p>Names stay hidden unless you both agree.</p> : !state.data?.preference && <p>One neighborhood, a little free time, something you both enjoy.</p>}
     </header>
-    {DEMO && <aside className="ov-note"><h3>{demoSeat ? `Fictional demo · ${demoSeat === "a" ? "Robin" : "Wren"}’s view` : "Try the two-person demo"}</h3>
-      <p>Open both views in the same browser. Pick the same window and a shared interest, then say yes separately.</p>
-      <div className="ov-row">{(["a", "b"] as const).filter(s => s !== demoSeat).map(s => <a key={s} className="btn" href={href("/overlap", { seat: s })} target={demoSeat || s === "b" ? "_blank" : "_self"} rel="noopener noreferrer">Open {s === "a" ? "Robin" : "Wren"}’s view</a>)}</div></aside>}
-    <p className="ov-consent">An Overlap doesn’t add a friend, send a message or book a meetup. You can withdraw at any time.</p>
+    {DEMO && <p className="tl__meta">
+      {(["a", "b"] as const).filter(s => s !== demoSeat).map(s => <a key={s} className="tl__link" href={href("/overlap", { seat: s })} target={demoSeat || s === "b" ? "_blank" : "_self"} rel="noopener noreferrer">Open {s === "a" ? "Robin" : "Wren"}’s view</a>)}</p>}
     <InlineError message={action.error} />
     {(!DEMO || demoSeat) && <Loaded state={state.error ? { ...state, data: null } : state}>{({ preference, match }) => preference ? <>
       {match && <Match key={match.id} match={match} busy={action.busy} run={run} error={action.error} />}
-      <section className="ov-card"><h2>Your active window</h2><WindowSummary {...preference} />
-        <div><button className="btn" disabled={action.busy} onClick={() => void run(() => api.withdrawOverlap(), "You withdrew from Overlap.")}>Withdraw from Overlap</button></div></section>
+      <section className="tl__card"><WindowSummary {...preference} />
+        <div><button className="tl__link" disabled={action.busy} onClick={() => void run(() => api.withdrawOverlap(), "You withdrew from Overlap.")}>Withdraw</button></div></section>
     </> : <OptIn city={city} setCity={setCity} busy={action.busy} save={p => void run(() => api.optInOverlap({ ...p, adults_confirmed: true }), "Your window is open.")} />}</Loaded>}
   </div>;
 }

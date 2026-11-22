@@ -1,0 +1,9 @@
+/* Join and Invite: one headline, one object, one action. Landing look. */
+.jn { max-width: 640px; display: grid; justify-items: start; gap: 28px; padding-top: clamp(24px, 8vh, 88px); }
+.jn__title { margin: 0; font-size: clamp(2.5rem, 7vw, 4rem); line-height: 1.02; font-weight: 900; letter-spacing: -0.04em; max-width: 14ch; text-wrap: balance; }
+.jn__title--small { font-size: clamp(1.75rem, 5vw, 2.5rem); max-width: 20ch; }
+.jn__title mark { background: linear-gradient(transparent 55%, var(--yellow) 55%, var(--yellow) 92%, transparent 92%); color: inherit; padding: 0 .05em; }
+.jn__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+.jn__qr { margin: 0; padding: 12px; border-radius: 26px; background: var(--yellow); transform: rotate(-1deg); }
+.jn__qr .qr__code { width: min(280px, 70vw); height: auto; aspect-ratio: 1; padding: 0; border-radius: 14px; }
+.jn__quiet { margin: 0; color: #6e6e73; font-size: 0.9375rem; }

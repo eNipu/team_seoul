@@ -3,18 +3,9 @@
 import { useState } from "react";
 import type { HelpTopic, HelpViewData } from "../types";
 import { ChatFallback, type ViewProps } from "./common";
-import { Icon, Illustration, type IconName } from "./icons";
+import { Icon } from "./icons";
 import SetupCard from "./Setup";
-
-const TOPIC_ICONS: Record<string, IconName> = {
-  setup: "flag",
-  memories: "bookmark",
-  people: "note",
-  connect: "user-plus",
-  stay_close: "heart",
-  quiz: "dice",
-  privacy: "lock",
-};
+import "./cards.css";
 
 type ExampleState = "sending" | "sent" | "failed";
 
@@ -34,43 +25,48 @@ export default function Help({ data, bridge, nav }: ViewProps<HelpViewData>) {
     setExamples((s) => ({ ...s, [id]: ok ? "sent" : "failed" }));
   }
 
+  const picks = data.topics
+    .map((t, i) => ({ topic: t, id: `${i}:0`, text: t.examples[0] }))
+    .filter((p) => p.text)
+    .slice(0, 3);
+  const failed = picks.filter((p) => examples[p.id] === "failed");
+
+  // Help is one line and quiet links: the setup guide and every example sit one tap away, never stacked.
+  const guide = data.onboarding && [data.onboarding.memories_ready, data.onboarding.contacts_ready, data.onboarding.matches_reviewed].some((r) => r !== true);
   return (
     <>
-      <section className="panel">
-        <div className="hero hero--row">
-          <Illustration name="help" size="sm" />
-          <div>
-            <h2>How Venn helps</h2>
-            <p className="muted small">
-              Venn remembers what matters to you, and helps you stay in touch and find the common ground with the people you
-              already know. Pick something to try, or just ask in the chat.
-            </p>
-          </div>
-        </div>
-      </section>
+      <section className="vc">
+        <h2 className="vc__title">Just ask Venn.</h2>
+        <p className="vc__muted">Say what you need in the chat. Venn will tell you here when something matters.</p>
+        {failed.map((e) => (
+          <ChatFallback key={e.id} text={e.text} />
+        ))}
 
-      <SetupCard data={data} nav={nav} />
+        {guide && (
+          <details className="vc__more">
+            <summary>Getting started</summary>
+            <SetupCard data={data} nav={nav} />
+          </details>
+        )}
 
-      <section className="panel">
-        <h3 className="section-title">What you can do</h3>
-        <ul className="list topics">
-          {data.topics.filter((t) => t.key !== "setup").map((t, i) => (
-            <Topic key={`${t.key}-${i}`} topic={t} index={i} states={examples} disabled={sending} onTry={tryIt} />
-          ))}
-        </ul>
+        <details className="vc__more">
+          <summary>Everything Venn can do</summary>
+          <ul className="vc__items">
+            {data.topics.map((t, i) => (
+              <Topic key={`${t.key}-${i}`} topic={t} index={i} states={examples} disabled={sending} onTry={tryIt} />
+            ))}
+          </ul>
+        </details>
 
         {data.privacy.length > 0 && (
-          <div className="privacy">
-            <h3 className="section-title">Your data</h3>
-            <ul className="privacy__list">
+          <details className="vc__more">
+            <summary>Only you see what you save</summary>
+            <ul className="vc__list">
               {data.privacy.map((p, i) => (
-                <li key={i}>
-                  <Icon name="shield" size={16} />
-                  <span>{p}</span>
-                </li>
+                <li key={i} className="vc__muted">{p}</li>
               ))}
             </ul>
-          </div>
+          </details>
         )}
       </section>
     </>
@@ -90,42 +86,36 @@ function Topic({
   disabled: boolean;
   onTry: (id: string, text: string) => Promise<void>;
 }) {
-  const failed = topic.examples.map((text, j) => ({ text, id: `${index}:${j}` })).filter((e) => states[e.id] === "failed");
+  const failed = topic.examples.map((text, j) => ({ text, id: `${index}:${j}` })).filter((e) => j0(e.id) && states[e.id] === "failed");
   return (
-    <li className="topic">
-      <span className="topic__icon" aria-hidden="true">
-        <Icon name={TOPIC_ICONS[topic.key] ?? "sparkle"} />
-      </span>
-      <div className="topic__body">
-        <h4 className="topic__title">{topic.title}</h4>
-        {topic.description && <p className="muted small">{topic.description}</p>}
-        {topic.examples.length > 0 && (
-          <ul className="try-list" aria-label={`Try it: ${topic.title}`}>
-            {topic.examples.map((text, j) => {
-              const id = `${index}:${j}`;
-              const state = states[id];
-              return (
-                <li key={id}>
-                  {state === "sent" ? (
-                    <span className="try try--sent" role="status">
-                      <Icon name="check" size={16} />
-                      <span>Sent — continue in the chat</span>
-                    </span>
-                  ) : (
-                    <button type="button" className="try" disabled={disabled} onClick={() => void onTry(id, text)}>
-                      <Icon name="chat" size={16} />
-                      <span>{state === "sending" ? "Sending…" : `“${text}”`}</span>
-                    </button>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-        {failed.map((e) => (
-          <ChatFallback key={e.id} text={e.text} />
-        ))}
-      </div>
+    <li>
+      <h3 className="vc__item-title">{topic.title}</h3>
+      {topic.description && <p className="vc__muted">{topic.description}</p>}
+      {topic.examples.length > 0 && (
+        <div className="vc__actions" aria-label={`Try it: ${topic.title}`}>
+          {topic.examples.map((text, j) => {
+            const id = `${index}:${j}`;
+            const state = states[id];
+            return state === "sent" ? (
+              <span key={id} className="vc__done" role="status">
+                <Icon name="check" size={16} /> Sent
+              </span>
+            ) : (
+              <button key={id} type="button" className="vc__link" style={{ textAlign: "left" }} disabled={disabled} onClick={() => void onTry(id, text)}>
+                {state === "sending" ? "Sending…" : `“${text}”`}
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {failed.map((e) => (
+        <ChatFallback key={e.id} text={e.text} />
+      ))}
     </li>
   );
+}
+
+// The first example of each topic already shows its fallback above the list.
+function j0(id: string) {
+  return !id.endsWith(":0");
 }

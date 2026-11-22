@@ -391,3 +391,56 @@ def test_repeated_import_marks_what_is_already_saved(alice):
 
 def test_unknown_source_is_rejected(alice):
     assert alice.call("venn_propose_memories", suggested=_remembered(1), source="claude")["isError"]
+
+
+def _age_memories(days: int) -> None:
+    from datetime import timedelta
+
+    from app.db.database import session_scope
+    from app.models import Memory
+    from app.models._base import utcnow
+
+    with session_scope() as db:
+        db.query(Memory).update({Memory.approved_at: utcnow() - timedelta(days=days)})
+
+
+def _save_one(user, title="Jazz"):
+    proposal = user.ok(
+        "venn_propose_memories", suggested=[{"category": "INTEREST", "title": title, "description": "Live jazz"}]
+    )
+    user.ok("venn_save_memories", proposal_id=proposal["proposal_id"], approvals=[{"index": 0}])
+
+
+def _tool_text(user, tool):
+    return user.call(tool)["content"][0]["text"]
+
+
+def test_weekly_update_due_flag_lifecycle(alice):
+    # New user, no memories: never due.
+    assert alice.ok("venn_show_dashboard").get("weekly_update_due") is False
+    assert alice.ok("venn_whats_new")["weekly_update_due"] is False
+
+    # Right after saving: not due.
+    _save_one(alice)
+    assert alice.ok("venn_show_dashboard")["weekly_update_due"] is False
+    assert "Want me to update your Venn" not in _tool_text(alice, "venn_show_dashboard")
+
+    # 6 days later: still not due; 8 days later: due and surfaced in the tool text.
+    _age_memories(6)
+    assert alice.ok("venn_show_dashboard")["weekly_update_due"] is False
+    _age_memories(8)
+    assert alice.ok("venn_show_dashboard")["weekly_update_due"] is True
+    assert "Want me to update your Venn with this week?" in _tool_text(alice, "venn_show_dashboard")
+    assert alice.ok("venn_whats_new")["weekly_update_due"] is True
+    assert "Want me to update your Venn with this week?" in _tool_text(alice, "venn_whats_new")
+
+    # A weekly proposal saves nothing by itself, and approving it resets the clock.
+    proposal = alice.ok(
+        "venn_propose_memories",
+        weekly_update=True,
+        suggested=[{"category": "WORK", "title": "Berlin beta", "description": "Early access next week"}],
+    )
+    assert alice.ok("venn_list_memories")["count"] == 1
+    assert alice.ok("venn_show_dashboard")["weekly_update_due"] is True
+    alice.ok("venn_save_memories", proposal_id=proposal["proposal_id"], approvals=[{"index": 0}])
+    assert alice.ok("venn_show_dashboard")["weekly_update_due"] is False

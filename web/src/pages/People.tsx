@@ -7,7 +7,6 @@ import { Link, navigate, useLocation } from "../router";
 import {
   LIMITS,
   daysSince,
-  formatLastSeen,
   friendPath,
   plural,
   type FriendSummary,
@@ -16,17 +15,14 @@ import {
 } from "../types";
 import {
   Avatar,
-  Chips,
   Dialog,
   EmptyState,
   Field,
   InlineError,
-  KindTag,
   Loaded,
   Notice,
   PageHeader,
   Skeleton,
-  Tag,
   useAction,
   useAsync,
   useToast,
@@ -140,21 +136,13 @@ function PersonRow({ f }: { f: FriendSummary }) {
         <span className="person-row__main">
           <span className="person-row__name">
             <strong>{f.display_name}</strong>
-            <KindTag onVenn={f.on_venn} />
-            {f.is_sample && <Tag tone="info">Preview</Tag>}
           </span>
           <span className="muted small">
-            {[f.relationship, formatLastSeen(f.last_interaction_at)].filter(Boolean).join(" · ")}
+            {f.relationship}
           </span>
-          <Chips items={f.interests.slice(0, 4)} />
+          
         </span>
         <span className="person-row__side">
-          {f.open_follow_ups > 0 && (
-            <Tag tone="warn" icon="flag">
-              {plural(f.open_follow_ups, "follow-up", "follow-ups")}
-            </Tag>
-          )}
-          <Icon name="chevron-right" size={18} />
         </span>
       </Link>
     </li>
@@ -166,7 +154,7 @@ export default function People() {
   const friends = useAsync(() => api.listFriends(), []);
   const toast = useToast();
   const [filter, setFilter] = useState("");
-  const [sort, setSort] = useState<Sort>("name");
+  const [sort] = useState<Sort>("name");
   const dialog =
     loc.query.get("new") === "1"
       ? "add"
@@ -201,25 +189,25 @@ export default function People() {
   return (
     <div className="page">
       <PageHeader
-        title="People"
-        lead="Everyone in your circle: friends on Venn and the private notes you keep."
+        title="Your circle"
         actions={
           <>
-            <Link to="/people" query={{ linkedin: "1" }} className="btn">
-              <Icon name="briefcase" size={18} />
-              LinkedIn import
-            </Link>
-            <Link to="/people" query={{ instagram: "1" }} className="btn">
-              <Icon name="camera" size={18} />
-              Instagram import
-            </Link>
-            <Link to="/people" query={{ import: "1" }} className="btn">
-              <Icon name="import" size={18} />
-              Import a list
-            </Link>
+            <details className="more-menu">
+              <summary className="link-btn">Import</summary>
+              <div className="more-menu__body">
+                <Link to="/people" query={{ linkedin: "1" }} className="menu__item">
+                  From LinkedIn
+                </Link>
+                <Link to="/people" query={{ instagram: "1" }} className="menu__item">
+                  From Instagram
+                </Link>
+                <Link to="/people" query={{ import: "1" }} className="menu__item">
+                  Paste a list
+                </Link>
+              </div>
+            </details>
             <Link to="/people" query={{ new: "1" }} className="btn btn--primary">
-              <Icon name="user-plus" size={18} />
-              Add a person
+              Add people
             </Link>
           </>
         }
@@ -229,49 +217,27 @@ export default function People() {
           list.length === 0 ? (
             <EmptyState
               illustration="friends"
-              title="No one here yet"
+              title="Who do you want to stay close to?"
               actions={
                 <>
                   <Link to="/people" query={{ new: "1" }} className="btn btn--primary">
-                    Add your first person
+                    Add someone
                   </Link>
-                  <Link to="/people" query={{ import: "1" }} className="btn">
+                  <Link to="/people" query={{ import: "1" }} className="link-btn">
                     Import a list
-                  </Link>
-                  <Link to="/people" query={{ linkedin: "1" }} className="btn">
-                    LinkedIn import
                   </Link>
                 </>
               }
-            >
-              <p>Add someone you'd like to stay close to. They don't need a Venn account.</p>
-            </EmptyState>
+            />
           ) : (
             <>
-              <div className="toolbar">
+              {list.length > 8 && (
                 <label className="filter">
                   <Icon name="search" size={18} />
-                  <span className="sr-only">Filter people</span>
-                  <input
-                    type="search"
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                    placeholder="Filter by name, relationship or interest"
-                  />
+                  <span className="sr-only">Find someone</span>
+                  <input type="search" value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Find someone" />
                 </label>
-                <label className="select">
-                  <span>Sort</span>
-                  <select value={sort} onChange={(e) => setSort(e.target.value === "seen" ? "seen" : "name")}>
-                    <option value="name">Name</option>
-                    <option value="seen">Longest since seen</option>
-                  </select>
-                </label>
-              </div>
-              <p className="count" aria-live="polite">
-                {filter.trim()
-                  ? `${shown.length} of ${plural(list.length, "person", "people")}`
-                  : plural(list.length, "person", "people")}
-              </p>
+              )}
               {shown.length === 0 ? (
                 <div className="card">
                   <p className="muted">
@@ -282,12 +248,15 @@ export default function People() {
                   </p>
                 </div>
               ) : (
-                <ul className="people card card--flush">
+                <ul className="people">
                   {shown.map((f) => (
                     <PersonRow key={`${f.kind}:${f.id}`} f={f} />
                   ))}
                 </ul>
               )}
+              <p className="people__more">
+                <Link to="/overlap" className="link-btn">Meet someone new nearby</Link>
+              </p>
             </>
           )
         }

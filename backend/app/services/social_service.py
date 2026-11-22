@@ -193,6 +193,21 @@ def redeem_invite(db: Session, user: User, code: str) -> RedeemInviteOut:
     """
     settings = get_settings()
     invite = db.scalar(select(Invite).where(Invite.code == normalize_code(code)).with_for_update())
+    # Scanning a used or expired code again is fine when you are already connected to its owner:
+    # say so instead of an error (this reveals nothing new to the two people already connected).
+    if invite is not None and invite.revoked_at is None and invite.created_by_user_id != user.id:
+        owner = db.get(User, invite.created_by_user_id)
+        if owner is not None and not is_blocked(db, user.id, owner.id):
+            already = get_connection_between(db, user.id, owner.id)
+            if already:
+                owner_name = display_name(owner)
+                return RedeemInviteOut(
+                    status="ALREADY_CONNECTED",
+                    request_id=None,
+                    connection_id=str(already.id),
+                    inviter_display_name=owner_name,
+                    message=f"You and {owner_name} are connected.",
+                )
     # Same error for unknown / revoked / expired / used-up codes: no oracle for code guessing.
     if (
         invite is None
@@ -433,3 +448,51 @@ def report_user(
         raise InvalidRequest("Provide connection_id or request_id")
     db.add(AbuseReport(reporter_user_id=user.id, reported_user_id=target, reason=reason[:1000]))
     db.flush()
+
+
+PERSONAL_NOTE = "personal QR"
+_PERSONAL_USES = 100_000
+_PERSONAL_YEARS = 10
+
+
+def personal_invite(db: Session, user: User) -> InviteOut:
+    """The user's permanent QR: one code that any friend can scan, no expiry, until they reset it.
+
+    Stored as an ordinary invite (so redeem, revoke and the /i/{code} page work unchanged), marked
+    by its note. Resetting = revoking it; the next call makes a fresh one.
+    """
+    now = utcnow()
+    invite = db.scalar(
+        select(Invite).where(
+            Invite.created_by_user_id == user.id,
+            Invite.note == PERSONAL_NOTE,
+            Invite.revoked_at.is_(None),
+            Invite.expires_at > now,
+        ).order_by(Invite.created_at.desc())
+    )
+    if invite is None:
+        for _ in range(5):
+            code = "".join(secrets.choice(_CODE_ALPHABET) for _ in range(_CODE_LEN))
+            if not db.scalar(select(Invite.id).where(Invite.code == code)):
+                break
+        invite = Invite(
+            created_by_user_id=user.id,
+            code=code,
+            note=PERSONAL_NOTE,
+            max_uses=_PERSONAL_USES,
+            expires_at=now + timedelta(days=365 * _PERSONAL_YEARS),
+        )
+        db.add(invite)
+        db.flush()
+        analytics.track(db, "invite_created", user.id)
+    settings = get_settings()
+    pretty = f"{invite.code[:4]}-{invite.code[4:]}"
+    link = invite_link(settings.public_base_url, pretty)
+    return InviteOut(
+        code=pretty,
+        expires_at=invite.expires_at,
+        max_uses=invite.max_uses,
+        share_text=f"I'm using Venn in ChatGPT to keep in touch. Join me? {link}",
+        link=link,
+        qr=qr_rows(link),
+    )

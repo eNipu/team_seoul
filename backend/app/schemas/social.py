@@ -208,10 +208,12 @@ class PluginHelpView(HelpView):
 
 class PluginWelcomeView(WelcomeView):
     onboarding: OnboardingState
+    weekly_update_due: bool = False
 
 
 class PluginDashboardView(DashboardView):
     onboarding: OnboardingState
+    weekly_update_due: bool = False
 
 
 class SimpleOk(BaseModel):
@@ -559,6 +561,7 @@ class WhatsNewSignal(BaseModel):
 
 class WhatsNewView(BaseModel):
     signals: list[WhatsNewSignal]
+    weekly_update_due: bool = False
     empty_reason: str | None = None
     note: str = (
         "Signals come only from what connections chose to share with the user on Venn. "

@@ -337,3 +337,23 @@ def test_delete_account_from_the_website(web, make_user):
 def test_unknown_api_route_is_json_404(web):
     resp = web("dana").get("/nope")
     assert resp.status_code == 404
+
+
+# ------------------------------------------------------------- ChatGPT connected flag
+def test_chatgpt_connected_flips_when_an_oauth_token_is_used(web, make_user):
+    me = web("dana", "Dana").ok("GET", "/me")
+    assert me["chatgpt_connected"] is False
+
+    dana = make_user("dana", name="Dana")
+    assert dana.rpc("tools/list").status_code == 200  # token verified: ChatGPT is connected
+
+    assert web("dana").ok("GET", "/me")["chatgpt_connected"] is True
+
+
+def test_chatgpt_connected_is_per_account_and_ignores_bad_tokens(web, make_user):
+    web("erin", "Erin").ok("GET", "/me")
+    web("finn", "Finn").ok("GET", "/me")
+    make_user("finn", name="Finn").rpc("tools/list")
+    make_user("erin", name="Erin").rpc("tools/list", token="garbage")  # noqa: S106 - invalid token
+    assert web("erin").ok("GET", "/me")["chatgpt_connected"] is False
+    assert web("finn").ok("GET", "/me")["chatgpt_connected"] is True

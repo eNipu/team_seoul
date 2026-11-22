@@ -365,6 +365,7 @@ def build_api(settings: Settings) -> APIRouter:  # noqa: C901 - flat list of rou
                 "username": who.username,
                 "auth_mode": settings.auth_mode,
                 "mcp_url": settings.mcp_resource_url,
+                "chatgpt_connected": user.chatgpt_connected_at is not None,
                 "profile": _json(user_service.get_profile(db, user)),
             }
 
@@ -688,6 +689,11 @@ def build_api(settings: Settings) -> APIRouter:  # noqa: C901 - flat list of rou
     @api.post("/invites")
     def create_invite(body: InviteBody, who: Identity = Who) -> Any:
         return run(who, lambda db, user: social_service.create_invite(db, user, max_uses=body.max_uses))
+
+    @api.get("/invites/personal")
+    def personal_invite(who: Identity = Who) -> Any:
+        """Your permanent QR: the same code every time, until you reset it."""
+        return run(who, lambda db, user: social_service.personal_invite(db, user))
 
     @api.post("/invites/redeem")
     def redeem_invite(body: RedeemBody, who: Identity = Who) -> Any:

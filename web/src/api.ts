@@ -75,6 +75,7 @@ export interface Api {
   deletePlan(planId: string): Promise<void>;
   // Connecting
   createInvite(maxUses?: number): Promise<T.Invite>;
+  personalInvite(): Promise<T.Invite>;
   redeemInvite(code: string): Promise<T.RedeemResult>;
   respondRequest(requestId: string, accept: boolean): Promise<T.RequestResult>;
   // Answers from friends without an account
@@ -309,6 +310,8 @@ const realApi: Api = {
   // POST /invites
   createInvite: async (maxUses) =>
     T.parseInvite(await request("POST", "/invites", { body: maxUses ? { max_uses: maxUses } : {} })),
+  // GET /invites/personal — your permanent QR, same code every time
+  personalInvite: async () => T.parseInvite(await request("GET", "/invites/personal")),
   // POST /invites/redeem
   redeemInvite: async (code) => T.parseRedeem(await request("POST", "/invites/redeem", { body: { code } })),
   // POST /requests/{request_id}

@@ -181,6 +181,8 @@ export interface Me {
   username: string | null;
   auth_mode: string;
   mcp_url: string;
+  /** True once ChatGPT's OAuth token has reached Venn for this account. */
+  chatgpt_connected: boolean;
   profile: Profile;
 }
 
@@ -769,6 +771,7 @@ export function parseMe(v: unknown): Me {
     username: strOrNull(o.username),
     auth_mode: str(o.auth_mode),
     mcp_url: str(o.mcp_url),
+    chatgpt_connected: bool(o.chatgpt_connected),
     profile,
   };
 }

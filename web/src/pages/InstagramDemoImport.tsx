@@ -26,12 +26,7 @@ export function InstagramDemoFlow({ onDone, onCancel }: { onDone: (count: number
 
   return (
     <div className="stack">
-      <p className="dialog__text">
-        This preview uses built-in profiles, not your Instagram account or an uploaded export.
-      </p>
-      <Notice tone="quiet">
-        You choose who to add. To remove these profiles later, choose <strong>Clear preview data</strong> on Home.
-      </Notice>
+      <p className="dialog__text">100 built-in Instagram-style profiles, marked as preview. No login needed.</p>
       <InlineError message={action.error} />
       <div className="dialog__actions">
         <button type="button" className="btn" onClick={onCancel} disabled={action.busy}>

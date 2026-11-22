@@ -23,7 +23,8 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
     listHeading.current?.focus();
   }
   const fresh = data.candidates.filter((c) => !c.already_added);
-  const [picked, setPicked] = useState<Set<number>>(() => new Set());
+  // Everyone new starts selected: one tap adds them; tapping a person on the radar or list leaves them out.
+  const [picked, setPicked] = useState<Set<number>>(() => new Set(fresh.map((c) => c.index)));
   const [added, setAdded] = useState<{ count: number; names: string[] } | null>(null);
 
   useEffect(() => { if (added) resultHeading.current?.focus(); }, [added]);
@@ -49,11 +50,6 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
     data.skipped > 0
       ? `${plural(data.skipped, "entry was", "entries were")} left out because ${data.skipped === 1 ? "it" : "they"} contained sensitive details.`
       : null;
-
-  function replaceSelection(next: Set<number>) {
-    action.clear();
-    setPicked(next);
-  }
 
   function toggle(c: ImportCandidate) {
     action.clear();
@@ -121,7 +117,7 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
           </button>
           <button
             type="button"
-            className="btn"
+            className="onb__link"
             disabled={busy}
             onClick={() => void action.run("reconnect", () => socialSource
               ? nav.replaceView("venn_preview_demo_people_import", { platform: socialSource === "instagram" ? "linkedin" : "instagram" })
@@ -142,10 +138,9 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
 
   return (
     <section className="panel">
-      <h2 ref={listHeading} tabIndex={-1}>{platform ? `${platform} import` : "Your people radar"}</h2>
+      <h2 ref={listHeading} tabIndex={-1}>{platform ? `${platform} import` : "Add more people."}</h2>
       <p className="muted small lead">
-        {platform ? `Choose fictional ${platform} contacts to add as private notes.` :
-          `Tap a person to see what connects you. People you add become private notes.`}
+        {platform ? `Choose fictional ${platform} contacts to add as private notes.` : `Only you see these.`}
       </p>
 
       <ActionError action={action} />
@@ -170,22 +165,9 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
         <>
           {!platform && <PeopleRadar candidates={data.candidates} picked={picked} busy={busy} toggle={toggle} />}
           <div className="pick-bar">
-            <span className="pick-bar__count" role="status">
+            <span className={platform ? "pick-bar__count" : "sr-only"} role="status">
               {count} of {data.candidates.length} selected
             </span>
-            <button
-              type="button"
-              className="btn btn--ghost btn--small"
-              disabled={busy || (platform ? visible.every(c => c.already_added || picked.has(c.index)) : fresh.length === 0)}
-              onClick={() => replaceSelection(platform
-                ? new Set([...picked, ...visible.filter(c => !c.already_added).map(c => c.index)])
-                : new Set(fresh.map(c => c.index)))}
-            >
-              {platform ? "Select this page" : "Select new names"}
-            </button>
-            <button type="button" className="btn btn--ghost btn--small" disabled={busy || count === 0} onClick={() => replaceSelection(new Set())}>
-              Clear
-            </button>
           </div>
 
           {platform && (

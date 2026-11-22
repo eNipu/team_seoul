@@ -19,6 +19,8 @@ class User(Base):
     display_name: Mapped[str | None] = mapped_column(String(80))
     overlap_area: Mapped[str | None] = mapped_column(String(16))
     matches_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # First time an OAuth access token for this account reached the MCP server (ChatGPT connected).
+    chatgpt_connected_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = created_at_col()
     updated_at: Mapped[datetime] = updated_at_col()
 

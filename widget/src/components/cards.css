@@ -1,0 +1,198 @@
+/* Chat cards (replies, brief, ideas, quiz, answers, help) in the onboarding look:
+   paper and ink, one heavy headline, one black pill, one quiet link,
+   and at most one yellow element per card. Theme tokens keep dark mode readable. */
+
+.vc {
+  --vc-yellow: #ffd400;
+  display: grid;
+  gap: 16px;
+  padding: 24px 20px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: var(--surface);
+  color: var(--text);
+}
+.vc > * { min-width: 0; }
+
+.vc__kicker { margin: 0 0 -8px; font-size: 0.8125rem; font-weight: 600; color: var(--muted); }
+.vc__title {
+  margin: 0;
+  font-size: 1.75rem;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+.vc__title:focus { outline: none; }
+.vc__body { margin: 0; font-size: 0.975rem; line-height: 1.45; color: var(--text); opacity: 0.86; }
+.vc__muted { margin: 0; font-size: 0.875rem; line-height: 1.4; color: var(--muted); }
+
+/* the one primary action */
+.vc__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--surface);
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.vc__cta:hover:not(:disabled) { opacity: 0.86; }
+.vc__cta:disabled { opacity: 0.3; cursor: default; }
+.vc__cta--small { width: auto; min-height: 40px; padding: 0 16px; font-size: 0.9375rem; }
+
+/* the one quiet secondary action */
+.vc__link {
+  justify-self: start;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.vc__link:hover:not(:disabled) { color: var(--text); }
+.vc__link:disabled { opacity: 0.5; cursor: default; }
+.vc__link--danger { color: var(--danger); }
+
+.vc__cta:focus-visible,
+.vc__link:focus-visible,
+.vc__more > summary:focus-visible,
+.vc__pick:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+
+.vc__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
+.vc__actions .vc__cta { flex: 1 1 auto; }
+.vc__center { justify-self: center; }
+
+/* everything secondary lives behind one disclosure */
+.vc__more { width: 100%; }
+.vc__more > summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.vc__more > summary::-webkit-details-marker { display: none; }
+.vc__more > summary:hover { color: var(--text); }
+.vc__more[open] > summary { margin-bottom: 12px; }
+.vc__more-body { display: grid; gap: 12px; }
+
+/* the yellow moment: the single bright thing on the card */
+.vc__moment {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: var(--vc-yellow);
+  color: #000;
+}
+.vc__moment p { margin: 0; font-size: 1rem; font-weight: 600; line-height: 1.45; }
+.vc__moment small { font-size: 0.75rem; color: #4c4000; }
+.vc__moment--bubble { border-radius: 20px 20px 6px 20px; }
+
+/* quiet grey block */
+.vc__quiet { display: grid; gap: 8px; margin: 0; padding: 14px 16px; border-radius: 16px; background: var(--surface-2); }
+
+/* plain lists */
+.vc__list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.vc__list > li { font-size: 0.975rem; line-height: 1.4; }
+.vc__steps { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; counter-reset: vc; }
+.vc__steps > li { display: grid; grid-template-columns: 24px 1fr; gap: 10px; font-size: 0.975rem; line-height: 1.4; counter-increment: vc; }
+.vc__steps > li::before { content: counter(vc); font-weight: 800; color: var(--muted); }
+.vc__steps h3 { margin: 0 0 2px; font-size: 1rem; font-weight: 700; }
+.vc__steps p { margin: 0; color: var(--muted); font-size: 0.9375rem; }
+
+/* items with a title and a line (ideas, saved replies, links) */
+.vc__items { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.vc__items > li { display: grid; gap: 8px; padding: 14px 0; border-top: 1px solid var(--border); }
+.vc__items > li:first-child { border-top: 0; padding-top: 0; }
+.vc__item-title { margin: 0; font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.01em; }
+.vc__item-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+
+/* tappable choices (quiz options, things to try) */
+.vc__picks { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.vc__pick {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 16px;
+  border: 1px solid var(--border-strong, rgba(0, 0, 0, 0.12));
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+.vc__pick:hover:not(:disabled) { border-color: var(--text); }
+.vc__pick:disabled { cursor: default; }
+.vc__pick--right { border-color: var(--text); background: var(--vc-yellow); color: #000; font-weight: 700; }
+.vc__pick--wrong { border-style: dashed; color: var(--muted); text-decoration: line-through; }
+.vc__pick--dim { opacity: 0.45; }
+.vc__pick small { font-size: 0.75rem; font-weight: 600; }
+
+/* checkbox rows (follow-ups, answers) */
+.vc__checks { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.vc__check { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; font-size: 0.975rem; line-height: 1.4; cursor: pointer; }
+.vc__check input { flex: none; width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--text); }
+.vc__check--done span { color: var(--muted); text-decoration: line-through; }
+.vc__check-q { display: block; font-size: 0.8125rem; color: var(--muted); }
+
+.vc__field { display: flex; gap: 8px; }
+.vc__field input,
+.vc__input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border-strong, rgba(0, 0, 0, 0.12));
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.975rem;
+}
+.vc textarea.vc__input { min-height: 96px; padding: 12px 14px; resize: vertical; }
+
+.vc__done { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 0.9375rem; font-weight: 600; }
+
+/* quiz progress: a thin bar, no colors */
+.vc__bar { height: 4px; border-radius: 2px; background: var(--surface-2); overflow: hidden; }
+.vc__bar > span { display: block; height: 100%; background: var(--text); transition: width 0.3s ease; }
+.vc__score { margin: 0; font-size: 4rem; line-height: 1; letter-spacing: -0.05em; font-weight: 800; }
+
+.vc__link-text { margin: 0; font-family: var(--mono, ui-monospace, monospace); font-size: 0.875rem; overflow-wrap: anywhere; }
+
+.vc__items .vc__more > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.vc__items .vc__more > summary::after { content: "+"; font-size: 1.25rem; font-weight: 400; color: var(--muted); }
+.vc__items .vc__more[open] > summary::after { content: "–"; }
+.vc .vc__actions { gap: 8px 16px; }
+
+.vc__segs { display: flex; gap: 4px; }
+.vc__segs > span { flex: 1; height: 4px; border-radius: 2px; background: var(--surface-2); }
+.vc__segs > span.on { background: var(--text); }

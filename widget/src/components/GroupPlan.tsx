@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { firstName, joinNames, type GroupPlanViewData } from "../types";
-import { Avatar, ChatStatus, EmptyNote, SectionTitle, useChatPrompt, type ViewProps } from "./common";
-import { Icon } from "./icons";
-import { PlanTools } from "./PlanTools";
+import { ChatStatus, useChatPrompt, type ViewProps } from "./common";
+import { IdeaList, PlanTools } from "./PlanTools";
+import "./cards.css";
 
 export default function GroupPlan({ data, bridge }: ViewProps<GroupPlanViewData>) {
   const chat = useChatPrompt(bridge);
@@ -17,85 +17,23 @@ export default function GroupPlan({ data, bridge }: ViewProps<GroupPlanViewData>
   }
 
   return (
-    <section className="panel">
-      <div className="group-head">
-        <div className="avatar-stack" aria-hidden="true">
-          <span className="avatar avatar--you">You</span>
-          {data.members.map((m, i) => (
-            <Avatar key={`${m.kind}:${m.id}:${i}`} name={m.display_name} />
-          ))}
-        </div>
-        <div>
-          <p className="eyebrow">Group hangout</p>
-          <h2>You{everyone ? `, ${everyone}` : ""}</h2>
-        </div>
-      </div>
+    <section className="vc">
+      <h2 className="vc__title">You{everyone ? `, ${everyone}` : ""}</h2>
+      <p className="vc__muted">
+        {data.common_to_all.length > 0
+          ? `Everyone's into ${data.common_to_all.join(", ")}.`
+          : "No single thing everyone shares yet."}
+      </p>
 
-      <div className={`spotlight ${data.common_to_all.length === 0 ? "spotlight--quiet" : ""}`}>
-        {data.common_to_all.length > 0 ? (
-          <>
-            <span className="spotlight__label">
-              <Icon name="sparkle" size={16} /> Everyone's into
-            </span>
-            <div className="chips">
-              {data.common_to_all.map((s, i) => (
-                <span key={`${s}-${i}`} className="chip chip--big">
-                  {s}
-                </span>
-              ))}
-            </div>
-          </>
-        ) : (
-          <p className="small">No single thing everyone shares yet — here's what overlaps</p>
-        )}
-      </div>
-
-      {data.common_to_some.length > 0 && (
-        <>
-          <SectionTitle>Some of you share</SectionTitle>
-          <ul className="list overlap-list">
-            {data.common_to_some.map((o, i) => (
-              <li key={`${o.interest}-${i}`} className="overlap">
-                <span className="chip chip--plain">{o.interest}</span>
-                <span className="overlap__who">
-                  <span className="avatar-stack avatar-stack--small" aria-hidden="true">
-                    {o.members.map((n, j) =>
-                      n === "You" ? (
-                        <span key={j} className="avatar avatar--small avatar--you">
-                          You
-                        </span>
-                      ) : (
-                        <Avatar key={j} name={n} size="small" />
-                      ),
-                    )}
-                  </span>
-                  <span className="muted small">{joinNames(o.members.map((n) => (n === "You" ? n : firstName(n))))}</span>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-
-      <SectionTitle count={data.suggestions.length}>Ideas for the group</SectionTitle>
       {data.suggestions.length === 0 ? (
-        <EmptyNote art="ideas" title="No ideas yet">
-          Add a few interests for each friend and ask again.
-        </EmptyNote>
+        <p className="vc__muted">No ideas yet. Add a few interests for each friend and ask again.</p>
       ) : (
-        <ul className="list">
-          {data.suggestions.map((s, i) => (
-            <li key={i} className="card">
-              <strong className="card__title">{s.title}</strong>
-              {s.description && <p>{s.description}</p>}
-              {s.grounded_in.length > 0 && <p className="muted small">Based on: {s.grounded_in.join(", ")}</p>}
-              {s.suggested_action && (
-                <p className="next-step">
-                  <Icon name="arrow-right" size={16} />
-                  <span>{s.suggested_action}</span>
-                </p>
-              )}
+        <IdeaList
+          ideas={data.suggestions}
+          actions={(s, i) => (
+            <>
               <PlanTools
+                quiet
                 bridge={bridge}
                 title={s.title}
                 details={s.description}
@@ -104,21 +42,35 @@ export default function GroupPlan({ data, bridge }: ViewProps<GroupPlanViewData>
               >
                 <button
                   type="button"
-                  className="btn btn--primary btn--small"
+                  className="vc__cta"
                   disabled={chat.state === "sending"}
                   onClick={() => plan(i, s.title)}
                 >
-                  <Icon name="chat" size={16} />
                   {chat.state === "sending" && planned === i ? "Asking…" : "Plan it"}
                 </button>
               </PlanTools>
               {planned === i && <ChatStatus state={chat.state} prompt={chat.prompt} />}
-            </li>
-          ))}
-        </ul>
+            </>
+          )}
+        />
       )}
 
-      {data.note && <p className="muted small footnote">{data.note}</p>}
+      {(data.common_to_some.length > 0 || data.note) && (
+        <details className="vc__more">
+          <summary>What some of you share</summary>
+          <div className="vc__more-body">
+            <ul className="vc__list">
+              {data.common_to_some.map((o, i) => (
+                <li key={`${o.interest}-${i}`}>
+                  <strong>{o.interest}</strong>
+                  <span className="vc__muted"> · {joinNames(o.members.map((n) => (n === "You" ? n : firstName(n))))}</span>
+                </li>
+              ))}
+            </ul>
+            {data.note && <p className="vc__muted">{data.note}</p>}
+          </div>
+        </details>
+      )}
     </section>
   );
 }

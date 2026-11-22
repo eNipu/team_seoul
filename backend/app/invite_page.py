@@ -1,9 +1,10 @@
 """The page behind an invite link / QR code.
 
-One headline, one button that opens ChatGPT with the redeem prompt, one quiet line. It is static:
-no database lookup, no inviter name, and the same response for any well-formed code, so it reveals
-nothing about whether a code exists. Redeeming still requires signing in to Venn inside ChatGPT,
-and redeeming connects both people at once.
+One headline, one button, one quiet line. The button opens the web app's join flow
+(`/app/join?code=…`): sign in with Google, redeem (connects both people at once), then add Venn to
+ChatGPT. A friend who does not have Venn in ChatGPT yet is not stuck. The page is static: no database
+lookup, no inviter name, and the same response for any well-formed code, so it reveals nothing about
+whether a code exists.
 """
 
 from __future__ import annotations
@@ -57,12 +58,16 @@ def normalize(code: str) -> str | None:
     return f"{bare[:4]}-{bare[4:]}"
 
 
-def render_invite_page(code: str) -> str | None:
+def join_url(base_url: str, pretty_code: str) -> str:
+    """Where the invite page's button goes: the web app's join flow, with the code preserved."""
+    return f"{base_url.rstrip('/')}/app/join?code={quote(pretty_code)}"
+
+
+def render_invite_page(code: str, base_url: str = "") -> str | None:
     pretty = normalize(code)
     if pretty is None:
         return None
-    prompt = f"Redeem Venn invite {pretty}"
-    chatgpt_url = html.escape(f"https://chatgpt.com/?q={quote(prompt)}", quote=True)
+    join_href = html.escape(join_url(base_url, pretty), quote=True)
     return (
         '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
@@ -70,7 +75,7 @@ def render_invite_page(code: str) -> str | None:
         f"<title>You're invited to Venn</title>\n<style>{_CSS}</style>\n</head>\n<body>\n<main>\n"
         f"{_MARK}\n"
         "<h1>A friend invited you to Venn.</h1>\n"
-        f'<a class="pill" href="{chatgpt_url}" rel="noopener noreferrer">Add Venn in ChatGPT</a>\n'
+        f'<a class="pill" href="{join_href}">Join</a>\n'
         '<p class="quiet">Free. You choose what you share.</p>\n'
         "</main>\n</body>\n</html>\n"
     )

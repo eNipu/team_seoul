@@ -164,8 +164,8 @@ def test_unknown_and_revoked_codes_are_indistinguishable(alice, bob):
 def test_invite_creation_is_rate_limited(client, settings, make_user):
     alice = make_user("alice")
     for _ in range(settings.max_invites_per_day):
-        alice.ok("venn_create_invite")
-    assert alice.err("venn_create_invite").startswith("RATE_LIMITED")
+        alice.ok("venn_create_invite", personal=False)
+    assert alice.err("venn_create_invite", personal=False).startswith("RATE_LIMITED")
 
 
 # --------------------------------------------------------- content safety
