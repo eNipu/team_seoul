@@ -3759,3 +3759,55 @@ input[type="datetime-local"], input:not([type]), select, textarea {
 .say small { font-size: 0.8125rem; color: #4c4000; font-weight: 500; }
 .say:hover .say__text { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
 .profile__actions { align-items: center; gap: 12px 20px; }
+
+/* ---------- landing look, final layer (founder: "sexy", like joinvennai.com) ---------- */
+:root {
+  --primary: #000; --primary-hover: #2c2c2e; --accent: #000; --accent-strong: #000;
+  --accent-soft: #f5f5f7; --brand: #ffd400; --focus: #0071e3; --info: #424245;
+  --venn-yellow: #ffd400;
+}
+.btn--primary { background: #000 !important; color: #fff !important; border-color: #000 !important; }
+.btn--primary:hover { background: #2c2c2e !important; }
+/* people colours come back: soft hue tints instead of grey initials */
+.avatar { background: hsl(var(--avatar-hue, 40) 70% 88%) !important; color: hsl(var(--avatar-hue, 40) 45% 22%) !important; font-weight: 700; }
+
+/* Home */
+.h2 { display: grid; gap: 40px; align-items: center; min-height: calc(100vh - 160px); padding-block: 24px 48px; }
+@media (min-width: 900px) { .h2 { grid-template-columns: 1.15fr 1fr; gap: 64px; } }
+.h2__copy { display: grid; gap: 28px; }
+.h2__title { margin: 0; font-size: clamp(2.6rem, 1.6rem + 4vw, 4.6rem); line-height: 0.98; letter-spacing: -0.045em; font-weight: 800; color: #000; }
+.h2__title mark { padding: 0 0.1em; color: inherit; background: linear-gradient(transparent 16%, var(--venn-yellow) 16%, var(--venn-yellow) 90%, transparent 90%); -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.h2-moment { position: relative; display: grid; gap: 8px; max-width: 30rem; padding: 18px 20px 16px 64px; border-radius: 22px; background: var(--venn-yellow); color: #000; text-decoration: none; box-shadow: 0 18px 40px -24px rgba(0,0,0,.35); transform: rotate(-1.2deg); transition: transform .2s ease; }
+.h2-moment:hover { transform: rotate(0deg); }
+.h2-moment__icon { position: absolute; left: 18px; top: 18px; }
+.h2-moment__text { margin: 0; font-size: 1.15rem; line-height: 1.35; font-weight: 700; letter-spacing: -0.01em; }
+.h2-moment__prov { font-size: .8rem; color: #4c4000; }
+.h2__side { display: grid; justify-items: start; gap: 20px; }
+@media (min-width: 900px) { .h2__side { justify-items: center; text-align: center; } }
+.h2-stack { display: grid; gap: 14px; justify-items: inherit; color: #000; text-decoration: none; }
+.h2-stack__faces { display: flex; padding: 22px 28px; background: url("./brand/mark-underline-yellow.webp") center bottom / 90% 18px no-repeat; }
+.h2-stack__faces .avatar { width: 72px; height: 72px; margin-left: -16px; font-size: 1.15rem; border: 3px solid #fff; }
+.h2-stack__faces .avatar:first-child { margin-left: 0; }
+.h2-stack__label { font-size: 1rem; font-weight: 700; }
+.h2-stack:hover .h2-stack__label { text-decoration: underline; }
+.h2__quiet { color: #424245; font-weight: 600; text-decoration: none; }
+.h2__invite { min-width: 220px; }
+.h2__foot { grid-column: 1 / -1; }
+@media (max-width: 600px) { .h2-stack__faces .avatar { width: 56px; height: 56px; margin-left: -12px; } .h2 { min-height: 0; } }
+/* menu: plain words, the current one underlined in yellow (no pill tabs) */
+.nav__item, .nav__item:hover, .nav__item[aria-current="page"] { background: none !important; border-radius: 0; padding-inline: 6px; }
+.nav__item { color: #6e6e73 !important; font-weight: 600 !important; }
+.nav__item:hover { color: #000 !important; }
+.nav__item[aria-current="page"] { color: #000 !important; box-shadow: inset 0 -3px 0 var(--venn-yellow); }
+/* circle page: heavy title, black button */
+.page h1 { letter-spacing: -0.04em; font-weight: 800; }
+.h2__sub { margin: 0; max-width: 26ch; font-size: 1.25rem; line-height: 1.4; color: #424245; }
+.h2-demo { display: grid; gap: 10px; max-width: 32rem; margin: 0; }
+.h2-demo figcaption { font-size: .8125rem; font-weight: 600; color: #6e6e73; }
+.h2-demo__ask { justify-self: end; margin: 0; padding: 8px 14px; border-radius: 18px; background: #f0f0f3; font-size: .95rem; animation: h2-in .4s ease both; }
+.h2-demo .h2-moment { transform: none; animation: h2-in .45s .08s ease both; }
+.h2-demo__dots { display: flex; gap: 6px; }
+.h2-demo__dots span { width: 6px; height: 6px; border-radius: 3px; background: #d2d2d7; transition: width .3s; }
+.h2-demo__dots span[data-on="true"] { width: 18px; background: #000; }
+@keyframes h2-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .h2-demo__ask, .h2-demo .h2-moment { animation: none; } }

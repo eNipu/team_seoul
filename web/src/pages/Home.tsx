@@ -1,12 +1,11 @@
 // Home: your circle, and the latest thing a friend shared (read-only). Recommendations arrive as
 // ChatGPT messages, not here. No actions, reminders or dashboard.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "../api";
-import { Icon } from "../icons";
 import { Link } from "../router";
 import { useSession } from "../session";
-import { firstName, friendPath, joinNames, type DashboardHome, type FriendKind } from "../types";
+import { firstName, joinNames, type DashboardHome } from "../types";
 import {
   Avatar,
   ConfirmDialog,
@@ -44,87 +43,71 @@ export function SampleBanner({ onRemoved }: { onRemoved: () => void }) {
   );
 }
 
-interface Shared {
-  kind: FriendKind;
-  id: string;
-  name: string;
-  title: string;
-  text: string;
-}
+const EXAMPLES = [
+  { ask: "Any plans this weekend?", text: "Btw, Maya is in Berlin right now and she's into marketing. I think you should reconnect.", who: "Maya" },
+  { ask: "Who could help with our launch?", text: "Btw, Daniel just shared he's looking for early users for his fintech app. Worth a hello?", who: "Daniel" },
+  { ask: "What should we do Saturday?", text: "Btw, Sofia has wanted to try a pottery class, and there's one Saturday at 11. You both like making things.", who: "Sofia" },
+];
 
-/** The latest thing a friend chose to share, shown read-only. Recommendations come from ChatGPT, not here. */
-async function latestShared(): Promise<Shared | null> {
-  const friends = await api.listFriends();
-  const onVenn = friends.filter((f) => f.on_venn).slice(0, 6);
-  const details = await Promise.all(onVenn.map((f) => api.getFriend(f.kind, f.id).catch(() => null)));
-  for (const f of details) {
-    const m = f?.shared_memories[0];
-    if (f && m) return { kind: f.kind, id: f.id, name: f.display_name, title: m.title, text: m.description || m.title };
-  }
-  return null;
-}
-
-function LatestShared() {
-  const shared = useAsync(async () => ({ s: await latestShared() }), []);
-  const s = shared.data?.s;
-  if (!s) return null;
+/** An example of how Venn shows up in ChatGPT. Marked as an example; real ones arrive in ChatGPT. */
+function DemoMoment() {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = window.setInterval(() => setI((n) => (n + 1) % EXAMPLES.length), 6000);
+    return () => window.clearInterval(t);
+  }, []);
+  const ex = EXAMPLES[i];
   return (
-    <Link to={friendPath(s.kind, s.id)} className="say">
-      <span className="say__text">
-        {firstName(s.name)} shared: {/^(I|I'm|I've)\b/.test(s.text) ? s.text : s.text.charAt(0).toLowerCase() + s.text.slice(1)}
-      </span>
-      <small>Shared by {firstName(s.name)}'s AI · via venn</small>
-    </Link>
+    <figure className="h2-demo" aria-label="Example of Venn in ChatGPT">
+      <figcaption>Example · how Venn speaks up in ChatGPT</figcaption>
+      <p className="h2-demo__ask" key={`a${i}`}>{ex.ask}</p>
+      <div className="h2-moment" key={`m${i}`}>
+        <img className="h2-moment__icon" src={`${import.meta.env.BASE_URL}brand/ai-icon.png`} alt="" width={33} height={35} />
+        <p className="h2-moment__text">{ex.text}</p>
+        <small className="h2-moment__prov">Shared by {ex.who}&apos;s AI · via <b>venn</b></small>
+      </div>
+      <div className="h2-demo__dots" aria-hidden="true">{EXAMPLES.map((_, n) => <span key={n} data-on={n === i} />)}</div>
+    </figure>
   );
 }
 
 function Circle() {
   const friends = useAsync(() => api.listFriends(), []);
   return (
-    <section className="circle" aria-labelledby="circle-title">
-      <h2 id="circle-title">
-        <Link to="/people" className="circle__title">Your circle</Link>
-      </h2>
-      <Loaded state={friends} skeleton={<Skeleton rows={1} />}>
-        {(list) => (
-          <ul className="circle__list">
-            {list.slice(0, 12).map((f) => (
-              <li key={`${f.kind}:${f.id}`}>
-                <Link to={friendPath(f.kind, f.id)} className="circle__person">
-                  <Avatar name={f.display_name} size="large" />
-                  <span>{firstName(f.display_name)}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Loaded>
-    </section>
+    <Loaded state={friends} skeleton={<Skeleton rows={1} />}>
+      {(list) => (
+        <Link to="/people" className="h2-stack" aria-label={`Your circle, ${list.length} people`}>
+          <span className="h2-stack__faces">
+            {list.slice(0, 7).map((f) => <Avatar key={`${f.kind}:${f.id}`} name={f.display_name} size="large" />)}
+          </span>
+          <span className="h2-stack__label">{list.length} {list.length === 1 ? "person" : "people"} in your circle</span>
+        </Link>
+      )}
+    </Loaded>
   );
 }
 
 function Dashboard({ home, reloadHome }: { home: DashboardHome; reloadHome: () => void }) {
   return (
-    <div className="page page--home">
-      <h1 id="page-title" className="sr-only">
-        Your circle
-      </h1>
-      <LatestShared />
-      <Circle />
-      <div className="quiet-lines">
+    <div className="page h2">
+      <div className="h2__copy">
+        <h1 id="page-title" className="h2__title">Build your <mark>inner circle.</mark></h1>
+        <DemoMoment />
+      </div>
+      <div className="h2__side">
+        <Circle />
         {home.pending_requests.length > 0 && (
-          <Link to="/account" query={{ section: "connect" }} className="quiet-line">
+          <Link to="/account" query={{ section: "connect" }} className="h2__quiet">
             {joinNames(home.pending_requests.map((r) => firstName(r.sender_display_name)))}{" "}
             {home.pending_requests.length === 1 ? "wants" : "want"} to connect
-            <Icon name="chevron-right" size={16} />
           </Link>
         )}
-        <Link to="/account" query={{ section: "connect" }} className="quiet-line">
+        <Link to="/account" query={{ section: "connect" }} className="btn btn--primary btn--pill h2__invite">
           Invite someone
-          <Icon name="chevron-right" size={16} />
         </Link>
       </div>
-      {home.sample_loaded && <SampleBanner onRemoved={reloadHome} />}
+      {home.sample_loaded && <div className="h2__foot"><SampleBanner onRemoved={reloadHome} /></div>}
     </div>
   );
 }
