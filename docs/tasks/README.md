@@ -93,6 +93,7 @@ Read `SCHEDULING.md` before any task in this group.
 | [T43](T43-chatgpt-preview-distribution.md) | ChatGPT widget preview and account entry | both | M | T41, T42 | done |
 | [T44](T44-product-navigation.md) | Focused landing page and live ChatGPT review | both | M | T43 | done |
 | [T45](T45-plugin-weekly-review.md) | Review and save weekly updates in ChatGPT | both | M | – | done |
+| [T47](T47-chatgpt-starter-demo-import.md) | Add ChatGPT starter actions and demo contact imports | both | S | T46 | done |
 
 ### G. Website experience
 

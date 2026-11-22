@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { LIMITS, type WelcomeViewData } from "../types";
+import DemoImport from "./DemoImport";
 import ErrorBanner from "./ErrorBanner";
 import { ActionError, ChatFallback, useAction, type ViewProps } from "./common";
 import { Icon, Illustration } from "./icons";
 
-const SETUP_PROMPT = "Let's set up Venn. Ask me a few questions about my interests and the people I want to stay close to.";
+const SETUP_PROMPT = "Let's set up Venn. Start with my first unfinished step and ask me one question at a time.";
 
 type Phase = "choosing" | "starting" | "started" | "unavailable";
 
@@ -70,10 +71,11 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
   }
 
   const startHere = (
-    <div className="welcome__start">
+    <section className="welcome__start" aria-label="Starter actions">
+      <h3 className="section-title">Start here</h3>
       <div className="welcome__actions">
         <button type="button" className="btn btn--primary btn--block" disabled={busy} onClick={() => void start()}>
-          {phase === "starting" ? "Getting started…" : "Get started"}
+          {phase === "starting" ? "Getting started…" : "Set up Venn"}
           {phase !== "starting" && <Icon name="arrow-right" size={18} />}
         </button>
         <button
@@ -86,6 +88,7 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
           {action.busy === "import" ? "Opening…" : "Import my ChatGPT memory"}
         </button>
       </div>
+      <DemoImport nav={nav} action={action} disabled={busy} />
       {data.goal_options.length > 0 && (
         <details className="welcome__goals">
           <summary>Choose your goals{selected.length > 0 ? ` (${selected.length})` : ""}</summary>
@@ -113,9 +116,6 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
           </fieldset>
         </details>
       )}
-      <p className="muted small welcome__alt">
-        Get started asks a few questions in the chat. Importing brings over what ChatGPT already knows; you choose what comes over.
-      </p>
       {!data.sample_loaded && (
         <div className="sample-offer">
           <button type="button" className="btn btn--ghost btn--block" disabled={busy} onClick={trySample}>
@@ -125,7 +125,7 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
           <p className="muted small">See every card with a made-up circle. Remove it with one tap.</p>
         </div>
       )}
-    </div>
+    </section>
   );
 
   return (
@@ -139,8 +139,9 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
       </div>
 
       <ActionError action={action} />
+      {startHere}
 
-      {steps.length > 0 ? (
+      {steps.length > 0 && (
         <>
           <h3 className="section-title">
             <span>Set up in {steps.length === 3 ? "three" : steps.length} short steps</span>
@@ -163,16 +164,12 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
                       {step.done && <span className="sr-only"> (done)</span>}
                     </p>
                     {step.description && <p className="muted small">{step.description}</p>}
-                    {here && step.key === "about_you" && startHere}
                   </div>
                 </li>
               );
             })}
           </ol>
-          {current?.key !== "about_you" && startHere}
         </>
-      ) : (
-        startHere
       )}
 
       <p className="trust">

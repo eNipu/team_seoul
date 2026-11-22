@@ -56,6 +56,8 @@ def remove(db: Session, me: User | None) -> dict[str, int]:
 
 
 def seed(db: Session, me: User) -> dict[str, int]:
+    # The dev command explicitly refreshes all sample data; in-app loading does not.
+    sample_service.remove(db, me)
     loaded = sample_service.load(db, me)
     if not me.profile.social_goals:
         me.profile.social_goals = list(MY_GOALS)

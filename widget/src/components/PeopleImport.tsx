@@ -1,22 +1,32 @@
 import { useState } from "react";
-import { formatDaysAgo, parseImportPeople, plural, type ImportCandidate, type PeopleImportViewData } from "../types";
+import { DEMO_PLATFORM_LABELS, formatDaysAgo, parseImportPeople, plural, type ImportCandidate, type PeopleImportViewData } from "../types";
 import { ActionError, Avatar, EmptyNote, useAction, type ViewProps } from "./common";
 import { Illustration } from "./icons";
 
 export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImportViewData>) {
   const action = useAction();
+  const platform = data.demo_platform && DEMO_PLATFORM_LABELS[data.demo_platform];
   const fresh = data.candidates.filter((c) => !c.already_added);
-  const [picked, setPicked] = useState<Set<number>>(() => new Set(fresh.map((c) => c.index)));
+  const [picked, setPicked] = useState<Set<number>>(() => new Set(platform ? [] : fresh.map((c) => c.index)));
   const [added, setAdded] = useState<{ count: number; names: string[] } | null>(null);
 
   const busy = action.busy !== null;
-  const count = data.candidates.filter((c) => picked.has(c.index)).length;
+  const count = picked.size;
+  const selection = platform ? plural(count, "sample profile", "sample profiles") : plural(count, "person", "people");
+  const confirmLabel = action.busy === "import" ? "Adding…" :
+    platform && fresh.length === 0 ? "All profiles already added" : count === 0 ? "Pick someone to add" : `Add ${selection}`;
   const skippedLine =
     data.skipped > 0
       ? `${plural(data.skipped, "entry was", "entries were")} left out because ${data.skipped === 1 ? "it" : "they"} contained sensitive details.`
       : null;
 
+  function replaceSelection(next: Set<number>) {
+    action.clear();
+    setPicked(next);
+  }
+
   function toggle(c: ImportCandidate) {
+    action.clear();
     setPicked((prev) => {
       const next = new Set(prev);
       if (next.has(c.index)) next.delete(c.index);
@@ -29,10 +39,13 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
     const indexes = data.candidates.filter((c) => picked.has(c.index)).map((c) => c.index);
     if (indexes.length === 0) return;
     void action.run("import", async () => {
-      const res = await bridge.callTool("venn_import_people", { import_id: data.import_id, indexes });
+      const tool = platform ? "venn_import_demo_people" : "venn_import_people";
+      const res = await bridge.callTool(tool, { import_id: data.import_id, indexes });
       if (!res.ok) return res.errorText;
       const result = parseImportPeople(res.data);
-      if (result.count === 0 && result.imported.length === 0) return "Venn didn't add anyone. Try again.";
+      if (result.count === 0 && result.imported.length === 0) {
+        return platform ? "Those profiles are already in Venn. Open a fresh demo to review again." : "Venn didn't add anyone. Try again.";
+      }
       setAdded({ count: result.count || result.imported.length, names: result.imported.map((p) => p.name) });
       window.scrollTo?.(0, 0);
       return null;
@@ -45,8 +58,11 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
       <section className="panel celebrate">
         <ActionError action={action} />
         <Illustration name="friends" />
-        <h2 role="status">Added {plural(added.count, "person", "people")}</h2>
-        <p className="muted">They're saved as private notes. Only you can see them.</p>
+        <h2 role="status">Added {platform ? plural(added.count, "sample profile", "sample profiles") : plural(added.count, "person", "people")}</h2>
+        <p className="muted">
+          {platform ? "Only you can see these notes. To clear them, choose Remove sample data on the dashboard." :
+            "They're saved as private notes. Only you can see them."}
+        </p>
         {shown.length > 0 && (
           <div className="avatar-stack avatar-stack--center" aria-hidden="true">
             {shown.map((n, i) => (
@@ -61,7 +77,7 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
             type="button"
             className="btn btn--primary"
             disabled={busy}
-            onClick={() => void action.run("friends", () => nav.openView("venn_show_dashboard", {}))}
+            onClick={() => void action.run("friends", () => nav.openDashboard("friends"))}
           >
             {action.busy === "friends" ? "Loading…" : "See my friends"}
           </button>
@@ -78,12 +94,18 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
     );
   }
 
+  const addButton = (
+    <button type="button" className="btn btn--primary btn--block" disabled={busy || count === 0} onClick={confirm}>
+      {confirmLabel}
+    </button>
+  );
+
   return (
     <section className="panel">
-      <h2>Add these people?</h2>
+      <h2>{platform ? `${platform} demo import` : "Add these people?"}</h2>
       <p className="muted small lead">
-        {data.source ? `From your ${data.source}. ` : ""}Nothing is saved until you confirm. They become private notes only you can
-        see.
+        {platform ? `${plural(data.candidates.length, "fictional profile", "fictional profiles")}, not from a real ${platform} account. Pick the ones you want to add as private sample notes.` :
+          `${data.source ? `From your ${data.source}. ` : ""}Nothing is saved until you confirm. They become private notes only you can see.`}
       </p>
 
       <ActionError action={action} />
@@ -101,17 +123,23 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
             <button
               type="button"
               className="btn btn--ghost btn--small"
-              disabled={busy}
-              onClick={() => setPicked(new Set(fresh.map((c) => c.index)))}
+              disabled={busy || fresh.length === 0}
+              onClick={() => replaceSelection(new Set(fresh.map((c) => c.index)))}
             >
               Select all
             </button>
-            <button type="button" className="btn btn--ghost btn--small" disabled={busy} onClick={() => setPicked(new Set())}>
-              None
+            <button type="button" className="btn btn--ghost btn--small" disabled={busy || count === 0} onClick={() => replaceSelection(new Set())}>
+              Clear
             </button>
           </div>
 
-          <ul className="list pick-list">
+          {platform && addButton}
+
+          <ul
+            className={`list pick-list${platform ? " pick-list--demo" : ""}`}
+            tabIndex={platform ? 0 : undefined}
+            aria-label={platform ? "Fictional profiles" : undefined}
+          >
             {data.candidates.map((c, i) => {
               const on = picked.has(c.index);
               const meta = [c.relationship, c.last_met_days_ago !== null ? `Last met ${approxDays(c.last_met_days_ago)}` : null]
@@ -120,7 +148,7 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
               return (
                 <li key={`${c.index}-${i}`}>
                   <label className={`pick ${on ? "pick--on" : ""}`}>
-                    <input type="checkbox" checked={on} disabled={busy} onChange={() => toggle(c)} />
+                    <input type="checkbox" checked={on} disabled={busy || Boolean(platform && c.already_added)} onChange={() => toggle(c)} />
                     <Avatar name={c.name} size="small" />
                     <span className="pick__body">
                       <span className="pick__name">
@@ -147,11 +175,7 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
 
           {skippedLine && <p className="muted small">{skippedLine}</p>}
 
-          <div className="sticky-bar">
-            <button type="button" className="btn btn--primary btn--block" disabled={busy || count === 0} onClick={confirm}>
-              {action.busy === "import" ? "Adding…" : count === 0 ? "Pick someone to add" : `Add ${plural(count, "person", "people")}`}
-            </button>
-          </div>
+          {!platform && <div className="sticky-bar">{addButton}</div>}
         </>
       )}
 

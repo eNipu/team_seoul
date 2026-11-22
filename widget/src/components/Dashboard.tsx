@@ -18,6 +18,7 @@ import {
 } from "../types";
 import { ActionError, Avatar, SectionTitle, useAction, type Action, type ViewProps } from "./common";
 import type { HostBridge } from "../mcp/client";
+import DemoImport from "./DemoImport";
 import MemoriesTab from "./MemoriesTab";
 import FriendsTab from "./FriendsTab";
 import SetupCard from "./Setup";
@@ -34,6 +35,7 @@ interface Props extends ViewProps<DashboardViewData> {
 export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }: Props) {
   const id = useId();
   const action = useAction();
+  const demoAction = useAction();
   const [tab, setTabState] = useState<DashboardTab>(initialTab ?? "profile");
   const [profile, setProfile] = useState<Profile>(data.profile);
   const [memories, setMemories] = useState<Memory[]>(data.memories);
@@ -84,9 +86,11 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
 
   return (
     <>
-    {sampleLoaded && <SampleBanner bridge={bridge} onChanged={reload} />}
-    <SetupCard steps={setup} bridge={bridge} nav={nav} />
+    {sampleLoaded && <SampleBanner bridge={bridge} onChanged={() => nav.replaceView("venn_show_dashboard", {})} />}
     <HomeTiles pendingAnswers={pendingAnswers} nav={nav} />
+    <DemoImport nav={nav} action={demoAction} />
+    <ActionError action={demoAction} />
+    <SetupCard steps={setup} bridge={bridge} nav={nav} />
     <Plans
       plans={plans}
       bridge={bridge}
@@ -119,7 +123,6 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
 
       <div className="tab-panel" role="tabpanel" id={`${id}-panel`} aria-labelledby={`${id}-tab-${tab}`}>
         <ActionError action={action} />
-
         {tab === "profile" && (
           <ProfileTab
             profile={profile}

@@ -213,9 +213,11 @@ def remove(db: Session, owner: User) -> SampleRemovedOut:
 
 
 def load(db: Session, owner: User) -> SampleLoadedOut:
-    """Add the sample circle (replacing an earlier copy). The caller's own data is left alone."""
-    remove(db, owner)
+    """Add the sample circle once, without touching imported demo profiles or edits."""
+    people_service.lock_people_writes(db, owner)
     out = SampleLoadedOut(loaded=True, connections=0, people=0, pending_requests=0, memories_added=0)
+    if sample_users(db, owner):
+        return out
 
     has_memories = db.scalar(select(func.count()).select_from(Memory).where(Memory.user_id == owner.id)) or 0
     if not has_memories:

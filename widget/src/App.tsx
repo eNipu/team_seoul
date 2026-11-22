@@ -78,7 +78,8 @@ function skeletonFor(hint: string | null | undefined): SkeletonKind {
     case "reconnect":
     case "venn_find_people":
     case "people_search":
-    case "venn_preview_people_import":
+    case "venn_propose_people_import":
+    case "venn_preview_demo_people_import":
     case "people_import":
     case "venn_this_week":
     case "this_week":
@@ -96,6 +97,7 @@ function skeletonFor(hint: string | null | undefined): SkeletonKind {
 function refreshCall(view: ViewData): { tool: string; args: Record<string, unknown> } | null {
   switch (view.view) {
     case "dashboard":
+    case "welcome":
       return { tool: "venn_show_dashboard", args: {} };
     case "reconnect":
       return { tool: "venn_reconnection_suggestions", args: {} };
@@ -260,7 +262,9 @@ export default function App() {
       setRefreshing(false);
       if (!res.ok) return;
       const parsed = parseView(res.data, res.meta);
-      if (!parsed || parsed.view !== target.view.view) return;
+      if (!parsed) return;
+      const isHome = call.tool === "venn_show_dashboard" && (parsed.view === "welcome" || parsed.view === "dashboard");
+      if (!isHome && parsed.view !== target.view.view) return;
       setStack(stackRef.current.map((e) => (e.key === target.key ? entry(parsed) : e)));
     },
     [entry, setStack],

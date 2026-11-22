@@ -444,13 +444,15 @@ def build_api(settings: Settings) -> APIRouter:  # noqa: C901 - flat list of rou
 
     @api.post("/people/import")
     def import_people(body: ImportBody, who: Identity = Who) -> Any:
-        return run(who, lambda db, user: people_service.import_people(db, user, body.import_id, body.indexes))
+        return run(
+            who, lambda db, user: people_service.import_people(db, user, body.import_id, body.indexes, channel="web")
+        )
 
     # --------------------------------------------------------------- linkedin
     @api.post("/linkedin/demo-preview")
     def linkedin_demo_preview(who: Identity = Who) -> Any:
         """Preview 100 fictional connections without contacting LinkedIn or an enrichment service."""
-        return run(who, people_service.propose_linkedin_demo)
+        return run(who, lambda db, user: people_service.propose_demo_import(db, user, "linkedin", channel="web"))
 
     @api.post("/linkedin/connections")
     def linkedin_connections(body: LinkedInConnectionsBody, who: Identity = Who) -> Any:

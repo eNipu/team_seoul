@@ -22,9 +22,9 @@
         "websiteURL": "https://joinvennai.com",
         "privacyPolicyURL": "https://joinvennai.com/privacy",
         "defaultPrompt": [
-          "Set up Venn",
-          "Who should I reconnect with this week?",
-          "What can Venn do?"
+          "Open Venn",
+          "Preview an Instagram demo import in Venn",
+          "What should I do this week?"
         ],
         "brandColor": "#E86A4A",
         "composerIcon": "./assets/icon.svg",

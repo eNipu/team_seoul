@@ -365,11 +365,15 @@ export interface ImportCandidate {
   already_added: boolean;
 }
 
+export const DEMO_PLATFORM_LABELS = { instagram: "Instagram", linkedin: "LinkedIn" } as const;
+export type DemoPlatform = keyof typeof DEMO_PLATFORM_LABELS;
+
 export interface PeopleImportViewData {
   view: "people_import";
   import_id: string;
   expires_at: string;
   source: string | null;
+  demo_platform: DemoPlatform | null;
   candidates: ImportCandidate[];
   skipped: number;
   note: string;
@@ -1029,6 +1033,7 @@ export function parseView(sc: unknown, meta?: unknown): ViewData | null {
         import_id: str(sc.import_id),
         expires_at: str(sc.expires_at),
         source: strOrNull(sc.source),
+        demo_platform: sc.demo_platform === "instagram" || sc.demo_platform === "linkedin" ? sc.demo_platform : null,
         candidates: objs(sc.candidates).map((c, i) => ({
           index: Math.floor(num(c.index, i)),
           name: str(c.name, "Someone") || "Someone",

@@ -124,10 +124,7 @@ def build_home(db: Session, user: User) -> DashboardView | WelcomeView:
 
 
 def setup_guidance(setup: list[SetupStep], *, start: bool = True) -> str:
-    """What the assistant should do next about set-up; empty when set-up is complete.
-
-    `start=False` is for replies that answer something else first (help): offer set-up, don't begin it.
-    """
+    """What to do about optional set-up on home or in help; empty when set-up is complete."""
     open_steps = [s.key for s in setup if not s.done]
     if not open_steps:
         return ""
@@ -139,9 +136,9 @@ def setup_guidance(setup: list[SetupStep], *, start: bool = True) -> str:
             f"step. {todo[open_steps[0]]}"
         )
     return (
-        f"Set-up is not finished (open: {names}). Unless the user asked for something specific, start the "
-        f"first open step in this same reply, with one short question and no feature list. {todo[open_steps[0]]} "
-        "When a step is done or the user skips it, go straight to the next open one."
+        f"Set-up is not finished (open: {names}). Start the first open step only if the user asked for "
+        f"set-up. Otherwise let them choose an action on the card. {todo[open_steps[0]]} "
+        "Once in set-up, move to the next open step when they finish or skip one."
     )
 
 

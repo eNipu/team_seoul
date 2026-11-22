@@ -32,14 +32,13 @@ Use Venn cards for questions directed to Venn, including follow-ups.
    profile too, so don't call `venn_get_profile` first; that tool returns data with no card.
 3. A brand-new account gets a welcome card (`view: "welcome"`); otherwise the card is their
    Venn home. Either way the result tells you which set-up steps are still open.
-4. If any step is open, start set-up in that same reply (next section). If none is, add one
-   short line, e.g. point out a pending request or offer reconnection ideas.
+4. For a general opening (e.g. "Open Venn"), let the user choose a starter action on the card.
+   Begin the first open step only if they ask for set-up. Do not load sample data on opening.
 5. Show the home or welcome card once per conversation unless the user asks for it again.
 
-## Set-up comes first
+## Guided set-up
 
-Don't wait for the user to ask, don't list features, and don't ask what they would like to do.
-Lead them through the open steps in order, one short question per reply:
+When the user chooses set-up, lead them through the open steps in order, one short question per reply:
 
 1. **About you** (no memories yet). Offer to bring over what you already remember about them
    (`venn_import_chatgpt_memory`, see below), or ask what they enjoy and what they avoid and
@@ -54,8 +53,6 @@ Lead them through the open steps in order, one short question per reply:
 - When a step is done or the user says "skip" or "later", go straight to the next open step.
 - When all three are done, say so in one line and offer one thing to try, such as who to
   reconnect with.
-- If the user's first message asked for something specific, do that first, then pick set-up
-  up again in one line.
 - Set-up never overrides consent: memories and imported people are still only saved after the
   user confirms them on the card or in chat.
 - The home card shows the same steps as a "Finish setting up" checklist with buttons. If the
@@ -68,6 +65,14 @@ say, call `venn_help`. It shows every area with example requests they can tap, t
 steps still open, and how their data is handled. Don't write the list out in text. Add one
 short line: answer the specific question if there was one, and if set-up is still open, offer
 to continue it. Tapping an example sends it to you as a normal message — just do it.
+
+## Demo contact imports
+
+When the user asks to preview an Instagram or LinkedIn demo import, call
+`venn_preview_demo_people_import` with `platform: "instagram"` or `platform: "linkedin"`.
+It shows 100 fictional profiles. Never ask for social credentials, claim they came from a real
+account, or confirm the demo for the user. They choose whom to add on the review card. Saved
+profiles are marked as private samples and can be removed with **Remove sample data**.
 
 ## Memories are consent-based
 

@@ -33,6 +33,7 @@ import type {
   BriefViewData,
   Connection,
   DashboardViewData,
+  DemoPlatform,
   FollowUp,
   FriendKind,
   FriendViewData,
@@ -435,7 +436,17 @@ const IMPORT_CANDIDATES: ImportCandidate[] = [
   },
 ];
 
-const imports = new Map<string, ImportCandidate[]>();
+const imports = new Map<string, { candidates: ImportCandidate[]; isSample: boolean }>();
+
+const DEMO_GIVEN_NAMES = ["Nadia", "Lucia", "Anika", "Sana", "Matteo", "Linh", "Ivo", "Farah", "Sacha", "Tariq"];
+const DEMO_SURNAMES = {
+  instagram: ["Amari", "Kato", "Nordin", "Bello", "Haddad", "Voss", "Duran", "Rahal", "Solis", "Marek"],
+  linkedin: ["Ames", "Pereira", "Silva", "Duarte", "Laurent", "Novak", "Qadir", "Verma", "Molina", "Tan"],
+};
+const DEMO_TOPICS = {
+  instagram: ["Film photography", "Ceramics", "Plant care", "Food illustration", "Streetwear"],
+  linkedin: ["UX research", "Climate tech", "Data visualization", "Design systems", "Social enterprise"],
+};
 
 const invites = new Map<string, { max_uses: number; expires_at: string }>();
 
@@ -1055,25 +1066,27 @@ const SAMPLE_MEMORIES: Memory[] = [
 ];
 
 function loadSampleCircle() {
-  if (!sampleLoaded) {
-    sampleLoaded = true;
-    connections = [...connections, ...structuredClone(SAMPLE_CONNECTIONS)];
-    people = [...people, ...structuredClone(SAMPLE_PEOPLE)];
-    memories = [...memories, ...structuredClone(SAMPLE_MEMORIES)];
-    pending = [...pending, { request_id: "sample_r1", sender_display_name: "Elena Rossi (sample)", created_at: iso(-1) }];
-    followUps["connection:sample_c1"] = [
-      { follow_up_id: "sample_fu1", text: "Ask Priya how the ceramics show went", created_at: iso(-5) },
-    ];
-    interactions["connection:sample_c1"] = [
-      { activity: "Sunrise hike and bakery stop", occurred_at: iso(-12) },
-    ];
+  if (connections.some((c) => c.is_sample)) {
+    return { loaded: true, connections: 0, people: 0, pending_requests: 0, memories_added: 0 };
   }
+  sampleLoaded = true;
+  const addMemories = memories.length === 0;
+  connections = [...connections, ...structuredClone(SAMPLE_CONNECTIONS)];
+  people = [...people, ...structuredClone(SAMPLE_PEOPLE)];
+  if (addMemories) memories = structuredClone(SAMPLE_MEMORIES);
+  pending = [...pending, { request_id: "sample_r1", sender_display_name: "Elena Rossi (sample)", created_at: iso(-1) }];
+  followUps["connection:sample_c1"] = [
+    { follow_up_id: "sample_fu1", text: "Ask Priya how the ceramics show went", created_at: iso(-5) },
+  ];
+  interactions["connection:sample_c1"] = [
+    { activity: "Sunrise hike and bakery stop", occurred_at: iso(-12) },
+  ];
   return {
     loaded: true,
     connections: SAMPLE_CONNECTIONS.length,
     people: SAMPLE_PEOPLE.length,
     pending_requests: 1,
-    memories_added: SAMPLE_MEMORIES.length,
+    memories_added: addMemories ? SAMPLE_MEMORIES.length : 0,
   };
 }
 
@@ -1097,6 +1110,9 @@ function removeSampleCircle() {
     .map((p) => ({ ...p, had: p.members.length, members: p.members.filter((m) => !gone.has(key(m.kind, m.id))) }))
     .filter((p) => p.had === 0 || p.members.length > 0)
     .map(({ had: _had, ...p }) => p);
+  for (const [id, proposal] of imports) {
+    if (proposal.isSample) imports.delete(id);
+  }
   sampleLoaded = false;
   return { removed: true, friends, people: persons, memories: mems };
 }
@@ -1401,18 +1417,27 @@ function inviteView(maxUses: unknown, code = newCode()): InviteViewData {
 // ---------------------------------------------------------------------------
 
 
-function importView(): PeopleImportViewData {
+function importView(platform: DemoPlatform | null = null): PeopleImportViewData {
   const import_id = nextId("imp");
-  const taken = new Set(people.map((p) => p.name.toLowerCase()));
-  const candidates = IMPORT_CANDIDATES.map((c) => ({ ...c, already_added: taken.has(c.name.toLowerCase()) }));
-  imports.set(import_id, candidates);
+  const taken = new Set(people.filter((p) => platform || !p.is_sample).map((p) => p.name.toLowerCase()));
+  const profiles = platform ? DEMO_GIVEN_NAMES.flatMap((first, row) => DEMO_SURNAMES[platform].map((last, col) => ({
+    index: row * DEMO_SURNAMES[platform].length + col,
+    name: `${first} ${last}`,
+    relationship: null,
+    notes: null,
+    interests: [DEMO_TOPICS[platform][(row + col) % DEMO_TOPICS[platform].length]],
+    last_met_days_ago: null,
+  }))) : IMPORT_CANDIDATES;
+  const candidates = profiles.map((c) => ({ ...c, already_added: taken.has(c.name.toLowerCase()) }));
+  imports.set(import_id, { candidates, isSample: platform !== null });
   return structuredClone({
     view: "people_import" as const,
     import_id,
     expires_at: iso(1),
-    source: "pasted list",
+    source: platform ? `${platform}_demo` : "pasted list",
+    demo_platform: platform,
     candidates,
-    skipped: 1,
+    skipped: platform ? 0 : 1,
     note: "Nothing is saved until you confirm. These stay private notes only you can see.",
   });
 }
@@ -1845,6 +1870,15 @@ export function mockInitialView(): ViewData | null {
     case "friend_person":
       return friendView({ person_id: "p1" });
     case "welcome":
+      people = [];
+      connections = [];
+      pending = [];
+      memories = [];
+      answerInbox = [];
+      profile.social_goals = [];
+      profile.interests = [];
+      profile.bio = null;
+      profile.is_new = true;
       return welcomeView();
     case "people_import":
       return importView();
@@ -1965,7 +1999,8 @@ export function createMockBridge(): HostBridge {
           savedReplies = savedReplies.filter(({ reply_id }) => reply_id !== args.reply_id);
           return ok({ deleted: true });
         case "venn_show_dashboard":
-          return ok(dashboardView());
+          return ok(people.length || connections.length || memories.length || pending.length || profile.social_goals.length || openPlans().length || answerInbox.length
+            ? dashboardView() : welcomeView());
 
         case "venn_help":
           return ok(helpView());
@@ -2185,12 +2220,23 @@ export function createMockBridge(): HostBridge {
         case "venn_propose_people_import":
           return ok(importView());
 
-        case "venn_import_people": {
-          const candidates = typeof args.import_id === "string" ? imports.get(args.import_id) : undefined;
-          if (!candidates) return fail("NOT_FOUND: this import has expired. Ask Venn to read the list again.");
+        case "venn_preview_demo_people_import":
+          return args.platform === "instagram" || args.platform === "linkedin"
+            ? ok(importView(args.platform)) : fail("INVALID_ARGUMENT: choose Instagram or LinkedIn");
+
+        case "venn_import_people":
+        case "venn_import_demo_people": {
+          const proposal = typeof args.import_id === "string" ? imports.get(args.import_id) : undefined;
+          if (!proposal) return fail("NOT_FOUND: this import has expired. Open a fresh review.");
+          const { candidates, isSample } = proposal;
+          if (isSample !== (name === "venn_import_demo_people")) {
+            return fail("INVALID_ARGUMENT: use the Add button on the matching import review card");
+          }
           const wanted = new Set(Array.isArray(args.indexes) ? args.indexes : []);
+          if (!wanted.size) return fail("INVALID_ARGUMENT: pick at least one person");
+          const taken = new Set(people.map((p) => p.name.toLowerCase()));
           const imported: Person[] = candidates
-            .filter((c) => wanted.has(c.index))
+            .filter((c) => wanted.has(c.index) && (!isSample || !taken.has(c.name.toLowerCase())))
             .map((c) => ({
               person_id: nextId("p"),
               name: c.name,
@@ -2199,10 +2245,10 @@ export function createMockBridge(): HostBridge {
               interests: c.interests,
               last_interaction_at: c.last_met_days_ago === null ? null : iso(-c.last_met_days_ago),
               created_at: new Date().toISOString(),
-              is_sample: false,
+              is_sample: isSample,
             }));
-          if (imported.length === 0) return fail("INVALID_ARGUMENT: pick at least one person");
           people = [...people, ...imported];
+          if (isSample && imported.length) sampleLoaded = true;
           imports.delete(String(args.import_id));
           return ok({ imported, count: imported.length });
         }

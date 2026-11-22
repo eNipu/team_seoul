@@ -237,6 +237,9 @@ class LogInteractionOut(BaseModel):
 
 
 # ---------------------------------------------------------------- import people
+DemoPlatform = Literal["instagram", "linkedin"]
+
+
 class PersonCandidate(BaseModel):
     """One person the assistant proposes to add, taken from what the user pasted, uploaded or said."""
 
@@ -264,6 +267,7 @@ class PeopleImportView(BaseModel):
     source: str | None
     candidates: list[ImportCandidateOut]
     skipped: int
+    demo_platform: DemoPlatform | None = None
     note: str = "Nothing is saved until the user confirms on the card. These notes stay private to the user."
 
 

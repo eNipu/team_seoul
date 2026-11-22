@@ -14,6 +14,7 @@ from __future__ import annotations
 import re
 import uuid
 from datetime import datetime, timedelta
+from typing import Literal
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -23,6 +24,7 @@ from app.models import PeopleImport, Person, PersonInteraction, User
 from app.models._base import as_aware, utcnow
 from app.schemas.social import (
     DeletePersonOut,
+    DemoPlatform,
     ImportCandidateOut,
     ImportPeopleOut,
     InteractionOut,
@@ -31,13 +33,14 @@ from app.schemas.social import (
     PersonCandidate,
     PersonOut,
 )
-from app.services import analytics, linkedin_demo
+from app.services import analytics, instagram_demo, linkedin_demo
 from app.services.errors import InvalidRequest, NotFound, PrivacyViolation
 
 MAX_PEOPLE_PER_USER = 500
 MAX_IMPORT_CANDIDATES = 50
 MAX_DEMO_IMPORT_CANDIDATES = 100
 IMPORT_TTL = timedelta(hours=24)
+DemoChannel = Literal["chatgpt", "web"]
 # Venn keeps notes about people, not ways to reach them.
 _CONTACT_DETAIL = re.compile(
     r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+"  # email addresses
@@ -231,7 +234,9 @@ def _is_sample_import(items: list[dict]) -> bool:
 
 
 def _clear_demo_previews(db: Session, user: User, *, expired_only: bool) -> None:
-    query = select(PeopleImport).where(PeopleImport.user_id == user.id, PeopleImport.source == linkedin_demo.SOURCE)
+    query = select(PeopleImport).where(
+        PeopleImport.user_id == user.id, PeopleImport.source.in_((instagram_demo.SOURCE, linkedin_demo.SOURCE))
+    )
     if expired_only:
         query = query.where(PeopleImport.expires_at < utcnow())
     for row in db.scalars(query):
@@ -250,17 +255,30 @@ def propose_import(
     return _propose_import(db, user, people[:MAX_IMPORT_CANDIDATES], source)
 
 
-def propose_linkedin_demo(db: Session, user: User) -> PeopleImportView:
+def propose_demo_import(db: Session, user: User, platform: DemoPlatform, *, channel: DemoChannel) -> PeopleImportView:
     lock_people_writes(db, user)
     _clear_demo_previews(db, user, expired_only=True)
+    fixture = instagram_demo if platform == "instagram" else linkedin_demo
     return _propose_import(
-        db, user, linkedin_demo.candidates()[:MAX_DEMO_IMPORT_CANDIDATES], linkedin_demo.SOURCE, is_sample=True
+        db,
+        user,
+        fixture.candidates()[:MAX_DEMO_IMPORT_CANDIDATES],
+        fixture.SOURCE,
+        demo_platform=platform,
+        demo_channel=channel,
     )
 
 
 def _propose_import(
-    db: Session, user: User, people: list[PersonCandidate], source: str | None, *, is_sample: bool = False
+    db: Session,
+    user: User,
+    people: list[PersonCandidate],
+    source: str | None,
+    *,
+    demo_platform: DemoPlatform | None = None,
+    demo_channel: DemoChannel | None = None,
 ) -> PeopleImportView:
+    is_sample = demo_platform is not None
     existing = existing_names(db, user, include_samples=is_sample)
     items: list[dict] = []
     seen: set[tuple[str, str]] = set()
@@ -289,6 +307,7 @@ def _propose_import(
                 "last_met_days_ago": candidate.last_met_days_ago,
                 # Only the server-owned demo proposal sets this; source is untrusted.
                 "is_sample": is_sample,
+                "demo_channel": demo_channel,
             }
         )
     if not items:
@@ -310,10 +329,18 @@ def _propose_import(
             for i, item in enumerate(items)
         ],
         skipped=skipped,
+        demo_platform=demo_platform,
     )
 
 
-def import_people(db: Session, user: User, import_id: str, indexes: list[int]) -> ImportPeopleOut:
+def import_people(
+    db: Session,
+    user: User,
+    import_id: str,
+    indexes: list[int],
+    *,
+    channel: Literal["regular"] | DemoChannel = "regular",
+) -> ImportPeopleOut:
     """Add the entries the user picked from an import they were shown. Single-use."""
     try:
         iid = uuid.UUID(str(import_id))
@@ -329,6 +356,13 @@ def import_people(db: Session, user: User, import_id: str, indexes: list[int]) -
         raise InvalidRequest("This import expired. Propose a new one.")
     items = list(row.items or [])
     is_sample = _is_sample_import(items)
+    if is_sample:
+        # Older website demo proposals predate channel metadata.
+        demo_channel = items[0].get("demo_channel", "web")
+        if demo_channel != channel:
+            raise InvalidRequest("Use the Add button on the matching import review card.")
+    elif channel == "chatgpt":
+        raise InvalidRequest("Use the Add button on the matching import review card.")
     limit = MAX_DEMO_IMPORT_CANDIDATES if is_sample else MAX_IMPORT_CANDIDATES
     if len(indexes) > limit:
         raise InvalidRequest(f"You can import up to {limit} people at a time.")

@@ -23,10 +23,12 @@ def test_new_account_starts_with_all_three_steps_open(alice):
     assert all(s["title"] and s["description"] for s in view["setup"])
 
 
-def test_model_is_told_to_start_the_first_open_step(alice):
+def test_model_leaves_generic_opening_to_the_starter_actions(alice):
     said = text(alice, "venn_show_dashboard")
     assert "Set-up is not finished (open: about you, your people, connect)" in said
-    assert "start the first open step in this same reply" in said
+    assert "starter actions" in said
+    assert "Start the first open step only if the user asked for set-up" in said
+    assert alice.ok("venn_list_people")["count"] == 0
     # The first open step names the tools that do it.
     assert "venn_import_chatgpt_memory" in said and "venn_propose_memories" in said
     assert "venn_propose_people_import" not in said
@@ -125,10 +127,12 @@ def test_help_examples_are_requests_the_server_instructions_route(alice):
         {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "t", "version": "0"}},
     ).json()["result"]["instructions"]
     assert "venn_help" in instructions
-    assert "start with set-up" in instructions
+    assert "let the user choose an" in instructions
+    assert "Do not begin set-up or load sample data unless they ask" in instructions
     for tool in (
         "venn_import_chatgpt_memory",
         "venn_propose_people_import",
+        "venn_preview_demo_people_import",
         "venn_create_invite",
         "venn_redeem_invite",
         "venn_start_quiz",
@@ -139,7 +143,7 @@ def test_help_examples_are_requests_the_server_instructions_route(alice):
 
 def test_instructions_start_with_a_question_and_state_the_boundary(client):
     instructions = client.app_state.mcp.instructions
-    assert instructions.index("Start with the user's question") < instructions.index("Otherwise start with set-up")
+    assert instructions.index("Start with the user's question") < instructions.index("For a generic greeting")
     for tool in ("venn_find_people", "venn_this_week", "venn_compare", "venn_save_plan", "venn_create_question_link"):
         assert tool in instructions, tool
     assert "never sends anything" in instructions

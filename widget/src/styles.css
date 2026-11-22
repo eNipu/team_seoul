@@ -1197,6 +1197,12 @@ input[type="datetime-local"] {
 .pick-list {
   gap: 6px;
 }
+.pick-list--demo {
+  max-block-size: 21rem;
+  overflow: auto;
+  padding: 4px; /* Leave room for the checkbox focus outline. */
+  scrollbar-gutter: stable;
+}
 .pick__notes,
 .snippet {
   display: -webkit-box;
@@ -2189,8 +2195,38 @@ input[type="datetime-local"] {
   gap: var(--s-3);
   margin-top: var(--s-2);
 }
+.welcome__start .section-title {
+  margin-block: 0;
+}
 .welcome__actions {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: var(--s-2);
+}
+.demo-import {
+  padding-inline: var(--s-3);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.demo-import summary {
+  min-height: 44px;
+  padding-block: var(--s-3);
+  cursor: pointer;
+  font-weight: 650;
+}
+.demo-import summary:hover::marker {
+  color: var(--accent-strong);
+}
+.demo-import__body {
+  display: grid;
+  gap: var(--s-2);
+  padding-bottom: var(--s-3);
+}
+.demo-import__actions {
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--s-2);
 }
 .welcome__goals summary {
@@ -2198,10 +2234,6 @@ input[type="datetime-local"] {
   padding-block: var(--s-3);
   cursor: pointer;
   font-weight: 650;
-}
-.welcome__alt {
-  font-size: var(--fs-sm);
-  color: var(--muted);
 }
 
 /* ---------- Dashboard stats ---------- */

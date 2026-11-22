@@ -195,7 +195,7 @@ def test_widget_resource_served(alice):
 
 def test_render_tools_bound_to_widget(alice):
     tools = {t["name"]: t for t in alice.rpc("tools/list").json()["result"]["tools"]}
-    assert len(tools) == 60
+    assert len(tools) == 62
     render_tools = (
         "venn_propose_memories",
         "venn_import_chatgpt_memory",
@@ -203,6 +203,7 @@ def test_render_tools_bound_to_widget(alice):
         "venn_help",
         "venn_create_invite",
         "venn_propose_people_import",
+        "venn_preview_demo_people_import",
         "venn_view_friend",
         "venn_suggest_activity",
         "venn_reconnection_suggestions",
@@ -246,8 +247,8 @@ def test_render_tools_bound_to_widget(alice):
     ):
         assert tools[name]["_meta"]["openai/widgetAccessible"] is True, name
     assert "ui" not in (tools["venn_list_memories"].get("_meta") or {})
-    assert sum("resourceUri" in t.get("_meta", {}).get("ui", {}) for t in tools.values()) == 19
-    for name in ("venn_save_reply", "venn_delete_saved_reply"):
+    assert sum("resourceUri" in t.get("_meta", {}).get("ui", {}) for t in tools.values()) == 20
+    for name in ("venn_save_reply", "venn_delete_saved_reply", "venn_import_demo_people"):
         meta = tools[name]["_meta"]
         assert meta["ui"] == {"visibility": ["app"]}, name
         assert meta["openai/widgetAccessible"] is True, name

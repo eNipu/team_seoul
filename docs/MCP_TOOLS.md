@@ -26,7 +26,7 @@ Annotations: **R** read-only, **W** write, **D** destructive (ChatGPT asks for c
 **UI** = renders the widget (`_meta.ui.resourceUri = ui://venn/app-v2.html`); the result's
 `view` field tells the widget which card to show.
 
-60 tools, 19 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Venn) or
+62 tools, 20 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Venn) or
 `person_id` (a private note about someone who is not); results name it as `kind`
 (`"connection"` \| `"person"`) + `id`.
 
@@ -55,17 +55,18 @@ memory. The reply tool accepts the task-specific payload and has no conversation
 | `venn_delete_saved_reply` | `reply_id` | D, widget only | `{deleted: true}`. Removes the owner's saved reply. |
 This is guidance to the model, not something the server can enforce.
 
-**Set-up first.** Set-up has three steps, in order: *about you* (done once a memory is saved),
+**Starting actions and optional set-up.** "Open Venn" opens the home card without starting set-up.
+The welcome card offers **Set up Venn**, **Import my ChatGPT memory**, and **Try a demo import**.
+Set-up has three steps, in order: *about you* (done once a memory is saved),
 *your people* (done once there is a people note or a connection), *connect* (done once there is
 a connection, a pending request, or an invite that is active or was used). Nothing extra is
 stored: each step is derived from the data it produces.
 - The home, welcome and help cards carry them as `setup[{key, title, description, done}]`. While
   a step is open the home card shows a "Finish setting up" checklist with a button per step, so
   set-up is always one tap away even if the model says nothing.
-- `venn_show_dashboard` also puts the open steps into its result text and tells the model to
-  start the first open one in the same reply — import from ChatGPT memory or a couple of
-  questions, then `venn_propose_people_import`, then `venn_create_invite` — and to move on
-  by itself when a step is done or skipped.
+- `venn_show_dashboard` includes the open steps in its result text. Start the first open one
+  only when the user asks for set-up, then move on when a step is done or skipped. Demo
+  imports and the sample circle do not count toward set-up.
 - What the model does with that text is guidance, not enforced; the checklist on the card is
   what is guaranteed. Every step still ends in a review card.
 
@@ -178,7 +179,9 @@ candidates are stored server-side, so nothing can be added that the user was not
 | Tool | Args | Scope | | Returns |
 | --- | --- | --- | --- | --- |
 | `venn_propose_people_import` | `people[]` (1–50 `{name, relationship?, notes?, interests?[], last_met_days_ago?}`), `source?` (≤60) | connections | W, UI | `{view: "people_import", import_id, expires_at, source, candidates[{index, name, relationship, notes, interests[], last_met_days_ago, already_added}], skipped, note}` — **adds nobody** |
-| `venn_import_people` | `import_id`, `indexes[]` | connections | W | `{imported: Person[], count}` |
+| `venn_import_people` | `import_id`, `indexes[]` (1–50) | connections | W | `{imported: Person[], count}`; regular imports only |
+| `venn_preview_demo_people_import` | `platform`: `"instagram"` or `"linkedin"` | connections | W, UI | `people_import` with `demo_platform` and 100 fictional candidates. Adds nobody; no social login or external API |
+| `venn_import_demo_people` | `import_id`, `indexes[]` (1–100) | connections | W, widget only | `{imported: Person[], count}`. Saves only the chosen profiles as owner-only Sample notes. The dashboard's **Remove sample data** clears them |
 
 Emails, links and phone numbers are stripped from names, relationships and notes; entries
 containing credentials or card/ID numbers are dropped and counted in `skipped`. `already_added`

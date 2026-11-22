@@ -57,7 +57,7 @@ from app.schemas.memory import (
 )
 from app.schemas.profile import ProfileUpdate, ProfileVisibility, SocialGoal
 from app.schemas.reply import DeleteReplyResult, Reply, ReplyView, SavedRepliesView, SaveReplyResult
-from app.schemas.social import PersonCandidate
+from app.schemas.social import DemoPlatform, PersonCandidate
 from app.services import (
     availability_service,
     calendar_service,
@@ -511,9 +511,9 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
             "view: profile, memories, friends "
             "(connections on Venn and private notes on people who aren't) and pending requests. The "
             "user can edit their profile and memories, open a friend, and accept/decline requests there. "
-            "A brand-new account gets a welcome card instead. The result also tells you which set-up "
-            "steps are still open (about you, your people, connect); when any are, start the first one "
-            "right away in the same reply instead of waiting for the user to ask. The result includes "
+            "A brand-new account gets a welcome card with starter actions instead. The result also tells you "
+            "which set-up steps are still open. Start the first one only if the user asked for set-up. "
+            "The result includes "
             "the profile, so there is no need to call venn_get_profile as well."
         ),
         annotations=READ_ONLY,
@@ -527,9 +527,9 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
             guidance = dashboard_service.setup_guidance(view.setup)
             if view.view == "welcome":
                 return ok(
-                    "Showing the welcome card: this account is empty. The card lets the user pick social "
-                    "goals, import their ChatGPT memory or start set-up. Do not describe the card and do "
-                    f"not show it again. {guidance}",
+                    "Showing the welcome card with starter actions: guided set-up, ChatGPT memory import, "
+                    "and demo contact imports. Let the user choose an action; do not list the card in chat. "
+                    f"{guidance}",
                     view,
                 )
             return ok(
@@ -882,26 +882,76 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
 
         return await guarded(body)
 
+    @apps.tool(
+        resource_uri=WIDGET_URI,
+        visibility=["model", "app"],
+        meta=ui_meta("Preparing sample profiles…", "Demo ready to review"),
+        name="venn_preview_demo_people_import",
+        title="Preview a demo contact import",
+        description=(
+            "Preview 100 fictional Instagram-style or LinkedIn-style profiles when the user specifically asks "
+            "for a demo import. No real profiles, social login, cookies or external calls. This opens a review "
+            "card with nothing selected. Do not confirm the import for the user; let them pick and add profiles "
+            "on the card. Confirmed profiles are private sample notes removable with Remove sample data."
+        ),
+        annotations=WRITE,
+    )
+    async def venn_preview_demo_people_import(platform: DemoPlatform) -> CallToolResult:
+        async def body():
+            view = await run_as_user(
+                [CONNECTIONS],
+                lambda db, user, _: people_service.propose_demo_import(db, user, platform, channel="chatgpt"),
+            )
+            label = "Instagram" if platform == "instagram" else "LinkedIn"
+            return ok(f"Showing {len(view.candidates)} fictional {label}-style profiles. Nothing has been added.", view)
+
+        return await guarded(body)
+
     @mcp.tool(
         name="venn_import_people",
         title="Add the picked friends",
         description=(
-            "Add the people the user picked from a venn_propose_people_import review card. `indexes` are "
-            "the `index` values of the entries the user chose. Only call with entries the user explicitly "
-            "picked; normally the card does this itself. Each import can be used once."
+            "Add the people the user explicitly picked from a regular import review card. `indexes` are the "
+            "`index` values of those entries (up to 50). The card normally does this itself. Each import can "
+            "be used once. This tool cannot confirm a demo import."
         ),
         annotations=WRITE,
         meta=invocation_meta("Adding your friends…", "Friends added", widget_accessible=True),
     )
     async def venn_import_people(
         import_id: Annotated[str, Field(description="import_id from venn_propose_people_import")],
-        indexes: Annotated[list[Annotated[int, Field(ge=0)]], Field(min_length=1, max_length=50)],
+        indexes: Annotated[
+            list[Annotated[int, Field(ge=0)]], Field(min_length=1, max_length=people_service.MAX_IMPORT_CANDIDATES)
+        ],
     ) -> CallToolResult:
         async def body():
             result = await run_as_user(
-                [CONNECTIONS], lambda db, user, _: people_service.import_people(db, user, import_id, indexes)
+                [CONNECTIONS],
+                lambda db, user, _: people_service.import_people(db, user, import_id, indexes),
             )
             return ok(f"Added {result.count} people. Only the user can see these notes.", result)
+
+        return await guarded(body)
+
+    @mcp.tool(
+        name="venn_import_demo_people",
+        title="Add the picked sample profiles",
+        description="Add explicitly selected fictional profiles from the demo import review card. App only.",
+        annotations=WRITE,
+        meta=app_only_meta("Adding sample profiles…", "Sample profiles added"),
+    )
+    async def venn_import_demo_people(
+        import_id: Annotated[str, Field(description="import_id from venn_preview_demo_people_import")],
+        indexes: Annotated[
+            list[Annotated[int, Field(ge=0)]], Field(min_length=1, max_length=people_service.MAX_DEMO_IMPORT_CANDIDATES)
+        ],
+    ) -> CallToolResult:
+        async def body():
+            result = await run_as_user(
+                [CONNECTIONS],
+                lambda db, user, _: people_service.import_people(db, user, import_id, indexes, channel="chatgpt"),
+            )
+            return ok(f"Added {result.count} fictional profiles as private sample notes.", result)
 
         return await guarded(body)
 
@@ -1576,6 +1626,8 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
     async def venn_load_sample_circle() -> CallToolResult:
         async def body():
             result = await run_as_user([CONNECTIONS, MEMORIES_WRITE], lambda db, user, _: sample_service.load(db, user))
+            if not result.connections:
+                return ok("The sample circle is already loaded. Existing sample notes are unchanged.", result)
             return ok(
                 f"Added a sample circle: {result.connections} connections, {result.people} people notes, "
                 f"{result.pending_requests} pending request. These are made-up people, marked as samples. "
@@ -1588,7 +1640,10 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
     @mcp.tool(
         name="venn_remove_sample_circle",
         title="Remove the sample friends",
-        description="Remove the sample circle added by venn_load_sample_circle. The user's own data is untouched.",
+        description=(
+            "When the user asks to remove sample data, clear the sample circle and demo imports. "
+            "The user's own data is untouched."
+        ),
         annotations=WRITE_IDEMPOTENT,
         meta=invocation_meta("Removing sample friends…", "Sample friends removed", widget_accessible=True),
     )
@@ -1597,7 +1652,7 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
             result = await run_as_user(
                 [CONNECTIONS, MEMORIES_WRITE], lambda db, user, _: sample_service.remove(db, user)
             )
-            return ok("The sample friends were removed. Your own data was not touched.", result)
+            return ok("The sample data was removed. Your own data was not touched.", result)
 
         return await guarded(body)
 
@@ -1657,7 +1712,9 @@ ToolName = Literal[
     "venn_update_person",
     "venn_delete_person",
     "venn_propose_people_import",
+    "venn_preview_demo_people_import",
     "venn_import_people",
+    "venn_import_demo_people",
     "venn_view_friend",
     "venn_suggest_activity",
     "venn_log_interaction",

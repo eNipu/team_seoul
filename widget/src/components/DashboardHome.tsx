@@ -26,7 +26,7 @@ export function SampleBanner({ bridge, onChanged }: { bridge: HostBridge; onChan
         <span className="sample-banner__text">
           <Icon name="sparkle" size={18} />
           <span>
-            <strong>You're looking at sample friends.</strong> They are made up, so you can try every card.
+            <strong>Sample data is loaded.</strong> Fictional profiles are marked Sample.
           </span>
         </span>
         {!confirming && (
@@ -37,7 +37,7 @@ export function SampleBanner({ bridge, onChanged }: { bridge: HostBridge; onChan
       </div>
       {confirming && (
         <div className="confirm confirm--plain">
-          <span className="small">Remove every sample friend, note and memory? Your own data stays.</span>
+          <span className="small">Remove all sample data, including any edits to samples? Your own data stays.</span>
           <button type="button" className="btn btn--danger btn--small" disabled={busy} onClick={remove}>
             {action.busy === "remove" ? "Removing…" : "Remove"}
           </button>
