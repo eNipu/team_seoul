@@ -3,13 +3,13 @@
 ## The product in four lines
 
 Venn is a ChatGPT plugin that shows its own cards in the chat. It saves the memories a user
-approves, groups them into interests, and for each person the user knows it suggests how to keep
-the connection alive and how the connection could help either side. ChatGPT only, for now.
+approves and suggests ways to stay in touch. The signed-in My Venn web app uses the same
+accounts and records. Interest clusters and opportunity matching are goals tracked on the board.
 
 ## Rules no task may break
 
 1. The acting user comes from the OAuth token. No tool takes a user id.
-2. Nothing is saved without approval: `venn_save_memories` needs a server-issued `proposal_id`.
+2. ChatGPT memory candidates stay in a proposal until approval. `venn_save_memories` needs a server-issued `proposal_id`. A web user can also explicitly save a memory they wrote.
 3. Another user's `PRIVATE` memories are never read. Go through
    `memory_service.visible_memories_of`, or `all_friends` and `resolve` in `relationship_service`.
 4. A blocked user is invisible in both directions (`social_service.is_blocked`).
