@@ -87,7 +87,7 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
   return (
     <>
     {sampleLoaded && <SampleBanner bridge={bridge} onChanged={() => nav.replaceView("venn_show_dashboard", {})} />}
-    <HomeTiles pendingAnswers={pendingAnswers} nav={nav} />
+    <HomeTiles pendingAnswers={pendingAnswers} bridge={bridge} nav={nav} />
     <DemoImport nav={nav} action={demoAction} />
     <ActionError action={demoAction} />
     <SetupCard steps={setup} bridge={bridge} nav={nav} />

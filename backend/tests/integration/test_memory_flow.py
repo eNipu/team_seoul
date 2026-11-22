@@ -200,7 +200,13 @@ def test_widget_resource_served(alice):
 
 def test_render_tools_bound_to_widget(alice):
     tools = {t["name"]: t for t in alice.rpc("tools/list").json()["result"]["tools"]}
-    assert len(tools) == 62
+    assert len(tools) == 63
+    nudge = tools["venn_find_nudge"]
+    assert nudge["annotations"]["readOnlyHint"] is True
+    assert nudge["_meta"]["ui"] == {"visibility": ["model"]}
+    assert "openai/outputTemplate" not in nudge["_meta"]
+    assert "openai/widgetAccessible" not in nudge["_meta"]
+    assert set(nudge["inputSchema"]["properties"]) == {"topic", "connection_id", "person_id"}
     render_tools = (
         "venn_propose_memories",
         "venn_import_chatgpt_memory",

@@ -19,7 +19,7 @@ from datetime import datetime
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
-from app.models import Connection, FollowUp, Memory, Person, RelationshipEvent, User
+from app.models import Block, Connection, FollowUp, Memory, Person, RelationshipEvent, User
 from app.models._base import as_aware, utcnow
 from app.schemas.social import (
     ActivityIdeasView,
@@ -36,6 +36,8 @@ from app.schemas.social import (
     GroupPlanView,
     InteractionOut,
     LogInteractionOut,
+    NudgeLookup,
+    NudgeMatch,
     OpenFollowUpOut,
     PartialOverlap,
     PeopleSearchResult,
@@ -49,6 +51,7 @@ from app.schemas.social import (
     VennView,
 )
 from app.services import analytics, memory_service, people_service, social_service
+from app.services.activity_topics import activity_topic as normalize_activity
 from app.services.errors import InvalidRequest, NotFound
 from app.services.user_service import display_name, is_sample_user
 
@@ -291,6 +294,21 @@ def all_friends(db: Session, user: User) -> list[Friend]:
         out.append(_person_friend(db, p))
     mine = own_memories(db, user)
     return [_link_own_memories(friend, mine) for friend in out]
+
+
+def compatible_companions(db: Session, anchor: Friend, friends: list[Friend]) -> list[Friend]:
+    """No mixed sample/real party or suggestions pairing accounts blocked in either direction."""
+    candidates = [f for f in friends if (f.kind, f.id) != (anchor.kind, anchor.id) and f.is_sample == anchor.is_sample]
+    if not anchor.friend_user:
+        return candidates
+    uid = anchor.friend_user.id
+    blocks = db.execute(
+        select(Block.blocker_user_id, Block.blocked_user_id).where(
+            or_(Block.blocker_user_id == uid, Block.blocked_user_id == uid)
+        )
+    )
+    excluded = {b if a == uid else a for a, b in blocks}
+    return [f for f in candidates if not f.friend_user or f.friend_user.id not in excluded]
 
 
 def compact(terms: set[str]) -> list[str]:
@@ -765,6 +783,62 @@ def _matching_memories(mine: list[Memory], query_stems: list[str], limit: int = 
     return [m for _, m in scored[:limit]]
 
 
+def find_nudge(
+    db: Session, user: User, topic: str, connection_id: str | None = None, person_id: str | None = None
+) -> NudgeLookup:
+    key = normalize_activity(topic)
+    if key is None or (connection_id and person_id):
+        return NudgeLookup()
+
+    friends = all_friends(db, user)
+    group = bool(connection_id or person_id)
+    if group:
+        ref = ("connection", connection_id) if connection_id else ("person", person_id)
+        anchor = next((f for f in friends if (f.kind, f.id) == ref), None)
+        if anchor is None:
+            return NudgeLookup()
+        friends = compatible_companions(db, anchor, friends)
+
+    # An explicit activity label, never surrounding notes or conversation text.
+    reasons = {
+        "interest": "Your saved interests for this person list",
+        "own_memory": "Your memory about this person mentions",
+        "shared": "A memory this person shared mentions",
+    }
+    best: tuple[tuple, NudgeMatch] | None = None
+    for friend in friends:
+        if key in friend.display_name.lower().split():
+            continue
+        labels = [("interest", text) for text in friend.interest_labels] if friend.person else []
+        for source, memories in (("own_memory", friend.about), ("shared", friend.memories)):
+            for memory in memories:
+                about_friend = source == "own_memory" and memory.people and memory.category in _INTEREST_CATEGORIES
+                self_interest = source == "shared" and not memory.people and memory.category == "INTEREST"
+                if about_friend or self_interest:
+                    labels.extend((source, text) for text in (memory.title, *(memory.tags or [])))
+        for source, text in labels:
+            evidence = text.strip()
+            label = normalize_activity(evidence)
+            bridge = group and label and bridge_for_topics(key, label)
+            if key != label and not bridge:
+                continue
+            rank = (friend.is_sample, not bridge, friend.display_name.casefold(), friend.id)
+            if best is None or rank < best[0]:
+                prefix = "Sample circle (fictional): " if friend.is_sample else ""
+                best = (
+                    rank,
+                    NudgeMatch(
+                        kind=friend.kind,
+                        id=friend.id,
+                        display_name=friend.display_name,
+                        source=source,
+                        evidence=evidence,
+                        reason=f"{prefix}{reasons[source]} “{evidence}”.",
+                    ),
+                )
+    return NudgeLookup(match=best[1] if best else None)
+
+
 def find_people(db: Session, user: User, query: str, limit: int = 8) -> PeopleSearchView:
     """Who in the user's circle matches a topic ("climbing", "works in design")?
 
@@ -833,8 +907,80 @@ def find_people(db: Session, user: User, query: str, limit: int = 8) -> PeopleSe
 
 
 # ------------------------------------------------------------------- group plan
+_GROUP_BRIDGES = (
+    (
+        {"hiking", "walking"},
+        {"photography"},
+        "Trail photo walk",
+        "Pick a short trail and stop to photograph one detail each along the way.",
+    ),
+    (
+        {"architecture"},
+        {"photography"},
+        "Neighborhood photo walk",
+        "Walk a neighborhood together and photograph architectural details along the route.",
+    ),
+    (
+        {"coffee", "cafés"},
+        {"board games", "tabletop games"},
+        "Café game break",
+        "Pick a café with table space and bring a short game to play over drinks.",
+    ),
+)
+
+
+def _topic_key(topic: str) -> str:
+    key = " ".join(topic.casefold().split())
+    return normalize_activity(key) or key
+
+
+def bridge_for_topics(a: str, b: str) -> tuple[str, str] | None:
+    """Return a curated activity for two explicit interest labels, in either order."""
+    a, b = _topic_key(a), _topic_key(b)
+    for left, right, title, description in _GROUP_BRIDGES:
+        if (a in left and b in right) or (b in left and a in right):
+            return title, description
+    return None
+
+
+def _group_bridge(participants: list[tuple[str, list[str]]], focus: str = "") -> ActivitySuggestion | None:
+    """Pair explicit labels from different participants, never terms inferred from notes."""
+    first_pair = None
+    for i, (name, labels) in enumerate(participants):
+        for other, other_labels in participants[i + 1 :]:
+            for label in labels:
+                for second in other_labels:
+                    a, b = label.casefold(), second.casefold()
+                    if a == b or (focus and focus not in {_topic_key(a), _topic_key(b)}):
+                        continue
+                    basis = [f"{name}: {label}", f"{other}: {second}"]
+                    if bridge := bridge_for_topics(a, b):
+                        title, description = bridge
+                        return ActivitySuggestion(
+                            title=title, description=description, grounded_in=basis, suggested_action=_NO_CONTACT
+                        )
+                    if not focus and first_pair is None:
+                        first_pair = (label, second, basis)
+    if first_pair is None:
+        return None
+    label, second, basis = first_pair
+    return ActivitySuggestion(
+        title=f"Show and tell: {label} × {second}",
+        description=(
+            f"Invite the group to bring a photo or object related to {label} or {second}. "
+            "Take turns telling the story behind each pick."
+        ),
+        grounded_in=basis,
+        suggested_action=_NO_CONTACT,
+    )
+
+
 def plan_group(
-    db: Session, user: User, connection_ids: list[str] | None = None, person_ids: list[str] | None = None
+    db: Session,
+    user: User,
+    connection_ids: list[str] | None = None,
+    person_ids: list[str] | None = None,
+    activity_topic: str | None = None,
 ) -> GroupPlanView:
     """What a small group has in common, and what they could do together."""
     refs = [(cid, None) for cid in dict.fromkeys(connection_ids or [])]
@@ -844,7 +990,8 @@ def plan_group(
     members = [resolve(db, user, cid, pid) for cid, pid in refs]
 
     holders: dict[str, list[str]] = {}
-    for name, terms in [("You", my_terms(db, user)), *((m.display_name, m.terms) for m in members)]:
+    mine = own_memories(db, user)
+    for name, terms in [("You", _memory_terms(mine)), *((m.display_name, m.terms) for m in members)]:
         for term in terms:
             holders.setdefault(term, []).append(name)
     everyone = len(members) + 1
@@ -861,6 +1008,36 @@ def plan_group(
         )
         for title, description, grounded in _ideas_from([common_to_all, partial], _GROUP_IDEAS)
     ]
+    # _ideas_from puts group-wide matches first, before partial matches and defaults.
+    focus = _topic_key(activity_topic or "")
+    needs_bridge = not any(term in common_to_all for term in suggestions[0].grounded_in)
+    if focus or needs_bridge:
+        participants = [
+            (
+                m.display_name,
+                m.interest_labels
+                if m.person
+                else [r.title for r in m.memories if r.category == "INTEREST" and not r.people],
+            )
+            for m in members
+        ]
+        participants.append(("You", [r.title for r in mine if r.category == "INTEREST" and not r.people]))
+        bridge = _group_bridge(participants, focus) if focus else None
+        if focus and not bridge:
+            evidence = [
+                f"{name}: {label}" for name, labels in participants for label in labels if _topic_key(label) == focus
+            ]
+            if not evidence:
+                evidence = [term for term in holders if _topic_key(term) == focus]
+            if evidence and (ideas := _ideas_from([[focus]], [], limit=1)):
+                title, description, _ = ideas[0]
+                bridge = ActivitySuggestion(
+                    title=title, description=description, grounded_in=evidence, suggested_action=_NO_CONTACT
+                )
+        if not bridge and needs_bridge:
+            bridge = _group_bridge(participants)
+        if bridge:
+            suggestions = [bridge]
     analytics.track(db, "group_planned", user.id, count=len(members))
     return GroupPlanView(
         members=[

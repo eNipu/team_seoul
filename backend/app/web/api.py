@@ -28,6 +28,7 @@ from app.schemas.profile import ProfileUpdate
 from app.schemas.social import PersonCandidate
 from app.services import (
     analytics,
+    circle_idea_service,
     dashboard_service,
     linkedin_service,
     memory_service,
@@ -612,6 +613,17 @@ def build_api(settings: Settings) -> APIRouter:  # noqa: C901 - flat list of rou
         if len(q.strip()) < 2:
             raise InvalidRequest("Type at least two letters to search.")
         return run(who, lambda db, user: rel.find_people(db, user, q[:120], limit=12))
+
+    @api.get("/circle-idea")
+    def circle_idea(who: Identity = Who) -> dict:
+        # A proactive read must not provision an account as a side effect.
+        with session_scope() as db:
+            user = web_session.find_user(db, who.subject)
+            if user is None:
+                if who.provision:
+                    return {"idea": None}
+                raise Unauthenticated("Sign in to Venn.")
+            return circle_idea_service.circle_idea(db, user)
 
     @api.get("/this-week")
     def this_week(who: Identity = Who) -> Any:

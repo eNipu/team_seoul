@@ -26,19 +26,23 @@ Annotations: **R** read-only, **W** write, **D** destructive (ChatGPT asks for c
 **UI** = renders the widget (`_meta.ui.resourceUri = ui://venn/app-v3.html`); the result's
 `view` field tells the widget which card to show.
 
-62 tools, 20 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Venn) or
+63 tools, 20 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Venn) or
 `person_id` (a private note about someone who is not); results name it as `kind`
 (`"connection"` \| `"person"`) + `id`.
 
 **UI first.** The server instructions, the tool descriptions and the skill tell the model that the
 first Venn call in a conversation must render a card: the specific card if the request maps
 to one, `venn_show_reply` for tailored social answers, or `venn_show_dashboard` for home and set-up.
+The exception is a proactive `venn_find_nudge` lookup within a Venn conversation: a weak or
+absent match should leave the conversation uninterrupted, not display a search card.
 
 ## Tailored replies
 
 All four tools require `connections.manage` and publish an `outputSchema`. The `reply` argument is
 a plain-text `title` (up to 100 characters) and `body` (up to 1,200), with fields selected by `kind`.
-`advice` and `draft` use the common fields. `checklist` adds one to six `steps` of up to 200
+`advice`, `nudge` and `draft` use the common fields. A `nudge` proposes a small activity with one
+matched person in its title and explains why in its body. **Draft an invite** requests an unsent
+draft in chat; **Maybe later** dismisses the card locally. `checklist` adds one to six `steps` of up to 200
 characters each. `discussion` adds one `question` of up to 200 characters. `thread` adds two to six
 Venn-authored `entries` with a `title` (up to 100 characters) and `body` (up to 400) per entry.
 
@@ -210,14 +214,17 @@ interests ignore filler words ("loves", "really", …). Venn never contacts anyo
 
 | Tool | Args | Scope | | Returns |
 | --- | --- | --- | --- | --- |
+| `venn_find_nudge` | `topic` (1–80), `connection_id?` or `person_id?` (first guest for group follow-up) | connections, memories.read | R, model only | `{match: null}` or `{match: {kind, id, display_name, source, evidence, reason}}`. Pass a concrete activity topic, not chat text. Returns at most one grounded match; no widget template. |
 | `venn_find_people` | `query` (2–120), `limit?` (≤20, default 8) | connections, memories.read | R, UI | `{view: "people_search", query, results[{kind, id, display_name, on_venn, relationship, matched[], snippet, last_interaction_at}], count, searched, note}` |
-| `venn_plan_group` | `connection_ids?[]`, `person_ids?[]` (2–6 friends in total) | connections, memories.read | R, UI | `{view: "group_plan", members[{kind, id, display_name, interests[]}], common_to_all[], common_to_some[{interest, members[]}], suggestions[{title, description, grounded_in, suggested_action}], note}` |
+| `venn_plan_group` | `connection_ids?[]`, `person_ids?[]` (2–6 friends in total), `activity_topic?` | connections, memories.read | R, UI | `{view: "group_plan", members[{kind, id, display_name, interests[]}], common_to_all[], common_to_some[{interest, members[]}], suggestions[{title, description, grounded_in, suggested_action}], note}` |
 
 "Who do I know who…" searches the caller's own notes (name, relationship, notes, interests)
 and what each connection chose to share (non-private memories, and the bio if their profile
 allows it). Any query word may match; results that match more words come first. Matching is
 by word stem ("climbs" finds "climbing"), with no model call. `searched` is how many friends
-were looked at. In a group plan the caller counts as a member, named `You`.
+were looked at. In a group plan the caller counts as a member, named `You`. On a group follow-up,
+keep the initial person and pass the original activity topic. A suggestion can pair two different
+people’s interests; `grounded_in` identifies whose interest supports each part of the idea.
 
 ## Before and after a meetup
 

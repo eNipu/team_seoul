@@ -33,6 +33,7 @@ import {
   useToast,
 } from "../ui";
 import { TickButton } from "./shared";
+import { CircleIdea } from "./CircleIdea";
 
 const EXAMPLES = ["photography", "board games", "climbing", "lives in Lisbon"];
 
@@ -59,6 +60,7 @@ function HeroSearch() {
         <Icon name="search" size={22} />
         <input
           type="search"
+          id="circle-search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Who do I know who…"
@@ -288,6 +290,8 @@ function Dashboard({ home, reloadHome }: { home: DashboardHome; reloadHome: () =
   const followUps = useAsync(() => api.listFollowUps(), []);
   const toast = useToast();
   const [busyId, setBusyId] = useState<string | null>(null);
+  const topAction = week.data?.actions.find((a) => a.type === "follow_up") ?? week.data?.actions[0];
+  const otherActions = week.data?.actions.filter((a) => a !== topAction) ?? [];
   const upcoming = home.plans.filter((p) => p.status === "planned");
   const refresh = () => {
     week.reload();
@@ -305,9 +309,28 @@ function Dashboard({ home, reloadHome }: { home: DashboardHome; reloadHome: () =
         <p className="lead">Start with a person or a plan.</p>
       </header>
 
-      <HeroSearch />
-
       {home.sample_loaded && <SampleBanner onRemoved={refresh} />}
+
+      <Card title="This week" icon="sparkle" className="card--feature">
+        <Loaded state={week} skeleton={<Skeleton rows={1} />}>
+          {(w) => topAction ? (
+            <>
+              <ul className="week">
+                <WeekActionCard key={`${topAction.type}:${topAction.kind}:${topAction.id}:${topAction.follow_up?.follow_up_id ?? ""}`} action={topAction} onChanged={refresh} />
+              </ul>
+              <p className="fine">
+                <Icon name="shield" size={14} />
+                Venn never sends anything for you.
+              </p>
+            </>
+          ) : (
+            <p className="muted">{w.empty_reason || "Nothing needs your attention this week."}</p>
+          )}
+        </Loaded>
+      </Card>
+
+      <CircleIdea key={String(home.sample_loaded)} onDismiss={() => document.getElementById("circle-search")?.focus()} />
+      <HeroSearch />
 
       {home.pending_answers > 0 && (
         <Link to="/answers" className="callout">
@@ -348,28 +371,16 @@ function Dashboard({ home, reloadHome }: { home: DashboardHome; reloadHome: () =
         </Link>
       </div>
 
-      <div className="grid-2">
-        <Card title="This week" icon="sparkle" className="card--feature">
-          <Loaded state={week} skeleton={<Skeleton rows={3} />}>
-            {(w) =>
-              w.actions.length === 0 ? (
-                <p className="muted">{w.empty_reason ?? "Nothing needs your attention this week."}</p>
-              ) : (
-                <>
-                  <ul className="week">
-                    {w.actions.slice(0, 3).map((a, i) => (
-                      <WeekActionCard key={`${a.type}:${a.kind}:${a.id}:${i}`} action={a} onChanged={refresh} />
-                    ))}
-                  </ul>
-                  <p className="fine">
-                    <Icon name="shield" size={14} />
-                    Venn never sends anything for you.
-                  </p>
-                </>
-              )
-            }
-          </Loaded>
-        </Card>
+      <div className={otherActions.length ? "grid-2" : "stack"}>
+        {otherActions.length > 0 && (
+          <Card title="More this week" icon="sparkle">
+            <ul className="week">
+              {otherActions.map((a) => (
+                <WeekActionCard key={`${a.type}:${a.kind}:${a.id}`} action={a} onChanged={refresh} />
+              ))}
+            </ul>
+          </Card>
+        )}
 
         <div className="stack">
           <Card

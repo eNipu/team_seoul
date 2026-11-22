@@ -18,6 +18,7 @@ export interface Api {
   updateMe(patch: { display_name?: string; bio?: string; social_goals?: string[] }): Promise<T.Profile>;
   deleteAccount(confirmation: string): Promise<void>;
   getHome(): Promise<T.Home>;
+  getCircleIdea(): Promise<T.CircleIdeaResponse>;
   getHelp(): Promise<T.Help>;
   // Memories
   listMemories(params?: { q?: string; category?: T.MemoryCategory }): Promise<T.Memory[]>;
@@ -190,6 +191,7 @@ const realApi: Api = {
   },
   // GET /home
   getHome: async () => T.parseHome(await request("GET", "/home")),
+  getCircleIdea: async () => T.parseCircleIdea(await request("GET", "/circle-idea", { quiet401: true })),
   // GET /help
   getHelp: async () => T.parseHelp(await request("GET", "/help")),
 

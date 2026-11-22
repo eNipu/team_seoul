@@ -101,6 +101,7 @@ export const DEMO_VIEWS = [
   "dashboard_plans",
   "memory_review_people",
   "reply_advice",
+  "reply_nudge",
   "reply_checklist",
   "reply_draft",
   "reply_discussion",
@@ -1798,6 +1799,11 @@ function welcomeView(): WelcomeViewData {
 }
 
 const demoReplies: Record<string, Reply> = {
+  reply_nudge: {
+    kind: "nudge",
+    title: "A photo walk with Maya",
+    body: "You mentioned missing the Saturday walks you used to take together.",
+  },
   reply_advice: {
     kind: "advice",
     title: "Start with something you share",
@@ -1836,6 +1842,8 @@ let savedReplies: SavedReply[] = [];
 
 export function mockInitialView(): ViewData | null {
   switch (demoParam("view")) {
+    case "reply_nudge":
+      return { view: "reply", reply: demoReplies.reply_nudge };
     case "reply_advice":
       return { view: "reply", reply: demoReplies.reply_advice };
     case "reply_checklist":

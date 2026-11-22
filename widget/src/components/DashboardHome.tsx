@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { firstName, formatDateTime, isObj, joinNames, plural, type Plan } from "../types";
+import { useEffect, useState } from "react";
+import { firstName, formatDateTime, isObj, joinNames, parseView, plural, type Plan, type WeekAction } from "../types";
 import type { HostBridge } from "../mcp/client";
 import { ActionError, Avatar, SectionTitle, useAction, type Nav } from "./common";
 import { Icon } from "./icons";
@@ -52,7 +52,23 @@ export function SampleBanner({ bridge, onChanged }: { bridge: HostBridge; onChan
 }
 
 /** The dashboard's home rows: this week, and answers that wait for review. */
-export function HomeTiles({ pendingAnswers, nav }: { pendingAnswers: number; nav: Nav }) {
+export function HomeTiles({ pendingAnswers, bridge, nav }: { pendingAnswers: number; bridge: HostBridge; nav: Nav }) {
+  const [featured, setFeatured] = useState<WeekAction | null>(null);
+  useEffect(() => {
+    let active = true;
+    setFeatured(null);
+    async function loadPreview() {
+      const res = await bridge.callTool("venn_this_week", {});
+      const week = res.ok ? parseView(res.data, res.meta) : null;
+      if (!active || week?.view !== "this_week") return;
+      const actions = week.actions.filter((item) => item.title.trim() && item.reason.trim());
+      setFeatured(actions.find((item) => item.type === "follow_up") ?? actions[0] ?? null);
+    }
+    // The ordinary weekly shortcut stays available if its preview can't load.
+    void loadPreview().catch(() => {});
+    return () => { active = false; };
+  }, [bridge]);
+
   const action = useAction();
   const busy = action.busy !== null;
   return (
@@ -67,8 +83,9 @@ export function HomeTiles({ pendingAnswers, nav }: { pendingAnswers: number; nav
           <Icon name="calendar-check" size={22} />
         </span>
         <span className="home-tile__body">
-          <strong>This week</strong>
-          <span className="small">{action.busy === "week" ? "Opening…" : "Up to three small things that keep you close"}</span>
+          {featured && <span className="small">This week</span>}
+          <strong>{featured?.title ?? "This week"}</strong>
+          <span className="small">{action.busy === "week" ? "Opening…" : featured?.reason ?? "Up to three small things that keep you close"}</span>
         </span>
         <Icon name="chevron-right" size={18} />
       </button>

@@ -42,7 +42,7 @@ mock bridge (`src/mock.ts`) instead of the ext-apps connection. It also works st
 - `&tab=profile|memories|friends` opens a dashboard tab
 - In `?view=welcome` or `?view=dashboard`, open **Try a demo import** and choose either platform. Review 100 fictional profiles, select one or more, and confirm. The mock marks saved profiles **Sample** and supports **Remove sample data**.
 - `?view=weekly_review` shows three editable weekly updates and the audience picker.
-- `?view=reply_advice|reply_checklist|reply_draft|reply_discussion|reply_thread|saved_replies` shows the reply layouts and the saved-reply list
+- `?view=reply_nudge|reply_advice|reply_checklist|reply_draft|reply_discussion|reply_thread|saved_replies` shows the reply layouts and the saved-reply list
 - `&theme=dark|light` forces a theme (default: `prefers-color-scheme`)
 - `&flaky=1` makes every other tool call fail, so you can test the error banner and Retry
 - `&nochat=1` makes `sendMessage` fail, so you can test the copy-and-paste fallbacks
@@ -69,7 +69,7 @@ roughly matches the incoming view. A tool result with `isError` shows an error b
 
 | `view` | Produced by | What it shows |
 | --- | --- | --- |
-| `reply` | `venn_show_reply` | Advice, steps, a copyable draft, a discussion with **Reply in ChatGPT**, or a thread recap with ordered entries. **Save privately** keeps the displayed card. |
+| `reply` | `venn_show_reply` | Advice, steps, a copyable draft, a discussion with **Reply in ChatGPT**, a thread recap, or a nudge. Nudges show the proposed activity and person as the title and the reason as the body. **Draft an invite** and **Make it a group** continue in chat. **Maybe later** dismisses the nudge without saving. Other replies offer **Save privately**. |
 | `saved_replies` | `venn_saved_replies` | Open or delete your saved replies. Also available through the bookmark button in the header. |
 | `memory_review` | `venn_propose_memories` | Select drafts and set visibility for the selected updates. **Edit** opens per-item wording and visibility controls. More than 3 items adds bulk selection and a sticky action bar. Previously saved drafts start unchecked. `weekly_update: true` and `source: "chatgpt_memory"` have their own headings. The confirmation lists the saved records and offers **Open my Venn**. |
 | `memory_import` | `venn_import_chatgpt_memory` | "Bring your ChatGPT memory with you": one checkbox per area, the always-excluded note, **Preview my ChatGPT memory** (sends a prompt into the chat), then "Check the chat" with **Choose again**, or the prompt to copy when the host refuses the message. Nothing is sent to Venn from this card. |
@@ -92,7 +92,7 @@ roughly matches the incoming view. A tool result with `isError` shows an error b
 | anything else | | Empty state |
 
 The `dashboard` view also shows, above the tabs: **Try a demo import**; the sample banner with
-**Remove sample data** (inline confirm) while `sample_loaded` is true; a **This week** tile; a highlighted
+**Remove sample data** (inline confirm) while `sample_loaded` is true; a **This week** tile featuring a specific follow-up or the next available action; a highlighted
 "N answers waiting for your review" tile when `pending_answers > 0`; and a **Plans** section when `plans`
 is non-empty (title, date or "No date yet", members, **Done**, delete with inline confirm). The Friends tab
 adds **Ask a friend**, a Common ground shortcut on every friend row, "Sample" tags, and **Try with sample
@@ -272,6 +272,7 @@ the local state and show a banner with **Retry**. Buttons are disabled while a c
   the button disappears when the host refuses the message.
   **Preview my ChatGPT memory** sends the import prompt described under "Importing ChatGPT memory".
   If the host doesn't support `message`, the widget shows the text to type in chat instead.
+  A nudge’s **Draft an invite** asks ChatGPT for a draft using only the proposal title, never the grounding. It does not contact the person. With `?view=reply_nudge&nochat=1`, the same request appears for copying instead.
   A discussion's **Reply in ChatGPT** posts the answer to the chat and uses the same copy fallback.
 - `openLink` (`app.openLink({ url })`, needs the host's `openLinks` capability): **Add to calendar**
   opens a prefilled Google Calendar link built by `buildCalendarUrl` in `src/calendar.ts`

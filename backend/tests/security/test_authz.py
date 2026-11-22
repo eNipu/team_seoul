@@ -461,6 +461,42 @@ def test_find_people_only_searches_own_circle(alice, bob, carol):
     assert out["results"] == [] and out["searched"] == 0
 
 
+def test_quiet_nudge_respects_private_shared_and_blocked_data(alice, bob, carol):
+    conn = connect(alice, bob)
+    alice.ok("venn_add_person", name="Maya", interests=["Pottery"])
+    save(alice, "INTEREST", "Jazz", "Piano", "PRIVATE")
+    save(alice, "INTEREST", "Opera", "Season ticket", "SHARED_WITH_CONNECTIONS")
+    assert bob.ok("venn_find_nudge", topic="jazz") == {"match": None}
+    assert bob.ok("venn_find_nudge", topic="pottery") == {"match": None}
+    match = bob.ok("venn_find_nudge", topic="opera")["match"]
+    assert (match["display_name"], match["source"], match["evidence"]) == ("Alice", "shared", "Opera")
+    assert carol.ok("venn_find_nudge", topic="opera") == {"match": None}
+    alice.ok("venn_block_user", connection_id=conn)
+    assert bob.ok("venn_find_nudge", topic="opera") == {"match": None}
+
+
+@pytest.mark.parametrize("scope", ["venn.connections.manage", "venn.memories.read"])
+def test_quiet_nudge_requires_both_scopes(client, scope):
+    caller = MCPUser(client, mint_token(client, "alice", scopes=[scope]))
+    response = caller.rpc("tools/call", {"name": "venn_find_nudge", "arguments": {"topic": "jazz"}})
+    assert response.status_code == 403
+
+
+def test_group_nudge_respects_blocks_between_two_friends(alice, bob, carol, web):
+    first = connect(alice, bob)
+    connect(alice, carol)
+    pair = connect(bob, carol)
+    save(alice, "INTEREST", "Photography", "Film", "PRIVATE")
+    save(bob, "INTEREST", "Photography", "Film", "SHARED_WITH_CONNECTIONS")
+    save(carol, "INTEREST", "Architecture", "Design", "SHARED_WITH_CONNECTIONS")
+    args = {"connection_id": first, "topic": "photography"}
+    assert alice.ok("venn_find_nudge", **args)["match"]["display_name"] == "Carol"
+    assert web("alice").ok("GET", "/circle-idea")["idea"]["group"]["person"]["display_name"] == "Carol"
+    carol.ok("venn_block_user", connection_id=pair)
+    assert alice.ok("venn_find_nudge", **args) == {"match": None}
+    assert web("alice").ok("GET", "/circle-idea")["idea"]["group"] is None
+
+
 def test_group_brief_and_quiz_reject_foreign_ids(alice, bob, carol):
     conn = connect(alice, bob)
     maya = alice.ok("venn_add_person", name="Maya")

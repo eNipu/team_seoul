@@ -123,7 +123,8 @@ last_interaction_at|null, since, is_sample, open_follow_ups: number}`
 | Route | Returns |
 |---|---|
 | `GET /api/v1/search?q=` | the people-search payload (`view: "people_search"`), including `why` per result and matching `memories` |
-| `GET /api/v1/this-week` | the this-week payload (`view: "this_week"`) |
+| `GET /api/v1/this-week` | the this-week payload (`view: "this_week"`); home features a follow-up if present, else the first action |
+| `GET /api/v1/circle-idea` | `{idea: null}` or `{idea: {topic, person, activity, reason, draft, group}}`. An optional home suggestion from saved interests, not chat history. `person` is `{kind, id, display_name}`. `group` is null or `{person, activity, reason, draft}` for including one additional person. The drafts are unsent text. |
 | `GET /api/v1/reconnect` | the reconnect payload (`view: "reconnect"`) |
 | `GET /api/v1/quiz?connection_id=` | the quiz payload (`view: "quiz"`); without `connection_id`, a quiz on the whole circle |
 

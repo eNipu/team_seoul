@@ -248,8 +248,14 @@ function seedState(): State {
       id: "con_jun",
       name: "Jun Park",
       bio: "Designer. Collects old cameras and newer hobbies.",
-      interests: ["photography", "climbing", "jazz"],
+      interests: ["photography", "climbing", "jazz", "architecture"],
       shared: [
+        {
+          category: "INTEREST",
+          title: "Architecture",
+          description: "Enjoys spotting Art Deco doorways on walks around town.",
+          tags: ["architecture"],
+        },
         {
           category: "INTEREST",
           title: "Film photography",
@@ -706,6 +712,34 @@ export function createMockApi(options: MockOptions): Api {
           pending_answers: state.responses.length,
           sample_loaded: state.sampleLoaded || state.friends.some((f) => f.isSample),
         };
+      }),
+    getCircleIdea: () =>
+      wait((): T.CircleIdeaResponse => {
+        for (const [topic, solo, together] of [
+          ["photography", "take a photo walk around the old town", "pick a street and each photograph a different detail"],
+          ["board games", "try a new two-player board game", "meet for a three-player board game night"],
+        ]) {
+          const memory = state.memories.find((m) => m.category === "INTEREST" && !m.people.length && m.tags.includes(topic));
+          const matching = state.friends.filter((f) => f.interests.includes(topic) && f.isSample === (memory?.source === "sample"));
+          const friend = matching[0];
+          if (!memory || !friend) continue;
+          const architect = topic === "photography" && state.friends.find((f) => f !== friend && f.isSample === friend.isSample && f.interests.includes("architecture"));
+          const extra = architect || matching[1];
+          const outing = architect ? "take a neighborhood photo walk and photograph the architecture" : together;
+          const person = (f: MockFriend) => ({ kind: f.kind, id: f.id, display_name: f.name });
+          return {
+            idea: {
+              topic, person: person(friend), reason: `You saved “${memory.title}”, and ${friend.name} is into ${topic}.`,
+              activity: `You could ${solo}.`, draft: `Hey ${first(friend.name)}, want to ${solo} this weekend?`,
+              group: extra ? {
+                person: person(extra), reason: architect ? `${extra.name} is into architecture.` : `${extra.name} is also into ${topic}.`,
+                activity: `The three of you could ${outing}.`,
+                draft: `Hey ${first(friend.name)} and ${first(extra.name)}, want to ${outing} this weekend?`,
+              } : null,
+            },
+          };
+        }
+        return { idea: null };
       }),
     getHelp: () =>
       wait(() => ({
@@ -1193,10 +1227,9 @@ export function createMockApi(options: MockOptions): Api {
             suggestion: null,
           });
         }
-        const pending = state.friends
-          .filter((f) => !used.has(f.id))
-          .flatMap((f) => f.followUps.map((fu) => ({ f, fu })))
-          .sort((a, b) => a.fu.created_at.localeCompare(b.fu.created_at))[0];
+        const open = state.friends.flatMap((f) => f.followUps.map((fu) => ({ f, fu })))
+          .sort((a, b) => a.fu.created_at.localeCompare(b.fu.created_at));
+        const pending = open.find(({ f }) => !used.has(f.id)) ?? open[0];
         if (pending) {
           used.add(pending.f.id);
           actions.push({

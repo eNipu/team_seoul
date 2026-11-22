@@ -14,6 +14,10 @@ class AdviceReply(ReplyBase):
     kind: Literal["advice"]
 
 
+class NudgeReply(ReplyBase):
+    kind: Literal["nudge"]
+
+
 class ChecklistReply(ReplyBase):
     kind: Literal["checklist"]
     steps: list[Annotated[str, StringConstraints(min_length=1, max_length=200)]] = Field(min_length=1, max_length=6)
@@ -38,7 +42,7 @@ class ThreadReply(ReplyBase):
 
 
 Reply = Annotated[
-    AdviceReply | ChecklistReply | DraftReply | DiscussionReply | ThreadReply,
+    AdviceReply | ChecklistReply | DraftReply | DiscussionReply | ThreadReply | NudgeReply,
     Field(discriminator="kind"),
 ]
 

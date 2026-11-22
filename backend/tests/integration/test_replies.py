@@ -4,6 +4,7 @@ from sqlalchemy import select
 from app.models import AnalyticsEvent
 
 DRAFT = {"kind": "draft", "title": "Photo walk with Maya", "body": "Hey Maya, want to go on a photo walk?"}
+NUDGE = {"kind": "nudge", "title": "Check in with Maya", "body": "Ask how her photo walk went."}
 DISCUSSION = {
     "kind": "discussion",
     "title": "Reaching out to Maya",
@@ -33,6 +34,7 @@ def saved_replies(user):
     "reply",
     [
         DRAFT,
+        NUDGE,
         {"kind": "advice", "title": "Start small", "body": "Suggest a short walk."},
         {"kind": "checklist", "title": "Plan a photo walk", "body": "Pick a route.", "steps": ["Invite Maya."]},
         DISCUSSION,
@@ -44,7 +46,7 @@ def test_reply_renders_with_no_saved_record(alice, reply):
     assert saved_replies(alice) == []
 
 
-@pytest.mark.parametrize("reply", [DRAFT, DISCUSSION, THREAD])
+@pytest.mark.parametrize("reply", [DRAFT, DISCUSSION, THREAD, NUDGE])
 def test_saved_reply_roundtrip_and_owner_isolation(alice, bob, db, reply):
     alice.ok("venn_show_reply", reply=reply)
     events = select(AnalyticsEvent).where(AnalyticsEvent.event_type == "reply_saved")
@@ -69,6 +71,14 @@ def test_reply_rejects_secrets_and_raw_context(alice, tool):
     assert alice.err(tool, reply={**THREAD, "entries": [THREAD["entries"][0], entry]}).startswith("PRIVACY_VIOLATION")
     assert alice.call(tool, reply={**DRAFT, "conversation": "raw chat history"})["isError"]
     assert alice.call(tool, reply={**THREAD, "entries": [entry]})["isError"]
+    assert saved_replies(alice) == []
+
+
+@pytest.mark.parametrize("tool", ["venn_show_reply", "venn_save_reply"])
+def test_nudge_validates_plain_text_and_rejects_extra_fields(alice, tool):
+    assert alice.err(tool, reply={**NUDGE, "title": "My password is secret."}).startswith("PRIVACY_VIOLATION")
+    assert alice.err(tool, reply={**NUDGE, "body": "Hello\0Maya"}).startswith("INVALID_REQUEST")
+    assert alice.call(tool, reply={**NUDGE, "context": "raw chat history"})["isError"]
     assert saved_replies(alice) == []
 
 

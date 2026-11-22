@@ -5,6 +5,7 @@ import { Icon } from "./icons";
 
 const REPLY_LABEL = {
   advice: "Advice",
+  nudge: "Suggestion",
   checklist: "Next steps",
   draft: "Message draft",
   discussion: "Discussion",
@@ -70,11 +71,42 @@ function Discussion({ title, question, bridge }: Pick<ViewProps<ReplyViewData>, 
   );
 }
 
+function NudgeActions({ title, bridge, dismiss }: Pick<ViewProps<ReplyViewData>, "bridge"> & { title: string; dismiss: () => void }) {
+  const chat = useChatPrompt(bridge);
+  const sending = chat.state === "sending";
+  if (chat.state === "sent") return <ChatStatus state={chat.state} prompt={chat.prompt} />;
+  return (
+    <>
+      {chat.state === "unavailable" && <ChatFallback text={chat.prompt} />}
+      <div className="actions">
+        {chat.state !== "unavailable" && (
+          <>
+            <button type="button" className="btn btn--primary" disabled={sending}
+              onClick={() => void chat.send(`Draft a short invite for this proposal: “${title}”. I’ll send it myself.`)}>
+              Draft an invite
+            </button>
+            <button type="button" className="btn" disabled={sending}
+              onClick={() => void chat.send(`Make it a group thing. Keep the original person and activity: “${title}”.`)}>
+              Make it a group
+            </button>
+          </>
+        )}
+        <button type="button" className="btn" disabled={sending} onClick={dismiss}>Maybe later</button>
+      </div>
+    </>
+  );
+}
+
 export default function ReplyCard({ data, bridge }: ViewProps<ReplyViewData>) {
   const heading = useId();
   const action = useAction();
   const [saved, setSaved] = useState(false);
   const { reply } = data;
+  const [dismissed, setDismissed] = useState(false);
+
+  if (reply.kind === "nudge" && dismissed) {
+    return <p role="status" className="panel muted">Suggestion dismissed.</p>;
+  }
 
   function save() {
     void action.run("save", async () => {
@@ -96,7 +128,9 @@ export default function ReplyCard({ data, bridge }: ViewProps<ReplyViewData>) {
       {reply.kind === "discussion" && <Discussion title={reply.title} question={reply.question} bridge={bridge} />}
       <ActionError action={action} />
       <footer className="reply__footer">
-        {saved ? (
+        {reply.kind === "nudge" ? (
+          <NudgeActions title={reply.title} bridge={bridge} dismiss={() => setDismissed(true)} />
+        ) : saved ? (
           <p role="status" className="reply__saved"><Icon name="check-circle" size={18} /> Saved to your private Venn account</p>
         ) : (
           <button type="button" className={reply.kind === "discussion" ? "btn" : "btn btn--primary"}

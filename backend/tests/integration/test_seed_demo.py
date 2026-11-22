@@ -49,6 +49,13 @@ def test_seed_fills_every_card(alice):
     found = alice.ok("venn_find_people", query="who do I know who climbs")
     assert {r["display_name"] for r in found["results"]} >= {"Jun Park", "Priya Nair"}
 
+    nudge = alice.ok("venn_find_nudge", topic="photography")["match"]
+    assert nudge["id"] == jun and "fictional" in nudge["reason"]
+    extra = alice.ok("venn_find_nudge", topic="photography", connection_id=jun)["match"]
+    assert extra["id"] == diego and "Hiking" in extra["evidence"]
+    follow_on = alice.ok("venn_plan_group", connection_ids=[jun, diego], activity_topic="photography")
+    assert follow_on["suggestions"][0]["title"] == "Trail photo walk"
+
     group = alice.ok("venn_plan_group", connection_ids=[hana, diego])
     assert group["common_to_all"] == ["board games"]
 

@@ -203,6 +203,17 @@ export interface WelcomeHome {
 
 export type Home = DashboardHome | WelcomeHome;
 
+export interface CircleIdeaOption {
+  person: { kind: FriendKind; id: string; display_name: string };
+  activity: string;
+  reason: string;
+  draft: string;
+}
+
+export interface CircleIdeaResponse {
+  idea: (CircleIdeaOption & { topic: string; group: CircleIdeaOption | null }) | null;
+}
+
 export interface HelpTopic {
   key: string;
   title: string;
@@ -766,6 +777,26 @@ export function parsePlans(v: unknown): Plan[] {
   return objs(obj(v).plans)
     .map(parsePlan)
     .filter((p) => p.plan_id !== "");
+}
+
+function circleOption(v: unknown): CircleIdeaOption | null {
+  const o = obj(v);
+  const p = obj(o.person);
+  const { kind } = p;
+  const id = strOrNull(p.id), display_name = strOrNull(p.display_name);
+  const reason = strOrNull(o.reason), activity = strOrNull(o.activity), draft = strOrNull(o.draft);
+  if ((kind !== "connection" && kind !== "person") || !id || !display_name || !reason || !activity || !draft) return null;
+  return { person: { kind, id, display_name }, reason, activity, draft };
+}
+
+export function parseCircleIdea(v: unknown): CircleIdeaResponse {
+  const raw = obj(obj(v).idea);
+  const solo = circleOption(raw);
+  const topic = strOrNull(raw.topic);
+  if (!solo || !topic) return { idea: null };
+  const group = circleOption(raw.group);
+  const different = group && (group.person.kind !== solo.person.kind || group.person.id !== solo.person.id);
+  return { idea: { ...solo, topic, group: different ? group : null } };
 }
 
 export function parseHome(v: unknown): Home {

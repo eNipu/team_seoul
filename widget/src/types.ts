@@ -489,7 +489,7 @@ export type ViewData =
   | SavedRepliesViewData;
 
 export type Reply = { title: string; body: string } & (
-  | { kind: "advice" | "draft" }
+  | { kind: "advice" | "draft" | "nudge" }
   | { kind: "checklist"; steps: string[] }
   | { kind: "discussion"; question: string }
   | { kind: "thread"; entries: { title: string; body: string }[] }
@@ -896,7 +896,7 @@ function parseReply(value: unknown): Reply | null {
   const title = strOrNull(value.title);
   const body = strOrNull(value.body);
   if (!title || !body) return null;
-  if (value.kind === "advice" || value.kind === "draft") return { kind: value.kind, title, body };
+  if (value.kind === "advice" || value.kind === "draft" || value.kind === "nudge") return { kind: value.kind, title, body };
   if (value.kind === "discussion") {
     const question = strOrNull(value.question);
     return question ? { kind: "discussion", title, body, question } : null;

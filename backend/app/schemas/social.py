@@ -277,6 +277,19 @@ class ImportPeopleOut(BaseModel):
 
 
 # ------------------------------------------------------------------ find people
+class NudgeMatch(BaseModel):
+    kind: FriendKind
+    id: str
+    display_name: str
+    reason: str
+    source: Literal["interest", "own_memory", "shared"]
+    evidence: str
+
+
+class NudgeLookup(BaseModel):
+    match: NudgeMatch | None = None
+
+
 class PeopleSearchResult(BaseModel):
     kind: FriendKind
     id: str
