@@ -191,7 +191,7 @@ has no public address; the site reaches it over Railway's private network.
 ```bash
 npm run build && node check.mjs
 railway up ./site --path-as-root --service site -m "what changed"
-node site/check.mjs --url https://site-production-4ef8eb52.up.railway.app/
+node site/check.mjs --url https://<site-host>/
 ```
 
 ## What the copy may claim

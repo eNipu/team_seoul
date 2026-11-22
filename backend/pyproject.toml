@@ -3,7 +3,7 @@ name = "venn"
 version = "0.1.0"
 description = "Venn MCP server: ChatGPT-native AI social companion"
 authors = [
-    { name = "gururise", email = "ruebsamen.gene@gmail.com" }
+    { name = "gururise" }
 ]
 requires-python = ">=3.12"
 dependencies = [

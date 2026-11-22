@@ -270,7 +270,7 @@ Railway project `heldly` (the old product name), environment `production`:
 | Service | URL | Notes |
 | --- | --- | --- |
 | `backend` | `https://app.joinvennai.com` (MCP at `/mcp`) | Built from the root `Dockerfile` |
-| `site` | `https://site-production-4ef8eb52.up.railway.app` | See `site/README.md` |
+| `site` | `https://<site-host>` (see Railway project variables/domains) | See `site/README.md` |
 | `Postgres` | private network only | Used by both |
 
 The backend is **not** in production mode. There is no identity provider yet, so it runs with
