@@ -16,7 +16,7 @@ from pydantic import ValidationError
 from app.auth.dev_provider import DevOAuthProvider
 from app.auth.jwt_verifier import JWTTokenVerifier
 from app.config import ALL_SCOPES, Settings
-from app.mcp.common import LEGACY_WIDGET_URI, WIDGET_URI, error
+from app.mcp.common import WIDGET_URI, error
 from app.mcp.tools import register_tools
 from app.services.errors import InvalidRequest
 
@@ -53,6 +53,7 @@ the same in ChatGPT and on the Venn website. Friends do not need to join for Ven
   set to the original topic, not the full message. Highlight one
   feasible idea from the card that fits the original activity, naming whose interests it brings
   together; never call a two-person overlap something everybody likes.
+
 - For a generic greeting or "Open Venn", call venn_show_dashboard and let the user choose an
   action on the card. Do not begin set-up or load sample data unless they ask. When they ask to set
   up Venn, use the open steps from the dashboard result and start with the first one:
@@ -61,8 +62,10 @@ the same in ChatGPT and on the Venn website. Friends do not need to join for Ven
      to 30; never health, money, credentials or ID numbers). Do not list them in chat first. The
      card saves them PRIVATE at once (the tap is the consent) and offers Review. If you remember
      nothing, ask one short question about them instead.
-  2. Your person: reply with one short line asking who they want closer - a partner or a friend
-     -> venn_propose_people_import with who they name.
+  2. Bring your people: the card offers "Import contacts" (the user uploads a LinkedIn or Instagram
+     export or pastes names -> venn_propose_people_import with source 'linkedin', 'instagram' or
+     'pasted list'; confirm on the card; never infer interests from names or job titles) or
+     "Invite someone". Users who picked Partner see the invite first.
   3. Send the spark: venn_create_invite; the user shares the link, code or QR themselves. If they
      were given a code -> venn_redeem_invite. Redeeming connects both people at once; reply with
      one line, "You and {name} are connected.", and nothing more. Never ask anyone to accept.
@@ -74,10 +77,9 @@ the same in ChatGPT and on the Venn website. Friends do not need to join for Ven
   on the user's behalf or request social credentials. The user confirms on the card.
   For "try with sample friends", use venn_load_sample_circle instead. Sample data is not the
   user's own and does not count as set-up; remove it when asked with venn_remove_sample_circle.
-- Later, never part of first set-up ("Add more people"): import contacts from Instagram or LinkedIn
-  (the user's own export via venn_propose_people_import with source 'instagram' or 'linkedin'; never
-  infer interests from names or job titles; confirm on the review card), then
-  venn_find_interest_matches to show who shares their interests with an honest empty state. Do not
+  Show the dashboard without announcing internal load status. If asked about a profile's origin,
+  answer accurately.
+- After contacts are imported, venn_find_interest_matches to show who shares their interests with an honest empty state. Do not
   send an invitation or create a connection from a match.
 - Answer requests directed to Venn with a dedicated card whenever one fits, including follow-ups.
   If the request maps to a specific card, call that tool (venn_find_people, venn_this_week,
@@ -197,7 +199,11 @@ def build_mcp_server(settings: Settings) -> tuple[MCPServer, DevOAuthProvider | 
     apps = Apps()
     html = load_widget_html(settings.widget_path)
     # Old chat cards can still resolve their resource; newly advertised tools use the versioned URI.
-    for uri, name in ((WIDGET_URI, "venn-app"), (LEGACY_WIDGET_URI, "venn-app-v2")):
+    for uri, name in (
+        (WIDGET_URI, "venn-app"),
+        ("ui://venn/app-v3.html", "venn-app-v3"),
+        ("ui://venn/app-v2.html", "venn-app-v2"),
+    ):
         apps.add_html_resource(
             uri,
             html,

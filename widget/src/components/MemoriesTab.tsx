@@ -16,7 +16,7 @@ import {
   type Memory,
   type Visibility,
 } from "../types";
-import { EmptyNote, PeopleChips, SampleTag, SectionTitle, type Action, type Nav } from "./common";
+import { EmptyNote, PeopleChips, SectionTitle, type Action, type Nav } from "./common";
 import { CategoryIcon, Icon } from "./icons";
 
 interface Props {
@@ -222,7 +222,6 @@ export default function MemoriesTab({ memories, bridge, nav, action, onChange }:
                                 From ChatGPT
                               </span>
                             )}
-                            {m.source === "sample" && <SampleTag />}
                           </span>
                           <div className="card__foot-actions">
                             <button

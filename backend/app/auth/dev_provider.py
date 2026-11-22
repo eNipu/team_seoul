@@ -15,6 +15,8 @@ import html
 import secrets
 import time
 import uuid
+from dataclasses import dataclass
+from urllib.parse import urlencode
 
 import anyio
 import jwt
@@ -42,6 +44,32 @@ CODE_TTL_SECONDS = 300
 TXN_TTL_SECONDS = 600
 DEV_ISSUER_PREFIX = web_session.DEV_ISSUER
 _USERNAME_RE = web_session.USERNAME_RE
+
+_AUTH_ERRORS = {
+    "cancelled": "Google sign-in was cancelled. Try again whenever you're ready.",
+    "email_unverified": "Your Google account needs a verified email address to sign in.",
+    "invalid_state": "Your sign-in session expired. Please try again.",
+    "google_not_configured": "Google sign-in is not configured on this server.",
+}
+
+
+@dataclass(frozen=True)
+class _WebAccount:
+    auth_issuer: str
+    raw_subject: str
+    full_subject: str
+    label: str
+    display_name: str
+    email: str | None = None
+
+
+def _split_auth_subject(value: str) -> tuple[str, str]:
+    """Split a stored `<issuer>|<sub>` subject, defaulting legacy plain usernames to `dev`."""
+    if "|" in value:
+        issuer, sub = value.split("|", 1)
+        if issuer in (DEV_ISSUER_PREFIX, web_session.GOOGLE_ISSUER) and sub:
+            return issuer, sub
+    return DEV_ISSUER_PREFIX, value
 
 
 class DevOAuthProvider:
@@ -101,21 +129,36 @@ class DevOAuthProvider:
 
         ChatGPT and the website are two ways into one account, so this page links to an existing
         account rather than quietly making a second one: someone already signed in on the website
-        is offered that account, and a username that has no account yet has to be confirmed.
+        (via Google SSO or dev sign-in) is offered that account, Google Single Sign-On is offered
+        first when configured, and a dev username that has no account yet has to be confirmed.
         """
         need_passcode = bool(self.settings.dev_auth_passcode)
-        invalid = HTMLResponse(_page("This sign-in link is invalid or expired.", ""), status_code=400)
+        google_sso = self.settings.google_sso_enabled
+        no_store = {"Cache-Control": "no-store"}
+        invalid = HTMLResponse(_page("This sign-in link is invalid or expired.", ""), status_code=400, headers=no_store)
 
         if request.method == "GET":
             txn = request.query_params.get("txn", "")
             if not self._decode_txn(txn):
                 return invalid
+            auth_error = request.query_params.get("auth_error", "").strip()
+            error_msg = (
+                _AUTH_ERRORS.get(auth_error, "Could not finish Google sign-in. Please try again.")
+                if auth_error
+                else None
+            )
             signed_in = None
-            if request.query_params.get("switch") != "1":
+            if not error_msg and request.query_params.get("switch") != "1":
                 signed_in = await anyio.to_thread.run_sync(self._web_account, request)
             if signed_in:
-                return HTMLResponse(_continue_page(txn, *signed_in))
-            return HTMLResponse(_page(None, txn, need_passcode=need_passcode))
+                return HTMLResponse(
+                    _continue_page(txn, signed_in.display_name, signed_in.label, google_sso=google_sso),
+                    headers=no_store,
+                )
+            return HTMLResponse(
+                _page(error_msg, txn, need_passcode=need_passcode, google_sso=google_sso),
+                headers=no_store,
+            )
 
         form = await request.form()
         txn = str(form.get("txn", ""))
@@ -128,16 +171,41 @@ class DevOAuthProvider:
             # "Continue as …": the account comes from the website session, never from the form.
             signed_in = await anyio.to_thread.run_sync(self._web_account, request)
             if not signed_in:
-                return HTMLResponse(_page("You are signed out. Sign in again.", txn, need_passcode), status_code=401)
-            username, display = signed_in
+                return HTMLResponse(
+                    _page(
+                        "You are signed out. Sign in again.",
+                        txn,
+                        need_passcode=need_passcode,
+                        google_sso=google_sso,
+                    ),
+                    status_code=401,
+                    headers=no_store,
+                )
+            auth_issuer = signed_in.auth_issuer
+            raw_subject = signed_in.raw_subject
+            auth_subject = signed_in.full_subject
+            display = signed_in.display_name
+            google_email = signed_in.email
         else:
             passcode = str(form.get("passcode", ""))
             if need_passcode and not secrets.compare_digest(passcode, self.settings.dev_auth_passcode or ""):
-                return HTMLResponse(_page("Wrong passcode.", txn, need_passcode=True), status_code=401)
+                return HTMLResponse(
+                    _page("Wrong passcode.", txn, need_passcode=True, google_sso=google_sso, open_fallback=True),
+                    status_code=401,
+                    headers=no_store,
+                )
             username = str(form.get("username", "")).strip().lower()
             if not _USERNAME_RE.match(username):
                 return HTMLResponse(
-                    _page("Username: 2-32 chars, letters/digits/._-", txn, need_passcode), status_code=400
+                    _page(
+                        "Username: 2-32 chars, letters/digits/._-",
+                        txn,
+                        need_passcode=need_passcode,
+                        google_sso=google_sso,
+                        open_fallback=True,
+                    ),
+                    status_code=400,
+                    headers=no_store,
                 )
             wanted = str(form.get("display_name", "")).strip()[:60]
             create = str(form.get("create", "")) == "1"
@@ -153,7 +221,14 @@ class DevOAuthProvider:
             display = await anyio.to_thread.run_sync(_account)
             if display is None:
                 # No account under this name: ask before making one.
-                return HTMLResponse(_create_page(txn, username, wanted, passcode if need_passcode else ""))
+                return HTMLResponse(
+                    _create_page(txn, username, wanted, passcode if need_passcode else ""),
+                    headers=no_store,
+                )
+            auth_issuer = DEV_ISSUER_PREFIX
+            raw_subject = username
+            auth_subject = web_session.dev_subject(username)
+            google_email = None
 
         code = secrets.token_urlsafe(32)
         auth_code = AuthorizationCode(
@@ -165,7 +240,7 @@ class DevOAuthProvider:
             redirect_uri=params.redirect_uri,
             redirect_uri_provided_explicitly=params.redirect_uri_provided_explicitly,
             resource=params.resource,
-            subject=username,
+            subject=auth_subject,
         )
 
         def _store():
@@ -178,18 +253,41 @@ class DevOAuthProvider:
         response = RedirectResponse(
             construct_redirect_uri(str(params.redirect_uri), code=code, state=params.state), status_code=302
         )
-        # Same account on the website: the browser that just signed in is signed in there too.
-        web_session.set_cookie(response, request, self.settings, username)
+        response.headers["Cache-Control"] = "no-store"
+        # Same account on the website: preserve Google SSO or dev session cookie.
+        if auth_issuer == web_session.GOOGLE_ISSUER:
+            web_session.set_google_cookie(response, request, self.settings, auth_subject, google_email)
+        else:
+            web_session.set_cookie(response, request, self.settings, raw_subject)
         return response
 
-    def _web_account(self, request: Request) -> tuple[str, str] | None:
-        """(username, display name) of the account signed in on the website in this browser, if any."""
-        username = web_session.username_from(request, self.settings)
-        if not username:
+    def _web_account(self, request: Request) -> _WebAccount | None:
+        """Account signed in on the website in this browser (Google SSO or dev sign-in), if any."""
+        identity = web_session.identity_from(request, self.settings)
+        if identity is None:
             return None
         with session_scope() as db:
-            user = web_session.find_user(db, web_session.dev_subject(username))
-            return None if user is None else (username, user.display_name or username)
+            user = web_session.find_user(db, identity.subject)
+            if user is None:
+                return None
+            auth_issuer, raw_sub = _split_auth_subject(identity.subject)
+            if auth_issuer == web_session.GOOGLE_ISSUER:
+                email = identity.username
+                return _WebAccount(
+                    auth_issuer=auth_issuer,
+                    raw_subject=raw_sub,
+                    full_subject=identity.subject,
+                    label=email or "Google account",
+                    display_name=user.display_name or email or "Venn member",
+                    email=email,
+                )
+            return _WebAccount(
+                auth_issuer=auth_issuer,
+                raw_subject=raw_sub,
+                full_subject=identity.subject,
+                label=f"@{raw_sub}",
+                display_name=user.display_name or raw_sub,
+            )
 
     # ------------------------------------------------------------------- codes
     async def load_authorization_code(
@@ -224,12 +322,28 @@ class DevOAuthProvider:
         if name is None:  # single use
             raise TokenError(error="invalid_grant", error_description="authorization code already used")
         assert authorization_code.subject
-        return self._issue(client.client_id, authorization_code.subject, authorization_code.scopes, name)
+        auth_iss, raw_sub = _split_auth_subject(authorization_code.subject)
+        return self._issue(client.client_id, raw_sub, authorization_code.scopes, name, auth_iss=auth_iss)
 
     # ------------------------------------------------------------------ tokens
-    def _issue(self, client_id: str, subject: str, scopes: list[str], name: str | None) -> OAuthToken:
+    def _issue(
+        self,
+        client_id: str,
+        subject: str,
+        scopes: list[str],
+        name: str | None,
+        *,
+        auth_iss: str = DEV_ISSUER_PREFIX,
+    ) -> OAuthToken:
         now = int(time.time())
-        base = {"iss": self.issuer, "aud": self.audience, "sub": subject, "client_id": client_id, "iat": now}
+        base = {
+            "iss": self.issuer,
+            "aud": self.audience,
+            "sub": subject,
+            "auth_iss": auth_iss,
+            "client_id": client_id,
+            "iat": now,
+        }
         scope = " ".join(scopes)
         access = jwt.encode(
             {
@@ -295,12 +409,14 @@ class DevOAuthProvider:
         granted = set(refresh_token.scopes)
         new_scopes = [s for s in scopes if s in granted] if scopes else refresh_token.scopes
         assert refresh_token.subject
-        return self._issue(client.client_id, refresh_token.subject, new_scopes, claims.get("name"))
+        auth_iss = str(claims.get("auth_iss") or DEV_ISSUER_PREFIX)
+        return self._issue(client.client_id, refresh_token.subject, new_scopes, claims.get("name"), auth_iss=auth_iss)
 
     async def load_access_token(self, token: str) -> AccessToken | None:
         claims = self._decode(token, "access")
         if not claims:
             return None
+        auth_iss = str(claims.get("auth_iss") or DEV_ISSUER_PREFIX)
         return AccessToken(
             token=token,
             client_id=str(claims.get("client_id", "")),
@@ -308,7 +424,7 @@ class DevOAuthProvider:
             expires_at=int(claims["exp"]),
             resource=self.audience,
             subject=str(claims["sub"]),
-            claims={"iss": DEV_ISSUER_PREFIX, "name": claims.get("name")},
+            claims={"iss": auth_iss, "name": claims.get("name")},
         )
 
     async def revoke_token(self, token: AccessToken | RefreshToken) -> None:
@@ -321,45 +437,94 @@ class DevOAuthProvider:
 
 _DEV_NOTE = '<div class="note">Development sign-in. Not for production use.</div>'
 
+_GOOGLE_G_SVG = (
+    '<svg class="google-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">'
+    '<path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47a5.53 5.53 0 0 1-2.4 3.63v3.02h3.88'
+    'c2.27-2.09 3.54-5.17 3.54-8.89Z"/>'
+    '<path fill="#34A853" d="M12 24c3.24 0 5.95-1.07 7.94-2.9l-3.88-3.02c-1.08.72-2.45 1.15-4.06 1.15-3.12 '
+    '0-5.77-2.11-6.72-4.96H1.28v3.11A12 12 0 0 0 12 24Z"/>'
+    '<path fill="#FBBC05" d="M5.28 14.27a7.2 7.2 0 0 1 0-4.54V6.62H1.28a12 12 0 0 0 0 10.76l4-3.11Z"/>'
+    '<path fill="#EA4335" d="M12 4.77c1.76 0 3.34.61 4.59 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 0 0 '
+    '1.28 6.62l4 3.11C6.23 6.88 8.88 4.77 12 4.77Z"/>'
+    "</svg>"
+)
 
-def _page(error: str | None, txn: str, need_passcode: bool = False) -> str:
+
+def _google_start_href(txn: str) -> str:
+    next_target = f"/dev/login?{urlencode({'txn': txn})}"
+    return f"/auth/google/start?{urlencode({'next': next_target})}"
+
+
+def _page(
+    error: str | None,
+    txn: str,
+    need_passcode: bool = False,
+    *,
+    google_sso: bool = False,
+    open_fallback: bool = False,
+) -> str:
     err = f'<p class="err" role="alert">{html.escape(error)}</p>' if error else ""
     passcode = (
-        '<label>Dev passcode<input name="passcode" type="password" required autocomplete="off"></label>'
+        '<label>Server passcode<input name="passcode" type="password" required autocomplete="off"></label>'
         if need_passcode
         else ""
     )
-    form = (
+    autofocus = "" if google_sso else " autofocus"
+    dev_form = (
         f"""<form method="post" action="/dev/login">
   <input type="hidden" name="txn" value="{html.escape(txn)}">
   <label>Username<input name="username" required pattern="[a-zA-Z0-9][a-zA-Z0-9_.-]{{1,31}}"
-    placeholder="alex" autocomplete="username" autocapitalize="none" spellcheck="false" autofocus></label>
+    placeholder="alex" autocomplete="username" autocapitalize="none" spellcheck="false"{autofocus}></label>
   {passcode}
   <button type="submit">Continue to ChatGPT</button>
-</form>
-<small>Use the username you use on the Venn website. It opens the same account: what you saved there is
-here too.</small>"""
+</form>"""
         if txn
         else ""
     )
+    if txn and google_sso:
+        open_attr = " open" if open_fallback else ""
+        google_href = html.escape(_google_start_href(txn), quote=True)
+        body_main = f"""{err}
+<a class="button button--google" href="{google_href}">{_GOOGLE_G_SVG}Continue with Google</a>
+<div class="divider"><span>or</span></div>
+<details class="alt"{open_attr}>
+  <summary>Use server sign-in instead</summary>
+  <div class="alt-body">
+    {_DEV_NOTE}
+    {dev_form}
+  </div>
+</details>
+<small>Your ChatGPT chats and ChatGPT's own memory are not synced to Venn. Only what you approve is saved.</small>"""
+    else:
+        note = _DEV_NOTE if txn else ""
+        hint = (
+            "<small>Use the username you use on the Venn website. It opens the same account: what you saved there is "
+            "here too.</small>"
+            if txn
+            else ""
+        )
+        body_main = f"{note}\n{err}{dev_form}{hint}"
+
+    title = "Sign in to Venn" if google_sso else "Sign in to Venn (development)"
     return page(
-        "Sign in to Venn (development)",
+        title,
         f"""<h1>Sign in to Venn</h1>
 <p>Connect ChatGPT to your Venn account.</p>
-{_DEV_NOTE}
-{err}{form}""",
+{body_main}""",
+        theme="light",
     )
 
 
-def _continue_page(txn: str, username: str, display: str) -> str:
+def _continue_page(txn: str, display: str, label: str, *, google_sso: bool = False) -> str:
     """Shown when this browser is already signed in on the Venn website."""
     safe_txn = html.escape(txn)
+    note = "" if google_sso else f"\n{_DEV_NOTE}"
+    title = "Connect ChatGPT to Venn" if google_sso else "Connect ChatGPT to Venn (development)"
     return page(
-        "Connect ChatGPT to Venn (development)",
+        title,
         f"""<h1>Connect ChatGPT to Venn</h1>
-<p>You are signed in as <strong>{html.escape(display)}</strong> (@{html.escape(username)}). ChatGPT will use
-this account, so everything you saved to Venn is there too.</p>
-{_DEV_NOTE}
+<p>You are signed in as <strong>{html.escape(display)}</strong> ({html.escape(label)}). ChatGPT will use
+this account, so everything you saved to Venn is there too.</p>{note}
 <form method="post" action="/dev/login">
   <input type="hidden" name="txn" value="{safe_txn}">
   <input type="hidden" name="session" value="1">
@@ -367,6 +532,7 @@ this account, so everything you saved to Venn is there too.</p>
 </form>
 <small><a class="quiet" href="/dev/login?txn={safe_txn}&amp;switch=1">Use a different account</a></small>
 <small>Your ChatGPT chats and ChatGPT's own memory are not synced to Venn. Only what you approve is saved.</small>""",
+        theme="light",
     )
 
 
@@ -389,4 +555,5 @@ Otherwise you can create a new one.</p>
   <button type="submit">Create account and continue</button>
 </form>
 <small><a class="quiet" href="/dev/login?txn={safe_txn}&amp;switch=1">Back</a></small>""",
+        theme="light",
     )

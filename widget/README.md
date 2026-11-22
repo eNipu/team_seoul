@@ -14,8 +14,7 @@ npm run dev        # local demo harness
 ```
 
 The Python server reads `widget/dist/index.html` and serves it as MCP resource
-`ui://venn/app-v3.html` with mimeType `text/html;profile=mcp-app`. Older cards can still
-resolve `ui://venn/app-v2.html`.
+`ui://venn/app-v4.html` with mimeType `text/html;profile=mcp-app`. The v2 and v3 resource URIs remain available for older cards.
 
 ### Demo mode
 
@@ -35,11 +34,11 @@ mock bridge (`src/mock.ts`) instead of the ext-apps connection. It also works st
   `venn_full` has 8 labels in every region, for layout checks; `this_week` has one action of each type,
   `this_week_empty` has no friends; `ask_link` is a question link for Maya Chen; `answers` has two
   responses, one for an existing person and one from someone new, plus three links; `answers_empty` has
-  neither; `dashboard_sample` has the sample circle loaded (Preview tags, starter memories, and a cleanup control, without a banner);
+  neither; `dashboard_sample` has the sample circle loaded (standard friend and memory rows and a cleanup control, without a status banner);
   `dashboard_plans` has two saved plans; `memory_review_people` is a review card whose items name people,
   two of them adding new people)
 - `&tab=profile|memories|friends` opens a dashboard tab
-- Rehearse the guided flow at `?view=welcome`, or open `?view=onboarding_contacts` to start at step 2. `?view=onboarding_matches` starts at step 3, while `?view=interest_matches` and `?view=interest_matches_empty` show the two outcomes. In step 2 choose Instagram or LinkedIn. Each platform offers 100 built-in profiles with five interests each. Exact matches and related interest pairs appear separately; only profiles you select and confirm become private notes. **Clear preview data** removes them.
+- Rehearse the guided flow at `?view=welcome`, or open `?view=onboarding_contacts` to start at step 2. `?view=onboarding_matches` starts at step 3, while `?view=interest_matches` and `?view=interest_matches_empty` show the two outcomes. In **Add your people**, **Instagram import** and **LinkedIn import** each open their review directly. Confirm picks from one source to continue, or use **Also review** on the receipt to import from both. Each platform offers 100 built-in profiles with five interests each. Exact matches and related interest pairs appear separately; only profiles you select and confirm become private notes. **Clear preview data** removes them.
 - `?view=weekly_review` shows three editable weekly updates and the audience picker.
 - `?view=reply_nudge|reply_advice|reply_checklist|reply_draft|reply_discussion|reply_thread|saved_replies` shows the reply layouts and the saved-reply list
 - `&theme=dark|light` forces a theme (default: `prefers-color-scheme`)
@@ -91,10 +90,10 @@ roughly matches the incoming view. A tool result with `isError` shows an error b
 | `answers` | `venn_review_answers` | One card per response: who answered and when, a name field (new person) or "Updates your note on <name>", each answer as a checkbox (on by default) with its question and a "Saves as" tag, **Save selected** / **Discard** (inline confirm); after saving, what was added and **Open <name>**. Below, the question links with Active / Expired, **Copy link**, **Revoke**, and **Create a link**. Answer text is rendered as plain text. |
 | anything else | | Empty state |
 
-The `dashboard` view also shows, above the tabs: **Preview profiles**; a **This week** tile featuring a specific follow-up or the next available action; a highlighted
+The `dashboard` view also shows, above the tabs: a **This week** tile featuring a specific follow-up or the next available action; a highlighted
 "N answers waiting for your review" tile when `pending_answers > 0`; and a **Plans** section when `plans`
 is non-empty (title, date or "No date yet", members, **Done**, delete with inline confirm). The Friends tab
-adds **Ask a friend**, a Common ground shortcut on every friend row, **Preview** tags, and **Explore a starter circle** in its empty state; **Play a quiz** shows when connections + people ≥ 2. When `sample_loaded` is true, **Clear preview data** below the dashboard tabs requires confirmation. `memory_review` shows "About: <names>" and "Also adds <names> to your people";
+adds **Ask a friend**, a Common ground shortcut on every friend row, and **Explore a starter circle** in its empty state; **Play a quiz** shows when connections + people ≥ 2. When `sample_loaded` is true, **Clear preview data** below the dashboard tabs requires confirmation. `memory_review` shows "About: <names>" and "Also adds <names> to your people";
 `people_search` shows each result's `why` (in place of the matched labels and snippet, which remain the
 fallback when `why` is empty) and a "From your memories" group. The friend view adds **Common ground** and,
 for private notes, **Ask them a few questions**.
@@ -197,7 +196,7 @@ Welcome, home and help use `onboarding: {memories_ready, contacts_ready, matches
 | We did this / We met up / Log a hangout | `venn_log_interaction` | `{ ...friendArg, activity? }` | `{ recorded: true, kind, id, last_interaction_at }` |
 | Invite a friend | `venn_create_invite` | `{}` | `invite` view |
 | Revoke code | `venn_revoke_invite` | `{ code }` | `{ revoked: true }` |
-| Preview profiles → Instagram / LinkedIn import | `venn_preview_demo_people_import` | `{ platform: "instagram" or "linkedin" }` | `people_import` view plus widget-only `_meta["venn/demoImportConfirmation"]` |
+| Step 2 → Instagram import / LinkedIn import | `venn_preview_demo_people_import` | `{ platform: "instagram" or "linkedin" }` | `people_import` view plus widget-only `_meta["venn/demoImportConfirmation"]` |
 | Add N profiles | `venn_import_demo_people` | `{ import_id, indexes: number[], confirmation_token }` | `{ imported: Person[], count }`; the widget forwards the token from that review only on **Add** |
 | Add N people (regular import) | `venn_import_people` | `{ import_id, indexes: number[] }` | `{ imported: Person[], count }` |
 | Friends tab search; search again | `venn_find_people` | `{ query }` | `people_search` view |
@@ -253,9 +252,7 @@ the local state and show a banner with **Retry**. Buttons are disabled while a c
   Also **Import friends** (`I'd like to import my friends into Venn. I'll paste a list, upload a contacts file, or just tell you about them.`),
   group **Plan it** (`Help me plan "<title>" with <names>. I will reach out to everyone myself.`) and
   **Tell <name> my score** (`I just scored X out of N on Venn's "How well do you know <name>?" quiz. Help me draft a short, playful message telling <name> my score. I will send it myself.`).
-  Set-up **Answer a few questions** (`Let's set up Venn. Ask me a few questions about what I enjoy and what I like to avoid.`)
-  and **Add your people** (`I'd like to add my friends to Venn. I'll paste a list, upload a contacts file, or just tell you about them.`);
-  a help example sends its own text unchanged.
+  **Add your people** opens a platform review card directly, without sending a chat message. A help example sends its own text unchanged.
   This week **Ask ChatGPT to rewrite** (`Rewrite this message to <name> in my voice, keep it short: “<draft>”`);
   the button disappears when the host refuses the message.
   **Preview my ChatGPT memory** sends the import prompt described under "Importing ChatGPT memory".

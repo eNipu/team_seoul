@@ -63,8 +63,8 @@ User ids are **never** taken from tool arguments.
 
 ## Widget (MCP Apps)
 
-- One widget bundle published as `ui://venn/app-v3.html` (`text/html;profile=mcp-app`, with
-  `ui://venn/app-v2.html` for older cards), built from
+- One widget bundle published as `ui://venn/app-v4.html` (`text/html;profile=mcp-app`, with
+  v2 and v3 compatibility aliases for older cards), built from
   `widget/` into a single file and served from `widget/dist/index.html` (fallback page if missing).
 - Card-producing tools bind this resource and return a `view` discriminator. For example,
   `venn_propose_memories` opens a review and `venn_show_reply` opens a reply card.
@@ -79,7 +79,7 @@ User ids are **never** taken from tool arguments.
   opens it through the host. Separately, users can link Google Calendar through the backend.
   The provider requests free/busy and event permissions. Availability settings and calendar
   connection tools exist today. Meeting proposals, booking and notifications are on the [task board](tasks/README.md).
-- Bump the resource URI (`app-v3`) when shipping breaking widget changes; ChatGPT caches templates.
+- Bump the resource URI (`app-v4`) when shipping breaking widget changes; ChatGPT caches templates.
 
 ## Memory consent flow
 

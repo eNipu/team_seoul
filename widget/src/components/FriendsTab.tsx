@@ -16,7 +16,7 @@ import {
   type PendingRequest,
   type Person,
 } from "../types";
-import { Avatar, ChatStatus, EmptyNote, SampleTag, SectionTitle, Spinner, useChatPrompt, type Action, type Nav } from "./common";
+import { Avatar, ChatStatus, EmptyNote, SectionTitle, Spinner, useChatPrompt, type Action, type Nav } from "./common";
 import { Icon } from "./icons";
 import { SearchIcon } from "./PeopleSearch";
 import PersonForm, { type PersonValues } from "./PersonForm";
@@ -314,7 +314,6 @@ export default function FriendsTab(props: Props) {
               opening={action.busy === `open-connection:${c.connection_id}`}
               disabled={busy}
               onOpen={() => open("connection", c.connection_id)}
-              sample={c.is_sample}
               comparing={action.busy === `compare-connection:${c.connection_id}`}
               onCompare={() => compare("connection", c.connection_id)}
               {...pickProps("connection", c.connection_id)}
@@ -341,7 +340,6 @@ export default function FriendsTab(props: Props) {
               opening={action.busy === `open-person:${p.person_id}`}
               disabled={busy}
               onOpen={() => open("person", p.person_id)}
-              sample={p.is_sample}
               comparing={action.busy === `compare-person:${p.person_id}`}
               onCompare={() => compare("person", p.person_id)}
               {...pickProps("person", p.person_id)}
@@ -380,7 +378,6 @@ interface RowProps {
   opening: boolean;
   disabled: boolean;
   onOpen: () => void;
-  sample: boolean;
   comparing: boolean;
   onCompare: () => void;
   /** Set while picking friends for a group hangout: the row becomes a checkbox. */
@@ -389,7 +386,7 @@ interface RowProps {
   onPick?: () => void;
 }
 
-function FriendRow({ name, detail, opening, disabled, onOpen, sample, comparing, onCompare, picked, pickDisabled, onPick }: RowProps) {
+function FriendRow({ name, detail, opening, disabled, onOpen, comparing, onCompare, picked, pickDisabled, onPick }: RowProps) {
   if (onPick) {
     return (
       <li>
@@ -399,7 +396,6 @@ function FriendRow({ name, detail, opening, disabled, onOpen, sample, comparing,
           <span className="pick__body">
             <span className="name-line">
               <strong>{name}</strong>
-              {sample && <SampleTag />}
             </span>
             <span className="muted small">{detail}</span>
           </span>
@@ -413,14 +409,13 @@ function FriendRow({ name, detail, opening, disabled, onOpen, sample, comparing,
         type="button"
         className="friend-row"
         disabled={disabled}
-        aria-label={`Open ${name}${sample ? " (preview)" : ""}`}
+        aria-label={`Open ${name}`}
         onClick={onOpen}
       >
         <Avatar name={name} />
         <span className="friend-row__body">
           <span className="name-line">
             <strong>{name}</strong>
-            {sample && <SampleTag />}
           </span>
           <span className="muted small">{detail}</span>
         </span>

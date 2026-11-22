@@ -1136,7 +1136,7 @@ function loadSampleCircle() {
   connections = [...connections, ...structuredClone(SAMPLE_CONNECTIONS)];
   people = [...people, ...structuredClone(SAMPLE_PEOPLE)];
   if (addMemories) memories = structuredClone(SAMPLE_MEMORIES);
-  pending = [...pending, { request_id: "sample_r1", sender_display_name: "Elena Rossi (sample)", created_at: iso(-1) }];
+  pending = [...pending, { request_id: "sample_r1", sender_display_name: "Elena Rossi", created_at: iso(-1) }];
   followUps["connection:sample_c1"] = [
     { follow_up_id: "sample_fu1", text: "Ask Priya how the ceramics show went", created_at: iso(-5) },
   ];

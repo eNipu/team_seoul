@@ -189,13 +189,11 @@ def test_search_memories(alice):
 def test_widget_resource_served(alice):
     resources = alice.rpc("resources/list").json()["result"]["resources"]
     uris = {resource["uri"] for resource in resources}
-    assert {"ui://venn/app-v2.html", "ui://venn/app-v3.html"} <= uris
-    current, legacy = (
-        alice.rpc("resources/read", {"uri": uri}).json()["result"]["contents"][0]
-        for uri in ("ui://venn/app-v3.html", "ui://venn/app-v2.html")
-    )
-    assert current["mimeType"] == legacy["mimeType"] == "text/html;profile=mcp-app"
-    assert current["text"] == legacy["text"] and "<html" in current["text"]
+    supported = {f"ui://venn/app-v{version}.html" for version in (2, 3, 4)}
+    assert supported <= uris
+    contents = [alice.rpc("resources/read", {"uri": uri}).json()["result"]["contents"][0] for uri in supported]
+    assert all(c["mimeType"] == "text/html;profile=mcp-app" for c in contents)
+    assert all(c["text"] == contents[0]["text"] for c in contents) and "<html" in contents[0]["text"]
 
 
 def test_render_tools_bound_to_widget(alice):
@@ -231,8 +229,8 @@ def test_render_tools_bound_to_widget(alice):
         "venn_saved_replies",
     )
     for name in render_tools:
-        assert tools[name]["_meta"]["ui"]["resourceUri"] == "ui://venn/app-v3.html"
-        assert tools[name]["_meta"]["openai/outputTemplate"] == "ui://venn/app-v3.html"
+        assert tools[name]["_meta"]["ui"]["resourceUri"] == "ui://venn/app-v4.html"
+        assert tools[name]["_meta"]["openai/outputTemplate"] == "ui://venn/app-v4.html"
     # Tools the widget calls directly must be callable from the app.
     for name in (
         "venn_save_memories",
