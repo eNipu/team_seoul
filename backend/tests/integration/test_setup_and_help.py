@@ -154,7 +154,7 @@ def test_instructions_start_with_a_question_and_state_the_boundary(client):
 def test_instructions_surface_matched_signals_in_plain_text(client):
     instructions = client.app_state.mcp.instructions
     assert "venn_whats_new" in instructions
-    assert "Btw, Maya is in Berlin right now" in instructions
+    assert "Btw, Maya is in Berlin right now" in " ".join(instructions.split())
     # No schedule, no drafts, no proactive quiz/ask-link.
     for phrase in ("every morning", "scheduled task", "offer to draft", "Offer to draft"):
         assert phrase not in instructions

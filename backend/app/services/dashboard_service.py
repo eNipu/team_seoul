@@ -63,7 +63,7 @@ SETUP_STEPS: tuple[_Step, ...] = (
     _Step(
         "your_people",
         "Import contacts",
-        "From a LinkedIn or Instagram export, or a list of names.",
+        "From LinkedIn, Instagram or a list.",
         "Import contacts: the user uploads a LinkedIn or Instagram export or pastes names -> "
         "venn_propose_people_import; they confirm on the card. Never infer interests from names or job titles. "
         "If the user picked Partner on the welcome card, do Invite someone first.",
