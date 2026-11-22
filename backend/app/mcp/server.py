@@ -10,7 +10,7 @@ from mcp.server.apps import Apps, ResourceCsp
 from mcp.server.auth.settings import AuthSettings, ClientRegistrationOptions, RevocationOptions
 from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
-from mcp_types import Icon
+from mcp_types import CallToolResult, Icon
 from pydantic import ValidationError
 
 from app.auth.dev_provider import DevOAuthProvider
@@ -167,17 +167,35 @@ class DeferredTools:
             mcp.tool(**kwargs)(fn)
 
 
+def _validation_summary(exc: ValidationError) -> str:
+    """Field paths and error types only — never raw values or tokens."""
+    parts = []
+    for err in exc.errors()[:5]:
+        loc = ".".join(str(p) for p in err.get("loc", ()))
+        parts.append(f"{loc}:{err.get('type', 'invalid')}")
+    return ",".join(parts)
+
+
 class VennMCPServer(MCPServer):
     async def call_tool(self, name, arguments, context=None):
         try:
-            return await super().call_tool(name, arguments, context)
+            result = await super().call_tool(name, arguments, context)
         except ToolError as exc:
-            if name == "venn_import_demo_people" and isinstance(exc.__cause__, ValidationError):
-                # SDK validation errors can echo arguments, including the review's private capability.
-                return error(
-                    InvalidRequest("Open a fresh import review and use its Add button to confirm your selection.")
-                )
+            if isinstance(exc.__cause__, ValidationError):
+                log.warning("mcp tool validation error tool=%s errors=%s", name, _validation_summary(exc.__cause__))
+                if name == "venn_import_demo_people":
+                    # SDK validation errors can echo arguments, including the review's private capability.
+                    return error(
+                        InvalidRequest("Open a fresh import review and use its Add button to confirm your selection.")
+                    )
+            else:
+                log.warning("mcp tool call error tool=%s type=%s", name, type(exc.__cause__ or exc).__name__)
             raise
+        if isinstance(result, CallToolResult) and result.is_error:
+            first_text = next((getattr(b, "text", "") for b in (result.content or [])), "")
+            code = first_text.split(":", 1)[0].strip() if ":" in first_text else "ERROR"
+            log.info("mcp tool error tool=%s code=%s", name, code)
+        return result
 
 
 def build_mcp_server(settings: Settings) -> tuple[MCPServer, DevOAuthProvider | None]:
