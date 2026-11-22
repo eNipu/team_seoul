@@ -6,7 +6,7 @@ import {
   parsePerson,
   type FriendViewData,
 } from "../types";
-import { OpenMyVenn, momentText, signalsFrom } from "./Moment";
+import { OpenMyVenn, signalsFrom } from "./Moment";
 import { ActionError, SectionTitle, useAction, type ViewProps } from "./common";
 import { CategoryIcon, Icon, Illustration } from "./icons";
 import PersonForm, { type PersonValues } from "./PersonForm";
@@ -107,12 +107,10 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
   const chips = [...details.interests, ...(isPerson ? [] : data.shared_interests.filter((s) => !listed.has(s.toLowerCase())))];
 
   const signals = signalsFrom({ ...data, display_name: details.name, notes: details.notes });
-  const moment = momentText(details.name, signals);
 
   return (
     <section className="onb friend">
-      <h2 className="sr-only">{details.name}</h2>
-      <p className="onb__context">ChatGPT</p>
+      <h2 className="onb__title">{details.name}</h2>
       <ActionError action={action} />
 
       {mode === "edit" ? (
@@ -134,10 +132,13 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
         </div>
       ) : (
         <>
-          <div className="onb__bubble onb__bubble--in">
-            <p>{moment}</p>
-            {signals.signal && <small>{signals.signal.source}</small>}
-          </div>
+          {signals.signal && (
+            <div className="onb__moment">
+              <p>{signals.signal.title}</p>
+              {signals.signal.detail && <span className="onb__moment-detail">{signals.signal.detail}</span>}
+              <small>{signals.signal.source}</small>
+            </div>
+          )}
           <div className="onb__row">
             <OpenMyVenn bridge={bridge} />
             <details className="onb__more">
