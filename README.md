@@ -126,7 +126,8 @@ curl https://abc123.ngrok-free.app/.well-known/oauth-protected-resource/mcp  # O
    your `DEV_AUTH_PASSCODE`. The username becomes your Venn identity.
 
 Or install the packaged plugin from the repo marketplace: `.agents/plugins/marketplace.json`
-points at `./plugin`. Set the `url` in `plugin/mcp.json` to your tunnel's `/mcp` URL first.
+points at `./plugin`. The package uses `https://app.joinvennai.com/mcp`. For local testing,
+set the `url` in `plugin/mcp.json` to your tunnel's `/mcp` URL.
 After changing tools or the widget, refresh the Venn connection in ChatGPT's Plugins settings.
 
 ### 6. Try it
@@ -232,7 +233,7 @@ ChatGPT ──MCP (OAuth bearer)──▶ FastAPI /mcp ──▶ services ──
 - **Set-up and help**: the home card carries a three-step set-up checklist (about you, your
   people, connect) until it is done, and the model is told to start it without being asked.
   `venn_help` shows what Venn can do, with examples to tap.
-- **Cards**: seventeen tools render an interactive card in ChatGPT; the rest return data.
+- **Cards**: nineteen tools render an interactive card in ChatGPT; the rest return data.
 - **Identity** always comes from the OAuth token, never from tool arguments.
 
 60 tools in total — see [docs/MCP_TOOLS.md](docs/MCP_TOOLS.md). The website's routes are in [docs/WEB_API.md](docs/WEB_API.md).
@@ -248,6 +249,7 @@ See [.env.example](.env.example). Key settings:
 | `AUTH_MODE` | `dev` (built-in OAuth server, refused in production) or `jwt` (your IdP) |
 | `OAUTH_ISSUER`, `OAUTH_AUDIENCE`, `OAUTH_JWKS_URL` | Required for `jwt` / production |
 | `OPENAI_API_KEY`, `OPENAI_MODEL` | Optional LLM memory extraction (heuristic fallback otherwise) |
+| `APIFY_TOKEN` | Optional. Lets the website's "Import from LinkedIn" fetch company, location and skills for the connections you pick; without it they are imported with name and headline |
 
 ## Production
 
@@ -267,7 +269,7 @@ Railway project `heldly` (the old product name), environment `production`:
 
 | Service | URL | Notes |
 | --- | --- | --- |
-| `backend` | `https://backend-production-a7fad591.up.railway.app` (MCP at `/mcp`) | Built from the root `Dockerfile` |
+| `backend` | `https://app.joinvennai.com` (MCP at `/mcp`) | Built from the root `Dockerfile` |
 | `site` | `https://site-production-4ef8eb52.up.railway.app` | See `site/README.md` |
 | `Postgres` | private network only | Used by both |
 
@@ -279,7 +281,7 @@ users arrive.
 
 ```bash
 railway up --service backend --environment production --ci -m "what changed"   # from the repo root
-curl https://backend-production-a7fad591.up.railway.app/readyz
+curl https://app.joinvennai.com/readyz
 ```
 
 ## Repository layout

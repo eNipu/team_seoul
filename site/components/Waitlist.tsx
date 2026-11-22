@@ -1,6 +1,7 @@
 "use client";
 
 import { type FormEvent, useEffect, useRef, useState } from "react";
+import { trackPixel } from "@/lib/pixel";
 
 import { readCampaignParams } from "@/lib/attribution";
 import { type WaitlistVersion } from "@/lib/version";
@@ -140,6 +141,7 @@ export default function Waitlist({ version, invite }: Props) {
       }
       remember(spot);
       justJoined.current = true;
+      trackPixel("Lead", { content_name: "waitlist" });
       setState({ step: "joined", spot, shareNote: null });
     } catch {
       setState({ step: "form", busy: false, error: "You seem to be offline. Check your connection and try again." });

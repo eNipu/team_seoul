@@ -4,6 +4,7 @@ import OnboardingPreview from "@/components/OnboardingPreview";
 import PageView from "@/components/PageView";
 import SiteHeader from "@/components/SiteHeader";
 import Waitlist from "@/components/Waitlist";
+import { CookieSettingsLink } from "@/components/ConsentBanner";
 import Faq from "@/components/sections/Faq";
 import HowItWorks from "@/components/sections/HowItWorks";
 import Moment from "@/components/sections/Moment";
@@ -115,7 +116,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
       </main>
 
       <footer className="wrap">
-        <span>© {new Date().getFullYear()} Venn</span>
+        <span>© {new Date().getFullYear()} Venn · <a href="/privacy">Privacy</a> · <a href="/pricing">Pricing</a> · <CookieSettingsLink /></span>
         <p>The people in the examples are made up.</p>
       </footer>
       <PageView version={version} />
