@@ -8,6 +8,7 @@ export default function SiteHeader({ note = "For ChatGPT", action }: { note?: Re
         <VennMark size={104} />
       </span>
       <div className="site-header__end">
+        <a className="site-header__link" href="/pricing">Pricing</a>
         <span className="site-header__note">{note}</span>
         {action}
       </div>

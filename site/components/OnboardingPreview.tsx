@@ -69,7 +69,7 @@ export default function OnboardingPreview() {
       </header>
 
       <ConnectionMap circle={circle} kept={DRAFTS.map((draft) => kept.includes(draft.id))}
-        shared={step > 0} matched={step === 2 && matchShared} />
+        shared={step > 0} matched={step === 2 && matchShared} step={step} />
 
       <div className="onboarding__body" key={step}>
         <h3 ref={heading} tabIndex={-1}>
