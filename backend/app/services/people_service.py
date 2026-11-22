@@ -22,7 +22,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.ai.extraction import contains_sensitive
-from app.models import PeopleImport, Person, PersonInteraction, User
+from app.models import Memory, PeopleImport, Person, PersonInteraction, User
 from app.models._base import as_aware, utcnow
 from app.schemas.social import (
     DeletePersonOut,
@@ -251,10 +251,10 @@ def clear_demo_previews(db: Session, user: User) -> None:
 
 
 def propose_import(
-    db: Session, user: User, people: list[PersonCandidate], source: str | None = None
+    db: Session, user: User, people: list[PersonCandidate], source: str | None = None, *, match_interests: bool = False
 ) -> PeopleImportView:
     """Store a list of people for the user to review. Adds nothing to their notes yet."""
-    return _propose_import(db, user, people[:MAX_IMPORT_CANDIDATES], source)
+    return _propose_import(db, user, people[:MAX_IMPORT_CANDIDATES], source, match_interests=match_interests)
 
 
 def propose_demo_import(
@@ -285,14 +285,23 @@ def _propose_import(
     people: list[PersonCandidate],
     source: str | None,
     *,
+    match_interests: bool = False,
     demo_platform: DemoPlatform | None = None,
     demo_channel: DemoChannel | None = None,
     confirmation_token: str | None = None,
 ) -> PeopleImportView:
     is_sample = demo_platform is not None
-    existing = existing_names(db, user, include_samples=is_sample)
+    existing: dict[str, list[str]] = {}
+    query = select(Person.name, Person.relationship).where(Person.owner_user_id == user.id)
+    if not is_sample:
+        query = query.where(Person.is_sample.is_(False))
+    for name, relationship in db.execute(query.order_by(Person.id)):
+        clues = existing.setdefault(name.casefold(), [])
+        clue = strip_contact_details(relationship)
+        if clue and clue not in clues:
+            clues.append(clue)
     items: list[dict] = []
-    seen: set[tuple[str, str]] = set()
+    seen: set[tuple[str, str, str, tuple[str, ...], int | None]] = set()
     skipped = 0
     for candidate in people:
         raw = (candidate.name, candidate.relationship, candidate.notes, *candidate.interests)
@@ -305,7 +314,13 @@ def _propose_import(
         interests = clean_interests([i for i in map(strip_contact_details, candidate.interests) if i])
         if not name:
             continue
-        key = (name.lower(), (relationship or "").lower())
+        key = (
+            name.casefold(),
+            (relationship or "").casefold(),
+            (notes or "").casefold(),
+            tuple(sorted(interest.casefold() for interest in interests)),
+            candidate.last_met_days_ago,
+        )
         if key in seen:
             continue
         seen.add(key)
@@ -334,12 +349,26 @@ def _propose_import(
     )
     db.add(row)
     db.flush()
+    my_interests: set[str] = set()
+    if match_interests:
+        for title, tags in db.execute(
+            select(Memory.title, Memory.tags).where(
+                Memory.user_id == user.id, Memory.category == "INTEREST", Memory.source.is_distinct_from("sample")
+            )
+        ):
+            my_interests.update(label.strip().casefold() for label in [title, *(tags or [])])
     return PeopleImportView(
         import_id=str(row.id),
         expires_at=as_aware(row.expires_at),
         source=row.source,
         candidates=[
-            ImportCandidateOut(index=i, already_added=item["name"].lower() in existing, **item)
+            ImportCandidateOut(
+                index=i,
+                shared_interests=[label for label in item["interests"] if label.casefold() in my_interests],
+                already_added=item["name"].casefold() in existing,
+                existing_relationships=existing.get(item["name"].casefold(), []),
+                **item,
+            )
             for i, item in enumerate(items)
         ],
         skipped=skipped,

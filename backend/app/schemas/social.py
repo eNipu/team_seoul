@@ -251,6 +251,7 @@ class PersonCandidate(BaseModel):
 
 
 class ImportCandidateOut(BaseModel):
+    shared_interests: list[str] = Field(default_factory=list)
     index: int
     name: str
     relationship: str | None
@@ -258,6 +259,7 @@ class ImportCandidateOut(BaseModel):
     interests: list[str]
     last_met_days_ago: int | None
     already_added: bool
+    existing_relationships: list[str] = Field(default_factory=list)
 
 
 class PeopleImportView(BaseModel):

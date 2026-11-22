@@ -1418,9 +1418,8 @@ function inviteView(maxUses: unknown, code = newCode()): InviteViewData {
 // ---------------------------------------------------------------------------
 
 
-function importView(platform: DemoPlatform | null = null): PeopleImportViewData {
+function importView(platform: DemoPlatform | null = null, entries: ImportCandidate[] = IMPORT_CANDIDATES): PeopleImportViewData {
   const import_id = nextId("imp");
-  const taken = new Set(people.filter((p) => platform || !p.is_sample).map((p) => p.name.toLowerCase()));
   const profiles = platform ? DEMO_GIVEN_NAMES.flatMap((first, row) => DEMO_SURNAMES[platform].map((last, col) => ({
     index: row * DEMO_SURNAMES[platform].length + col,
     name: `${first} ${last}`,
@@ -1428,8 +1427,12 @@ function importView(platform: DemoPlatform | null = null): PeopleImportViewData 
     notes: null,
     interests: [DEMO_TOPICS[platform][(row + col) % DEMO_TOPICS[platform].length]],
     last_met_days_ago: null,
-  }))) : IMPORT_CANDIDATES;
-  const candidates = profiles.map((c) => ({ ...c, already_added: taken.has(c.name.toLowerCase()) }));
+  }))) : entries;
+  const candidates = profiles.map((c) => {
+    const matches = people.filter((p) => (platform || !p.is_sample) && p.name.toLowerCase() === c.name.toLowerCase());
+    return { ...c, shared_interests: c.interests.filter((interest) => profile.interests.some((mine) => mine.toLowerCase() === interest.toLowerCase())), already_added: matches.length > 0, existing_relationships: matches.flatMap((p) => p.relationship ? [p.relationship] : []) };
+  });
+
   const confirmationToken = platform ? import_id.padEnd(43, "_") : null;
   imports.set(import_id, { candidates, isSample: platform !== null, confirmationToken });
   return structuredClone({
@@ -1440,7 +1443,7 @@ function importView(platform: DemoPlatform | null = null): PeopleImportViewData 
     demo_platform: platform,
     confirmation_token: confirmationToken,
     candidates,
-    skipped: platform ? 0 : 1,
+    skipped: platform || entries !== IMPORT_CANDIDATES ? 0 : 1,
     note: "Nothing is saved until you confirm. These stay private notes only you can see.",
   });
 }
@@ -2227,8 +2230,15 @@ export function createMockBridge(): HostBridge {
           return ok({ removed: true, connection_id: args.connection_id });
         }
 
-        case "venn_propose_people_import":
-          return ok(importView());
+        case "venn_propose_people_import": {
+          if (!Array.isArray(args.people)) return ok(importView());
+          const entries = args.people.map((person, index) => ({
+            index, name: String(person.name), relationship: person.relationship ?? null,
+            notes: person.notes ?? null, interests: person.interests ?? [],
+            last_met_days_ago: person.last_met_days_ago ?? null, already_added: false,
+          }));
+          return ok(importView(null, entries));
+        }
 
         case "venn_preview_demo_people_import": {
           if (args.platform !== "instagram" && args.platform !== "linkedin") {
