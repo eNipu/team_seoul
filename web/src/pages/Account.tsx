@@ -23,6 +23,7 @@ import {
   useAsync,
   useToast,
 } from "../ui";
+import { OverlapLocationCard } from "./OverlapLocationCard";
 
 function ProfileCard({ me, onSaved }: { me: Me; onSaved: () => void }) {
   const { setDisplayName } = useSession();
@@ -344,6 +345,7 @@ export default function Account() {
         {(m) => (
           <div className="stack">
             <ProfileCard key={`${m.profile.display_name}:${m.profile.bio ?? ""}`} me={m} onSaved={me.reload} />
+            <OverlapLocationCard />
             <ChatGptCard me={m} />
             <ConnectCard requests={requests} onChanged={home.reload} />
             {fromSetup && <Link to="/" className="btn">Back to Home</Link>}

@@ -1,4 +1,4 @@
-"""Public, closed-vocabulary inputs and anonymous Overlap cards."""
+"""Closed-vocabulary inputs and responses for Overlap."""
 
 from datetime import date as LocalDate
 from typing import Annotated, Literal
@@ -8,6 +8,11 @@ from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
 Area = Literal["seongsu", "hongdae", "yeonnam"]
 Slot = Literal["morning", "afternoon", "evening"]
 Interest = Literal["photography", "architecture", "walking", "coffee", "books", "art"]
+
+
+class OverlapLocation(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    area: Area | None
 
 
 class OverlapWindow(BaseModel):

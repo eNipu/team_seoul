@@ -106,7 +106,7 @@ Read `SCHEDULING.md` before any task in this group.
 | [T48](T48-instagram-web-demo-import.md) | Preview and import fictional Instagram profiles on the web | web + backend | S | T46, T47 | done |
 | [T49](T49-proactive-suggestions.md) | Suggest a person and a plan before the user asks | web + widget + backend | M | T39 | done |
 | [T50](T50-actionable-home-setup.md) | Complete unfinished setup steps from Home | web | S | – | done |
-| [T53](T53-venn-overlap.md) | Venn Overlap: nearby plans with mutual introductions | web + backend | L | – | done |
+| [T53](T53-venn-overlap.md) | Venn Overlap: explicit neighborhood matching and mutual introductions | web + backend | L | – | done |
 | [T54](T54-social-import-interests.md) | Social import previews and related interests | web + plugin + backend | M | T48, T52 | done |
 | [T55](T55-plugin-onboarding.md) | Three-step plugin onboarding and paginated memory review | plugin + widget + backend | M | T54 | done |
 | [T56](T56-plugin-profile-import.md) | Open either platform directly from Add your people | plugin + widget | S | T55 | done |
@@ -115,6 +115,7 @@ Read `SCHEDULING.md` before any task in this group.
 | [T60](T60-demo-interest-breadth.md) | Enrich demo profiles and match broad interests to specific ones | web + widget + backend | S | T54 | done |
 | [T61](T61-card-memory-import.md) | Import ChatGPT memories on the card and populate profile interests | widget + backend | S | T55 | done |
 | [T62](T62-web-home-chatgpt-link.md) | Link to ChatGPT and its quickstart guide from the web home greeting | web | S | — | done |
+| [T63](T63-overlap-onboarding-location.md) | Save a private Seoul neighborhood during web onboarding | web + backend | S | T53 | done |
 
 T04 and T12 can start right away, in parallel with the backend tasks, because the shapes they
 render are fixed in `CONTRACTS.md`.

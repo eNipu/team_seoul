@@ -15,6 +15,8 @@ export interface Api {
   signInWithGoogle?(mode: "signin" | "signup"): Promise<T.SignInResult>;
   signOut(): Promise<void>;
   getOverlap(): Promise<T.OverlapState>;
+  getOverlapLocation(): Promise<T.OverlapLocation>;
+  updateOverlapLocation(area: T.OverlapLocation["area"]): Promise<T.OverlapLocation>;
   optInOverlap(input: T.OverlapInput): Promise<T.OverlapState>;
   withdrawOverlap(): Promise<T.OverlapState>;
   respondOverlap(id: string, action: T.OverlapAction): Promise<T.OverlapState>;
@@ -188,6 +190,8 @@ const realApi: Api = {
   },
 
   getOverlap: async () => T.parseOverlapState(await request("GET", "/overlap")),
+  getOverlapLocation: async () => T.parseOverlapLocation(await request("GET", "/overlap/location")),
+  updateOverlapLocation: async (area) => T.parseOverlapLocation(await request("PATCH", "/overlap/location", { body: { area } })),
   optInOverlap: async (input) => T.parseOverlapState(await request("POST", "/overlap/preference", { body: input })),
   withdrawOverlap: async () => T.parseOverlapState(await request("DELETE", "/overlap/preference")),
   respondOverlap: async (id, action) => T.parseOverlapState(await request("POST", `/overlap/matches/${enc(id)}/respond`, { body: { action } })),

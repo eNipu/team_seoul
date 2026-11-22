@@ -4,6 +4,7 @@ import { href } from "../router";
 import { openSlots, seoulWeek as week } from "../overlapWindow";
 import { OVERLAP_AREAS, OVERLAP_INTERESTS, type OverlapPreference, type OverlapReportReason, type OverlapState } from "../types";
 import { Dialog, InlineError, Loaded, useAction, useAsync, useToast } from "../ui";
+import { overlapAreaName } from "./OverlapLocationCard";
 import "../overlap.css";
 
 const label = (code: string) => code.charAt(0).toUpperCase() + code.slice(1);
@@ -19,7 +20,15 @@ function WindowSummary({ area, date, slot, interests }: OverlapPreference) {
 
 function OptIn({ busy, save }: { busy: boolean; save: (p: OverlapPreference) => void }) {
   const days = week();
-  const [area, setArea] = useState<string>(OVERLAP_AREAS[0]);
+  const [area, setArea] = useState("");
+  const location = useAsync(() => api.getOverlapLocation(), []);
+  const { reload: reloadLocation } = location;
+  useEffect(() => {
+    const refreshLocation = () => { if (!document.hidden) reloadLocation(); };
+    document.addEventListener("visibilitychange", refreshLocation);
+    return () => document.removeEventListener("visibilitychange", refreshLocation);
+  }, [reloadLocation]);
+  const savedArea = location.error ? null : location.data?.area;
   // Tomorrow always has a full set of windows, regardless of the current time in Seoul.
   const [chosenDay, setDay] = useState(days[1]);
   const date = days.includes(chosenDay) ? chosenDay : days[0];
@@ -28,26 +37,38 @@ function OptIn({ busy, save }: { busy: boolean; save: (p: OverlapPreference) => 
   const slot = slots.includes(chosenSlot) ? chosenSlot : slots[0];
   const [interests, setInterests] = useState<string[]>([]);
   const [adult, setAdult] = useState(false);
-  const preference = { area, date, slot, interests };
+  const validArea = OVERLAP_AREAS.find(code => code === area);
+  const preference = validArea ? { area: validArea, date, slot, interests } : null;
+  const canOptIn = !busy && !!preference && adult && interests.length > 0 && interests.length <= 3;
   return <form className="ov-card" onSubmit={e => {
     e.preventDefault();
-    if (!busy && adult && interests.length && interests.length <= 3 && week().includes(date)) save(preference);
+    if (canOptIn && preference && week().includes(date)) save(preference);
   }}>
     <h2>Your Seoul window</h2>
-    <p>Choose a neighborhood you’d like to visit, not your current location.</p>
+    <p id="overlap-neighborhood-hint">Choose a neighborhood you’d visit. We look for someone who picks the same one. No address or GPS needed.</p>
     <div className="ov-fields">
-      <label>District<select value={area} onChange={e => setArea(e.target.value)}>{OVERLAP_AREAS.map(a => <option key={a} value={a}>{label(a)}</option>)}</select></label>
+      <label>Neighborhood in Seoul
+        <select name="area" required aria-describedby="overlap-neighborhood-hint" value={area} onChange={e => setArea(e.target.value)}>
+          <option value="" disabled>Choose a neighborhood</option>
+          {OVERLAP_AREAS.map(a => <option key={a} value={a}>{overlapAreaName(a)}</option>)}
+        </select>
+      </label>
       <label>Day in Seoul<select value={date} onChange={e => setDay(e.target.value)}>{days.map(d => <option key={d} value={d}>{showDay(d)}</option>)}</select></label>
       <label>Time of day<select value={slot} onChange={e => setSlot(e.target.value)}>{slots.map(s => <option key={s} value={s}>{label(s)}</option>)}</select></label>
     </div>
+    {savedArea && <div>
+      <button type="button" className="btn" disabled={busy} onClick={() => setArea(savedArea)}>
+        Use saved neighborhood: {overlapAreaName(savedArea)}
+      </button>
+    </div>}
     <fieldset className="ov-interests"><legend>What would you enjoy? Choose 1–3.</legend><div className="ov-row">
       {OVERLAP_INTERESTS.map(i => { const on = interests.includes(i); return <button key={i} type="button" className="btn" aria-pressed={on} disabled={!on && interests.length >= 3}
         onClick={() => setInterests(old => on ? old.filter(x => x !== i) : [...old, i])}>{on && <span aria-hidden="true">✓ </span>}{label(i)}</button>; })}
     </div></fieldset>
-    <section className="ov-note"><h3>What a match can see</h3><WindowSummary {...preference} />
-      <p>Venn can use these interests to explain a plan to one other member in this window. It won’t share your location, contacts or memories. Your first name appears only if you both say yes to that plan.</p></section>
+    <section className="ov-note"><h3>Before you opt in</h3>{preference && <WindowSummary {...preference} />}
+      <p>A suggested plan can mention the neighborhood and shared interests, but not your current location, contacts or memories. Your first name appears only if you both say yes.</p></section>
     <label className="ov-check"><input type="checkbox" checked={adult} onChange={e => setAdult(e.target.checked)} required /> I confirm that I’m an adult.</label>
-    <div><button className="btn btn--primary" disabled={busy || !adult || !interests.length}>Opt in to Overlap</button></div>
+    <div><button className="btn btn--primary" disabled={!canOptIn}>Opt in to Overlap</button></div>
   </form>;
 }
 
@@ -118,7 +139,7 @@ export default function Overlap() {
   return <div className="overlap">
     <header className="ov-hero"><div className={`ov-rings ${status === "introduced" ? "ov-mutual" : ""}`} aria-hidden="true"><i /><i /></div>
       <div><div className="ov-kicker">Venn Overlap · Seoul</div><h1 aria-live="polite">{headline}</h1>
-      <p>{status === "waiting" ? "Names stay hidden unless you both agree. This page updates automatically." : state.data?.preference && !match ? "We’ll show a suggestion here if another adult shares your window and an interest." : "One neighborhood, a little free time and something you both enjoy."}</p></div>
+      <p>{status === "waiting" ? "Names stay hidden unless you both agree. This page updates automatically." : state.data?.preference && !match ? "We’ll show a suggestion if another adult picks the same neighborhood and time slot and shares an interest." : "One neighborhood, a little free time and something you both enjoy."}</p></div>
     </header>
     {DEMO && <aside className="ov-note"><h3>{demoSeat ? `Fictional demo · ${demoSeat === "a" ? "Robin" : "Wren"}’s view` : "Try the two-person demo"}</h3>
       <p>Open both views in the same browser. Pick the same window and a shared interest, then say yes separately.</p>

@@ -1,9 +1,9 @@
-// Only the two explicitly selected fictional seats share state. Each owns one key,
-// so simultaneous responses in different tabs cannot overwrite each other.
+// The two explicitly selected fictional seats share match state. Each has its own
+// key, so simultaneous responses in different tabs cannot overwrite each other.
 import type { Api } from "./api";
 import { ApiError } from "./errors";
 import { demoOverlapPlan } from "./demoOverlapPlan";
-import { parseOverlapState, type OverlapPreference, type OverlapState, type OverlapAction, type OverlapReportReason } from "./types";
+import { parseOverlapLocation, parseOverlapState, type OverlapPreference, type OverlapState, type OverlapAction, type OverlapReportReason } from "./types";
 
 type Seat = "a" | "b";
 const prefix = "venn.overlap.fictional.v1.";
@@ -24,10 +24,11 @@ function read(seat: Seat): Entry {
   return { ...entry, preference: parseOverlapState(entry).preference };
 }
 
-type Demo = Pick<Api, "getOverlap" | "optInOverlap" | "withdrawOverlap" | "respondOverlap" | "reportOverlap">;
+type Demo = Pick<Api, "getOverlap" | "getOverlapLocation" | "updateOverlapLocation" | "optInOverlap" | "withdrawOverlap" | "respondOverlap" | "reportOverlap">;
 export function createOverlapDemo(selected?: string | null, run: <R>(fn: () => R) => Promise<R> = async fn => fn()): Demo {
   const seat = selected === "a" || selected === "b" ? selected : null;
   const other = seat === "a" ? "b" : "a";
+  const locationKey = seat ? `${prefix}location.${seat}` : null;
   function state(): OverlapState {
     if (!seat) return { preference: null, match: null };
     const own = read(seat), peer = read(other);
@@ -75,6 +76,13 @@ export function createOverlapDemo(selected?: string | null, run: <R>(fn: () => R
   }
   return {
     getOverlap: () => run(state),
+    getOverlapLocation: () => run(() => parseOverlapLocation({ area: locationKey && window.localStorage.getItem(locationKey) })),
+    updateOverlapLocation: area => run(() => {
+      if (!locationKey) throw new ApiError("INVALID_REQUEST", "Choose fictional demo seat a or b in the URL.", 400);
+      if (area === null) window.localStorage.removeItem(locationKey);
+      else window.localStorage.setItem(locationKey, area);
+      return { area };
+    }),
     optInOverlap: input => run(() => update(entry => {
       const { preference } = parseOverlapState({ preference: input });
       if (input.adults_confirmed !== true || !preference || !["morning", "afternoon", "evening"].includes(preference.slot)) throw new ApiError("INVALID_REQUEST", "Check your overlap preferences.", 400);

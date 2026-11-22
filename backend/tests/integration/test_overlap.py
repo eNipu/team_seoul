@@ -14,6 +14,7 @@ from app.services import overlap_service
 
 ROOT = "/overlap"
 PREF = ROOT + "/preference"
+LOCATION = ROOT + "/location"
 EMPTY = {"preference": None, "match": None}
 
 
@@ -75,6 +76,30 @@ def test_auth_and_csrf(web):
         assert anon.err(method, path, body) == (401, "UNAUTHENTICATED")
         assert alice.send(method, path, body, headers={}).status_code == 403
     assert alice.ok("GET", ROOT) == EMPTY
+
+
+def test_private_account_location_is_independent_of_overlap_opt_in(web):
+    anon, alice, bob = web(), web("alice"), web("bob")
+    area = {"area": "hongdae"}
+    assert anon.err("GET", LOCATION) == (401, "UNAUTHENTICATED")
+    assert anon.err("PATCH", LOCATION, area) == (401, "UNAUTHENTICATED")
+    assert alice.send("PATCH", LOCATION, area, headers={}).status_code == 403
+    assert alice.ok("GET", LOCATION) == {"area": None}
+    assert alice.ok("PATCH", LOCATION, area) == area
+    for invalid in ({}, {"area": "Seoul"}, {**area, "user_id": bob.ok("GET", "/me")["user_id"]}):
+        assert alice.err("PATCH", LOCATION, invalid) == (400, "INVALID_REQUEST")
+    assert alice.ok("GET", LOCATION) == area
+    assert bob.ok("GET", LOCATION, user_id=alice.ok("GET", "/me")["user_id"]) == {"area": None}
+    assert "overlap_area" not in alice.ok("GET", "/me")
+    assert alice.ok("GET", ROOT) == EMPTY
+
+    alice.ok("POST", PREF, prefs())
+    state = bob.ok("POST", PREF, prefs())
+    assert state["match"] is not None
+    assert alice.ok("GET", LOCATION) == area
+    assert alice.ok("PATCH", LOCATION, {"area": None}) == {"area": None}
+    assert alice.ok("GET", LOCATION) == {"area": None}
+    assert alice.ok("GET", ROOT) == state
 
 
 @pytest.mark.parametrize(

@@ -131,6 +131,10 @@ last_interaction_at|null, since, is_sample, open_follow_ups: number}`
 
 ### Venn Overlap: meet someone new (signed-in web only)
 
+`GET /api/v1/overlap/location` reads the signed-in user's private saved neighborhood. `PATCH /api/v1/overlap/location` requires `{area}` with `seongsu`, `hongdae`, `yeonnam` or `null` (remove it). Both return `{area}`. This preference can be saved during web onboarding or in Account. It never opens or changes a live window, and isn't shown to other members.
+
+For live windows:
+
 | Route | Body | Effect |
 |---|---|---|
 | `GET /api/v1/overlap` | — | Read your live window/offer. Never opts in or creates a match. |

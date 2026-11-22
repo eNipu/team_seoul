@@ -17,6 +17,7 @@ class User(Base):
     # "<issuer>|<sub>" — the only identity source; never derived from names or chat content.
     auth_subject: Mapped[str] = mapped_column(String(512), unique=True, nullable=False)
     display_name: Mapped[str | None] = mapped_column(String(80))
+    overlap_area: Mapped[str | None] = mapped_column(String(16))
     matches_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = created_at_col()
     updated_at: Mapped[datetime] = updated_at_col()

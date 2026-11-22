@@ -85,6 +85,14 @@ import { relatedLabels } from "../../shared/importInterests";
 import { openSlots, seoulWeek } from "./overlapWindow";
 
 export const OVERLAP_AREAS = ["seongsu", "hongdae", "yeonnam"] as const;
+export type OverlapArea = (typeof OVERLAP_AREAS)[number];
+export interface OverlapLocation { area: OverlapArea | null }
+
+export function parseOverlapLocation(value: unknown): OverlapLocation {
+  const area = isObj(value) ? value.area : null;
+  return { area: OVERLAP_AREAS.find(code => code === area) ?? null };
+}
+
 export const OVERLAP_INTERESTS = ["photography", "architecture", "walking", "coffee", "books", "art"] as const;
 
 export interface OverlapPreference {

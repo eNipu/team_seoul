@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.db.database import session_scope
 from app.models import User
-from app.schemas.overlap import OverlapPreferenceInput, OverlapState
+from app.schemas.overlap import OverlapLocation, OverlapPreferenceInput, OverlapState
 from app.services import overlap_service
 from app.services.errors import Unauthenticated
 from app.web.session import Identity, find_user
@@ -25,7 +25,7 @@ class ReportBody(BaseModel):
     reason: Literal["safety", "spam", "other"]
 
 
-def build_overlap_api(identity: Callable, run: Callable[[Identity, Callable[[Session, User], OverlapState]], Any]):
+def build_overlap_api(identity: Callable, run: Callable[[Identity, Callable[[Session, User], BaseModel]], Any]):
     def private_response(response: Response) -> None:
         response.headers["Cache-Control"] = "private, no-store"
 
@@ -42,6 +42,22 @@ def build_overlap_api(identity: Callable, run: Callable[[Identity, Callable[[Ses
                     return OverlapState()
                 raise Unauthenticated("Sign in to Venn.")
             return overlap_service.get_state(db, user)
+
+    @router.get("/location")
+    def location(who: Identity = who_required) -> OverlapLocation:
+        with session_scope() as db:
+            user = find_user(db, who.subject)
+            if user is None and not who.provision:
+                raise Unauthenticated("Sign in to Venn.")
+            return OverlapLocation(area=user.overlap_area if user else None)
+
+    @router.patch("/location")
+    def update_location(body: OverlapLocation, who: Identity = who_required) -> OverlapLocation:
+        def save(db: Session, user: User) -> OverlapLocation:
+            user.overlap_area = body.area
+            return body
+
+        return run(who, save)
 
     @router.post("/preference")
     def opt_in(body: OverlapPreferenceInput, who: Identity = who_required) -> OverlapState:

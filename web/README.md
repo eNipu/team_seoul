@@ -27,7 +27,7 @@ ordinary History-API URLs with a small router of its own (`src/router.tsx`).
 ## Demo mode
 
 Add `?demo=1` to any URL: the app uses an in-memory mock of the API (`src/mockApi.ts`) and skips
-sign-in. The flag is kept across in-app navigation. A reload resets the mock except for the two explicitly fictional Overlap seats below.
+sign-in. The flag is kept across in-app navigation. A reload resets the mock except for Overlap demo state (see below).
 It is seeded with the investor demo: account "Gene", Maya Chen, the memory "Photo walks with
 Maya", and a search for "photography" that returns Maya with the reason she matched.
 
@@ -48,7 +48,9 @@ a Venn server." with a link to the demo.
 
 Open `/app/overlap?demo=1&seat=a` and `/app/overlap?demo=1&seat=b` side by side in the **same browser profile and origin**. These are fictional seats, not live accounts. Select Seongsu, tomorrow afternoon, and Photography in both; add Architecture on the second. Opt in separately. A plan appears in both views. Accept on one: the other still sees an anonymous offer. Accept on the second to reveal first names and the shared challenge on both screens. Suggest the public station entrance from one seat and agree from the other; neither action books anything. Withdraw in either to close it.
 
-Only these demo seats exchange state via local storage. To reset an excluded pair after a pass/block/report, clear the two `venn.overlap.fictional.v1.a` and `venn.overlap.fictional.v1.b` keys. For a real rehearsal, migrate the backend and use **separate browser profiles** signed into two different accounts, with no demo flags.
+Try `/app?demo=1&fresh=1&seat=a` to save an optional neighborhood from the welcome screen. Overlap offers it as a shortcut, but no window opens until you opt in. Edit or remove it in Account. Saved demo neighborhoods persist in local storage separately for each fictional seat.
+
+Only the two demo seats exchange match state via local storage. To reset an excluded pair after a pass/block/report, clear the two `venn.overlap.fictional.v1.a` and `venn.overlap.fictional.v1.b` keys. For a real rehearsal, migrate the backend and use **separate browser profiles** signed into two different accounts, with no demo flags.
 
 ## Sign-in
 

@@ -36,6 +36,7 @@ import {
 import { TickButton } from "./shared";
 import { CircleIdea } from "./CircleIdea";
 import { OverlapEntry } from "./OverlapEntry";
+import { OverlapLocationCard } from "./OverlapLocationCard";
 
 const EXAMPLES = ["photography", "board games", "climbing", "lives in Lisbon"];
 
@@ -278,6 +279,7 @@ function Welcome({ name, steps, onLoaded }: { name: string; steps: SetupStep[]; 
           join for Venn to be useful.
         </p>
       </section>
+      <OverlapLocationCard />
       <div className="starts">
         <Link to="/people" query={{ new: "1", from: "setup" }} className="start">
           <span className="start__icon">

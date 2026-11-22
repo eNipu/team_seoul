@@ -9,7 +9,7 @@ timestamps are timezone-aware UTC, JSON columns are `JSONB` on Postgres.
 
 | Table | Columns | Notes |
 | --- | --- | --- |
-| `users` | id*, auth_subject* (unique), display_name, matches_reviewed_at, created_at*, updated_at* | `auth_subject = "<issuer>\|<sub>"` from the verified token. Created on first tool call. |
+| `users` | id*, auth_subject* (unique), display_name, matches_reviewed_at, overlap_area, created_at*, updated_at* | `auth_subject = "<issuer>\|<sub>"` from the verified token. Created on first tool call. |
 | `user_profiles` | id*, user_id* (unique, FK cascade), bio, social_goals* (JSON list), visibility* (`PRIVATE`/`CONNECTIONS`/`PUBLIC`), created_at*, updated_at* | Social goals: `make_friends`, `maintain_friendships`, `deepen_relationships`, `find_activity_partners`, `reconnect`, `meet_people_with_shared_interests`. |
 
 ## Memories
@@ -115,7 +115,9 @@ people notes, through the existing visibility and ownership checks. If a discuss
 durable interest or preference, ChatGPT can propose the specific item with
 `venn_propose_memories`. It becomes a matching signal after the user approves it in the review card.
 
-## Seoul Overlap (migrations 0009–0010)
+## Seoul Overlap (migrations 0009, 0010, 0012)
+
+`users.overlap_area` is a nullable, private preference for one supported Seoul neighborhood. It is visible only to the owner through signed-in web settings. It is a shortcut when choosing a window, not an opt-in or a matching input; deleting the account also removes it.
 
 `overlap_preferences` has one explicitly adult-confirmed opt-in per user: curated district,
 Seoul local date, slot, and 1–3 selected interest codes. Today through today + 6 days are
