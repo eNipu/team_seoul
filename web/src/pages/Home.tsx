@@ -1,16 +1,15 @@
-// Home: one recommendation from what a friend chose to share (their AI's signal meets yours),
-// one action, then your circle. No reminders, no dashboard.
+// Home: your circle, and the latest thing a friend shared (read-only). Recommendations arrive as
+// ChatGPT messages, not here. No actions, reminders or dashboard.
 
 import { useState } from "react";
 import { api } from "../api";
 import { Icon } from "../icons";
 import { Link } from "../router";
 import { useSession } from "../session";
-import { firstName, friendPath, joinNames, plural, type DashboardHome, type FriendKind } from "../types";
+import { firstName, friendPath, joinNames, type DashboardHome, type FriendKind } from "../types";
 import {
   Avatar,
   ConfirmDialog,
-  CopyButton,
   ErrorState,
   Loaded,
   Skeleton,
@@ -45,97 +44,37 @@ export function SampleBanner({ onRemoved }: { onRemoved: () => void }) {
   );
 }
 
-interface Signal {
+interface Shared {
   kind: FriendKind;
   id: string;
   name: string;
-  /** One plain message, the way ChatGPT would say it. */
-  message: string;
-  draft: string;
-  /** "Shared by Priya's AI · via venn", or Venn's own suggestion. */
-  provenance: string;
+  title: string;
+  text: string;
 }
 
-const lower = (s: string) => s.trim().toLowerCase();
-
-/** "Shoots medium format." -> "Jun shoots medium format."; first-person lines are quoted. */
-function retell(first: string, said: string): string {
-  const t = said.trim().replace(/[.!]+$/, "");
-  if (/^(I|I'm|I've|My|We|We're|Our)\b/.test(t)) return `${first} shared “${t}.”`;
-  return `${first} ${t.charAt(0).toLowerCase()}${t.slice(1)}.`;
-}
-
-/** Pick the strongest thing a friend chose to share that meets something you care about. */
-async function findSignal(): Promise<Signal | null> {
+/** The latest thing a friend chose to share, shown read-only. Recommendations come from ChatGPT, not here. */
+async function latestShared(): Promise<Shared | null> {
   const friends = await api.listFriends();
   const onVenn = friends.filter((f) => f.on_venn).slice(0, 6);
   const details = await Promise.all(onVenn.map((f) => api.getFriend(f.kind, f.id).catch(() => null)));
-  let best: { score: number; signal: Signal } | null = null;
   for (const f of details) {
-    if (!f) continue;
-    const mine = new Set(f.shared_interests.map(lower));
-    for (const m of f.shared_memories) {
-      const overlap = m.tags.find((t) => mine.has(lower(t)));
-      const score =
-        (overlap ? 2 : 0) + (m.category === "INTEREST" || m.category === "PREFERENCE" ? 0 : 1) + (m.description ? 1 : 0);
-      const first = firstName(f.display_name);
-      const signal: Signal = {
-        kind: f.kind,
-        id: f.id,
-        name: f.display_name,
-        message: `Btw, ${retell(first, m.description || m.title)}${overlap ? ` You're into ${overlap} too.` : ""} I think you should reconnect.`,
-        draft: `Hey ${first}, saw you're into ${lower(m.title)}. I'm in, when are you free?`,
-        provenance: `Shared by ${first}'s AI · via venn`,
-      };
-      if (!best || score > best.score) best = { score, signal };
-    }
+    const m = f?.shared_memories[0];
+    if (f && m) return { kind: f.kind, id: f.id, name: f.display_name, title: m.title, text: m.description || m.title };
   }
-  if (best) return best.signal;
-  // Nobody has shared anything yet: fall back to Venn's own idea from your saved interests.
-  const { idea } = await api.getCircleIdea();
-  if (!idea) return null;
-  return {
-    kind: idea.person.kind,
-    id: idea.person.id,
-    name: idea.person.display_name,
-    message: `Btw, ${firstName(idea.person.display_name)} is into ${idea.topic}, like you. I think you should reach out.`,
-    draft: idea.draft,
-    provenance: "Suggested by Venn · only you see this",
-  };
+  return null;
 }
 
-function NextMoment() {
-  const signal = useAsync(async () => ({ s: await findSignal() }), []);
+function LatestShared() {
+  const shared = useAsync(async () => ({ s: await latestShared() }), []);
+  const s = shared.data?.s;
+  if (!s) return null;
   return (
-    <Loaded state={signal} skeleton={<Skeleton rows={2} />}>
-      {({ s }) =>
-        s === null ? (
-          <section className="next">
-            <h1 id="page-title" className="next__title">
-              Nothing new from your circle yet.
-            </h1>
-            <div className="next__actions">
-              <Link to="/account" query={{ section: "connect" }} className="btn btn--primary btn--pill">
-                Invite a friend
-              </Link>
-            </div>
-          </section>
-        ) : (
-          <section className="next" aria-labelledby="page-title">
-            <h1 id="page-title" className="sr-only">
-              From your circle
-            </h1>
-            <Link to={friendPath(s.kind, s.id)} className="say">
-              <span className="say__text">{s.message}</span>
-              <small>{s.provenance}</small>
-            </Link>
-            <div className="next__actions">
-              <CopyButton text={s.draft} label="Say hi" className="btn btn--primary btn--pill" icon={false} />
-            </div>
-          </section>
-        )
-      }
-    </Loaded>
+    <Link to={friendPath(s.kind, s.id)} className="say">
+      <span className="say__text">
+        {firstName(s.name)} shared: {/^(I|I'm|I've)\b/.test(s.text) ? s.text : s.text.charAt(0).toLowerCase() + s.text.slice(1)}
+      </span>
+      <small>Shared by {firstName(s.name)}'s AI · via venn</small>
+    </Link>
   );
 }
 
@@ -167,25 +106,24 @@ function Circle() {
 function Dashboard({ home, reloadHome }: { home: DashboardHome; reloadHome: () => void }) {
   return (
     <div className="page page--home">
-      <NextMoment />
+      <h1 id="page-title" className="sr-only">
+        Your circle
+      </h1>
+      <LatestShared />
       <Circle />
-      {(home.pending_requests.length > 0 || home.pending_answers > 0) && (
-        <div className="quiet-lines">
-          {home.pending_requests.length > 0 && (
-            <Link to="/account" query={{ section: "connect" }} className="quiet-line">
-              {joinNames(home.pending_requests.map((r) => firstName(r.sender_display_name)))}{" "}
-              {home.pending_requests.length === 1 ? "wants" : "want"} to connect
-              <Icon name="chevron-right" size={16} />
-            </Link>
-          )}
-          {home.pending_answers > 0 && (
-            <Link to="/answers" className="quiet-line">
-              {plural(home.pending_answers, "friend", "friends")} answered
-              <Icon name="chevron-right" size={16} />
-            </Link>
-          )}
-        </div>
-      )}
+      <div className="quiet-lines">
+        {home.pending_requests.length > 0 && (
+          <Link to="/account" query={{ section: "connect" }} className="quiet-line">
+            {joinNames(home.pending_requests.map((r) => firstName(r.sender_display_name)))}{" "}
+            {home.pending_requests.length === 1 ? "wants" : "want"} to connect
+            <Icon name="chevron-right" size={16} />
+          </Link>
+        )}
+        <Link to="/account" query={{ section: "connect" }} className="quiet-line">
+          Invite someone
+          <Icon name="chevron-right" size={16} />
+        </Link>
+      </div>
       {home.sample_loaded && <SampleBanner onRemoved={reloadHome} />}
     </div>
   );

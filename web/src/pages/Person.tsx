@@ -1,4 +1,4 @@
-// One friend: what they shared, what you have in common, one action.
+// One friend: what they shared and what you have in common. Read and edit, no actions.
 
 import { useState } from "react";
 import { api } from "../api";
@@ -10,7 +10,6 @@ import {
   Card,
   Chips,
   ConfirmDialog,
-  CopyButton,
   Dialog,
   ErrorState,
   Loaded,
@@ -116,12 +115,6 @@ export default function PersonPage({ kind, id }: Props) {
           <p className="muted small">{f.on_venn ? `Shares with you on Venn` : `Only you see this`}</p>
         </div>
         <div className="profile__actions">
-          <CopyButton
-            text={`Hey ${first}, I was just thinking about you. Free for a catch-up soon?`}
-            label="Say hi"
-            className="btn btn--primary btn--pill"
-            icon={false}
-          />
           {kind === "person" && (
             <>
             <button type="button" className="link-btn" onClick={() => setEditing(true)}>
