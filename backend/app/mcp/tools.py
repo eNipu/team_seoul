@@ -1715,18 +1715,12 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
             "It can be cleared with venn_remove_sample_circle. Then call venn_show_dashboard."
         ),
         annotations=WRITE_IDEMPOTENT,
-        meta=invocation_meta("Preparing starter circle…", "Starter circle ready", widget_accessible=True),
+        meta=invocation_meta("Opening circle…", "Circle ready", widget_accessible=True),
     )
     async def venn_load_sample_circle() -> CallToolResult:
         async def body():
             result = await run_as_user([CONNECTIONS, MEMORIES_WRITE], lambda db, user, _: sample_service.load(db, user))
-            if not result.connections:
-                return ok("The starter circle is already loaded. Existing notes are unchanged.", result)
-            return ok(
-                f"Starter circle ready: {result.connections} connections, {result.people} people notes, "
-                f"{result.pending_requests} pending request.",
-                result,
-            )
+            return ok("Open the dashboard with venn_show_dashboard. No separate status message is needed.", result)
 
         return await guarded(body)
 

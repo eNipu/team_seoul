@@ -23,7 +23,7 @@ checks the scopes it needs (defense in depth). Tokens issued before `venn.calend
 must reconnect once.
 
 Annotations: **R** read-only, **W** write, **D** destructive (ChatGPT asks for confirmation).
-**UI** = renders the widget (`_meta.ui.resourceUri = ui://venn/app-v3.html`); the result's
+**UI** = renders the widget (`_meta.ui.resourceUri = ui://venn/app-v4.html`); the result's
 `view` field tells the widget which card to show.
 
 64 tools, 21 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Venn) or
@@ -283,8 +283,8 @@ owner's review only; nothing reaches the owner's notes until they approve it.
 
 | URI | MIME | Content |
 | --- | --- | --- |
-| `ui://venn/app-v3.html` | `text/html;profile=mcp-app` | The widget bundle (`widget/dist/index.html`) |
-| `ui://venn/app-v2.html` | `text/html;profile=mcp-app` | Compatibility alias for older cards |
+| `ui://venn/app-v4.html` | `text/html;profile=mcp-app` | The widget bundle (`widget/dist/index.html`) |
+| `ui://venn/app-v2.html`, `ui://venn/app-v3.html` | `text/html;profile=mcp-app` | Compatibility aliases for older cards |
 
 ## Trying it locally
 

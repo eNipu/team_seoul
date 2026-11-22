@@ -1,19 +1,17 @@
-import { useState } from "react";
-import type { DashboardViewData, HelpViewData, WelcomeViewData } from "../types";
+import { DEMO_PLATFORM_LABELS, type DashboardViewData, type HelpViewData, type WelcomeViewData } from "../types";
 import { ActionError, useAction, type Nav } from "./common";
 import { Icon } from "./icons";
 
 type SetupData = DashboardViewData | HelpViewData | WelcomeViewData;
-const titles = ["Import memories", "Import contacts", "Find connections with similar interests"];
+const titles = ["Import memories", "Add your people", "Find connections with similar interests"];
 const descriptions = [
   "Choose which interests to preview in chat. Only the memories you select and approve are saved.",
-  "Choose Instagram or LinkedIn. Review built-in profiles or bring your own contact list. One source is enough; nothing is added until you confirm.",
+  "Start with Instagram or LinkedIn. You’ll review generated profiles, not contacts from your account. Pick who to add, then continue or try the other source.",
   "Compare your saved interests with your circle. Looking at a match doesn’t contact anyone.",
 ];
 
 export default function SetupCard({ data, nav }: { data: SetupData; nav: Nav }) {
   const action = useAction();
-  const [platform, setPlatform] = useState<"instagram" | "linkedin">("instagram");
   const progress = data.onboarding;
   const current = [progress?.memories_ready, progress?.contacts_ready, progress?.matches_reviewed].findIndex((ready) => ready !== true);
   if (current < 0) return data.view === "welcome" ? (
@@ -21,12 +19,9 @@ export default function SetupCard({ data, nav }: { data: SetupData; nav: Nav }) 
   ) : null;
   if (!progress && data.view !== "welcome") return null;
 
-  const platformName = platform === "instagram" ? "Instagram" : "LinkedIn";
-  const labels = ["Choose memory areas", `Preview ${platformName} profiles`, "Find matches"];
   function openStep() {
     void action.run("open", () => {
       if (current === 0) return nav.openView("venn_import_chatgpt_memory", {});
-      if (current === 1) return nav.openView("venn_preview_demo_people_import", { platform });
       return nav.openView("venn_find_interest_matches", {});
     });
   }
@@ -46,19 +41,23 @@ export default function SetupCard({ data, nav }: { data: SetupData; nav: Nav }) 
               <h3 className="setup-step__title">{title}</h3>
               {i !== current ? <p className="muted small">{i < current ? "Complete" : `Locked until step ${i} is complete`}</p> : <>
                 <p className="muted small">{descriptions[i]}</p>
-                {i === 1 && <fieldset className="goal-picker" disabled={action.busy !== null}>
-                  <legend className="sr-only">Profile source</legend>
-                  <div className="chips">{(["instagram", "linkedin"] as const).map((source) => (
-                    <button key={source} type="button" className={`btn ${source === platform ? "chip--on" : ""}`} aria-pressed={source === platform} onClick={() => { action.clear(); setPlatform(source); }}>
-                      {source === platform && <Icon name="check" size={16} />}{source === "instagram" ? "Instagram" : "LinkedIn"}
-                    </button>
-                  ))}</div>
-                </fieldset>}
-                <div className="setup-step__actions"><button className="btn btn--primary" type="button" disabled={action.busy !== null} onClick={openStep}>
-                  {action.busy ? "Opening…" : labels[i]}
-                </button></div>
+                {i === 1 ? (
+                  <div className="setup-step__platforms" role="group" aria-label="Choose a profile source">
+                    {(["instagram", "linkedin"] as const).map((platform) => (
+                      <button key={platform} type="button" className="btn" disabled={action.busy !== null}
+                        onClick={() => void action.run(platform, () => nav.openView("venn_preview_demo_people_import", { platform }))}>
+                        <Icon name="import" size={18} />
+                        {action.busy === platform ? `Opening ${DEMO_PLATFORM_LABELS[platform]}…` : `${DEMO_PLATFORM_LABELS[platform]} import`}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="setup-step__actions"><button className="btn btn--primary" type="button" disabled={action.busy !== null} onClick={openStep}>
+                    {action.busy ? "Opening…" : i === 0 ? "Choose memory areas" : "Find matches"}
+                  </button></div>
+                )}
                 <ActionError action={action} />
-                {action.failure && <p className="muted small">Or ask in chat: “{["Open Venn’s memory import", `Preview Venn’s built-in ${platformName} profiles`, "Find connections with similar interests in Venn"][i]}.”</p>}
+                {action.failure && <p className="muted small">Or ask in chat: “{["Open Venn’s memory import", "Help me add people from Instagram or LinkedIn", "Find connections with similar interests in Venn"][i]}.”</p>}
               </>}
             </div>
           </li>

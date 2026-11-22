@@ -2202,28 +2202,7 @@ input[type="datetime-local"] {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: var(--s-2);
 }
-.demo-import {
-  padding-inline: var(--s-3);
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-}
-.demo-import summary {
-  min-height: 44px;
-  padding-block: var(--s-3);
-  cursor: pointer;
-  font-weight: 650;
-}
-.demo-import summary:hover::marker {
-  color: var(--accent-strong);
-}
-.demo-import__body {
-  display: grid;
-  gap: var(--s-2);
-  padding-bottom: var(--s-3);
-}
-.demo-import__actions {
+.setup-step__platforms {
   display: flex;
   flex-wrap: wrap;
   gap: var(--s-2);

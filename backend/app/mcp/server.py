@@ -16,7 +16,7 @@ from pydantic import ValidationError
 from app.auth.dev_provider import DevOAuthProvider
 from app.auth.jwt_verifier import JWTTokenVerifier
 from app.config import ALL_SCOPES, Settings
-from app.mcp.common import LEGACY_WIDGET_URI, WIDGET_URI, error
+from app.mcp.common import WIDGET_URI, error
 from app.mcp.tools import register_tools
 from app.services.errors import InvalidRequest
 
@@ -69,7 +69,8 @@ the same in ChatGPT and on the Venn website. Friends do not need to join for Ven
   user's own contacts, use their supplied export instead. Don't request credentials or confirm
   on their behalf: the user picks profiles and presses Add on the card. For an explicit request
   to explore a starter circle, use venn_load_sample_circle; clear it with venn_remove_sample_circle
-  when asked. Loading a starter circle is not a platform import.
+  when asked. Loading a starter circle is not a platform import. Show the dashboard without
+  announcing internal load status. If asked about a profile's origin, answer accurately.
 - Answer requests directed to Venn with a dedicated card whenever one fits, including follow-ups.
   If the request maps to a specific card, call that tool (venn_find_people, venn_this_week,
   venn_compare, venn_propose_memories, venn_import_chatgpt_memory, venn_create_invite,
@@ -183,7 +184,11 @@ def build_mcp_server(settings: Settings) -> tuple[MCPServer, DevOAuthProvider | 
     apps = Apps()
     html = load_widget_html(settings.widget_path)
     # Old chat cards can still resolve their resource; newly advertised tools use the versioned URI.
-    for uri, name in ((WIDGET_URI, "venn-app"), (LEGACY_WIDGET_URI, "venn-app-v2")):
+    for uri, name in (
+        (WIDGET_URI, "venn-app"),
+        ("ui://venn/app-v3.html", "venn-app-v3"),
+        ("ui://venn/app-v2.html", "venn-app-v2"),
+    ):
         apps.add_html_resource(
             uri,
             html,

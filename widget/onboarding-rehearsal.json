@@ -5,8 +5,24 @@
       "waitFor:Step 1 of 3", "click('Choose memory areas')", "waitFor:Choose memories to preview", "document.querySelector('.memory-import-topics input').click()", "click('Preview in chat')", "waitFor:Check the chat",
       "click('Review “Film photography”')", "waitFor:Memory review", "document.querySelector('.review-choice input').click()",
       "click('Save 1 privately')", "waitFor:Continue to contacts", "click('Continue to contacts')", "waitFor:Step 2 of 3",
-      "click('Preview Instagram profiles')", "waitFor:Instagram import", "click('Nadia Amari')", "clickLabel('Next profiles')", "waitFor:Page 2 of", "clickLabel('Previous profiles')",
+      "click('Instagram import')", "waitFor:Instagram import", "click('Nadia Amari')", "clickLabel('Next profiles')", "waitFor:Page 2 of", "clickLabel('Previous profiles')",
       "click('Add 1 profile')", "waitFor:Added 1 profile", "click('Continue to interest matches')", "waitFor:Interest matches", "has('Nadia Amari')", "has('In common:')", "overflow()"
+    ]
+  },
+  {
+    "url": "/?view=onboarding_contacts", "w": 320, "h": 720, "scheme": "light",
+    "steps": [
+      "waitFor:Step 2 of 3", "has('Add your people')", "has('Instagram import')", "has('LinkedIn import')", "overflow()",
+      "click('LinkedIn import')", "waitFor:LinkedIn import", "waitFor:0 of 100 selected", "document.querySelector('.pick-list--demo input:not(:disabled)').click()", "click('Add 1 profile')", "waitFor:Added 1 profile",
+      "click('Also review Instagram profiles')", "waitFor:Instagram import", "waitFor:0 of 100 selected", "document.querySelector('.pick-list--demo input:not(:disabled)').click()", "click('Add 1 profile')", "waitFor:Added 1 profile",
+      "window.history.state?.vennGuidedDemo?.platformPeople?.length === 2 ? 'ok' : 'MISSING both confirmed imports'", "click('Continue to interest matches')", "waitFor:Interest matches", "overflow()"
+    ]
+  },
+  {
+    "url": "/?view=dashboard_sample&tab=friends", "w": 390, "h": 800, "scheme": "dark",
+    "steps": [
+      "waitFor:Elena Rossi", "has('Clear preview data')", "!(/\\bsample\\b/i.test(document.body.innerText) || document.querySelector('.badge--sample,.sample-banner,[aria-label$=\"(preview)\"]')) ? 'ok' : 'MISSING ordinary friend presentation'",
+      "!document.querySelector('[role=tabpanel] .demo-import') && !/try the demo import|preview profiles/i.test(document.querySelector('[role=tabpanel]').innerText) ? 'ok' : 'MISSING removal of duplicate import'", "document.querySelector('[role=tab][id$=\"-tab-memories\"]').click()", "waitFor:ChatGPT memory", "!(/\\bsample\\b/i.test(document.body.innerText) || document.querySelector('.badge--sample,.sample-banner')) ? 'ok' : 'MISSING ordinary memory presentation'", "overflow()"
     ]
   },
   {
