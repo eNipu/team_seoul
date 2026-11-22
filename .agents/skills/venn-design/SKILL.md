@@ -58,10 +58,10 @@ recommends one action. Like the Meta ads: "Remember Alex from your accelerator? 
 week his company is looking for exactly what you sell." + "Shared by Alex's AI · via venn" ->
 "Say hi". Never "Check in with X", "It's been a while" or "Follow up with X" as the headline.
 **The moment is ChatGPT's own text reply, not a card.** Venn lives as a plugin inside
-ChatGPT. A ChatGPT scheduled task (offered once after "Send the spark") checks Venn every
-morning, and ChatGPT simply writes: "Btw, Maya is in Berlin right now and she's into
+ChatGPT. Whenever Venn has a matched signal (a friend's shared update meets your interests or
+what you're doing), ChatGPT simply mentions it, no fixed schedule: "Btw, Maya is in Berlin right now and she's into
 marketing. I think you should reconnect." One or two plain sentences, from what Maya's AI
-shared. Venn cannot push by itself; the scheduled task is what makes ChatGPT message you.
+shared. No daily digest, no scheduled task for now.
 **Never build:** copy-paste or drafted messages, "Say hi" / "Copy message" buttons, quizzes
 ("how well do you know X"), ask links, invite-this-person cards, follow-ups, tasks, plans lists,
 "days since", streaks or counters. Not in ChatGPT, not in the web app. Venn is not a CRM.
