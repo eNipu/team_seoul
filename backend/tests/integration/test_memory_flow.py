@@ -51,6 +51,38 @@ def test_text_extraction_heuristic(alice):
     assert "DISLIKE" in cats
 
 
+def test_weekly_review_returns_only_approved_updates_from_the_database(alice, bob):
+    proposal = alice.ok(
+        "venn_propose_memories",
+        weekly_update=True,
+        suggested=[
+            {"category": "WORK", "title": "Berlin beta", "description": "Early access opens next week"},
+            {"category": "SOCIAL_GOAL", "title": "Find a designer", "description": "Looking for fintech experience"},
+            {"category": "EXPERIENCE", "title": "Lisbon weekend", "description": "Visiting from Friday to Sunday"},
+        ],
+    )
+    assert proposal["view"] == "memory_review"
+    assert proposal["weekly_update"] is True
+    assert all(item["suggested_visibility"] == "PRIVATE" for item in proposal["proposals"])
+    assert alice.ok("venn_list_memories")["count"] == 0
+
+    approvals = [
+        {"index": 1, "visibility": "SHARED_WITH_CONNECTIONS", "title": "Find a product designer"},
+        {"index": 2, "visibility": "PRIVATE", "description": "Visiting Lisbon on Saturday"},
+    ]
+    forbidden = bob.err("venn_save_memories", proposal_id=proposal["proposal_id"], approvals=approvals)
+    assert forbidden.startswith("NOT_FOUND")
+    result = alice.ok("venn_save_memories", proposal_id=proposal["proposal_id"], approvals=approvals)
+    assert result["count"] == 2
+    assert [(m["title"], m["description"], m["visibility"]) for m in result["saved"]] == [
+        ("Find a product designer", "Looking for fintech experience", "SHARED_WITH_CONNECTIONS"),
+        ("Lisbon weekend", "Visiting Lisbon on Saturday", "PRIVATE"),
+    ]
+    persisted = alice.ok("venn_list_memories")["memories"]
+    assert sorted(persisted, key=lambda m: m["memory_id"]) == sorted(result["saved"], key=lambda m: m["memory_id"])
+    assert bob.ok("venn_list_memories")["count"] == 0
+
+
 def test_save_with_user_edits_and_default_private(alice):
     proposal = alice.ok(
         "venn_propose_memories",

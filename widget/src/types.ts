@@ -175,6 +175,7 @@ export interface MemoryReviewViewData {
   proposal_id: string;
   expires_at: string;
   source: ProposalSource;
+  weekly_update?: boolean;
   proposals: MemoryProposal[];
 }
 
@@ -931,6 +932,7 @@ export function parseView(sc: unknown, meta?: unknown): ViewData | null {
         proposal_id: str(sc.proposal_id),
         expires_at: str(sc.expires_at),
         source: oneOf(sc.source, PROPOSAL_SOURCES, "conversation"),
+        weekly_update: sc.weekly_update === true,
         proposals: objs(sc.proposals).map((p, i) => ({
           index: num(p.index, i),
           category: oneOf(p.category, MEMORY_CATEGORIES, "PERSONAL_MEMORY"),

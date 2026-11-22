@@ -321,7 +321,7 @@ export default function App() {
   }
 
   return (
-    <div className="venn" style={insets && {
+    <div className={`venn${top?.view.view === "memory_review" ? " venn--review" : ""}`} style={insets && {
       paddingTop: `calc(var(--s-3) + ${insets.top}px)`,
       paddingRight: `calc(var(--s-3) + ${insets.right}px)`,
       paddingBottom: `calc(var(--s-3) + ${insets.bottom}px)`,

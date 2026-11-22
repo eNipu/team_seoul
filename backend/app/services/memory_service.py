@@ -311,7 +311,9 @@ def create_memory(
 
 def discard_proposal(db: Session, user: User, proposal_id: str) -> None:
     pid = _parse_uuid(proposal_id, "proposal")
-    proposal = db.scalar(select(MemoryProposal).where(MemoryProposal.id == pid, MemoryProposal.user_id == user.id))
+    proposal = db.scalar(
+        select(MemoryProposal).where(MemoryProposal.id == pid, MemoryProposal.user_id == user.id).with_for_update()
+    )
     if proposal is None:
         raise NotFound("proposal not found")
     if proposal.consumed_at is None:
