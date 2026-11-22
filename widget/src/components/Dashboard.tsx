@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import {
   LIMITS,
   PROFILE_VISIBILITY_LABELS,
@@ -15,7 +15,7 @@ import {
   type Person,
   type Profile,
 } from "../types";
-import { ActionError, Avatar, SectionTitle, useAction, type Action, type ViewProps } from "./common";
+import { ActionError, Avatar, SectionTitle, useAction, type Action, type Nav, type ViewProps } from "./common";
 import type { HostBridge } from "../mcp/client";
 import MemoriesTab from "./MemoriesTab";
 import FriendsTab from "./FriendsTab";
@@ -126,6 +126,7 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
             pendingCount={pending.length}
             onOpenTab={setTab}
             bridge={bridge}
+            nav={nav}
             action={action}
             onProfile={setProfile}
           />
@@ -160,11 +161,12 @@ interface ProfileTabProps {
   pendingCount: number;
   onOpenTab: (tab: DashboardTab) => void;
   bridge: HostBridge;
+  nav: Nav;
   action: Action;
   onProfile: (p: Profile) => void;
 }
 
-function ProfileTab({ profile, memoryCount, friendCount, pendingCount, onOpenTab, bridge, action, onProfile }: ProfileTabProps) {
+function ProfileTab({ profile, memoryCount, friendCount, pendingCount, onOpenTab, bridge, nav, action, onProfile }: ProfileTabProps) {
   const id = useId();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(profile.display_name);
@@ -310,8 +312,68 @@ function ProfileTab({ profile, memoryCount, friendCount, pendingCount, onOpenTab
           ))}
         </div>
       ) : (
-        <p className="muted small">No interests yet. Tell Venn what you enjoy and approve what it should remember.</p>
+        <p className="muted small">No interests yet.</p>
       )}
+      <AddInterest nav={nav} />
+    </>
+  );
+}
+
+function AddInterest({ nav }: { nav: Nav }) {
+  const id = useId();
+  const action = useAction();
+  const toggle = useRef<HTMLButtonElement>(null);
+  const input = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
+  const [interest, setInterest] = useState("");
+  const busy = action.busy !== null;
+  const title = interest.trim();
+
+  useEffect(() => {
+    if (open) input.current?.focus();
+  }, [open]);
+
+  function close() {
+    action.clear();
+    setInterest("");
+    setOpen(false);
+    toggle.current?.focus();
+  }
+
+  function review(event: FormEvent) {
+    event.preventDefault();
+    if (!title) return;
+    void action.run("review-interest", () => nav.openView("venn_propose_memories", {
+      suggested: [{ category: "INTEREST", title, description: `I'm interested in ${title}.` }],
+    }));
+  }
+
+  return (
+    <>
+      <div className="row">
+        <button type="button" className="btn" ref={toggle} aria-expanded={open} aria-controls={id}
+          disabled={busy} onClick={() => open ? close() : setOpen(true)}>
+          Add interest
+        </button>
+      </div>
+      <div id={id} hidden={!open}>
+        {open && (
+          <form className="inline-form form" onSubmit={review}>
+            <label className="field">
+              <span className="field__label">Interest</span>
+              <input ref={input} type="text" value={interest} maxLength={LIMITS.memoryTitle} placeholder="e.g. Film photography"
+                required disabled={busy} autoComplete="off" onChange={(event) => { setInterest(event.target.value); action.clear(); }} />
+            </label>
+            <ActionError action={action} />
+            <div className="actions actions--compact">
+              <button type="button" className="btn btn--ghost" disabled={busy} onClick={close}>Cancel</button>
+              <button type="submit" className="btn btn--primary" disabled={busy || !title}>
+                {busy ? "Opening…" : "Review interest"}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
     </>
   );
 }

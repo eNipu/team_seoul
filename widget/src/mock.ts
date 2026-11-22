@@ -836,10 +836,18 @@ function helpView(): HelpViewData {
   });
 }
 
+function dashboardProfile(): Profile {
+  return {
+    ...profile,
+    interests: memories.filter((memory) => memory.category === "INTEREST").map((memory) => memory.title),
+    memory_count: memories.length,
+  };
+}
+
 function dashboardView(): DashboardViewData {
   return structuredClone({
     view: "dashboard" as const,
-    profile: { ...profile, memory_count: memories.length },
+    profile: dashboardProfile(),
     memories,
     connections: connections.map(({ connection_id, user_id, display_name, since, last_interaction_at, is_sample }) => ({
       connection_id,
@@ -2250,7 +2258,7 @@ export function createMockBridge(): HostBridge {
           const goals = list(args.social_goals);
           if (goals !== undefined) profile.social_goals = goals.slice(0, 6);
           profile.is_new = false;
-          return ok({ ...profile, memory_count: memories.length });
+          return ok(dashboardProfile());
         }
 
         case "venn_respond_to_connection": {

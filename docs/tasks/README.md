@@ -96,6 +96,7 @@ Read `SCHEDULING.md` before any task in this group.
 | [T47](T47-chatgpt-starter-demo-import.md) | Add ChatGPT starter actions and demo contact imports | both | S | T46 | done |
 | [T51](T51-onboarding-question.md) | Ask a default question on the first Venn interaction | backend | S | – | done |
 | [T52](T52-people-radar.md) | Review people on a radar with shared interests | both | S | T51 | done |
+| [T59](T59-dashboard-add-interest.md) | Add an interest from the ChatGPT dashboard | widget | S | – | done |
 
 ### G. Website experience
 
