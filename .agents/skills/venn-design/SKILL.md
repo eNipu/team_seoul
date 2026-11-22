@@ -57,6 +57,14 @@ Then the product is **"Venn tells you when"**: proactive moment cards inside Cha
 recommends one action. Like the Meta ads: "Remember Alex from your accelerator? He shared last
 week his company is looking for exactly what you sell." + "Shared by Alex's AI · via venn" ->
 "Say hi". Never "Check in with X", "It's been a while" or "Follow up with X" as the headline.
+**The moment is ChatGPT talking, not a task list.** It reads like a message from a friend who
+knows everyone: "Btw, Maya is in Berlin right now and she's into marketing. I think you
+should reconnect." One sentence of signal + one sentence of recommendation, then at most one
+action (Say hi / draft a message). Show it as a chat message (with the "Shared by Maya's AI ·
+via venn" line), not as a card with dates, counters, checkboxes or due items.
+**No follow-ups, tasks, to-dos, plans lists, "days since", streaks or "1 of 3" counters** in the
+main UI, in ChatGPT or the web app. Venn is not a CRM. Old features like that stay in code but
+are hidden from navigation and from the home screen.
 Off the main path, never required:
 - **Web app** (app.joinvennai.com): see and edit everything, reached from one quiet
   "Open my Venn" link. Not a step, not a dashboard people must visit.
