@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import mimetypes
 from pathlib import Path
+from urllib.parse import urlparse
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse, Response
@@ -53,6 +54,9 @@ def _file(root: Path, relative: str) -> Path | None:
 
 def install_site(app: FastAPI, settings: Settings) -> None:
     root = settings.web_dist_path
+    preview_ancestors = "https://joinvennai.com https://www.joinvennai.com"
+    if urlparse(settings.public_base_url).hostname in {"localhost", "127.0.0.1"}:
+        preview_ancestors += " http://localhost:* http://127.0.0.1:*"
 
     def index() -> Response:
         html = root / "index.html"
@@ -63,6 +67,24 @@ def install_site(app: FastAPI, settings: Settings) -> None:
     @app.get("/", include_in_schema=False)
     def home() -> Response:
         return RedirectResponse("/app/", status_code=307)
+
+    @app.get("/widget-preview", include_in_schema=False)
+    def widget_preview() -> Response:
+        # The widget chooses its in-memory demo bridge on this path. This route
+        # serves a file and never reads a session, calls a tool or accesses the DB.
+        headers = {
+            "Content-Security-Policy": (
+                "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; "
+                "img-src data:; font-src data:; base-uri 'none'; form-action 'none'; "
+                f"frame-ancestors {preview_ancestors}"
+            ),
+            "Referrer-Policy": "no-referrer",
+            "X-Content-Type-Options": "nosniff",
+            "Cache-Control": "no-cache",
+        }
+        if not settings.widget_path.is_file():
+            return Response("Preview unavailable.", status_code=503, media_type="text/plain", headers=headers)
+        return FileResponse(settings.widget_path, media_type="text/html", headers=headers)
 
     @app.get("/app", include_in_schema=False)
     def app_root() -> Response:

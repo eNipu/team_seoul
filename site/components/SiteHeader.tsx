@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import VennMark from "./VennMark";
 
-export default function SiteHeader({ note = "For ChatGPT", action }: { note?: string; action?: ReactNode }) {
+export default function SiteHeader({ note = "For ChatGPT", action }: { note?: ReactNode; action?: ReactNode }) {
   return (
     <header className="site-header wrap">
       <span className="brand">
