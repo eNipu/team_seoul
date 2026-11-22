@@ -7,6 +7,7 @@ export default function SiteFooter({ top = "#top" }: { top?: string }) {
       <div className="site-footer__links">
         <span>© {new Date().getFullYear()} Venn</span>
         <a href="/privacy">Privacy</a>
+        <a href="/connect">Connect ChatGPT</a>
         <a href="/pricing">Pricing</a>
         <CookieSettingsLink />
       </div>

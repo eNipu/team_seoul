@@ -19,6 +19,7 @@ import FollowUps from "./pages/FollowUps";
 import Plans from "./pages/Plans";
 import Answers from "./pages/Answers";
 import Account from "./pages/Account";
+import ConnectChatGpt, { PublicConnectChatGpt } from "./pages/ConnectChatGpt";
 
 interface NavItem {
   to: string;
@@ -36,6 +37,7 @@ const PRIMARY_NAV: NavItem[] = [
 
 const SECONDARY_NAV: NavItem[] = [
   { to: "/answers", label: "Answers", icon: "chat" },
+  { to: "/connect", label: "Connect ChatGPT", icon: "sparkle" },
   { to: "/account", label: "Account", icon: "user" },
 ];
 
@@ -64,6 +66,7 @@ function matchRoute(loc: Location): Route {
   if (path === "/follow-ups") return { title: "Follow-ups", element: <FollowUps /> };
   if (path === "/plans") return { title: "Plans", element: <Plans /> };
   if (path === "/answers") return { title: "Answers", element: <Answers /> };
+  if (path === "/connect") return { title: "Connect ChatGPT", element: <ConnectChatGpt /> };
   if (path === "/account") return { title: "Account", element: <Account /> };
   return { title: "Page not found", element: <NotFound /> };
 }
@@ -199,9 +202,9 @@ function AccountMenu() {
             <Icon name="chat" size={18} />
             Answers from friends
           </Link>
-          <Link to="/account" query={{ section: "chatgpt" }} className="menu__item">
+          <Link to="/connect" className="menu__item">
             <Icon name="sparkle" size={18} />
-            Use Venn in ChatGPT
+            Connect ChatGPT
           </Link>
           <button
             type="button"
@@ -275,11 +278,11 @@ function Shell() {
             <Link
               key={item.to}
               to={item.to}
-              className="nav__item"
+              className={item.to === "/connect" ? "nav__item nav__item--connect" : "nav__item"}
               aria-current={isCurrent(loc.path, item.to) ? "page" : undefined}
             >
               <Icon name={item.icon} size={20} />
-              {item.label}
+              <span>{item.label}</span>
             </Link>
           ))}
         </nav>
@@ -327,6 +330,7 @@ function Shell() {
 type Gate = { state: "loading" } | { state: "offline"; message: string } | { state: "ready"; session: Session };
 
 function SessionGate() {
+  const loc = useLocation();
   const [gate, setGate] = useState<Gate>({ state: "loading" });
   const [displayName, setDisplayName] = useState("");
 
@@ -382,6 +386,9 @@ function SessionGate() {
   if (gate.state === "offline") return <NotConnected onRetry={load} demoHref={`${href("/")}${DEMO ? "" : "?demo=1"}`} />;
   const { session } = gate;
   if (!session.signed_in) {
+    if (loc.path === "/connect") {
+      return <PublicConnectChatGpt googleSsoAvailable={session.google_sso_available} />;
+    }
     if (!session.sign_in_available) return <SignInUnavailable />;
     return (
       <SignIn
