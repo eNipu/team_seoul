@@ -85,6 +85,8 @@ export interface Session {
   signed_in: boolean;
   auth_mode: string;
   sign_in_available: boolean;
+  google_sso_available: boolean;
+  dev_sign_in_available: boolean;
   passcode_required: boolean;
   display_name: string | null;
   username: string | null;
@@ -651,10 +653,15 @@ function parseLink(v: unknown): string {
 
 export function parseSession(v: unknown): Session {
   const o = obj(v);
+  const signInAvailable = bool(o.sign_in_available);
+  const googleSsoAvailable = bool(o.google_sso_available);
+  const devSignInAvailable = o.dev_sign_in_available === undefined ? signInAvailable : bool(o.dev_sign_in_available);
   return {
     signed_in: bool(o.signed_in),
     auth_mode: str(o.auth_mode),
-    sign_in_available: bool(o.sign_in_available),
+    sign_in_available: signInAvailable,
+    google_sso_available: googleSsoAvailable,
+    dev_sign_in_available: devSignInAvailable,
     passcode_required: bool(o.passcode_required),
     display_name: strOrNull(o.display_name),
     username: strOrNull(o.username),
