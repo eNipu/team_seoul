@@ -1,6 +1,4 @@
 import HeroBackdrop from "@/components/HeroBackdrop";
-import ChatGptConnection from "@/components/ChatGptConnection";
-import ChatGptPreview from "@/components/ChatGptPreview";
 import Motion from "@/components/Motion";
 import OnboardingPreview from "@/components/OnboardingPreview";
 import PageView from "@/components/PageView";
@@ -26,16 +24,6 @@ type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
 const PROFILE_URL = "https://app.joinvennai.com/app/account";
 
-function directoryListingUrl(): string | null {
-  if (!process.env.CHATGPT_PLUGIN_URL) return null;
-  try {
-    const url = new URL(process.env.CHATGPT_PLUGIN_URL);
-    return url.origin === "https://chatgpt.com" && !url.username && !url.password
-      && url.pathname.split("/").filter(Boolean).length > 1 ? url.href : null;
-  } catch {
-    return null;
-  }
-}
 
 // Someone who arrives with `?ref=` is told whether that link still holds a place for them.
 // Looked up here rather than in the browser, so the form is right when it first paints.
@@ -59,7 +47,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
       <main>
         <section className="section section--dark" id="hero" aria-labelledby="hero-title" tabIndex={-1}>
           <SiteHeader note={<a className="site-header__account" href={PROFILE_URL}>My Venn</a>}
-            action={<ScrollArrow href="#chatgpt-ui" label="Go to the ChatGPT preview" />} />
+            action={<ScrollArrow href="#inside" label="Go to One week with Venn" />} />
           <div className="wrap hero__grid">
             <div className="hero__copy">
               <p className="eyebrow">Early-access waitlist</p>
@@ -92,22 +80,6 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
         <HowItWorks />
         <UseCases />
 
-        <section className="section chatgpt-preview" id="chatgpt-ui" aria-labelledby="chatgpt-ui-title" tabIndex={-1}>
-          <div className="wrap">
-            <div className="inside__heading">
-              <div>
-                <h2 className="h-section" id="chatgpt-ui-title">Venn inside ChatGPT.</h2>
-                <p className="lead">Try the welcome card, see how Venn replies, and approve a sample memory. This preview uses sample data and saves nothing to an account.</p>
-              </div>
-              <ScrollArrow href="#inside" label="Go to One week with Venn" />
-            </div>
-            <ChatGptPreview widgetUrl={process.env.WIDGET_PREVIEW_URL ?? "https://app.joinvennai.com/widget-preview"} />
-            <div className="chatgpt-preview__links" id="connect-chatgpt">
-              <ChatGptConnection listingUrl={directoryListingUrl()} />
-              <a className="btn" href={PROFILE_URL}>Open my Venn profile</a>
-            </div>
-          </div>
-        </section>
 
         <section className="section section--paper" id="inside" aria-labelledby="inside-title" tabIndex={-1}>
           <div className="wrap">
