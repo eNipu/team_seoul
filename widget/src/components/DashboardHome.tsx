@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { MomentCard } from "./Moment";
+import { ChatMoment } from "./Moment";
 import { firstName, formatDateTime, isObj, joinNames, parseView, plural, type Plan, type WeekAction } from "../types";
 import type { HostBridge } from "../mcp/client";
 import { ActionError, Avatar, SectionTitle, useAction, type Nav } from "./common";
@@ -53,61 +53,48 @@ export function SampleBanner({ bridge, onChanged }: { bridge: HostBridge; onChan
 }
 
 /**
- * The dashboard's home: one proactive moment (who to reach out to now, why, one action),
- * not a dashboard. Falls back to "Invite your person" while there is nobody to nudge.
+ * The dashboard's home: ChatGPT telling you one moment in plain words, with one action.
+ * Falls back to "Invite your person" while there is nobody to talk about.
  */
 export function HomeMoment({ bridge, nav, footer }: { bridge: HostBridge; nav: Nav; footer: ReactNode }) {
-  const [actions, setActions] = useState<WeekAction[] | null>(null);
-  const [at, setAt] = useState(0);
+  const [first, setFirst] = useState<WeekAction | null | undefined>(undefined);
   useEffect(() => {
     let active = true;
-    setActions(null);
+    setFirst(undefined);
     async function load() {
       const res = await bridge.callTool("venn_this_week", {});
       const week = res.ok ? parseView(res.data, res.meta) : null;
-      if (!active) return;
-      setActions(week?.view === "this_week" ? week.actions.filter((item) => item.title.trim()) : []);
+      if (active) setFirst(week?.view === "this_week" ? week.actions[0] ?? null : null);
     }
-    void load().catch(() => { if (active) setActions([]); });
+    void load().catch(() => { if (active) setFirst(null); });
     return () => { active = false; };
   }, [bridge]);
 
   const action = useAction();
   const busy = action.busy !== null;
-  if (actions === null) {
+  if (first === undefined) {
     return (
-      <section className="onb" aria-busy="true" aria-live="polite">
-        <h2 className="onb__title">Looking at your week…</h2>
+      <section className="onb moment-chat" aria-busy="true">
+        <p className="onb__context">ChatGPT</p>
+        <div className="onb__bubble onb__bubble--in"><p aria-label="Typing">…</p></div>
       </section>
     );
   }
-  if (actions.length === 0) {
+  if (first === null) {
     return (
       <section className="onb">
         <h2 className="onb__title">Bring your person in.</h2>
-        <p className="onb__body">Venn tells you when to reach out.</p>
         <ActionError action={action} />
         <button type="button" className="onb__cta" disabled={busy}
           onClick={() => void action.run("invite", () => nav.openView("venn_create_invite", {}))}>
           {action.busy === "invite" ? "Opening…" : "Invite your person"}
         </button>
-        <div className="onb__row">
-          <span />
-          <details className="onb__more">
-            <summary>More</summary>
-            <div className="onb__more-body">{footer}</div>
-          </details>
-        </div>
+        <div className="onb__row">{footer}</div>
       </section>
     );
   }
-  const a = actions[at % actions.length];
-  const next = actions.length > 1 ? actions[(at + 1) % actions.length] : null;
-  return (
-    <MomentCard key={`${a.kind}:${a.id}:${at}`} a={a} bridge={bridge} nav={nav}
-      onNext={next ? () => setAt(at + 1) : undefined}
-      nextLabel={next ? `Next: ${firstName(next.display_name)}` : undefined} footer={footer} />
-  );
+  return <ChatMoment key={`${first.kind}:${first.id}`} bridge={bridge} kind={first.kind} id={first.id}
+    name={first.display_name} idea={first.suggestion?.title} footer={footer} />;
 }
 
 function PlanRow({

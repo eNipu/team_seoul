@@ -132,3 +132,11 @@
 :root[data-theme="dark"] .onb__choice { background: var(--surface); border-color: var(--border-strong); }
 :root[data-theme="dark"] .onb__choice:has(input:checked) { border-color: var(--text); background: var(--surface-2); }
 .onb__moment, .onb__bubble, .onb__saved { color: #000; }
+.onb__context { margin: 0 0 -8px; font-size: 0.875rem; font-weight: 600; color: var(--muted, #6e6e73); }
+.onb__moment-detail { font-size: 0.9375rem; line-height: 1.4; }
+.onb__draft { margin: 0; font-size: 0.9375rem; color: var(--muted, #6e6e73); }
+/* The moment as ChatGPT talking: one incoming yellow message, provenance under the words. */
+.onb__bubble--in { justify-self: start; display: grid; gap: 6px; max-width: 100%; border-radius: 20px 20px 20px 6px; }
+.onb__bubble--in p { font-size: 1.0625rem; line-height: 1.4; }
+.onb__bubble--in small { font-size: 0.75rem; color: #4c4000; }
+.moment-chat .onb__context { margin: 0 0 -8px; }

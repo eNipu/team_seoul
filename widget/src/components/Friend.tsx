@@ -2,8 +2,6 @@ import { useId, useState, type FormEvent } from "react";
 import {
   CATEGORY_LABELS,
   LIMITS,
-  formatDate,
-  formatRelative,
   friendArg,
   hasId,
   isObj,
@@ -12,8 +10,8 @@ import {
   type FriendViewData,
   type Interaction,
 } from "../types";
+import { OpenMyVenn, momentText, signalsFrom } from "./Moment";
 import { ActionError, ChatStatus, SectionTitle, useAction, useChatPrompt, type ViewProps } from "./common";
-import FollowUps from "./FollowUps";
 import { CategoryIcon, Icon, Illustration } from "./icons";
 import PersonForm, { type PersonValues } from "./PersonForm";
 
@@ -42,8 +40,8 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
     notes: data.notes,
     interests: data.interests,
   });
-  const [interactions, setInteractions] = useState<Interaction[]>(data.recent_interactions);
-  const [lastAt, setLastAt] = useState<string | null>(data.last_interaction_at);
+  const [, setInteractions] = useState<Interaction[]>(data.recent_interactions);
+  const [, setLastAt] = useState<string | null>(data.last_interaction_at);
   const [activity, setActivity] = useState("");
   const [justLogged, setJustLogged] = useState(false);
   const [gone, setGone] = useState(false);
@@ -151,13 +149,13 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
   const listed = new Set(details.interests.map((i) => i.toLowerCase()));
   const chips = [...details.interests, ...(isPerson ? [] : data.shared_interests.filter((s) => !listed.has(s.toLowerCase())))];
 
+  const signals = signalsFrom({ ...data, display_name: details.name, notes: details.notes });
+  const moment = momentText(details.name, signals);
+
   return (
     <section className="onb friend">
-      <h2 className="onb__title">{details.name}</h2>
-      <p className="onb__body">
-        {lastAt ? `Last met ${formatRelative(lastAt)}` : "No hangouts yet"}
-        {details.relationship ? ` · ${details.relationship}` : ""}
-      </p>
+      <h2 className="sr-only">{details.name}</h2>
+      <p className="onb__context">ChatGPT</p>
       <ActionError action={action} />
 
       {mode === "edit" ? (
@@ -179,17 +177,15 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
         </div>
       ) : (
         <>
-          {!isPerson && data.shared_memories.length > 0 ? (
-            <div className="onb__moment">
-              <p>{data.shared_memories[0].title}</p>
-              <small>Shared by {details.name}{details.name.endsWith("s") ? "'" : "'s"} AI · via <b>venn</b></small>
-            </div>
-          ) : !isPerson && data.bio ? <p className="onb__body">{data.bio}</p> : null}
-          {isPerson && details.notes && <p className="onb__body">{details.notes}</p>}
-
-          <button type="button" className="onb__cta" disabled={busy} onClick={ideas}>
-            {action.busy === "ideas" ? "Loading…" : "Get ideas"}
+          <div className="onb__bubble onb__bubble--in">
+            <p>{moment}</p>
+            {signals.signal && <small>{signals.signal.source}</small>}
+          </div>
+          <button type="button" className="onb__cta" disabled={chat.state === "sending"}
+            onClick={() => void chat.send(`Help me say hi to ${details.name}. Keep it short and warm, mention: ${moment.replace(/^Btw, /, "")} I'll send it myself.`)}>
+            {chat.state === "sending" ? "Asking…" : `Say hi to ${details.name.split(/\s+/)[0]}`}
           </button>
+          {justLogged && <p className="onb__done" role="status">Logged.</p>}
           {mode === "log" && (
             <form className="inline-form form" onSubmit={logHangout}>
               <label className="field" htmlFor={`${formId}-activity`}>
@@ -216,16 +212,16 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
             </form>
           )}
           <div className="onb__row">
-            <button type="button" className="onb__link" disabled={busy} aria-expanded={mode === "log"}
-              onClick={() => setMode(mode === "log" ? "view" : "log")}>
-              We met up
-            </button>
+            <OpenMyVenn bridge={bridge} />
             <details className="onb__more">
               <summary>More</summary>
               <div className="onb__more-body">
-            <button type="button" className="btn btn--block" disabled={chat.state === "sending"}
-              onClick={() => void chat.send(`Help me draft a short, warm message to reconnect with ${details.name}. I will send it myself.`)}>
-              {chat.state === "sending" ? "Asking…" : "Draft a message"}
+            <button type="button" className="btn btn--block" disabled={busy} onClick={ideas}>
+              {action.busy === "ideas" ? "Loading…" : "Plan something"}
+            </button>
+            <button type="button" className="btn btn--block" disabled={busy} aria-expanded={mode === "log"}
+              onClick={() => setMode(mode === "log" ? "view" : "log")}>
+              We met up
             </button>
             <button type="button" className="btn btn--block" disabled={busy} onClick={prep}>
               {action.busy === "prep" ? "Loading…" : "Prep for a meetup"}
@@ -244,7 +240,6 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
             )}
           <ChatStatus state={chat.state} prompt={chat.prompt} />
 
-          <FollowUps bridge={bridge} friend={arg} name={details.name} initial={data.follow_ups} />
 
           <SectionTitle>Interests</SectionTitle>
           {chips.length > 0 ? (
@@ -293,25 +288,6 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
                 </ul>
               )}
             </>
-          )}
-
-          <SectionTitle count={interactions.length}>Recent hangouts</SectionTitle>
-          {justLogged && (
-            <p className="hint hint--ok" role="status">
-              <Icon name="check" size={16} /> Hangout logged
-            </p>
-          )}
-          {interactions.length === 0 ? (
-            <p className="muted small">No hangouts logged yet</p>
-          ) : (
-            <ol className="timeline">
-              {interactions.map((it, i) => (
-                <li key={`${it.occurred_at}-${i}`} className="timeline__item">
-                  <span className="timeline__what">{it.activity ?? "Spent time together"}</span>
-                  <span className="muted small">{formatDate(it.occurred_at)}</span>
-                </li>
-              ))}
-            </ol>
           )}
 
           <div className="footer-actions">

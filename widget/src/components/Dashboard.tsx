@@ -5,7 +5,6 @@ import {
   hasId,
   humanize,
   parseProfile,
-  parseView,
   plural,
   type Plan,
   type Connection,
@@ -18,11 +17,9 @@ import {
 } from "../types";
 import { ActionError, Avatar, SectionTitle, useAction, type Action, type ViewProps } from "./common";
 import type { HostBridge } from "../mcp/client";
-import DemoImport from "./DemoImport";
 import MemoriesTab from "./MemoriesTab";
 import FriendsTab from "./FriendsTab";
-import SetupCard from "./Setup";
-import { HomeMoment, Plans, SampleBanner } from "./DashboardHome";
+import { HomeMoment, SampleBanner } from "./DashboardHome";
 import { OpenMyVenn } from "./Moment";
 import { Icon, type IconName } from "./icons";
 
@@ -36,17 +33,16 @@ interface Props extends ViewProps<DashboardViewData> {
 export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }: Props) {
   const id = useId();
   const action = useAction();
-  const demoAction = useAction();
   const [tab, setTabState] = useState<DashboardTab>(initialTab ?? "profile");
-  const [showAll, setShowAll] = useState(initialTab !== null);
+  const showAll = initialTab !== null;
   const [profile, setProfile] = useState<Profile>(data.profile);
   const [memories, setMemories] = useState<Memory[]>(data.memories);
   const [connections, setConnections] = useState<Connection[]>(data.connections);
   const [people, setPeople] = useState<Person[]>(data.people);
   const [pending, setPending] = useState<PendingRequest[]>(data.pending_requests);
-  const [setup, setSetup] = useState<SetupStep[]>(data.setup);
-  const [plans, setPlans] = useState<Plan[]>(data.plans);
-  const [pendingAnswers, setPendingAnswers] = useState(data.pending_answers);
+  const [, setSetup] = useState<SetupStep[]>(data.setup);
+  const [, setPlans] = useState<Plan[]>(data.plans);
+  const [, setPendingAnswers] = useState(data.pending_answers);
   const [sampleLoaded, setSampleLoaded] = useState(data.sample_loaded);
 
   const friendCount = connections.length + people.length;
@@ -69,16 +65,6 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
     setSampleLoaded(d.sample_loaded);
   }
 
-  /** Re-fetch the dashboard after something changed many parts of it at once. */
-  async function reload(): Promise<string | null> {
-    const res = await bridge.callTool("venn_show_dashboard", {});
-    if (!res.ok) return res.errorText;
-    const parsed = parseView(res.data);
-    if (!parsed || parsed.view !== "dashboard") return "Venn couldn't refresh the dashboard.";
-    applyDashboard(parsed);
-    return null;
-  }
-
   // Every count shown in the UI is derived from the same arrays that are listed.
   const tabs: { id: DashboardTab; label: string; count?: number; dot?: boolean }[] = [
     { id: "profile", label: "Profile" },
@@ -88,46 +74,12 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
 
   return (
     <>
-    <HomeMoment bridge={bridge} nav={nav} footer={
-      <>
-        <button type="button" className="btn btn--ghost btn--block" aria-expanded={showAll} onClick={() => setShowAll(!showAll)}>
-          {showAll ? "Hide everything else" : "Everything else"}
-        </button>
-        <OpenMyVenn bridge={bridge} />
-      </>
-    } />
+    <HomeMoment bridge={bridge} nav={nav} footer={<OpenMyVenn bridge={bridge} />} />
+    {/* Lists (friends, memories, plans, setup) only when the chat asked for them. */}
     {showAll && (
     <div className="home-more">
         <div className="home-more__body">
-          <div className="home-more__links">
-            {pendingAnswers > 0 && (
-              <button type="button" className="btn btn--block" disabled={demoAction.busy !== null}
-                onClick={() => void demoAction.run("answers", () => nav.openView("venn_review_answers", {}))}>
-                {demoAction.busy === "answers" ? "Opening…" : `${plural(pendingAnswers, "answer", "answers")} to review`}
-              </button>
-            )}
-            <button type="button" className="btn btn--block" disabled={demoAction.busy !== null}
-              onClick={() => void demoAction.run("week", () => nav.openView("venn_this_week", {}))}>
-              {demoAction.busy === "week" ? "Opening…" : "All of this week"}
-            </button>
-            <button type="button" className="btn btn--block" disabled={demoAction.busy !== null}
-              onClick={() => void demoAction.run("saved", () => nav.openView("venn_saved_replies", {}))}>
-              {demoAction.busy === "saved" ? "Opening…" : "Saved replies"}
-            </button>
-            <button type="button" className="btn btn--block" onClick={() => setTab("friends")}>Add more people</button>
-          </div>
-          <ActionError action={demoAction} />
           {sampleLoaded && <SampleBanner bridge={bridge} onChanged={() => nav.replaceView("venn_show_dashboard", {})} />}
-          <SetupCard steps={setup} bridge={bridge} nav={nav} />
-          <Plans
-            plans={plans}
-            bridge={bridge}
-            onChanged={(next) => {
-              setPlans(next);
-              void reload();
-            }}
-          />
-          <DemoImport nav={nav} action={demoAction} />
     <section className="panel panel--tabs">
       <div className="tabs" role="tablist" aria-label="Dashboard sections">
         {tabs.map((t) => (

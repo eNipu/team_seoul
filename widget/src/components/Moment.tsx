@@ -1,8 +1,7 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import type { HostBridge } from "../mcp/client";
-import { firstName, friendArg, isObj, parseLogInteraction, type WeekAction } from "../types";
-import { ActionError, ChatStatus, ManualCopy, useAction, useChatPrompt, useCopy, type Nav } from "./common";
-import { PlanTools } from "./PlanTools";
+import { firstName, friendArg, parseView, type FriendKind, type FriendViewData } from "../types";
+import { ChatStatus, ManualCopy, useChatPrompt } from "./common";
 import "./onboarding.css";
 
 /** The web app: a side path for seeing and editing everything. Never a required step. */
@@ -27,138 +26,107 @@ export function OpenMyVenn({ bridge }: { bridge: HostBridge }) {
   );
 }
 
+
+/** A friend's shared signal: what their AI shared (or, for a private note, what you wrote). */
+export interface Signal {
+  title: string;
+  detail: string | null;
+  source: string;
+}
+
+export interface FriendSignals {
+  signal: Signal | null;
+  shared: string[];
+}
+
+function possessive(name: string): string {
+  return name.endsWith("s") ? `${name}'` : `${name}'s`;
+}
+
+/** The first thing a friend shared, the overlap with you, from a friend view. */
+export function signalsFrom(f: Pick<FriendViewData, "kind" | "display_name" | "shared_memories" | "notes" | "bio" | "shared_interests">): FriendSignals {
+  const first = firstName(f.display_name);
+  const m = f.kind === "connection" ? f.shared_memories[0] : undefined;
+  let signal: Signal | null = null;
+  if (m) signal = { title: m.title, detail: m.description || null, source: `Shared by ${possessive(first)} AI · via venn` };
+  else if (f.notes) signal = { title: f.notes.split(/(?<=[.!?])\s+/)[0], detail: null, source: "From your notes · only you see this" };
+  else if (f.bio) signal = { title: f.bio, detail: null, source: `${possessive(first)} profile · via venn` };
+  return { signal, shared: f.shared_interests };
+}
+
+/** Loads a friend's signals with the read-only friend view. Null until loaded; empty on failure. */
+export function useFriendSignals(bridge: HostBridge, kind: FriendKind, id: string): FriendSignals | null {
+  const [state, setState] = useState<FriendSignals | null>(null);
+  useEffect(() => {
+    let active = true;
+    setState(null);
+    if (!id) return () => { active = false; };
+    void bridge.callTool("venn_view_friend", friendArg(kind, id)).then((res) => {
+      const v = res.ok ? parseView(res.data, res.meta) : null;
+      if (active) setState(v?.view === "friend" ? signalsFrom(v) : { signal: null, shared: [] });
+    }).catch(() => { if (active) setState({ signal: null, shared: [] }); });
+    return () => { active = false; };
+  }, [bridge, kind, id]);
+  return state;
+}
+
+function lcFirst(t: string): string {
+  return t ? t.charAt(0).toLowerCase() + t.slice(1) : t;
+}
+
+/** What ChatGPT says, in plain words: the friend's signal, the overlap, one suggestion. */
+export function momentText(name: string, f: FriendSignals | null, idea?: string | null): string {
+  const first = firstName(name);
+  const sig = f?.signal;
+  const what = sig ? (sig.detail ?? sig.title).replace(/[.!?…]+$/, "") : null;
+  const parts = [what ? `Btw, ${first} ${lcFirst(what)}.` : `Btw, ${first} came up.`];
+  const both = f?.shared[0];
+  if (both) parts.push(`You're both into ${both.toLowerCase()}.`);
+  parts.push("I think you should reconnect.");
+  if (idea) parts.push(`Maybe ${lcFirst(idea.replace(/[.!?…]+$/, ""))}?`);
+  return parts.join(" ");
+}
+
 /**
- * The proactive card: who to reach out to now, why, and one action.
- * Everything else about the moment (log, rewrite, open, plan tools) sits behind "More".
+ * The moment: ChatGPT telling you, in one message, who to reach out to and why.
+ * One action, Say hi, which hands the message to the chat.
  */
-export function MomentCard({
-  a,
+export function ChatMoment({
   bridge,
-  nav,
-  onNext,
-  nextLabel = "Not now",
+  kind,
+  id,
+  name,
+  idea,
   footer,
-  eyebrow,
 }: {
-  a: WeekAction;
   bridge: HostBridge;
-  nav: Nav;
-  onNext?: () => void;
-  nextLabel?: string;
+  kind: FriendKind;
+  id: string;
+  name: string;
+  idea?: string | null;
   footer?: ReactNode;
-  eyebrow?: string;
 }) {
-  const action = useAction();
+  const signals = useFriendSignals(bridge, kind, id);
   const chat = useChatPrompt(bridge);
-  const { copied, manual, copy } = useCopy();
-  const [followUpDone, setFollowUpDone] = useState(false);
-  const [logged, setLogged] = useState<string | null>(null);
-  const first = firstName(a.display_name);
-  const arg = friendArg(a.kind, a.id);
-  const busy = action.busy !== null;
-  const message = a.draft_message ?? (a.follow_up && !followUpDone ? a.follow_up.text : null);
-
-  function completeFollowUp(id: string) {
-    void action.run("follow-up", async () => {
-      const res = await bridge.callTool("venn_complete_follow_up", { follow_up_id: id });
-      if (!res.ok) return res.errorText;
-      if (!isObj(res.data) || res.data.done !== true) return "Venn couldn't mark that as done.";
-      setFollowUpDone(true);
-      return null;
-    });
-  }
-
-  function log(label: string, activity: string) {
-    void action.run(`log-${activity}`, async () => {
-      const res = await bridge.callTool("venn_log_interaction", { ...arg, activity });
-      if (!res.ok) return res.errorText;
-      if (!parseLogInteraction(res.data).recorded) return "Venn couldn't log that.";
-      setLogged(label);
-      return null;
-    });
-  }
-
-  function planIt() {
-    if (!a.suggestion) return;
-    void chat.send(`Help me plan "${a.suggestion.title}" with ${a.display_name}. I will reach out myself.`);
-  }
-
+  const first = firstName(name);
+  const text = momentText(name, signals, idea);
   return (
-    <section className="onb" aria-label={`Venn suggests: ${a.title || first}`}>
-      {eyebrow && <p className="onb__steps">{eyebrow}</p>}
-      <h2 className="onb__title">{sentence(a.title || `Check in with ${first}`)}</h2>
-      {a.reason && <p className="onb__body">{sentence(a.reason)}</p>}
-
-      {message ? (
-        <div className="onb__bubble" aria-label={a.draft_message ? "A message you could send" : "Something to ask"}>
-          <p>{message}</p>
-        </div>
-      ) : a.suggestion ? (
-        <div className="onb__moment">
-          <p>{a.suggestion.title}</p>
-          {a.suggestion.description && <small>{a.suggestion.description}</small>}
-        </div>
-      ) : null}
-
-      <ActionError action={action} />
-      {logged ? (
-        <p className="onb__done" role="status">Logged: {logged.toLowerCase()}.</p>
-      ) : message ? (
-        <button type="button" className="onb__cta" onClick={() => void copy("msg", message)}>
-          {copied === "msg" ? "Copied. Now send it" : a.draft_message ? "Copy message" : `Copy question for ${first}`}
-        </button>
-      ) : a.suggestion ? (
-        <button type="button" className="onb__cta" disabled={chat.state === "sending"} onClick={planIt}>
-          {chat.state === "sending" ? "Asking…" : `Plan it with ${first}`}
-        </button>
+    <section className="onb moment-chat" aria-label="A message from Venn" aria-busy={signals === null}>
+      <p className="onb__context">ChatGPT</p>
+      {signals === null ? (
+        <div className="onb__bubble onb__bubble--in"><p aria-label="Typing">…</p></div>
       ) : (
-        <button type="button" className="onb__cta" disabled={busy}
-          onClick={() => void action.run("open", () => nav.openView("venn_view_friend", arg))}>
-          {action.busy === "open" ? "Opening…" : `Open ${first}`}
-        </button>
+        <div className="onb__bubble onb__bubble--in">
+          <p>{text}</p>
+          {signals.signal && <small>{signals.signal.source}</small>}
+        </div>
       )}
-      <span className="sr-only" role="status">{copied ? "Copied to clipboard" : ""}</span>
-      {manual !== null && <ManualCopy text={manual} />}
+      <button type="button" className="onb__cta" disabled={signals === null || chat.state === "sending"}
+        onClick={() => void chat.send(`Help me say hi to ${name}. Keep it short and warm, mention: ${text.replace(/^Btw, /, "")} I'll send it myself.`)}>
+        {chat.state === "sending" ? "Asking…" : `Say hi to ${first}`}
+      </button>
       <ChatStatus state={chat.state} prompt={chat.prompt} />
-
-      <div className="onb__row">
-        {onNext ? <button type="button" className="onb__link" onClick={onNext}>{nextLabel}</button> : <span />}
-        <details className="onb__more">
-          <summary>More</summary>
-          <div className="onb__more-body">
-            {!logged && (
-              <>
-                <button type="button" className="btn btn--block" disabled={busy} onClick={() => log("We talked", "Talked")}>
-                  {action.busy === "log-Talked" ? "Logging…" : "We talked"}
-                </button>
-                <button type="button" className="btn btn--block" disabled={busy} onClick={() => log("We met up", "Met up")}>
-                  {action.busy === "log-Met up" ? "Logging…" : "We met up"}
-                </button>
-              </>
-            )}
-            {a.follow_up && !followUpDone && (
-              <button type="button" className="btn btn--block" disabled={busy} onClick={() => completeFollowUp(a.follow_up!.follow_up_id)}>
-                {action.busy === "follow-up" ? "Saving…" : "I asked, mark done"}
-              </button>
-            )}
-            {a.draft_message && chat.state !== "unavailable" && (
-              <button type="button" className="btn btn--block" disabled={chat.state === "sending"}
-                onClick={() => void chat.send(`Rewrite this message to ${first} in my voice, keep it short: “${a.draft_message}”`)}>
-                {chat.state === "sending" ? "Asking…" : "Rewrite it in chat"}
-              </button>
-            )}
-            {a.suggestion && (
-              <PlanTools bridge={bridge} title={a.suggestion.title} details={a.suggestion.description}
-                calendarTitle={`${a.suggestion.title} with ${a.display_name}`} friends={[{ kind: a.kind, id: a.id }]} />
-            )}
-            <button type="button" className="btn btn--ghost btn--block" disabled={busy}
-              onClick={() => void action.run("open", () => nav.openView("venn_view_friend", arg))}>
-              {action.busy === "open" ? "Opening…" : `Open ${first}`}
-            </button>
-            {footer}
-          </div>
-        </details>
-      </div>
+      {footer && <div className="onb__row">{footer}</div>}
     </section>
   );
 }
