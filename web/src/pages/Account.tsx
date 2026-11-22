@@ -295,8 +295,8 @@ export default function Account() {
       <Loaded state={me} skeleton={<Skeleton rows={5} />}>
         {(m) => (
           <div className="stack">
-            <ConnectCard requests={requests} onChanged={home.reload} />
             <ProfileCard key={`${m.profile.display_name}:${m.profile.bio ?? ""}`} me={m} onSaved={me.reload} />
+            <ConnectCard requests={requests} onChanged={home.reload} />
             <ChatGptCard me={m} />
             {fromSetup && <Link to="/" className="link-btn">Back to Home</Link>}
             <DangerCard />

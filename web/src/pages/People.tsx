@@ -24,7 +24,6 @@ import {
   Notice,
   PageHeader,
   Skeleton,
-  Tag,
   useAction,
   useAsync,
   useToast,
@@ -145,11 +144,7 @@ function PersonRow({ f }: { f: FriendSummary }) {
           
         </span>
         <span className="person-row__side">
-          {f.open_follow_ups > 0 && (
-            <Tag tone="warn" icon="flag">
-              {plural(f.open_follow_ups, "follow-up", "follow-ups")}
-            </Tag>
-          )}
+          {f.open_follow_ups > 0 && <span className="dot" aria-label={plural(f.open_follow_ups, "open follow-up", "open follow-ups")} />}
         </span>
       </Link>
     </li>

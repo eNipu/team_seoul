@@ -3756,3 +3756,4 @@ input[type="datetime-local"], input:not([type]), select, textarea {
 .link-btn--danger { color: var(--danger); }
 /* person: only the overlap is yellow */
 :root { --venn-you: #f5f5f7; --venn-them: #f5f5f7; --venn-lens: #ffd400; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #000; }

@@ -22,7 +22,6 @@ import {
   Dialog,
   ErrorState,
   InlineError,
-  KindTag,
   Loaded,
   Notice,
   PageHeader,
@@ -388,7 +387,6 @@ export default function PersonPage({ kind, id }: Props) {
         <div className="profile__main">
           <p className="profile__meta">
             {f.relationship && <span>{f.relationship}</span>}
-            <KindTag onVenn={f.on_venn} />
             {f.is_sample && <Tag tone="info">Sample</Tag>}
           </p>
           <p className="muted">
