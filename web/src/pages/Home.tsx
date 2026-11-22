@@ -118,7 +118,7 @@ function Dashboard({ home, reloadHome }: { home: DashboardHome; reloadHome: () =
           </Link>
         )}
         {chatgptConnected(home) ? (
-          <Link to="/invite" className="btn btn--primary btn--pill h2__invite">
+          <Link to="/qr" className="btn btn--primary btn--pill h2__invite">
             Invite someone
           </Link>
         ) : (

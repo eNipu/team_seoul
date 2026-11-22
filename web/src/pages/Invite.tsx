@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { errorMessage } from "../errors";
 import QrCode from "../QrCode";
-import { formatDate, type Invite as InviteData } from "../types";
+import { type Invite as InviteData } from "../types";
 import { CopyButton, ErrorState, Skeleton } from "../ui";
 import "./join.css";
 
@@ -14,10 +14,10 @@ export default function Invite() {
   const started = useRef(false);
   const create = () => {
     setError(null);
-    api.createInvite().then(setInvite, (e) => setError(errorMessage(e)));
+    api.personalInvite().then(setInvite, (e) => setError(errorMessage(e)));
   };
   useEffect(() => {
-    if (started.current) return; // one invite per visit, even under StrictMode
+    if (started.current) return; // load once, even under StrictMode
     started.current = true;
     create();
   }, []);
@@ -35,7 +35,7 @@ export default function Invite() {
           <div className="jn__actions">
             <CopyButton text={invite.link} label="Copy link" />
           </div>
-          <p className="jn__quiet">One friend, until {formatDate(invite.expires_at)}.</p>
+          <p className="jn__quiet">Your QR. It stays the same, so save it or show it anytime.</p>
         </>
       ) : (
         <Skeleton rows={3} />

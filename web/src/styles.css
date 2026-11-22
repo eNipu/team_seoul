@@ -4100,3 +4100,6 @@ input[type="datetime-local"], input:not([type]), select, textarea {
 /* final: narrow settings column; task screens (join, invite) drop the nav */
 .page--narrow { max-width: 640px; }
 .shell--task .topbar .nav { display: none; }
+.topbar__qr { display: inline-grid; place-items: center; width: 40px; height: 40px; margin-left: auto; margin-right: 8px; border-radius: 50%; color: #000; }
+.topbar__qr:hover { background: #f5f5f7; }
+.topbar__qr + * { margin-left: 0 !important; }

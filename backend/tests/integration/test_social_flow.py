@@ -180,3 +180,12 @@ def test_scanning_a_used_code_again_when_already_connected_says_connected(alice,
     again = bob.ok("venn_redeem_invite", code=code)
     assert again["status"] == "ALREADY_CONNECTED"
     assert "are connected" in again["message"]
+
+
+def test_personal_qr_is_permanent_and_works_for_many_friends(alice, bob, carol):
+    first = alice.ok("venn_create_invite")
+    again = alice.ok("venn_create_invite")
+    assert first["code"] == again["code"]  # same QR every time
+    assert first["max_uses"] > 1000
+    for friend in (bob, carol):
+        assert friend.ok("venn_redeem_invite", code=first["code"])["status"] in ("CONNECTED", "ALREADY_CONNECTED")

@@ -645,10 +645,18 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
     async def venn_create_invite(
         max_uses: Annotated[int, Field(ge=1, le=20)] = 5,
         note: Annotated[str | None, Field(max_length=200, description="Private note for the user.")] = None,
+        personal: Annotated[
+            bool,
+            Field(description="True (default): the user's permanent personal QR, the same code every time, "
+                  "any friend can scan it. False: a one-off code for max_uses friends that expires."),
+        ] = True,
     ) -> CallToolResult:
         async def body():
             invite = await run_as_user(
-                [CONNECTIONS], lambda db, user, _: social_service.create_invite(db, user, note, max_uses)
+                [CONNECTIONS],
+                lambda db, user, _: social_service.personal_invite(db, user)
+                if personal and note is None and max_uses == 5
+                else social_service.create_invite(db, user, note, max_uses),
             )
             return ok(f"Invite code {invite.code} (expires {invite.expires_at:%Y-%m-%d %H:%M} UTC).", invite)
 

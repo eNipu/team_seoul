@@ -1431,6 +1431,21 @@ export function createMockApi(options: MockOptions): Api {
       }),
 
     /* ---------------------------------------------------------- connecting */
+    personalInvite: () =>
+      wait(() => {
+        const code = "VENN-7K2M";
+        const link = `${SITE}/i/${code}`;
+        return {
+          view: "invite" as const,
+          code,
+          expires_at: ahead(3650, 0),
+          max_uses: 100000,
+          share_text: `I'm using Venn in ChatGPT to keep in touch. Join me? ${link}`,
+          link,
+          qr: mockQrRows(link),
+          note: "",
+        };
+      }),
     createInvite: (maxUses = 1) =>
       wait(() => {
         const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";

@@ -63,7 +63,7 @@ function matchRoute(loc: Location): Route {
   if (path === "/plans") return { title: "Plans", element: <Plans /> };
   if (path === "/answers") return { title: "Answers", element: <Answers /> };
   if (path === "/connect") return { title: "Connect ChatGPT", element: <ConnectChatGpt /> };
-  if (path === "/invite") return { title: "Invite", element: <Invite /> };
+  if (path === "/invite" || path === "/qr") return { title: "My QR", element: <Invite /> };
   if (path === "/join") return { title: "Join", element: <Join /> };
   if (path === "/account") return { title: "Account", element: <Account /> };
   return { title: "Page not found", element: <NotFound /> };
@@ -180,7 +180,7 @@ function Shell() {
   }, [loc.path]);
 
   return (
-    <div className={loc.path === "/join" || loc.path === "/invite" ? "shell shell--task" : "shell"}>
+    <div className={loc.path === "/join" || loc.path === "/invite" || loc.path === "/qr" ? "shell shell--task" : "shell"}>
       <a className="skip-link" href="#main">
         Skip to content
       </a>
@@ -205,6 +205,12 @@ function Shell() {
             Demo
           </span>
         )}
+        <Link to="/qr" className="topbar__qr" aria-label="My QR code">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" /><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3" />
+          </svg>
+        </Link>
         <AccountMenu />
       </header>
       <main className="main" id="main" tabIndex={-1} ref={mainRef}>
