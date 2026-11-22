@@ -16,7 +16,7 @@ metrics page. A Next.js app (App Router) with its own small API and two tables i
 | `components/VennScene.tsx` | The 3D scene: two glass spheres orbiting each other, built with three.js (MIT) |
 | `components/Motion.tsx` | Turns on the scroll reveals for elements marked `data-reveal` |
 | `components/Waitlist.tsx` | The email form and its states after joining |
-| `components/OnboardingPreview.tsx` | The interactive memory, invitation, and shared-interest preview |
+| `components/OnboardingPreview.tsx`, `components/ConnectionMap.tsx` | The weekly signal preview and its animated connection map |
 | `lib/db.ts`, `lib/waitlist.ts`, `lib/analytics.ts` | Postgres pool and schema, waitlist logic, events and metrics |
 | `lib/version.ts` | The two waitlist versions, `pair` and `open`, and which one is the default |
 | `lib/rate-limit.ts` | Per-address request limit for the API routes |
@@ -28,7 +28,7 @@ metrics page. A Next.js app (App Router) with its own small API and two tables i
 ```bash
 cd site
 npm install
-npm run build                       # copies the kit from ../widget, then next build
+npm run build                       # checks the site kit, then runs Next.js build
 npm run start                       # http://localhost:3000 (PORT overrides)
 npm run dev                         # the same with hot reload
 node check.mjs                      # needs Node 22+, Chrome, and a build
@@ -49,10 +49,10 @@ not recorded, and `/metrics` says so. Nothing is kept in memory as a substitute,
 silently drop signups.
 
 `check.mjs` loads the page at 360, 390, 768 and 1280 px, plus once in dark mode and once with reduced motion. It
-fails on: a missing or empty heading, sideways overflow, a hero that does not fit in the first screen, text below
-WCAG AA contrast, text under 12 px, a control under 44 px, a console error, a request to another origin, a
-cookie, photos or canvas on the landing page, a broken step in the onboarding preview, a `/metrics`
-that opens without the password, or a waitlist that never answers 429. With `DATABASE_URL`
+checks headings, overflow, signup visibility on the first screen, WCAG AA text contrast, 12 px minimum text,
+44 px controls, console errors, cross-origin requests, cookies other than the consent-region cookie, the hero
+fallback, section navigation, the weekly preview, `/metrics` authentication, and the waitlist rate limit.
+With `DATABASE_URL`
 it also walks the waitlist on the smallest phone: joining alone with real key presses (Tab to the field,
 Enter, focus on the answer, Tab through both actions, each with a focus ring), arriving with that link (invited, then
 both confirmed), coming back as the first person, a link nobody owns, and the open version. Each state must
@@ -144,9 +144,10 @@ First-party only: no third-party scripts, no cookies, nothing stored on the devi
 
 ## Hero and onboarding
 
-The hero has the copy on the left and the join panel (the waitlist form) on the right, over two glass
-spheres in the brand yellow and red that orbit each other in 3D. On a phone the panel follows the copy and the
-scene reaches up behind the example card. A CSS version of the circles is in the HTML and paints first;
+The hero has the copy and chat example on the left and the join panel on the right, over two glass
+spheres in the brand yellow and red that orbit each other in 3D. On a phone signup appears before the
+chat example. Invitation and confirmation panels sit immediately below the subtitle to keep their controls
+within reach. A CSS version of the circles is in the HTML and paints first;
 three.js is a separate chunk loaded once the page is idle. The still version stays for reduced motion, data
 saving and no WebGL, and rendering stops when the scene is off screen or the tab is hidden.
 
@@ -154,20 +155,18 @@ Motion (`app/globals.css` › Motion) always plays into the finished page, so no
 or with reduced motion: the hero arrives line by line, the underline is drawn and the highlight swept in, and
 sections fade up the first time they scroll into view (`data-reveal="up"`, or `"group"` for children in turn).
 
-The onboarding preview uses
-inline SVG for the invitation and the transition from two separate people to a circle.
+The section arrows link from the hero to the weekly preview, from there to the Founding Circle, and from
+the footer back to the hero. The links move keyboard focus to the destination and respect reduced motion.
 
-The preview starts with sample memories. The visitor chooses what to share, opens a sample invitation,
-accepts as Maya, and sees the overlap calculated from the chosen memories. The preview does not submit
-or persist its choices. The last step links back to the live waitlist. Back preserves the choices and
-Restart clears them.
+The weekly preview animates paths through one persistent SVG connection map. The visitor keeps sample
+signals and picks their audience. The approved routes draw as they reach that circle, and the link to Maya
+lights up when an approved signal matches her question. The demo stores no choices. The last step links
+back to the waitlist. Going back preserves choices, and **Start again** restores the sample defaults.
 
 ## Shared styling with the widget
 
-`widget/src/venn-kit.css` is the single source for the design tokens and the card primitives (`.panel`, `.card`,
-`.btn`, `.badge`, `.chip`, `.avatar`, `.check`, `.pick`, `.venn-pair`, `.lock-note`). The widget imports it
-directly. `npm run build` here copies it to `app/venn-kit.css` (`scripts/sync-kit.mjs`), and the copy is
-committed because Railway uploads `site/` on its own. Change the widget file, build both, commit both.
+The landing page uses its own `app/venn-kit.css` for the site palette and primitives. Its build verifies
+that the file exists. The ChatGPT widget uses `widget/src/venn-kit.css`.
 
 The landing page is light only (`<html data-theme="light">`); the widget keeps light and dark for the host.
 

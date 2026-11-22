@@ -5,6 +5,7 @@
 // 2. You keep or drop each one and pick who sees them. Nothing leaves until you approve.
 // 3. Later, in someone else's ChatGPT, the right signal comes up at the right moment.
 import { useEffect, useRef, useState } from "react";
+import ConnectionMap from "./ConnectionMap";
 
 type Signal = { id: string; kind: string; text: string };
 
@@ -36,6 +37,11 @@ export default function OnboardingPreview() {
   };
   const toggle = (id: string) =>
     setKept((current) => (current.includes(id) ? current.filter((x) => x !== id) : [...current, id]));
+  const restart = () => {
+    setKept(DRAFTS.map((draft) => draft.id));
+    setCircle("Close friends");
+    go(0);
+  };
 
   const shared = DRAFTS.filter((d) => kept.includes(d.id));
   // Maya's question matches the Lisbon plan for friends, the designer need for work.
@@ -49,7 +55,7 @@ export default function OnboardingPreview() {
       : "Alex, who you met at Web Summit, is looking for a fintech product designer.";
 
   return (
-    <div className="onboarding">
+    <div className="onboarding" data-step={step + 1}>
       <header className="onboarding__header">
         <span className="onboarding__brand">Inside ChatGPT, with Venn</span>
         <span>
@@ -62,10 +68,22 @@ export default function OnboardingPreview() {
         </div>
       </header>
 
+      <ConnectionMap circle={circle} kept={DRAFTS.map((draft) => kept.includes(draft.id))}
+        shared={step > 0} matched={step === 2 && matchShared} />
+
       <div className="onboarding__body" key={step}>
         <h3 ref={heading} tabIndex={-1}>
           {STEPS[step]}
         </h3>
+        {step > 0 && (
+          <button type="button" className="scroll-arrow onboarding__back" aria-label="Previous step"
+            title="Previous step" onClick={() => go(step - 1)}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M20 12H4m6-6-6 6 6 6" />
+            </svg>
+          </button>
+        )}
 
         {step === 0 && (
           <>
@@ -138,7 +156,7 @@ export default function OnboardingPreview() {
               <a className="btn btn--primary" href="#waitlist">
                 Build your inner circle
               </a>
-              <button type="button" className="btn" onClick={() => go(0)}>
+              <button type="button" className="btn" onClick={restart}>
                 Start again
               </button>
             </div>

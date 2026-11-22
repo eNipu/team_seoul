@@ -2,6 +2,7 @@ import HeroBackdrop from "@/components/HeroBackdrop";
 import Motion from "@/components/Motion";
 import OnboardingPreview from "@/components/OnboardingPreview";
 import PageView from "@/components/PageView";
+import ScrollArrow from "@/components/ScrollArrow";
 import SiteHeader from "@/components/SiteHeader";
 import Waitlist from "@/components/Waitlist";
 import { CookieSettingsLink } from "@/components/ConsentBanner";
@@ -40,28 +41,27 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
   return (
     <>
       <main>
-        <section className="section section--dark" id="hero" aria-labelledby="hero-title">
-          <SiteHeader />
+        <section className="section section--dark" id="hero" aria-labelledby="hero-title" tabIndex={-1}>
+          <SiteHeader action={<ScrollArrow href="#inside" label="Go to One week with Venn" />} />
           <div className="wrap hero__grid">
             <div className="hero__copy">
               <p className="eyebrow">Early-access waitlist</p>
               <h1 className="h-display" id="hero-title">Connect your AI memories.</h1>
               <p className="h-sub"><span>Build your inner circle.</span></p>
-              <p className="lead hero__what">
-                Your ChatGPT tells you which friend, colleague or partner to talk to, from updates they choose to share.
-              </p>
-              <div className="chat hero__chat" aria-label="Example inside ChatGPT">
-                <p className="chat__user">I have no plans this weekend. Ideas?</p>
-                <Moment person="Emma" text="Emma from uni is in Berlin on Saturday. You haven't seen her in 2 years." yellow />
-              </div>
             </div>
-            {/* The join panel, with the 3D circles behind it: beside the copy on a wide screen. */}
+            <p className="lead hero__what">
+              Your ChatGPT tells you which friend, colleague or partner to talk to, from updates they choose to share.
+            </p>
             <div className="hero__join">
               <HeroBackdrop />
               <div className="hero__join-card">
                 <Waitlist version={version} invite={invite} />
                 <p className="hero__fine">Free early access · Works with ChatGPT · Your friends opt in</p>
               </div>
+            </div>
+            <div className="chat hero__chat" aria-label="Example inside ChatGPT">
+              <p className="chat__user">I have no plans this weekend. Ideas?</p>
+              <Moment person="Emma" text="Emma from uni is in Berlin on Saturday. You haven't seen her in 2 years." yellow />
             </div>
           </div>
         </section>
@@ -82,20 +82,23 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
         <HowItWorks />
         <UseCases />
 
-        <section className="section section--paper" id="inside" aria-labelledby="inside-title">
+        <section className="section section--paper" id="inside" aria-labelledby="inside-title" tabIndex={-1}>
           <div className="wrap">
-            <h2 className="h-section" id="inside-title" data-reveal="up">One week with Venn.</h2>
-            <p className="lead" data-reveal="up">Your AI drafts your week. You keep what you want. The right friend hears about it.</p>
-            <div data-reveal="up">
-              <OnboardingPreview />
+            <div className="inside__heading">
+              <div>
+                <h2 className="h-section" id="inside-title">One week with Venn.</h2>
+                <p className="lead">Your AI drafts your week. You keep what you want. The right friend hears about it.</p>
+              </div>
+              <ScrollArrow href="#early-access" label="Go to the Founding Circle" />
             </div>
+            <OnboardingPreview />
           </div>
         </section>
 
         <PrivacyPrinciples />
         <Faq />
 
-        <section className="section" id="early-access" aria-labelledby="closing-title">
+        <section className="section" id="early-access" aria-labelledby="closing-title" tabIndex={-1}>
           <div className="closing wrap" data-reveal="group">
             <img
               className="mark mark--faces"
@@ -115,9 +118,17 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
         </section>
       </main>
 
-      <footer className="wrap">
-        <span>© {new Date().getFullYear()} Venn · <a href="/privacy">Privacy</a> · <a href="/pricing">Pricing</a> · <CookieSettingsLink /></span>
-        <p>The people in the examples are made up.</p>
+      <footer className="site-footer wrap">
+        <div>
+          <div className="site-footer__links">
+            <span>© {new Date().getFullYear()} Venn</span>
+            <a href="/privacy">Privacy</a>
+            <a href="/pricing">Pricing</a>
+            <CookieSettingsLink />
+          </div>
+          <p>The people in the examples are made up.</p>
+        </div>
+        <ScrollArrow href="#hero" label="Back to top" direction="up" />
       </footer>
       <PageView version={version} />
       <Motion />
