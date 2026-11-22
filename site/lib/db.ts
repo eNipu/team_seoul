@@ -23,6 +23,12 @@ CREATE TABLE IF NOT EXISTS waitlist_signups (
 );
 CREATE INDEX IF NOT EXISTS waitlist_signups_ref_idx ON waitlist_signups (ref);
 
+CREATE TABLE IF NOT EXISTS waitlist_receipts (
+  signup_id BIGINT PRIMARY KEY REFERENCES waitlist_signups(id) ON DELETE CASCADE,
+  next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  attempts INTEGER NOT NULL DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS site_events (
   id BIGSERIAL PRIMARY KEY,
   event TEXT NOT NULL,

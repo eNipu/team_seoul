@@ -125,6 +125,10 @@ reads `utm_source`, `utm_content` and `ref` from the page URL.
 The schema is created on first use (`lib/db.ts`); there is no migration step. The tables are named so they can
 live in the same database as the MCP backend, which has its own `analytics_events`.
 
+### Signup confirmation email
+
+A new signup queues one receipt in the same transaction as the waitlist entry. Existing entries keep their spot on repeat submission. The running Next.js server drains the queue when `DATABASE_URL` and the server-only `RESEND_API_KEY` are set. Failed requests stay queued with increasing delays. The sender is **Venn <hi@joinvennai.com>**. Verify `joinvennai.com` in Resend and give the key sending access to that domain. Set `WAITLIST_REPLY_TO` to the monitored inbox for replies. Messages addressed directly to `hi@joinvennai.com` follow the domain’s forwarding rules.
+
 ## Analytics and `/metrics`
 
 First-party only: no third-party scripts, no cookies, nothing stored on the device for tracking.
@@ -203,7 +207,7 @@ Keep the page true when the product changes.
 | It never contacts anyone for you | Works | `README.md`, `plugin/skills/venn-social/SKILL.md` |
 | "Connect your AI memories." | Works for approved ChatGPT memories | `venn_import_chatgpt_memory`, memory review and save |
 | Review, accept, and find shared interests | Preview with a sample person | Memory review, invite redemption and acceptance, `venn_compare` |
-| "We only email you about your invite" | A promise the team must keep | `waitlist_signups` holds the emails. Nothing is sent today |
+| "We only email you about your invite" | A promise the team must keep | `waitlist_signups` holds the emails. New signups queue a transactional receipt |
 | "A confirmed place for both of you", "Your places in the Founding Circle are confirmed" | A promise the team must keep | `confirmed_at`. Whoever opens Venn to the list must honour it |
 | "Someone saved you a place" | Works | Shown only when the link exists and has room (`inviteHasRoom`) |
 | "You join with one person you know" | True of the pair version | A place stays pending until a +1 joins; `?w=open` has no such rule |
