@@ -25,7 +25,6 @@ export default function HowItWorksPage() {
                 <h2 className="h-section" id="inside-title">One week with Venn.</h2>
                 <p className="lead">Your AI drafts your week. You keep what you want. The right friend hears about it.</p>
               </div>
-              <a className="btn" href="/chatgpt">ChatGPT demo</a>
             </div>
             <OnboardingPreview />
           </div>
