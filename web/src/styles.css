@@ -601,6 +601,23 @@ textarea::placeholder {
   overflow-wrap: anywhere;
 }
 
+.home-greeting__actions {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  text-align: center;
+}
+
+.home-greeting__actions .home-greeting__help {
+  flex: 0 0 44px;
+  padding: 0;
+  color: var(--muted);
+}
+
+.home-greeting__actions .home-greeting__help:hover {
+  color: var(--text);
+}
+
 /* --------------------------------------------------------------- buttons */
 
 .btn {

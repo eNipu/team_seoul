@@ -19,6 +19,7 @@ const TYPES = {
   ".svg": "image/svg+xml",
   ".json": "application/json",
   ".png": "image/png",
+  ".pdf": "application/pdf",
   ".ico": "image/x-icon",
   ".map": "application/json",
 };

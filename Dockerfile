@@ -15,6 +15,7 @@ COPY web/package.json web/package-lock.json ./
 RUN npm ci
 COPY shared/ /shared/
 COPY backend/app/services/interest_families.json /backend/app/services/interest_families.json
+COPY docs/Venn-Quickstart.pdf /docs/Venn-Quickstart.pdf
 COPY web/ ./
 RUN npm run build
 

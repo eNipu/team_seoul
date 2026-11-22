@@ -1,6 +1,7 @@
 // Home: start with a person or a plan, not a chat.
 
 import { useState, type ReactNode } from "react";
+import quickstartUrl from "../../../docs/Venn-Quickstart.pdf?url";
 import { api } from "../api";
 import { Icon, Illustration, type IconName } from "../icons";
 import { Link, navigate, type Query } from "../router";
@@ -50,9 +51,21 @@ function HomeGreeting({ children }: { children: ReactNode }) {
   return (
     <div className="home-greeting">
       <h1 id="page-title">{children}</h1>
-      <a className="btn btn--small" href="https://chatgpt.com/plugins">
-        Open ChatGPT Plugin
-      </a>
+      <div className="home-greeting__actions">
+        <a className="btn" href="https://chatgpt.com/plugins">
+          Open ChatGPT Plugin
+        </a>
+        <a
+          className="btn home-greeting__help"
+          href={quickstartUrl}
+          target="_blank"
+          rel="noopener"
+          aria-label="Venn Quickstart Guide (PDF, opens in a new tab)"
+          title="Venn Quickstart Guide (PDF)"
+        >
+          <Icon name="help" />
+        </a>
+      </div>
     </div>
   );
 }
