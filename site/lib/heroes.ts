@@ -23,6 +23,24 @@ export const HEROES: readonly Hero[] = [
     answer: "Raj, your angel, knows Owen at Onward Labs. Owen needs exactly what you sell.",
   },
   {
+    key: "notworking",
+    rotate: true, // founder line, 2026-11-22
+    head: "Your networking is not working.",
+    sub: "Venn adds chosen weekly updates to ChatGPT, so it can tell you who in your network can help.",
+    ask: "Who should I talk to about our seed round?",
+    person: "Priya",
+    answer: "Priya, your old manager, just joined a fund that leads seed rounds in your space.",
+  },
+  {
+    key: "leads",
+    rotate: true, // founder line, 2026-11-22
+    head: "Stop paying for new leads. Use your network first.",
+    sub: "Your next client is often one intro away. Venn tells ChatGPT who, and when.",
+    ask: "Who can introduce me to customers?",
+    person: "Raj",
+    answer: "Raj, your angel, knows Owen at Onward Labs. Owen needs exactly what you sell.",
+  },
+  {
     key: "connections",
     rotate: true, // default rotation
     head: "1,000 connections. 0 updates.",
