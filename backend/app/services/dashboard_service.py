@@ -25,6 +25,7 @@ from app.services import (
     people_service,
     plan_service,
     question_service,
+    relationship_service,
     sample_service,
     social_service,
     user_service,
@@ -139,7 +140,8 @@ def build_home(db: Session, user: User) -> DashboardView | WelcomeView:
 def plugin_home(db: Session, user: User) -> PluginDashboardView | PluginWelcomeView:
     home = build_home(db, user)
     cls = PluginWelcomeView if isinstance(home, WelcomeView) else PluginDashboardView
-    return cls(**home.model_dump(), onboarding=onboarding_service.state_sync(db, user))
+    due = cls is PluginDashboardView and relationship_service.weekly_update_due(db, user)
+    return cls(**home.model_dump(), onboarding=onboarding_service.state_sync(db, user), weekly_update_due=due)
 
 
 def plugin_help(db: Session, user: User) -> PluginHelpView:

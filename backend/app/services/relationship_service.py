@@ -18,7 +18,7 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.models import Block, Connection, FollowUp, Memory, Person, RelationshipEvent, User
@@ -197,6 +197,25 @@ def _memory_terms(memories: list[Memory]) -> set[str]:
 
 def own_memories(db: Session, user: User) -> list[Memory]:
     return list(db.scalars(select(Memory).where(Memory.user_id == user.id).order_by(Memory.created_at.desc())).all())
+
+
+WEEKLY_UPDATE_DAYS = 7
+
+
+def weekly_update_due(db: Session, user: User) -> bool:
+    """True when the user has finished Connect (>=1 own memory) and last saved to Venn 7+ days ago.
+
+    "Last update" is the newest approved_at among the user's own non-sample memories, so no extra
+    column is needed: every approved save (card, import, weekly review) counts as touching Venn.
+    """
+    latest, count = db.execute(
+        select(func.max(Memory.approved_at), func.count(Memory.id)).where(
+            Memory.user_id == user.id, or_(Memory.source.is_(None), Memory.source != "sample")
+        )
+    ).one()
+    if not count or latest is None:
+        return False
+    return utcnow() - as_aware(latest) >= timedelta(days=WEEKLY_UPDATE_DAYS)
 
 
 def my_terms(db: Session, user: User) -> set[str]:
