@@ -202,5 +202,7 @@ Keep the page true when the product changes.
 | "A confirmed place for both of you", "Your places in the Founding Circle are confirmed" | A promise the team must keep | `confirmed_at`. Whoever opens Venn to the list must honour it |
 | "Someone saved you a place" | Works | Shown only when the link exists and has room (`inviteHasRoom`) |
 | "You join with one person you know" | True of the pair version | A place stays pending until a +1 joins; `?w=open` has no such rule |
+| "Planned pricing at launch. Early access is free." | Pricing decision | `site/PRICING-DECISION.md`; billing is not live |
+| "Invited friends are always free" | Pricing decision | `site/PRICING-DECISION.md`; this must remain true when billing launches |
 
 The onboarding uses an example person. The waitlist collects email addresses. There is no privacy page yet (T17).

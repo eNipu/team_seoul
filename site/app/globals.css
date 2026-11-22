@@ -489,6 +489,62 @@ ul { padding: 0; list-style: none; }
 .step__text, .principles li p { max-width: 31ch; color: var(--text-2); }
 #privacy, #early-access { background: var(--white); }
 
+/* ---------- Pricing ---------- */
+.pricing-hero__body,
+.pricing-founder__body {
+  display: grid;
+  justify-items: start;
+  gap: 1rem;
+  max-width: 45rem;
+}
+
+.pricing-hero__body .btn { margin-top: 0.35rem; }
+.pricing__note { color: var(--muted); font-size: var(--fs-small); }
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: 0.875rem;
+  margin-top: clamp(1.75rem, 4vw, 3.25rem);
+}
+
+.pricing-card {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  min-width: 0;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.pricing-card--featured { border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+.pricing-card__head { display: flex; align-items: start; justify-content: space-between; gap: 0.75rem; }
+.pricing-card h3 { font-size: clamp(1.25rem, 1.05rem + 0.7vw, 1.625rem); }
+.pricing-card__price { font-size: clamp(2.5rem, 1.8rem + 2.4vw, 3.75rem); font-weight: 750; letter-spacing: -0.045em; line-height: 0.95; }
+.pricing-card__price span { display: block; margin-top: 0.45rem; color: var(--muted); font-size: var(--fs-small); font-weight: 500; letter-spacing: 0; line-height: 1.35; }
+.pricing-card > p:not(.pricing-card__price) { color: var(--text-2); }
+.pricing-card ul { display: grid; gap: 0.55rem; color: var(--text-2); font-size: 0.9375rem; }
+.pricing-card li { position: relative; padding-inline-start: 1rem; }
+.pricing-card li::before { position: absolute; inset: 0.55em auto auto 0; width: 0.35rem; height: 0.35rem; border-radius: 50%; background: var(--text); content: ""; }
+
+.pricing-promise__grid {
+  display: grid;
+  gap: clamp(1.25rem, 4vw, 3rem);
+  align-items: center;
+}
+
+.pricing-promise .moment {
+  --moment-surface: var(--surface);
+  align-content: center;
+  min-height: 12rem;
+}
+
+@media (min-width: 52rem) {
+  .pricing-promise__grid { grid-template-columns: minmax(0, 1fr) minmax(17rem, 0.75fr); }
+}
+
 .faq__item { border-bottom: 1px solid var(--border); }
 .faq__item:first-of-type { border-top: 1px solid var(--border); }
 .faq :is(.h-section, h2) { margin-bottom: 1.5rem; }
@@ -536,6 +592,60 @@ ul { padding: 0; list-style: none; }
 }
 
 .site-footer a { display: inline-flex; align-items: center; min-height: 44px; }
+.footer-button, .text-button {
+  appearance: none;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.text-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  vertical-align: middle;
+}
+
+.consent {
+  position: fixed;
+  z-index: 20;
+  inset: auto 0 0;
+  padding: 0.75rem;
+  pointer-events: none;
+}
+
+.consent__body {
+  display: grid;
+  gap: 0.75rem;
+  width: min(100%, 43rem);
+  margin-inline: auto;
+  padding: 0.875rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 22px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  pointer-events: auto;
+}
+
+.consent__text {
+  color: var(--text-2);
+  font-size: 0.9375rem;
+  line-height: 1.35;
+}
+
+.consent__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.consent__actions .btn { flex: 1 1 9.5rem; }
 
 .metrics { min-height: 100dvh; padding-bottom: 4rem; }
 .metrics__title { margin-block: 1rem 0.375rem; font-size: clamp(1.75rem, 1.4rem + 1.6vw, 2.5rem); }
@@ -565,6 +675,14 @@ ul { padding: 0; list-style: none; }
 @media (min-width: 46rem) {
   .steps, .principles > .wrap > ul { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   #privacy > .wrap > ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .consent__body {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    padding: 0.875rem 1rem;
+  }
+
+  .consent__actions { justify-content: end; }
+  .consent__actions .btn { flex: none; }
 }
 
 @media (min-width: 52rem) {
@@ -951,3 +1069,5 @@ html[data-motion] [data-reveal="group"]:not([data-in]) .usecase .moment { opacit
 
 /* Focus moves to the confirmation only so that it is announced; it is not a control. */
 .waitlist__joined:focus-visible { outline: none; box-shadow: none; }
+.legal { max-width: 44rem; display: grid; gap: .9rem; padding-block: 2rem 4rem; }
+.legal h2 { font-size: 1.25rem; margin-top: 1rem; }
