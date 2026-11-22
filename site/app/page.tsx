@@ -116,7 +116,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
       </main>
 
       <footer className="wrap">
-        <span>© {new Date().getFullYear()} Venn · <a href="/privacy">Privacy</a> · <CookieSettingsLink /></span>
+        <span>© {new Date().getFullYear()} Venn · <a href="/privacy">Privacy</a> · <a href="/pricing">Pricing</a> · <CookieSettingsLink /></span>
         <p>The people in the examples are made up.</p>
       </footer>
       <PageView version={version} />
