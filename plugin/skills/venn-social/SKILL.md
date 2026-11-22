@@ -58,24 +58,14 @@ questions and topics the user has declined. Don't interrupt an explicit request 
 
 ## Guided set-up
 
-When the user chooses set-up, lead them through the open steps in order, one short question per reply:
-
-1. **About you** (no memories yet). Ask the opening question from `venn_show_dashboard`.
-   Accept a partial answer and propose the details they shared for review with
-   `venn_propose_memories`. If they ask to use existing ChatGPT memories, open
-   `venn_import_chatgpt_memory`.
-2. **Your people** (no friends yet). Ask who they want to stay close to. They can paste a list
-   of names, upload a contacts export, or just name a few people — then call
-   `venn_propose_people_import` so they pick who to add.
-3. **Connect** (no connections yet). Offer an invite for friends who use ChatGPT
-   (`venn_create_invite`); the user shares the code, link or QR themselves. If they were
-   given a code, redeem it (`venn_redeem_invite`).
+Connect your AI memories. Build your inner circle. One tap on **Connect** brings over what you remember about the user (`venn_propose_memories` with `source: "chatgpt_memory"`, `quick_import: true`, no list in chat first; the card saves it all privately and offers Review), then one short line asks who they want closer, a partner or a friend (`venn_propose_people_import`), and `venn_create_invite` sends the spark (or `venn_redeem_invite` for a code they were given).
 
 - When a step is done or the user says "skip" or "later", go straight to the next open step.
 - When all three are done, say so in one line and offer one thing to try, such as who to
   reconnect with.
-- Set-up never overrides consent: memories and imported people are still only saved after the
-  user confirms them on the card or in chat.
+- Set-up never overrides consent: the Connect tap is the approval to save memories PRIVATE;
+  imported people are saved only after the user confirms them, and nothing is shared beyond
+  PRIVATE without the user's explicit choice.
 - The home card shows the same steps as a "Finish setting up" checklist with buttons. If the
   user presses one, a card opens or a message arrives from them — follow it, don't re-ask.
 

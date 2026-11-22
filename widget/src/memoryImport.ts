@@ -37,3 +37,10 @@ export function buildMemoryImportPrompt(
   );
   return lines.join("\n");
 }
+
+/** One tap on "Connect": no list in the chat first. Everything is saved privately; the user can review after. */
+export const QUICK_IMPORT_PROMPT =
+  "Connect my AI memories to Venn. Call venn_propose_memories now with quick_import: true, source \"chatgpt_memory\" " +
+  "and everything you remember about me (saved memories and past chats, up to 30). Don't list them in the chat first. " +
+  "Leave out health, money, passwords, ID numbers and anything you're not sure is about me. " +
+  "If you don't remember anything about me, just ask me one question about who I want to be closer to.";

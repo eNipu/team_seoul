@@ -326,6 +326,35 @@ def test_import_from_chatgpt_memory_is_reviewed_then_saved_with_its_source(alice
     assert {m["source"] for m in dashboard["memories"]} == {"chatgpt_memory"}
 
 
+def test_quick_import_flags_the_card_and_tells_the_model_not_to_list(alice):
+    result = alice.call("venn_propose_memories", suggested=_remembered(12), source="chatgpt_memory", quick_import=True)
+    assert not result["isError"]
+    card = result["structuredContent"]
+    assert card["quick_import"] is True and card["source"] == "chatgpt_memory"
+    assert len(card["proposals"]) == 12
+    assert all(p["suggested_visibility"] == "PRIVATE" for p in card["proposals"])
+    said = result["content"][0]["text"]
+    assert "saving them privately" in said and "Do NOT list" in said
+    assert "Hobby 0" not in said  # the memories are not echoed back for the model to repeat
+    assert alice.ok("venn_list_memories")["count"] == 0  # the card does the save
+    saved = alice.ok(
+        "venn_save_memories", proposal_id=card["proposal_id"], approvals=[{"index": i} for i in range(12)]
+    )
+    assert saved["count"] == 12
+    assert {m["visibility"] for m in saved["saved"]} == {"PRIVATE"}
+    assert {m["source"] for m in saved["saved"]} == {"chatgpt_memory"}
+
+
+def test_quick_import_is_ignored_outside_chatgpt_memory(alice):
+    result = alice.call("venn_propose_memories", suggested=_remembered(2), quick_import=True)
+    assert not result["isError"]
+    card = result["structuredContent"]
+    assert "quick_import" not in card and card["source"] == "conversation"
+    assert "Nothing saved yet" in result["content"][0]["text"]
+    plain = alice.ok("venn_propose_memories", suggested=_remembered(2), source="chatgpt_memory")
+    assert "quick_import" not in plain
+
+
 def test_memories_from_the_conversation_have_no_source(alice):
     card = alice.ok("venn_propose_memories", suggested=_remembered(1))
     assert card["source"] == "conversation"

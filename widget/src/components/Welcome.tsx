@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { LIMITS, type WelcomeViewData } from "../types";
-import DemoImport from "./DemoImport";
 import ErrorBanner from "./ErrorBanner";
 import { ActionError, ChatFallback, useAction, type ViewProps } from "./common";
-import { Icon, Illustration } from "./icons";
+import { Illustration } from "./icons";
+import { QUICK_IMPORT_PROMPT } from "../memoryImport";
+import { CIRCLES, DEMO, saveCircle, type Circle } from "../onboardingCircle";
+import "./onboarding.css";
 
 const SETUP_PROMPT = "Let's set up Venn. Start with my first unfinished step and ask me one question at a time.";
 
@@ -31,21 +33,18 @@ function validatePeople(people: { name: string; relationship: string | null }[])
 
 export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData>) {
   const action = useAction();
-  const [selected, setSelected] = useState<string[]>([]);
+  const selected: string[] = [];
   const [phase, setPhase] = useState<Phase>("choosing");
   const [error, setError] = useState<string | null>(null);
   const [names, setNames] = useState("");
+  const [connecting, setConnecting] = useState<"sent" | "fallback" | null>(null);
+  const [circle, setCircle] = useState<Circle | null>(null);
+  const [step, setStep] = useState<1 | 2>(1);
   const people = names.split(/\r?\n/).map((line) => line.trim()).filter(Boolean).map((line) => {
     const [name, ...clue] = line.split("|");
     return { name: name.trim(), relationship: clue.join("|").trim() || null };
   });
   const namesError = validatePeople(people);
-
-  const atLimit = selected.length >= LIMITS.goals;
-  const toggle = (value: string) =>
-    setSelected((cur) =>
-      cur.includes(value) ? cur.filter((v) => v !== value) : cur.length >= LIMITS.goals ? cur : [...cur, value],
-    );
 
   async function start() {
     if (phase === "starting" || action.busy !== null) return;
@@ -65,7 +64,6 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
     setPhase(sent ? "started" : "unavailable");
   }
 
-  const name = data.display_name.trim();
 
   if (phase === "started" || phase === "unavailable") {
     return (
@@ -86,7 +84,6 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
 
   // The first open step is where the user is; on a brand-new account that is step 1.
   const steps = data.setup;
-  const current = steps.find((s) => !s.done) ?? null;
 
   function trySample() {
     void action.run("sample", async () => {
@@ -96,138 +93,110 @@ export default function Welcome({ data, bridge, nav }: ViewProps<WelcomeViewData
     });
   }
 
-  const startHere = (
-    <section className="welcome__start" aria-label="Starter actions">
-      <h3 className="section-title">Start here</h3>
-      <div className="welcome__actions">
-        <button type="button" className="btn btn--primary btn--block" disabled={busy} onClick={() => void start()}>
-          {phase === "starting" ? "Getting started…" : "Set up Venn"}
-          {phase !== "starting" && <Icon name="arrow-right" size={18} />}
-        </button>
-        <button
-          type="button"
-          className="btn btn--block"
-          disabled={busy}
-          onClick={() => void action.run("import", () => nav.openView("venn_import_chatgpt_memory", {}))}
-        >
-          <Icon name="import" size={18} />
-          {action.busy === "import" ? "Opening…" : "Import my ChatGPT memory"}
-        </button>
-      </div>
-      <DemoImport nav={nav} action={action} disabled={busy} />
-      {data.goal_options.length > 0 && (
-        <details className="welcome__goals">
-          <summary>Choose your goals{selected.length > 0 ? ` (${selected.length})` : ""}</summary>
-          <fieldset className="goal-picker" disabled={busy}>
-            <legend className="sr-only">Venn goals</legend>
-            <p className="muted small">Pick any that fit{atLimit ? ` (up to ${LIMITS.goals})` : ""}. You can change this later.</p>
-            <div className="chips">
-              {data.goal_options.map((g) => {
-                const on = selected.includes(g.value);
-                return (
-                  <button
-                    key={g.value}
-                    type="button"
-                    className={`chip chip--toggle ${on ? "chip--on" : ""}`}
-                    aria-pressed={on}
-                    disabled={!on && atLimit}
-                    onClick={() => toggle(g.value)}
-                  >
-                    <Icon name={on ? "check" : "plus"} size={14} />
-                    {g.label}
-                  </button>
-                );
-              })}
-            </div>
-          </fieldset>
-        </details>
-      )}
-      {!data.sample_loaded && (
-        <div className="sample-offer">
-          <button type="button" className="btn btn--ghost btn--block" disabled={busy} onClick={trySample}>
-            <Icon name="sparkle" size={18} />
-            {action.busy === "sample" ? "Loading sample friends…" : "Try with sample friends"}
-          </button>
-          <p className="muted small">See every card with a made-up circle. Remove it with one tap.</p>
+  // One tap, Boardy-simple: Connect imports privately. Everything else (preview, sample circle,
+  // goals, names) sits behind "More ways in" so the first screen has one decision.
+  async function connect() {
+    if (busy) return;
+    setPhase("starting");
+    let sent = false;
+    try {
+      const who = CIRCLES.find((c) => c.value === circle)?.label.toLowerCase();
+      sent = await bridge.sendMessage(QUICK_IMPORT_PROMPT + (who ? ` I want to be closer to ${who}.` : ""));
+    } catch {
+      sent = false;
+    }
+    setConnecting(sent ? "sent" : "fallback");
+    setPhase("choosing");
+  }
+
+  if (connecting) {
+    return (
+      <section className="onb" aria-live="polite">
+        <h2 className="onb__title">Connecting…</h2>
+        {connecting === "fallback" && <ChatFallback text={QUICK_IMPORT_PROMPT} />}
+      </section>
+    );
+  }
+
+  if (step === 1) {
+    return (
+      <section className="onb">
+        <StepCount n={1} />
+        <h2 className="onb__title">Who do you want to be closer to?</h2>
+        <fieldset className="onb__choices">
+          <legend className="sr-only">Who do you want to be closer to</legend>
+          {CIRCLES.map((c) => (
+            <label key={c.value} className="onb__choice">
+              <input type="radio" name="circle" checked={circle === c.value}
+                onChange={() => { setCircle(c.value); saveCircle(c.value); setStep(2); }} />
+              <span>{c.label}</span>
+            </label>
+          ))}
+        </fieldset>
+      </section>
+    );
+  }
+
+  const demo = DEMO[circle ?? "friends"];
+  return (
+    <section className="onb">
+      <StepCount n={2} />
+      <h2 className="onb__title">Connect your AI memories.</h2>
+      <ActionError action={action} />
+      <button type="button" className="onb__cta" disabled={busy} onClick={() => void connect()}>
+        {phase === "starting" ? "Connecting…" : "Connect"}
+      </button>
+      <figure className="onb__demo" aria-label="What Venn does, in ChatGPT">
+        <figcaption><span className="onb__gpt">ChatGPT</span> next week</figcaption>
+        <p className="onb__ask">{demo.ask}</p>
+        <div className="onb__moment">
+          <p>{demo.answer}</p>
+          <small>Shared by {demo.person}{demo.person.endsWith("s") ? "'" : "'s"} AI · via <b>venn</b></small>
         </div>
-      )}
+      </figure>
+      <div className="onb__row">
+      <button type="button" className="onb__link" onClick={() => setStep(1)}>Back</button>
+      <details className="onb__more">
+        <summary>Preview first</summary>
+        <div className="onb__more-body">
+          <button type="button" className="btn btn--block" disabled={busy}
+            onClick={() => void action.run("import", () => nav.openView("venn_import_chatgpt_memory", {}))}>
+            {action.busy === "import" ? "Opening…" : "Pick what to import"}
+          </button>
+          <button type="button" className="btn btn--block" disabled={busy} onClick={() => void start()}>
+            {phase === "starting" ? "Getting started…" : "Tell Venn about me in chat"}
+          </button>
+          {!data.sample_loaded && (
+            <button type="button" className="btn btn--ghost btn--block" disabled={busy} onClick={trySample}>
+              {action.busy === "sample" ? "Loading…" : "Try with sample friends"}
+            </button>
+          )}
+          {steps.some((st) => st.key === "your_people" && !st.done) && (
+            <details className="welcome__goals">
+              <summary>Add people by name</summary>
+              <form className="form" onSubmit={(event) => {
+                event.preventDefault();
+                if (busy || !people.length || namesError) return;
+                void action.run("people", () => nav.openView("venn_propose_people_import", { people, source: "pasted list" }));
+              }}>
+                <textarea aria-label="Names, one per line" rows={3} placeholder={"Maya | uni\nAlex | running club"} value={names} disabled={busy}
+                  onChange={(event) => setNames(event.target.value)} />
+                {namesError && <p role="alert" className="small text-danger">{namesError}</p>}
+                <button type="submit" className="btn" disabled={busy || !people.length || !!namesError}>
+                  {action.busy === "people" ? "Opening…" : "Review names"}
+                </button>
+              </form>
+            </details>
+          )}
+        </div>
+      </details>
+      </div>
     </section>
   );
+}
 
+export function StepCount({ n }: { n: number }) {
   return (
-    <section className="panel welcome">
-      <div className="welcome__hero">
-        <div>
-          <h2 className="welcome__title">{name ? `Welcome to Venn, ${name}` : "Welcome to Venn"}</h2>
-          <p className="muted">Who would you like to spend more time with, and what would you enjoy doing together?</p>
-        </div>
-        <Illustration name="welcome" size="md" />
-      </div>
-
-      <ActionError action={action} />
-      {startHere}
-
-      {steps.length > 0 && (
-        <>
-          <h3 className="section-title">
-            <span>Set up in {steps.length === 3 ? "three" : steps.length} short steps</span>
-          </h3>
-          <ol className="setup-steps setup-steps--path">
-            {steps.map((step, i) => {
-              const here = step === current;
-              return (
-                <li
-                  key={step.key}
-                  className={`setup-step ${step.done ? "setup-step--done" : ""} ${here ? "setup-step--current" : ""}`}
-                  aria-current={here ? "step" : undefined}
-                >
-                  <span className="setup-step__marker" aria-hidden="true">
-                    {step.done ? <Icon name="check" size={16} /> : i + 1}
-                  </span>
-                  <div className="setup-step__body">
-                    <p className="setup-step__title">
-                      {step.title}
-                      {step.done && <span className="sr-only"> (done)</span>}
-                    </p>
-                    {step.description && <p className="muted small">{step.description}</p>}
-                    {step.key === "your_people" && !step.done && (
-                      <details className="welcome__goals">
-                        <summary><Icon name="user-plus" size={16} /> Add people by name</summary>
-                        <form className="form" onSubmit={(event) => {
-                          event.preventDefault();
-                          if (busy || !people.length || namesError) return;
-                          void action.run("people", () => nav.openView("venn_propose_people_import", {
-                            people, source: "pasted list",
-                          }));
-                        }}>
-                          <label className="field">
-                            <span className="field__label">Names, one per line</span>
-                            <textarea rows={3} placeholder={"Alex | running club\nAlex | work"} value={names} disabled={busy}
-                              onChange={(event) => setNames(event.target.value)} />
-                          </label>
-                          <p className="muted small">After a name, add | and an optional clue about how you know them. You review each private note before saving.</p>
-                          {namesError && <p role="alert" className="small text-danger">{namesError}</p>}
-                          <button type="submit" className="btn" disabled={busy || !people.length || !!namesError}>
-                            {action.busy === "people" ? "Opening…" : "Review names"}
-                          </button>
-                        </form>
-                      </details>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-        </>
-      )}
-
-      <p className="trust">
-        <Icon name="shield" size={18} />
-        <span>Nothing is saved until you approve it, and Venn never contacts anyone for you.</span>
-      </p>
-      <p className="muted small welcome__privacy">
-        Saved Venn records are available in ChatGPT and on the Venn website. Your ChatGPT chats and ChatGPT's own memory are not synced.
-      </p>
-    </section>
+    <p className="onb__steps" aria-label={`Step ${n} of 3`}>0{n} / 03</p>
   );
 }

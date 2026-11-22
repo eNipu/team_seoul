@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { applyTheme, connectToHost, extractText, type HostBridge } from "./mcp/client";
 import { DEMO_VIEWS, createMockBridge, demoParam, mockInitialView } from "./mock";
 import { friendArg, parseView, type ViewData } from "./types";
+import QuickImport from "./components/QuickImport";
+import vennLogo from "./venn-logo.webp";
 import MemoryReview, { type PreviewReview } from "./components/MemoryReview";
 import MemoryImport from "./components/MemoryImport";
 import Dashboard, { type DashboardTab } from "./components/Dashboard";
@@ -22,7 +24,7 @@ import Quiz from "./components/Quiz";
 import Help from "./components/Help";
 import ReplyCard, { SavedReplies } from "./components/Reply";
 import type { McpUiHostContext } from "@modelcontextprotocol/ext-apps";
-import { BrandMark, Icon, Illustration } from "./components/icons";
+import { Icon, Illustration } from "./components/icons";
 import ErrorBanner from "./components/ErrorBanner";
 import { Spinner, type Nav } from "./components/common";
 
@@ -325,7 +327,7 @@ export default function App() {
   }
 
   return (
-    <div className={`venn${top?.view.view === "memory_review" ? " venn--review" : ""}`} style={insets && {
+    <div className={`venn${top?.view.view === "memory_review" && !top.view.quick_import ? " venn--review" : ""}`} style={insets && {
       paddingTop: `calc(var(--s-3) + ${insets.top}px)`,
       paddingRight: `calc(var(--s-3) + ${insets.right}px)`,
       paddingBottom: `calc(var(--s-3) + ${insets.bottom}px)`,
@@ -338,9 +340,7 @@ export default function App() {
           </button>
         )}
         <div className="venn__brand">
-          <BrandMark size={23} />
-          <span>Venn</span>
-          <span className="venn__pen"><Icon name="pen" size={17} /></span>
+          <img className="venn__logo" src={vennLogo} alt="Venn" height={26} />
         </div>
         <span className="venn__spacer" />
         {(refreshing || opening) && <Spinner label={opening ? `Opening ${opening.toLowerCase()}` : "Refreshing"} />}
@@ -400,6 +400,7 @@ function renderView(
     case "saved_replies":
       return <SavedReplies key={key} data={view} bridge={bridge} nav={nav} />;
     case "memory_review":
+      if (view.quick_import) return <QuickImport key={key} data={view} bridge={bridge} nav={nav} />;
       return <MemoryReview key={key} data={view} bridge={bridge} nav={nav}
         onPreviewReview={publicPreview && bridge.isMock ? reportPreviewReview : undefined} />;
     case "memory_import":

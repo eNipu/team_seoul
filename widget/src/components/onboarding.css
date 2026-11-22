@@ -1,0 +1,113 @@
+/* First-run cards (Welcome, QuickImport, Invite), in the landing page's look and nothing more:
+   white, one black headline, the yellow highlighter, one black pill, one quiet text link. */
+
+.onb {
+  --onb-yellow: #ffd400;
+  display: grid;
+  justify-items: start;
+  gap: 1rem;
+  padding: 1.75rem 1.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 24px;
+  background: #fff;
+  color: #000;
+}
+
+.onb__title {
+  margin: 0;
+  font-size: clamp(1.9rem, 1.5rem + 1.6vw, 2.4rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+}
+.onb__title mark {
+  padding: 0 0.12em;
+  color: inherit;
+  background: linear-gradient(transparent 18%, var(--onb-yellow) 18%, var(--onb-yellow) 88%, transparent 88%);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.onb__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 52px;
+  border: 0;
+  border-radius: 999px;
+  background: #000;
+  color: #fff;
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.onb__cta:hover:not(:disabled) { background: #2c2c2e; }
+.onb__cta:disabled { opacity: 0.25; cursor: default; }
+.onb__cta:focus-visible { outline: 3px solid var(--focus, #0071e3); outline-offset: 3px; }
+
+.onb__link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #6e6e73;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.onb__link:hover { color: #000; }
+
+.onb__more { width: 100%; }
+.onb__more > summary { cursor: pointer; list-style: none; font-size: 0.875rem; font-weight: 600; color: #6e6e73; }
+.onb__more > summary::-webkit-details-marker { display: none; }
+.onb__more-body { display: grid; gap: 0.5rem; margin-top: 0.75rem; }
+
+.onb__list { display: grid; gap: 0.25rem; margin: 0.75rem 0 0; padding: 0; list-style: none; }
+.onb__list li { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.5rem 0.75rem; border-radius: 12px; background: #f5f5f7; font-size: 0.9375rem; }
+.onb__x { display: inline-grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: 50%; background: transparent; color: #6e6e73; cursor: pointer; }
+.onb__x:hover { background: #e8e8ed; color: #000; }
+
+/* Boardy-style steps: three short bars, one question, choice cards */
+.onb__steps { justify-self: end; margin: 0 0 -8px; font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; color: #6e6e73; }
+
+.onb__choices { display: grid; gap: 8px; width: 100%; margin: 0; padding: 0; border: 0; }
+.onb__choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  background: #fff;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.onb__choice:hover { border-color: rgba(0, 0, 0, 0.3); }
+.onb__choice:has(input:checked) { border-color: #000; background: #fffbe0; }
+.onb__choice input { width: 18px; height: 18px; margin: 0; accent-color: #000; }
+
+.onb__body { margin: -4px 0 0; color: #424245; font-size: 0.975rem; line-height: 1.45; }
+
+/* the one bright element: what Venn does, inside ChatGPT */
+.onb__demo { display: grid; gap: 8px; width: 100%; margin: 4px 0 0; padding: 16px; border-radius: 18px; background: #f5f5f7; }
+.onb__demo figcaption { font-size: 0.8125rem; font-weight: 600; color: #6e6e73; }
+.onb__ask { justify-self: end; max-width: 85%; margin: 0; padding: 8px 14px; border-radius: 18px; background: #e3e3e8; font-size: 0.9375rem; }
+.onb__moment { display: grid; gap: 6px; padding: 14px 16px; border-radius: 16px; background: var(--onb-yellow); color: #000; }
+.onb__moment p { margin: 0; font-size: 0.9375rem; font-weight: 600; line-height: 1.4; }
+.onb__moment small { font-size: 0.75rem; color: #4c4000; }
+.onb__row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; width: 100%; }
+.onb__row .onb__more { width: auto; text-align: right; }
+.onb__row .onb__more[open] { width: 100%; text-align: left; }
+
+.onb__gpt { color: #000; }
+.onb__demo { padding: 20px 16px 16px; }
+.onb__saved { display: grid; gap: 6px; width: 100%; margin: 0; padding: 14px 16px; border-radius: 16px; background: var(--onb-yellow); list-style: none; }
+.onb__saved li { font-size: 0.9375rem; font-weight: 600; }
+.onb__saved-more { color: #4c4000; font-weight: 500 !important; }
+.onb__bubble { justify-self: end; max-width: 90%; padding: 12px 16px; border-radius: 20px 20px 6px 20px; background: var(--onb-yellow); }
+.onb__bubble p { margin: 0; font-size: 0.9375rem; font-weight: 600; line-height: 1.4; }

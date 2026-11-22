@@ -15,7 +15,7 @@
       "interface": {
         "displayName": "Venn",
         "shortDescription": "Keep private notes about people you know and plan time together.",
-        "longDescription": "Venn keeps a private, user-approved memory of what matters to you and the people you already know, friends and colleagues alike. Set up in three short steps: tell Venn about you (or bring over what ChatGPT already remembers), add your people, and connect with friends through an invite code, link or QR. Then get ideas for time together, a brief before you meet, nudges when it has been a while, and a quiz on how well you know your friends. Nothing is saved without your approval, and Venn never contacts anyone on your behalf.",
+        "longDescription": "Venn keeps a private, user-approved memory of what matters to you and the people you already know, friends and colleagues alike. Connect your AI memories. Build your inner circle. One tap brings over what ChatGPT already remembers about you, saved privately; then add your partner or a friend and send them the spark with an invite link. Then get ideas for time together, a brief before you meet, nudges when it has been a while, and a quiz on how well you know your friends. Nothing is shared without your approval, and Venn never contacts anyone on your behalf.",
         "developerName": "Venn",
         "category": "Lifestyle",
         "capabilities": ["Interactive", "Write"],

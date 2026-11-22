@@ -278,8 +278,11 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
             "links the memory to that friend, and adds them to the user's people if they are new; the card "
             "says so before the user approves.\n"
             'Set `source` to "chatgpt_memory" ONLY when the items come from what you already remember '
-            "about the user (your saved memories or past chats) and the user has seen that list in the chat "
-            "and told you which ones to keep — pass just those (up to 30). Otherwise leave `source` out "
+            "about the user (your saved memories or past chats) and either the user has seen that list in the "
+            "chat and told you which ones to keep (pass just those, up to 30), or the user tapped Connect in "
+            "Venn: then set `quick_import: true` and pass everything you remember about them (up to 30) "
+            "without listing it in chat first; the card saves them privately at once and offers Review. "
+            "Never include health, money, credentials or ID numbers. Otherwise leave `source` out "
             "(up to 8 items from the current conversation). For requests to update Venn with the user's "
             "week, set `weekly_update: true` and pass one structured candidate per update the user described."
         ),
@@ -300,13 +303,24 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
             MemorySource,
             Field(
                 description=(
-                    "'conversation' (default): from what the user said in this chat. 'chatgpt_memory': the "
-                    "user picked these from the list of things you already remembered about them."
+                    "'conversation' (default): from what the user said in this chat. 'chatgpt_memory': things "
+                    "you already remembered about the user (picked by them in chat, or all of them after they "
+                    "tapped Connect with quick_import)."
                 )
             ),
         ] = "conversation",
         weekly_update: Annotated[
             bool, Field(description="Show the weekly-update review for drafts from this conversation.")
+        ] = False,
+        quick_import: Annotated[
+            bool,
+            Field(
+                description=(
+                    "True only when the user tapped Connect / one-tap import in Venn: pass everything you "
+                    "remember about the user (up to 30) with source 'chatgpt_memory'; don't list them in chat "
+                    "first. The card saves them privately at once and offers Review."
+                )
+            ),
         ] = False,
     ) -> CallToolResult:
         async def body():
@@ -326,6 +340,16 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
             data = {"view": "memory_review", **proposal.model_dump(mode="json")}
             if weekly_update and source == "conversation":
                 data["weekly_update"] = True
+            if quick_import and source == "chatgpt_memory":
+                # The user's tap on Connect is the consent: the card saves everything PRIVATE right away.
+                data["quick_import"] = True
+                return ok(
+                    f"Bringing over {len(lines)} memories (proposal_id {proposal.proposal_id}). The card is "
+                    "saving them privately now; the user can Review them there. Reply in one short line, "
+                    'for example "Done — saved privately. Who do you want closer: a partner or a friend?" '
+                    "Do NOT list the memories in chat.",
+                    data,
+                )
             return ok(
                 f"Proposed {len(lines)} memories (proposal_id {proposal.proposal_id}). Nothing saved yet; "
                 "the user confirms on the card, or tells you which to keep and with what visibility "
@@ -349,7 +373,8 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
             "include; it takes no data and reads nothing. Venn's server cannot see your memory: you list "
             "what you remember IN THE CHAT first, and only what the user then picks is sent, through "
             'venn_propose_memories with source "chatgpt_memory". Do not send remembered items to any '
-            "Venn tool before the user has seen them in the chat."
+            "Venn tool before the user has seen them in the chat, unless the user tapped Connect (one-tap "
+            "import): then call venn_propose_memories with quick_import: true directly."
         ),
         annotations=READ_ONLY,
     )
@@ -373,8 +398,10 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
         title="Save approved memories",
         description=(
             "Save ONLY the memory proposals the user explicitly approved, by index, from a proposal created "
-            "by venn_propose_memories. Never call without clear user approval. Visibility defaults to "
-            "PRIVATE; use SHARED_WITH_CONNECTIONS or PUBLIC_PROFILE only if the user chose it."
+            "by venn_propose_memories. Never call without clear user approval. For a quick_import proposal "
+            "the user's tap on Connect is that approval: the card saves every item as PRIVATE. Visibility "
+            "defaults to PRIVATE; never share beyond PRIVATE (SHARED_WITH_CONNECTIONS or PUBLIC_PROFILE) "
+            "unless the user explicitly chose it."
         ),
         annotations=WRITE,
         meta=invocation_meta("Saving your memories…", "Memories saved", widget_accessible=True),

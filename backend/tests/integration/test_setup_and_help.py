@@ -19,8 +19,9 @@ def test_new_account_starts_with_all_three_steps_open(alice):
     assert view["view"] == "welcome"
     assert [s["key"] for s in view["setup"]] == ["about_you", "your_people", "connect"]
     assert steps(view) == {"about_you": False, "your_people": False, "connect": False}
-    assert view["setup"][0]["title"] == "Tell Venn about you"
+    assert [s["title"] for s in view["setup"]] == ["Connect your AI memories", "Add your person", "Send the spark"]
     assert all(s["title"] and s["description"] for s in view["setup"])
+    assert all(len(s["description"].split()) <= 8 for s in view["setup"])
 
 
 def test_model_leaves_generic_opening_to_the_starter_actions(alice):
@@ -29,9 +30,9 @@ def test_model_leaves_generic_opening_to_the_starter_actions(alice):
     assert "starter actions" in said
     assert "Start the first open step only if the user asked for set-up" in said
     assert alice.ok("venn_list_people")["count"] == 0
-    assert "Who would you like to spend more time with, and what would you enjoy doing together?" in said
-    # The first open step names the tools that do it.
-    assert "venn_import_chatgpt_memory" in said and "venn_propose_memories" in said
+    # The first open step is the one-tap Connect: propose everything remembered, flagged quick_import.
+    assert "venn_propose_memories" in said and "quick_import: true" in said
+    assert "Do not list them in chat first" in said
     assert "venn_propose_people_import" not in said
 
 

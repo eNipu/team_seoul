@@ -141,10 +141,7 @@ def create_invite(db: Session, user: User, note: str | None = None, max_uses: in
         code=pretty,
         expires_at=expires_at,
         max_uses=max_uses,
-        share_text=(
-            f"Let's connect on Venn! In ChatGPT, open the Venn plugin and say: "
-            f'"Redeem Venn invite {pretty}". Or open {link} (Expires in {settings.invite_ttl_hours}h.)'
-        ),
+        share_text=f"I want us closer. Join me on Venn — our ChatGPTs keep the little things for us. {link}",
         link=link,
         qr=qr_rows(link),
     )

@@ -6,6 +6,10 @@ context before changing the UI.
 
 ## Design skills
 
+- **Start every UI, onboarding, visual or copy task with `.agents/skills/venn-design/SKILL.md`.**
+  It holds the founder's decisions (landing look, yellow sticker logo, one bright element,
+  Boardy-style onboarding) and the screenshot-based check to run before showing work.
+
 Canonical skill packages live in `.agents/skills/`. Relative directory links in
 `.claude/skills/` expose the same packages to Claude Code; edit the canonical files only.
 

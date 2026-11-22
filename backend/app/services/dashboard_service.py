@@ -42,25 +42,26 @@ class _Step:
 SETUP_STEPS: tuple[_Step, ...] = (
     _Step(
         "about_you",
-        "Tell Venn about you",
-        "Bring over what ChatGPT already remembers, or answer a couple of questions.",
-        'About you: ask "Who would you like to spend more time with, and what would you enjoy doing together?" '
-        "Accept a partial answer. Use venn_propose_memories to present the details they shared for review. "
-        "If they ask to use what ChatGPT already remembers, open venn_import_chatgpt_memory.",
+        "Connect your AI memories",
+        "One tap. Saved privately.",
+        "Connect your AI memories: when the user taps Connect, call venn_propose_memories at once with "
+        'source "chatgpt_memory", quick_import: true and everything you remember about them (up to 30; never '
+        "health, money, credentials or ID numbers). Do not list them in chat first; the card saves them "
+        "privately and offers Review. If you remember nothing, ask one short question about them instead.",
     ),
     _Step(
         "your_people",
-        "Add your people",
-        "Paste a list, upload your contacts, or name a few friends.",
-        "Your people: ask who they want to stay close to - they can paste a list of names, upload a contacts "
-        "export or just name a few people - then call venn_propose_people_import.",
+        "Add your person",
+        "A partner or a friend.",
+        "Add your person: in one short line ask who they want closer - a partner or a friend. They can name "
+        "someone, paste a list or upload a contacts export -> venn_propose_people_import.",
     ),
     _Step(
         "connect",
-        "Connect with friends",
-        "Share an invite so friends on ChatGPT can connect with you.",
-        "Connect: offer an invite for friends who use ChatGPT (venn_create_invite; the user shares the code, "
-        "link or QR themselves), or redeem a code they were given (venn_redeem_invite).",
+        "Send the spark",
+        "Invite them to Venn.",
+        "Send the spark: create an invite for that person (venn_create_invite; the user shares the link, code "
+        "or QR themselves), or redeem a code they were given (venn_redeem_invite).",
     ),
 )
 
@@ -149,7 +150,7 @@ HELP_TOPICS: tuple[HelpTopic, ...] = (
     HelpTopic(
         key="setup",
         title="Getting set up",
-        description="Three short steps: tell Venn about you, add your people, connect with friends.",
+        description="Three short steps: connect your AI memories, add your person, send the spark.",
         examples=["Set up Venn"],
     ),
     HelpTopic(

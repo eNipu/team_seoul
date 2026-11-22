@@ -177,6 +177,8 @@ export interface MemoryReviewViewData {
   expires_at: string;
   source: ProposalSource;
   weekly_update?: boolean;
+  /** One-tap import: the user tapped Connect, so the card saves everything privately at once. */
+  quick_import?: boolean;
   proposals: MemoryProposal[];
 }
 
@@ -941,6 +943,7 @@ export function parseView(sc: unknown, meta?: unknown): ViewData | null {
         expires_at: str(sc.expires_at),
         source: oneOf(sc.source, PROPOSAL_SOURCES, "conversation"),
         weekly_update: sc.weekly_update === true,
+        quick_import: sc.quick_import === true && sc.source === "chatgpt_memory",
         proposals: objs(sc.proposals).map((p, i) => ({
           index: num(p.index, i),
           category: oneOf(p.category, MEMORY_CATEGORIES, "PERSONAL_MEMORY"),

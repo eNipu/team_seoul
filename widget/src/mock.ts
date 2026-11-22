@@ -87,6 +87,7 @@ export const DEMO_VIEWS = [
   "quiz_circle",
   "memory_import",
   "memory_review_import",
+  "memory_quick_import",
   "help",
   "dashboard_setup",
   "venn",
@@ -702,20 +703,20 @@ function setupSteps(fresh = false): SetupStep[] {
   return [
     {
       key: "about_you",
-      title: "Tell Venn about you",
-      description: "Bring over what ChatGPT already remembers, or answer a couple of questions.",
+      title: "Connect your AI memories",
+      description: "One tap. Saved privately.",
       done: !fresh && memories.length > 0,
     },
     {
       key: "your_people",
-      title: "Add your people",
-      description: "Paste a list, upload your contacts, or name a few friends.",
+      title: "Add your person",
+      description: "A partner or a friend.",
       done: !fresh && (people.length > 0 || connected),
     },
     {
       key: "connect",
-      title: "Connect with friends",
-      description: "Share an invite so friends on ChatGPT can connect with you.",
+      title: "Send the spark",
+      description: "Invite them to Venn.",
       done: connected,
     },
   ];
@@ -1408,7 +1409,7 @@ function inviteView(maxUses: unknown, code = newCode()): InviteViewData {
     qr: mockQrRows(link),
     expires_at,
     max_uses,
-    share_text: `I'm using Venn to keep up with the people I care about. Join me with invite code ${code}: open Venn in ChatGPT and say "connect with code ${code}".`,
+    share_text: `I want us closer. Join me on Venn — our ChatGPTs keep the little things for us. https://joinvennai.com/i/${code}`,
     note: "Share this code only with people you know. Anyone who uses it can send you a connection request, which you still approve.",
   };
 }
@@ -1868,6 +1869,8 @@ export function mockInitialView(): ViewData | null {
       return reviewView("conversation", [{ ...DEMO_PROPOSALS[0], suggested_visibility: "PRIVATE" }], "prop_site_demo");
     case "memory_review_import":
       return reviewView("chatgpt_memory", IMPORT_PROPOSALS, "prop_demo_import");
+    case "memory_quick_import":
+      return { ...reviewView("chatgpt_memory", IMPORT_PROPOSALS, "prop_demo_quick"), quick_import: true };
     case "memory_import":
       return parseView(memoryImportView());
     case "dashboard":
