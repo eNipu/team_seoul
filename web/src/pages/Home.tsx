@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import { Link } from "../router";
 import { useSession } from "../session";
-import { CHATGPT_FLAG } from "./ConnectChatGpt";
 import { firstName, joinNames, type DashboardHome } from "../types";
 import {
   Avatar,
@@ -89,20 +88,7 @@ function Circle() {
   );
 }
 
-/** Venn has been used from ChatGPT once anything arrived from there (or the guided setup was finished here). */
-function chatgptConnected(home: DashboardHome): boolean {
-  return home.memories.some((m) => m.source === "chatgpt_memory") || hasConnectedFlag();
-}
-
-function hasConnectedFlag(): boolean {
-  try {
-    return window.localStorage.getItem(CHATGPT_FLAG) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function Dashboard({ home, reloadHome }: { home: DashboardHome; reloadHome: () => void }) {
+function Dashboard({ home, reloadHome, chatgptConnected }: { home: DashboardHome; reloadHome: () => void; chatgptConnected: boolean }) {
   return (
     <div className="page h2">
       <div className="h2__copy">
@@ -117,7 +103,7 @@ function Dashboard({ home, reloadHome }: { home: DashboardHome; reloadHome: () =
             {home.pending_requests.length === 1 ? "wants" : "want"} to connect
           </Link>
         )}
-        {chatgptConnected(home) ? (
+        {chatgptConnected ? (
           <Link to="/qr" className="btn btn--primary btn--pill h2__invite">
             Invite someone
           </Link>
@@ -155,6 +141,7 @@ function Welcome({ name }: { name: string }) {
 
 export default function Home() {
   const home = useAsync(() => api.getHome(), []);
+  const me = useAsync(() => api.getMe(), []);
   const { displayName } = useSession();
   if (home.data === null) {
     if (home.error) {
@@ -171,5 +158,5 @@ export default function Home() {
     );
   }
   if (home.data.view === "welcome") return <Welcome name={home.data.display_name || displayName} />;
-  return <Dashboard home={home.data} reloadHome={home.reload} />;
+  return <Dashboard home={home.data} reloadHome={home.reload} chatgptConnected={me.data?.chatgpt_connected === true} />;
 }

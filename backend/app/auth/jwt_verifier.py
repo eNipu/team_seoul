@@ -13,6 +13,8 @@ import jwt
 from jwt import PyJWKClient
 from mcp.server.auth.provider import AccessToken, TokenVerifier
 
+from app.auth.context import note_token_used
+
 log = logging.getLogger("venn.auth")
 
 ALLOWED_ALGORITHMS = ["RS256", "RS384", "RS512", "ES256", "ES384", "PS256"]
@@ -61,4 +63,7 @@ class JWTTokenVerifier(TokenVerifier):
 
     async def verify_token(self, token: str) -> AccessToken | None:
         # JWKS fetch is blocking; keep it off the event loop.
-        return await anyio.to_thread.run_sync(self._verify_sync, token)
+        verified = await anyio.to_thread.run_sync(self._verify_sync, token)
+        if verified is not None:
+            await note_token_used(verified)
+        return verified

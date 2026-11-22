@@ -35,6 +35,7 @@ from starlette.responses import HTMLResponse, RedirectResponse, Response
 
 from app.branding import page
 from app.config import ALL_SCOPES, Settings
+from app.auth.context import note_token_used
 from app.db.database import session_scope
 from app.models import DevOAuthClient, DevOAuthCode
 from app.services import user_service
@@ -417,7 +418,7 @@ class DevOAuthProvider:
         if not claims:
             return None
         auth_iss = str(claims.get("auth_iss") or DEV_ISSUER_PREFIX)
-        return AccessToken(
+        verified = AccessToken(
             token=token,
             client_id=str(claims.get("client_id", "")),
             scopes=claims.get("scope", "").split(),
@@ -426,6 +427,8 @@ class DevOAuthProvider:
             subject=str(claims["sub"]),
             claims={"iss": auth_iss, "name": claims.get("name")},
         )
+        await note_token_used(verified)
+        return verified
 
     async def revoke_token(self, token: AccessToken | RefreshToken) -> None:
         # Stateless dev tokens expire quickly; revocation is a no-op in development.

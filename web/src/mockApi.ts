@@ -695,6 +695,8 @@ export function createMockApi(options: MockOptions): Api {
         username: state.username,
         auth_mode: "dev",
         mcp_url: `${window.location.origin}/mcp`,
+        // `?demo=1&connected=1` previews the success state.
+        chatgpt_connected: new URLSearchParams(window.location.search).get("connected") === "1",
         profile: profile(),
       })),
     updateMe: (patch) =>
