@@ -181,17 +181,19 @@ The landing page is light only (`<html data-theme="light">`); the widget keeps l
 
 ## Deploy
 
-Railway project `heldly` (it still has the old product name; renaming it there is cosmetic), service `site`.
-Railpack detects Next.js and runs `npm run build` and `npm run start`. The upload root is `site/`.
+Railway deploys the `site` service in the `heldly` project's `production` environment from
+`eNipu/team_seoul` on `main`. The root directory is `/site` and the watch path is `/site/**`,
+measured from the repository root. Railpack detects Next.js and runs `npm run build` and
+`npm run start`. Open feature pull requests against `dev` and promote releases by merging
+`dev` into `main`.
 
 The service has `DATABASE_URL` (a reference to the project's `Postgres` service, shared with the backend),
 `METRICS_PASSWORD` and `ANALYTICS_SALT`. Read the metrics password in the service's Variables tab. Postgres
 has no public address; the site reaches it over Railway's private network.
 
 ```bash
-npm run build && node check.mjs
-railway up ./site --path-as-root --service site -m "what changed"
-node site/check.mjs --url https://<site-host>/
+npm --prefix site run build
+node site/check.mjs --url https://joinvennai.com/
 ```
 
 ## What the copy may claim

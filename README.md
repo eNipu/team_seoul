@@ -269,9 +269,15 @@ Railway project `heldly` (the old product name), environment `production`:
 
 | Service | URL | Notes |
 | --- | --- | --- |
-| `backend` | `https://app.joinvennai.com` (MCP at `/mcp`) | Built from the root `Dockerfile` |
-| `site` | `https://<site-host>` (see Railway project variables/domains) | See `site/README.md` |
+| `backend` | `https://app.joinvennai.com` (MCP at `/mcp`) | Root `/`, root `Dockerfile`. Watches `backend/`, `widget/`, `web/`, `Dockerfile`, and `.dockerignore`. |
+| `site` | `https://joinvennai.com` | Root `/site`, Railpack. Watches `site/`. |
 | `Postgres` | private network only | Used by both |
+
+Both services track `main` in `eNipu/team_seoul`. Railway builds a service when a push or
+merge into `main` changes one of its watched paths.
+
+Branch feature and fix work from `dev` and open pull requests against `dev`. To release,
+open a pull request from `dev` into `main`. Merge any direct production fix back into `dev`.
 
 The backend is **not** in production mode. There is no identity provider yet, so it runs with
 `ENVIRONMENT=development` and `AUTH_MODE=dev`: the built-in sign-in page, behind
@@ -280,7 +286,6 @@ under any username, so share it with the team only and do steps 1 and 2 above be
 users arrive.
 
 ```bash
-railway up --service backend --environment production --ci -m "what changed"   # from the repo root
 curl https://app.joinvennai.com/readyz
 ```
 
