@@ -39,6 +39,26 @@ The landing page at joinvennai.com is the reference. Every surface looks like it
   what the user gets, not what Venn has.
 - Privacy in four words where it matters ("Only you see these"), not paragraphs.
 
+## The user journey (approved by the founder, 22.11.2026)
+
+Three steps, everything after the first click happens inside ChatGPT:
+
+1. **Get Venn into ChatGPT.** Today the landing (joinvennai.com) is an email waitlist and
+   people wait for an invite. **Keep it that way until the product is ready;** a separate
+   landing with one "Add Venn to ChatGPT" button comes later, with the full process.
+2. **Connect** inside ChatGPT: pick your person, one tap imports what ChatGPT remembers,
+   saved private.
+3. **Send the spark.** Your person taps the link, adds Venn in their ChatGPT and you are
+   connected at once (redeeming an invite connects both; no "accept request" step).
+
+Then the product is **"Venn tells you when"**: proactive moment cards inside ChatGPT.
+Off the main path, never required:
+- **Web app** (app.joinvennai.com): see and edit everything, reached from one quiet
+  "Open my Venn" link. Not a step, not a dashboard people must visit.
+- **Import contacts** (LinkedIn, Instagram, lists): later, as "Add more people".
+
+Any new screen must fit one of these places. If it adds a step to the main path, cut it.
+
 ## Flow (ChatGPT onboarding, modelled on Boardy)
 
 Boardy's onboarding is the benchmark users call "the best onboarding ever": brand on top,
