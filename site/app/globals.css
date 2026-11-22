@@ -995,7 +995,7 @@ body:has(> .consent) > .site-footer { padding-block-end: 9rem; }
   display: grid;
   place-items: center;
   min-width: 0;
-  min-height: 9rem;
+  min-height: 0;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1036,7 +1036,7 @@ body:has(> .consent) > .site-footer { padding-block-end: 9rem; }
 @media (min-width: 48rem) {
   .onboarding { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
   .onboarding__header, .onboarding__foot { grid-column: 1 / -1; }
-  .connection-map { align-self: stretch; min-height: 13rem; }
+  .connection-map { align-self: center; min-height: 0; }
 }
 
 .h-sub{font-size:clamp(1.5rem,4.5vw,2.25rem);font-weight:700;letter-spacing:-0.02em;margin-top:.5rem;color:#FFD400}
@@ -1159,6 +1159,8 @@ body:has(> .consent) > .site-footer { padding-block-end: 9rem; }
   .hero__grid { padding-block-start: 0.75rem; row-gap: 0.85rem; }
   .hero__copy { gap: 0.65rem; }
   .hero__copy .h-sub { margin-top: 0; }
+  .hero-rot { gap: 0.55rem; }
+  .hero__chat, .hero-rot__controls { display: none; }
   .hero__grid:has(.waitlist__invite, .waitlist__joined) .hero__join { grid-row: 2; }
 }
 
@@ -1244,3 +1246,46 @@ html[data-motion] [data-reveal="group"]:not([data-in]) .usecase .moment { opacit
 .waitlist__joined:focus-visible { outline: none; box-shadow: none; }
 .legal { max-width: 44rem; display: grid; gap: .9rem; padding-block: 2rem 4rem; }
 .legal h2 { font-size: 1.25rem; margin-top: 1rem; }
+
+/* rotating hero (lib/heroes.ts) */
+.hero-rot { display: grid; gap: 1rem; }
+.hero-rot__head { min-height: 2.1em; animation: hero-in .55s var(--ease-out, ease) both; }
+.hero-rot__brand { margin-top: -.25rem; }
+.hero-rot__fade { animation: hero-in .55s .08s var(--ease-out, ease) both; }
+.hero-rot__dots { display: flex; gap: .4rem; }
+.hero-rot__dots span { width: .5rem; height: .5rem; border-radius: 50%; background: var(--border-strong, #ccc); transition: background .3s, width .3s; }
+.hero-rot__dots span[data-on="true"] { width: 1.25rem; border-radius: 1rem; background: var(--text, #000); }
+@keyframes hero-in { from { opacity: 0; transform: translateY(.4em); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .hero-rot__head, .hero-rot__fade, .next-in__word { animation: none; } }
+
+/* "your next ___" */
+.next-in .h-display { max-width: 18ch; }
+.next-in__word { display: inline-block; position: relative; animation: hero-in .45s var(--ease-out, ease) both; }
+.next-in__word::after { content: ""; position: absolute; inset: auto -4% -.08em -4%; height: .28em; z-index: -1;
+  background: url("/brand/mark-underline-yellow.webp") center / 100% 100% no-repeat; }
+
+.site-header__link { font-weight: 600; text-decoration: none; color: inherit; margin-right: .25rem; }
+.site-header__link:hover { text-decoration: underline; }
+
+/* demo map: plain words */
+.connection-map__caption { margin: .25rem 0 0; text-align: center; font-size: .95rem; color: var(--text-2, #555); }
+.connection-map text.connection-map__small { font-size: 12px; font-weight: 500; fill: var(--text-2, #555); }
+.site-header__end { flex-direction: row; align-items: center; gap: .9rem; }
+@media (max-width: 520px) { .site-header__note { display: none; } }
+#hero .hero-rot__head { font-size: clamp(2.25rem, 1.4rem + 3.6vw, 4.75rem); line-height: 1.02; min-height: 0; }
+#hero .hero-rot__brand { font-size: clamp(1rem, .9rem + .5vw, 1.3rem); }
+.site-header__end { flex-wrap: nowrap; }
+#hero .hero-rot .moment { animation-delay: .35s; }
+.next-in__word::after { inset: auto -2% -.2em -2%; height: .22em; z-index: 0; }
+.hero-rot__dots { display: none; }
+.hero-rot__controls { display: flex; align-items: center; gap: 0; }
+.hero-rot__dot { width: 2.75rem; height: 2.75rem; padding: 0; border: 0; background: none; cursor: pointer; position: relative; }
+.hero-rot__dot::after { content: ""; position: absolute; inset: 50% auto auto 50%; width: .5rem; height: .5rem; translate: -50% -50%;
+  border-radius: 1rem; background: var(--border-strong, #bbb); transition: width .3s, background .3s; }
+.hero-rot__dot[data-on="true"]::after { width: 1.2rem; background: var(--text, #000); }
+.hero-rot__pause { border: 1px solid var(--border-strong, #bbb); background: none; border-radius: 999px; font-size: .75rem;
+  min-width: 2.75rem; min-height: 2.75rem; cursor: pointer; color: inherit; }
+@media (max-width: 51.99rem) {
+  .hero-rot { gap: 0.5rem; }
+  #hero .hero__chat, #hero .hero-rot__controls { display: none; }
+}

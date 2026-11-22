@@ -1,12 +1,15 @@
 import HeroBackdrop from "@/components/HeroBackdrop";
+import HeroRotator from "@/components/HeroRotator";
 import Motion from "@/components/Motion";
 import PageView from "@/components/PageView";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import Waitlist from "@/components/Waitlist";
 import Faq from "@/components/sections/Faq";
+import NextIn from "@/components/sections/NextIn";
 import { cleanRef } from "@/lib/analytics";
 import { hasDatabase } from "@/lib/db";
+import { heroIndex } from "@/lib/heroes";
 import { cleanVersion, defaultVersion } from "@/lib/version";
 import { inviteHasRoom } from "@/lib/waitlist";
 
@@ -40,12 +43,8 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           <div className="wrap hero__grid">
             <div className="hero__copy">
               <p className="eyebrow">Early-access waitlist</p>
-              <h1 className="h-display" id="hero-title">Connect your AI memories.</h1>
-              <p className="h-sub"><span>Build your inner circle.</span></p>
+              <HeroRotator pinned={heroIndex(first(params.h))} />
             </div>
-            <p className="lead hero__what">
-              Your ChatGPT tells you which friend, colleague or partner to talk to, from updates they choose to share.
-            </p>
             <div className="hero__join">
               <HeroBackdrop />
               <div className="hero__join-card">
@@ -60,6 +59,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
           </div>
         </section>
 
+        <NextIn />
         <Faq />
       </main>
       <SiteFooter top="#hero" />

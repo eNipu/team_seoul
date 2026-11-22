@@ -1,4 +1,4 @@
-import { PRODUCT_LINKS, PROFILE_URL } from "@/lib/links";
+import { PRODUCT_LINKS } from "@/lib/links";
 import VennMark from "./VennMark";
 
 export default function SiteHeader({ current, note }: { current?: string; note?: string }) {
@@ -18,7 +18,6 @@ export default function SiteHeader({ current, note }: { current?: string; note?:
             <summary>Menu</summary>
             <nav aria-label="Main navigation">{links}</nav>
           </details>
-          <a className="site-header__account" href={PROFILE_URL}>My Venn</a>
         </div>
       )}
     </header>
