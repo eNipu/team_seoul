@@ -177,7 +177,7 @@ export default function People() {
           : loc.query.get("instagram") === "1"
             ? "instagram"
             : null;
-  const close = () => navigate("/people", {}, { replace: true });
+  const close = () => navigate(loc.query.get("from") === "setup" ? "/" : "/people", {}, { replace: true });
 
   const shown = useMemo(() => {
     const list = friends.data ?? [];

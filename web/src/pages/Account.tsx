@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import { Icon } from "../icons";
-import { useLocation } from "../router";
+import { Link, useLocation } from "../router";
 import { useSession } from "../session";
 import { DELETE_ACCOUNT_PHRASE, LIMITS, formatDate, type Invite, type Me, type PendingRequest } from "../types";
 import {
@@ -197,6 +197,7 @@ function ConnectCard({ requests, onChanged }: { requests: PendingRequest[]; onCh
         <button
           type="button"
           className="btn"
+          id="create-friend-invite"
           disabled={create.busy}
           onClick={() => void create.run(async () => setInvite(await api.createInvite()))}
         >
@@ -321,12 +322,15 @@ export default function Account() {
   const home = useAsync(() => api.getHome(), []);
   const loc = useLocation();
   const section = loc.query.get("section");
+  const fromSetup = loc.query.get("from") === "setup";
   const ready = me.data !== null;
 
   useEffect(() => {
     if (!ready || !section) return;
-    document.getElementById(section)?.scrollIntoView({ block: "start" });
-  }, [ready, section]);
+    const target = document.getElementById(section);
+    target?.scrollIntoView({ block: "start" });
+    if (fromSetup && section === "connect") document.getElementById("create-friend-invite")?.focus();
+  }, [ready, section, fromSetup]);
 
   const requests = home.data?.view === "dashboard" ? home.data.pending_requests : [];
   return (
@@ -338,6 +342,7 @@ export default function Account() {
             <ProfileCard key={`${m.profile.display_name}:${m.profile.bio ?? ""}`} me={m} onSaved={me.reload} />
             <ChatGptCard me={m} />
             <ConnectCard requests={requests} onChanged={home.reload} />
+            {fromSetup && <Link to="/" className="btn">Back to Home</Link>}
             <Notice icon="lock" tone="quiet">
               Private by default. Venn never sends messages, invitations or calendar events for you.
             </Notice>

@@ -102,6 +102,7 @@ Read `SCHEDULING.md` before any task in this group.
 | [T46](T46-linkedin-demo-import.md) | Preview and import fictional LinkedIn connections | web + backend | S | – | done |
 | [T48](T48-instagram-web-demo-import.md) | Preview and import fictional Instagram profiles on the web | web + backend | S | T46, T47 | done |
 | [T49](T49-proactive-suggestions.md) | Suggest a person and a plan before the user asks | web + widget + backend | M | T39 | done |
+| [T50](T50-actionable-home-setup.md) | Complete unfinished setup steps from Home | web | S | – | done |
 
 T04 and T12 can start right away, in parallel with the backend tasks, because the shapes they
 render are fixed in `CONTRACTS.md`.

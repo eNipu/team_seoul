@@ -1,0 +1,59 @@
+[
+  {
+    "url": "/app?demo=1&fresh=1",
+    "w": 390,
+    "h": 844,
+    "scheme": "dark",
+    "steps": [
+      "waitFor:Getting set up",
+      "window.checkSteps = (n) => document.querySelectorAll('.setup a').length === n ? 'OK: ' + n + ' actionable steps' : 'MISSING expected step count ' + n; checkSteps(3)",
+      "document.querySelector('.setup a').focus()",
+      "key:Enter",
+      "waitFor:Add a memory",
+      "click('Cancel')",
+      "waitFor:Getting set up",
+      "checkSteps(3)",
+      "document.querySelector('.setup a').click()",
+      "waitFor:Add a memory",
+      "fill('Title','Film photography')",
+      "fill('What to remember','I enjoy photo walks.')",
+      "click('Save to Venn')",
+      "waitFor:Getting set up",
+      "checkSteps(2)",
+      "document.querySelector('.setup a').click()",
+      "waitFor:Add a person",
+      "fill('Name','Alex')",
+      "click('Add person')",
+      "waitFor:Getting set up",
+      "checkSteps(1)",
+      "document.querySelector('.setup a').click()",
+      "waitFor:Create an invite",
+      "click('Create an invite')",
+      "waitFor:Copy code",
+      "click('Back to Home')",
+      "waitFor:This week",
+      "checkSteps(0)",
+      "overflow()"
+    ]
+  },
+  {
+    "url": "/app?demo=1&fresh=1",
+    "w": 1280,
+    "h": 900,
+    "steps": [
+      "waitFor:Getting set up",
+      "click('Try with sample friends')",
+      "waitFor:Remove sample data",
+      "document.querySelectorAll('.setup a').length === 3 ? 'OK: samples do not count' : 'MISSING setup steps after loading samples'",
+      "document.querySelector('.setup a[href*=account]').click()",
+      "waitFor:Create an invite",
+      "document.activeElement.id === 'create-friend-invite' ? 'OK: invite focused' : 'MISSING invite focus'",
+      "key:Enter",
+      "waitFor:Copy code",
+      "click('Back to Home')",
+      "waitFor:Getting set up",
+      "document.querySelectorAll('.setup a').length === 2 && !document.querySelector('.setup a[href*=account]') ? 'OK: invite complete' : 'MISSING expected invite completion'",
+      "overflow()"
+    ]
+  }
+]

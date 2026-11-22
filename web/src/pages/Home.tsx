@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { api } from "../api";
 import { Icon, Illustration, type IconName } from "../icons";
-import { Link, navigate } from "../router";
+import { Link, navigate, type Query } from "../router";
 import { useSession } from "../session";
 import {
   LIMITS,
@@ -208,22 +208,38 @@ function WeekActionCard({ action, onChanged }: { action: WeekAction; onChanged: 
   );
 }
 
+// Only link to known, local flows. The API remains the source of truth for completion.
+const SETUP_ACTIONS = new Map<string, { to: string; query: Query; hint: string }>([
+  ["about_you", { to: "/memories", query: { new: "1", from: "setup" }, hint: "Save an interest, preference or memory about yourself." }],
+  ["your_people", { to: "/people", query: { new: "1", from: "setup" }, hint: "Add someone you want to stay in touch with. A name is enough." }],
+  ["connect", { to: "/account", query: { section: "connect", from: "setup" }, hint: "Create an invite link to share with a friend." }],
+]);
+
 function SetupSteps({ steps }: { steps: SetupStep[] }) {
   if (steps.length === 0) return null;
   return (
     <ol className="setup">
-      {steps.map((s) => (
-        <li key={s.key} className={s.done ? "setup__step setup__step--done" : "setup__step"}>
-          <span className="setup__mark" aria-hidden="true">
-            {s.done && <Icon name="check" size={14} />}
-          </span>
-          <div>
-            <strong>{s.title}</strong>
-            {s.done && <span className="sr-only"> (done)</span>}
-            <p>{s.description}</p>
-          </div>
-        </li>
-      ))}
+      {steps.map((s) => {
+        const action = SETUP_ACTIONS.get(s.key);
+        const content = (
+          <>
+            <span className="setup__mark" aria-hidden="true">{s.done && <Icon name="check" size={14} />}</span>
+            <span>
+              <strong>{s.title}</strong>{s.done && <span className="sr-only"> (done)</span>}
+              <span className="setup__hint">{action?.hint ?? s.description}</span>
+            </span>
+          </>
+        );
+        return (
+          <li key={s.key}>
+            {!s.done && action ? (
+              <Link to={action.to} query={action.query} className="setup__step setup__step--link">
+                {content}<Icon name="chevron-right" size={18} />
+              </Link>
+            ) : <div className={`setup__step${s.done ? " setup__step--done" : ""}`}>{content}</div>}
+          </li>
+        );
+      })}
     </ol>
   );
 }
@@ -242,14 +258,14 @@ function Welcome({ name, steps, onLoaded }: { name: string; steps: SetupStep[]; 
         </p>
       </section>
       <div className="starts">
-        <Link to="/people" query={{ new: "1" }} className="start">
+        <Link to="/people" query={{ new: "1", from: "setup" }} className="start">
           <span className="start__icon">
             <Icon name="user-plus" size={22} />
           </span>
           <strong>Add your first person</strong>
           <span>A name and a few things you want to remember about them.</span>
         </Link>
-        <Link to="/memories" query={{ new: "1" }} className="start">
+        <Link to="/memories" query={{ new: "1", from: "setup" }} className="start">
           <span className="start__icon">
             <Icon name="bookmark" size={22} />
           </span>

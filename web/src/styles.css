@@ -1964,12 +1964,34 @@ input[type="radio"] {
   gap: 4px;
 }
 
-.setup__step,
-.setup > li {
+.setup__step {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 10px 0;
+  padding: 10px 8px;
+  min-height: 44px;
+  border-radius: 8px;
+}
+
+.setup__step--link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.setup__step--link:hover,
+.setup__step--link:focus-visible {
+  background: var(--surface-2);
+}
+
+.setup__step--link > svg {
+  flex: none;
+  align-self: center;
+  margin-inline-start: auto;
+}
+
+.setup__hint {
+  display: block;
+  color: var(--muted);
 }
 
 .setup__mark {

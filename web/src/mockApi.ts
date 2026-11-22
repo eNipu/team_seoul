@@ -54,6 +54,7 @@ interface State {
   links: MockLink[];
   responses: T.AnswerResponse[];
   sampleLoaded: boolean;
+  inviteExpiresAt: string | null;
   imports: Map<string, { candidates: T.ImportCandidate[]; isSample: boolean; expires: number }>;
 }
 
@@ -129,6 +130,7 @@ function emptyState(displayName: string, username: string): State {
     links: [],
     responses: [],
     sampleLoaded: false,
+    inviteExpiresAt: null,
     imports: new Map(),
   };
 }
@@ -533,19 +535,20 @@ export function createMockApi(options: MockOptions): Api {
       key: "about_you",
       title: "Save something about you",
       description: "An interest, a preference or a memory. You choose who can see it.",
-      done: state.memories.length > 0,
+      done: state.memories.some((m) => m.source !== "sample"),
     },
     {
       key: "your_people",
       title: "Add the people you care about",
       description: "A name is enough. Notes stay private to you.",
-      done: state.friends.some((f) => f.kind === "person" && !f.isSample),
+      done: state.friends.some((f) => !f.isSample),
     },
     {
       key: "connect",
       title: "Connect with a friend on Venn",
       description: "Optional. Friends don't need to join for Venn to be useful.",
-      done: state.friends.some((f) => f.kind === "connection"),
+      done: state.friends.some((f) => f.kind === "connection" && !f.isSample) ||
+        state.requests.some((r) => !r.isSample) || Date.parse(state.inviteExpiresAt ?? "") > Date.now(),
     },
   ];
 
@@ -1382,10 +1385,11 @@ export function createMockApi(options: MockOptions): Api {
       wait(() => {
         const code = `VENN-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
         const link = `${SITE}/join/${code}`;
+        state.inviteExpiresAt = ahead(7, 12);
         return {
           view: "invite" as const,
           code,
-          expires_at: ahead(7, 12),
+          expires_at: state.inviteExpiresAt,
           max_uses: maxUses,
           share_text: `I'm using Venn to keep up with friends. Connect with me: ${link} (code ${code})`,
           note: "Send this yourself. Venn never contacts anyone for you.",

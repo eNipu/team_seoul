@@ -372,7 +372,9 @@ export default function Memories() {
     document.addEventListener("visibilitychange", refreshWhenVisible);
     return () => document.removeEventListener("visibilitychange", refreshWhenVisible);
   }, [importing, reload]);
-  const close = () => navigate("/memories", q ? { q } : {}, { replace: true });
+  const close = () => loc.query.get("from") === "setup"
+    ? navigate("/", {}, { replace: true })
+    : navigate("/memories", q ? { q } : {}, { replace: true });
   useEffect(() => setDraft(q), [q]);
 
   const counts = useMemo(() => {

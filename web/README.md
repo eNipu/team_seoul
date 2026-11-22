@@ -95,5 +95,6 @@ horizontal overflow, text contrast and touch-target sizes, and writes screenshot
 ```sh
 npm run build
 node scripts/serve.mjs 4173 &
+node scripts/shots.mjs scripts/setup-checklist.json   # complete all three Home setup steps
 node scripts/shots.mjs jobs.json   # job format is documented at the top of the script
 ```
