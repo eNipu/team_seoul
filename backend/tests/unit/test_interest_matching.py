@@ -17,11 +17,24 @@ def test_exact_before_related_and_stable_across_input_orders():
 
 
 def test_only_curated_whole_labels_are_related():
-    for mine, theirs in [("rock climbing", "bouldering"), ("coffee", "specialty coffee")]:
-        assert match_interests([mine], [theirs])[0].kind == "related"
-        assert match_interests([theirs], [mine])[0].kind == "related"
+    for mine, theirs in [
+        ("rock climbing", "bouldering"),
+        ("coffee", "specialty coffee"),
+        ("AI", "machine learning"),
+        ("sports", "tennis"),
+        ("sport", "soccer"),
+    ]:
+        for a, b in ((mine, theirs), (theirs, mine)):
+            (match,) = match_interests([a], [b])
+            assert (match.my_label, match.their_label, match.kind) == (a, b, "related")
     assert match_interests(["cycling", "art", "running"], ["upcycling", "martial arts", "running a cafe"]) == []
+    assert match_interests(["tennis", "AI"], ["basketball", "deep learning"]) == []
     assert match_interests([], ["coffee"]) == []
+
+
+def test_same_family_is_preferred_over_a_broader_topic():
+    (match,) = match_interests(["AI", "ML"], ["Machine learning"])
+    assert (match.my_label, match.their_label, match.kind) == ("ML", "Machine learning", "related")
 
 
 def test_my_interest_labels_only_includes_own_explicit_interests(client, db):

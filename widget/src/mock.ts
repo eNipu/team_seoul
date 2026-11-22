@@ -453,18 +453,20 @@ const DEMO_SURNAMES = {
 };
 const DEMO_TOPICS = {
   instagram: [
-    ["Film photography", "Architecture", "Walking tours", "Darkroom printing", "Zines"],
-    ["Ceramics", "Espresso", "Glaze chemistry", "Surface design", "Tea"],
-    ["Plant care", "Container gardening", "Macro photography", "Pollinators", "Nature journaling"],
-    ["Food illustration", "Watercolor", "Cookbooks", "Food markets", "Hand lettering"],
-    ["Streetwear", "Embroidery", "Upcycling", "Sewing", "Portrait photography"],
+    ["Film photography", "Architecture", "Walking tours", "Darkroom printing", "Zines", "Bookbinding", "Public art", "Urban sketching", "Tennis"],
+    ["Ceramics", "Espresso", "Glaze chemistry", "Surface design", "Tea", "Home roasting", "Coffee tasting", "Furniture restoration", "Baking"],
+    ["Plant care", "Container gardening", "Macro photography", "Pollinators", "Nature journaling", "Birding", "Citizen science", "Programming", "Arduino", "Home automation"],
+    ["Food illustration", "Watercolor", "Cookbooks", "Food markets", "Hand lettering", "Recipe swaps", "Printmaking", "Food styling", "Fermentation", "Picnics", "Seasonal cooking"],
+    ["Streetwear", "Embroidery", "Upcycling", "Sewing", "Portrait photography", "Thrifting", "Textile design", "Visible mending"],
+    ["Kinetic sculpture", "Robotics", "Programming", "AI", "Machine learning", "Computer vision", "Electronics", "3D printing", "Model making", "Woodworking", "Maker fairs", "Animation"],
   ],
   linkedin: [
-    ["UX research", "Interviews", "Accessibility", "Public transit", "Wayfinding"],
-    ["Climate tech", "Clean energy", "Cycling", "Weather maps", "Open source"],
-    ["Data visualization", "Cartography", "Rail travel", "Data journalism", "Typography"],
-    ["Design systems", "Prototyping", "Typography", "Creative coding", "Accessibility"],
-    ["Coffee roasting", "Social enterprise", "Mentorship", "Fundraising", "Hosting"],
+    ["UX research", "Interviews", "Accessibility", "Public transit", "Wayfinding", "Urban planning", "Workshops", "Walking tours", "Tennis"],
+    ["Climate tech", "Clean energy", "Cycling", "Weather maps", "Open source", "Programming", "Python", "Machine learning", "Weather stations", "Energy storage", "Hiking"],
+    ["Data visualization", "Cartography", "Rail travel", "Data journalism", "Typography", "Infographics", "Open data", "Transit maps", "Coffee"],
+    ["Design systems", "Prototyping", "Typography", "Creative coding", "Accessibility", "Interaction design", "Front-end development", "Web animation", "Graphic design", "Zines"],
+    ["Coffee roasting", "Social enterprise", "Mentorship", "Fundraising", "Hosting", "Specialty coffee", "Community building", "Cookbooks"],
+    ["Robotics", "Programming", "AI", "Embedded systems", "Computer vision", "Robotics competitions", "Hardware prototyping", "Electronics", "3D printing", "Jazz", "Board games", "Repair cafes"],
   ],
 };
 

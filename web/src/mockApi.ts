@@ -400,30 +400,30 @@ const LINKEDIN_DEMO: [string, string, string, string, string[]][] = [
 const DEMO_NAMES = ["Hana", "Mateo", "Amara", "Tobias", "Yuna", "Priya", "Nico", "Leila", "Adaeze", "Felix"];
 const DEMO_SURNAMES = ["Moon", "Ibarra", "Mensah", "Kern", "Baek", "Deshmukh", "Ferretti", "Nassar", "Nwosu", "Moreau"];
 const DEMO_ROLES = [
-  ["Product designer at Pebbleloom Studio", "accessibility", "design systems", "typography", "prototyping", "wayfinding"],
-  ["Climate data scientist at Rainspoke Analytics", "climate tech", "data visualization", "weather maps", "birding", "cartography"],
-  ["Documentary producer at Lantern Field Films", "documentaries", "street photography", "field recording", "oral history", "film festivals"],
-  ["Robotics engineer at Copper Finch Labs", "robotics", "open source", "electronics", "woodworking", "model making"],
-  ["UX researcher at Mossbridge Design", "user research", "accessibility", "interviews", "service design", "board games"],
-  ["Founder at Saffron Grid Energy", "clean energy", "startups", "solar power", "repair cafes", "cycling"],
-  ["Coffee roaster at Second Rill Coffee", "specialty coffee", "cycling", "espresso", "bread baking", "bike touring"],
-  ["Urban planner at Canopy Dial", "urban planning", "public transit", "walking tours", "architecture", "mapping"],
-  ["Backend engineer at Driftline Systems", "Python", "developer tools", "open source", "puzzles", "mentorship"],
-  ["Sound designer at Paper Current Audio", "sound design", "independent film", "field recording", "synthesizers", "cinema"],
+  ["Product designer at Pebbleloom Studio", "accessibility", "design systems", "typography", "prototyping", "wayfinding", "interaction design", "public art", "zines", "tennis"],
+  ["Climate data scientist at Rainspoke Analytics", "climate tech", "data visualization", "weather maps", "birding", "cartography", "Python", "programming", "machine learning", "open data", "weather stations", "hiking"],
+  ["Documentary producer at Lantern Field Films", "documentaries", "street photography", "field recording", "oral history", "film festivals", "radio storytelling", "archival film", "community screenings", "travel writing"],
+  ["Robotics engineer at Copper Finch Labs", "robotics", "open source", "electronics", "woodworking", "model making", "programming", "AI", "computer vision", "embedded systems", "3D printing", "maker fairs", "strategy games"],
+  ["UX researcher at Mossbridge Design", "user research", "accessibility", "interviews", "service design", "board games", "facilitation", "ethnography", "book clubs"],
+  ["Founder at Saffron Grid Energy", "clean energy", "startups", "solar power", "repair cafes", "cycling", "energy storage", "hardware prototyping", "community gardens", "mentorship"],
+  ["Coffee roaster at Second Rill Coffee", "specialty coffee", "cycling", "espresso", "bread baking", "bike touring", "coffee tasting", "food markets", "camping"],
+  ["Urban planner at Canopy Dial", "urban planning", "public transit", "walking tours", "architecture", "mapping", "street design", "public parks", "urban sketching"],
+  ["Backend engineer at Driftline Systems", "Python", "developer tools", "open source", "puzzles", "mentorship", "programming", "software architecture", "distributed systems", "privacy", "rock climbing"],
+  ["Sound designer at Paper Current Audio", "sound design", "independent film", "field recording", "synthesizers", "cinema", "ambient music", "audio electronics", "record collecting", "jazz"],
 ];
 const INSTAGRAM_NAMES = ["Mara", "Joon", "Nia", "Elias", "Romy", "Devika", "Oscar", "Aya", "Theo", "Lina"];
 const INSTAGRAM_SURNAMES = ["Solano", "Park", "Boateng", "Moreno", "Delacroix", "Pillai", "Nilsson", "Matsuda", "Okafor", "Haddad"];
 const INSTAGRAM_BIOS = [
-  ["Photographs the city before the shop shutters come up", "street photography", "architecture", "walking tours", "film photography", "urban sketching"],
-  ["Folds dumplings on Sundays and keeps a freezer stash for friends", "food", "dumplings", "home cooking", "hosting", "recipe swaps"],
-  ["Paints tiny gouache scenes from the bus window", "art", "gouache", "urban sketching", "public transit", "color theory"],
-  ["Packs a thermos for foggy ridge walks", "hiking", "landscape photography", "camping", "tea", "mapmaking"],
-  ["Keeps a sketchbook of favorite scenes from matinees", "independent film", "sketching", "storyboarding", "film history", "illustration"],
-  ["Shares the records she plays while cooking dinner", "music", "vinyl", "home cooking", "jazz", "record collecting"],
-  ["Makes mismatched mugs and tests glazes on their handles", "ceramics", "pottery", "glaze chemistry", "tea", "surface design"],
-  ["Collects fallen leaves for cyanotype prints", "printmaking", "botany", "cyanotypes", "nature walks", "paper crafts"],
-  ["Finds quiet bike routes between neighborhood bakeries", "cycling", "baking", "bike touring", "sourdough", "coffee"],
-  ["Cooks from the handwritten margins of a family recipe book", "home cooking", "food photography", "cookbooks", "family history", "preserving"],
+  ["Photographs the city before the shop shutters come up", "street photography", "architecture", "walking tours", "film photography", "urban sketching", "darkroom printing", "bookbinding", "public art"],
+  ["Folds dumplings on Sundays and keeps a freezer stash for friends", "food", "dumplings", "home cooking", "hosting", "recipe swaps", "fermentation", "food markets", "tea", "board games"],
+  ["Paints tiny gouache scenes from the bus window", "art", "gouache", "urban sketching", "public transit", "color theory", "zines", "hand lettering", "museum visits"],
+  ["Packs a thermos for foggy ridge walks", "hiking", "landscape photography", "camping", "tea", "mapmaking", "stargazing", "trail running", "birding", "weather stations", "nature journaling", "tennis"],
+  ["Keeps a sketchbook of favorite scenes from matinees", "independent film", "sketching", "storyboarding", "film history", "illustration", "stop-motion animation", "model making", "robotics", "Arduino", "practical effects", "costume design"],
+  ["Shares the records she plays while cooking dinner", "music", "vinyl", "home cooking", "jazz", "record collecting", "radio", "live music", "bread baking"],
+  ["Makes mismatched mugs and tests glazes on their handles", "ceramics", "pottery", "glaze chemistry", "tea", "surface design", "wood firing", "still life photography", "specialty coffee", "repair cafes"],
+  ["Collects fallen leaves for cyanotype prints", "printmaking", "botany", "cyanotypes", "nature walks", "paper crafts", "macro photography", "citizen science", "programming", "AI", "machine learning", "computer vision"],
+  ["Finds quiet bike routes between neighborhood bakeries", "cycling", "baking", "bike touring", "sourdough", "coffee", "bike maintenance", "trail mapping", "food markets", "picnics"],
+  ["Cooks from the handwritten margins of a family recipe book", "home cooking", "food photography", "cookbooks", "family history", "preserving", "oral history", "seasonal cooking", "food writing"],
 ];
 
 const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();

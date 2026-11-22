@@ -15,9 +15,11 @@ def test_demo_profiles_have_stable_review_ready_interests(fixture):
     assert len(profiles) == 100
     for profile in profiles:
         labels = profile.interests
-        assert 5 <= len(labels) <= MAX_INTERESTS
+        assert 8 <= len(labels) <= MAX_INTERESTS
         assert len({label.casefold() for label in labels}) == len(labels)
         assert all(label == label.strip() and 0 < len(label) <= MAX_INTEREST_LEN for label in labels)
+    for topic in ("programming", "ai", "robotics"):
+        assert 0 < sum(topic in {label.casefold() for label in p.interests} for p in profiles) < len(profiles)
 
 
 def preview(client, platform):
@@ -65,11 +67,14 @@ def test_preview_then_add_all_sample_profiles(alice, bob, platform):
 @pytest.mark.parametrize("platform", ["instagram", "linkedin"])
 def test_related_import_evidence_on_web_and_plugin(alice, bob, web, make_user, platform):
     me = web("alice")
-    me.ok("POST", "/memories", {"category": "INTEREST", "title": "Photo walks", "description": "Weekend ritual"})
+    for title in ("Photo walks", "AI", "Sports"):
+        me.ok("POST", "/memories", {"category": "INTEREST", "title": title, "description": "Weekend interest"})
     card, _ = preview(alice, platform)
     assert card["candidates"] == me.ok("POST", f"/{platform}/demo-preview")["candidates"]
     pairs = [pair for c in card["candidates"] for pair in c["interest_matches"]]
-    assert any(p["kind"] == "related" and p["my_label"] == "Photo walks" for p in pairs)
+    related = {(p["my_label"], p["their_label"].casefold()) for p in pairs if p["kind"] == "related"}
+    assert any(mine == "Photo walks" for mine, _ in related)
+    assert {("AI", "machine learning"), ("Sports", "tennis")} <= related
     assert not any(c["interest_matches"] for c in preview(bob, platform)[0]["candidates"])
     # A token without memory read either fails the transport scope check or yields no evidence.
     limited = make_user("alice", scopes=[s for s in ALL_SCOPES if s != "venn.memories.read"])

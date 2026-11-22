@@ -1,6 +1,18 @@
-import groups from "../backend/app/services/interest_families.json";
+import vocabulary from "../backend/app/services/interest_families.json";
 
-const families = new Map(Object.entries(groups).flatMap(([group, labels]) => labels.map(label => [label, group] as const)));
+const families = new Map(Object.entries(vocabulary.families).flatMap(([group, labels]) => labels.map(label => [label, group] as const)));
+const relatedTopics = new Map<string, Set<string>>();
+function linkTopic(from: string, to: string) {
+  const topics = relatedTopics.get(from) ?? new Set<string>();
+  topics.add(to);
+  relatedTopics.set(from, topics);
+}
+for (const [broad, specifics] of Object.entries(vocabulary.broader_topics)) {
+  for (const specific of specifics) {
+    linkTopic(broad, specific);
+    linkTopic(specific, broad);
+  }
+}
 const key = (label: string) => label.trim().replace(/\s+/g, " ").toLowerCase();
 
 export const interestFamily = (label: string) => families.get(key(label)) ?? key(label);
@@ -30,9 +42,14 @@ export function previewInterests(mine: string[], theirs: string[]) {
   };
   const own = labels(mine);
   const byFamily = new Map<string, string>();
+  const byRelatedTopic = new Map<string, string>();
   for (const k of [...own.keys()].sort()) {
-    const family = families.get(k) ?? k;
-    if (!byFamily.has(family)) byFamily.set(family, own.get(k)!);
+    const label = own.get(k)!;
+    const family = interestFamily(k);
+    if (!byFamily.has(family)) byFamily.set(family, label);
+    for (const related of relatedTopics.get(family) ?? []) {
+      if (!byRelatedTopic.has(related)) byRelatedTopic.set(related, label);
+    }
   }
   const shared_interests: string[] = [];
   const interest_matches: {kind: "exact" | "related"; my_label: string; their_label: string}[] = [];
@@ -43,7 +60,8 @@ export function previewInterests(mine: string[], theirs: string[]) {
       shared_interests.push(label);
       interest_matches.push({ kind: "exact", my_label: own.get(k)!, their_label: label });
     } else {
-      const match = byFamily.get(families.get(k) ?? k);
+      const family = interestFamily(k);
+      const match = byFamily.get(family) ?? byRelatedTopic.get(family);
       if (match) interest_matches.push({ kind: "related", my_label: match, their_label: label });
     }
   }

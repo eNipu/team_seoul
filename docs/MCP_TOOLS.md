@@ -172,7 +172,7 @@ candidates are stored server-side, so nothing can be added that the user was not
 | --- | --- | --- | --- | --- |
 | `venn_propose_people_import` | `people[]` (1–50 `{name, relationship?, notes?, interests?[], last_met_days_ago?}`), `source?` (≤60) | connections | W, UI | `{view: "people_import", import_id, expires_at, source, candidates[{index, name, relationship, notes, interests[], last_met_days_ago, already_added, existing_relationships[], shared_interests[]}], skipped, note}` — **adds nobody** |
 | `venn_import_people` | `import_id`, `indexes[]` (1–50) | connections | W | `{imported: Person[], count}`; regular imports only |
-| `venn_preview_demo_people_import` | `platform`: `"instagram"` or `"linkedin"` | connections | W, UI | `people_import` with `demo_platform` and 100 fictional candidates. Adds nobody; no social login or external API. Result `_meta` carries the review's confirmation token for the widget |
+| `venn_preview_demo_people_import` | `platform`: `"instagram"` or `"linkedin"` | connections | W, UI | `people_import` with `demo_platform` and 100 fictional candidates with 8–12 interests each. Adds nobody; no social login or external API. Result `_meta` carries the review's confirmation token for the widget |
 | `venn_import_demo_people` | `import_id`, `indexes[]` (1–100), `confirmation_token` | connections | W, widget callback | `{imported: Person[], count}`. Only the widget's **Add** button sends the token and selected indexes. Saves owner-only preview notes; **Clear preview data** clears them |
 
 The demo confirmation callback is visible in tool discovery so ChatGPT can route widget calls.
@@ -182,7 +182,7 @@ and widget-only token (`_meta["venn/demoImportConfirmation"]`, not in model-visi
 Emails, links and phone numbers are stripped from names, relationships and notes; entries
 containing credentials or card/ID numbers are dropped and counted in `skipped`. `already_added`
 marks a name the user already has a note for. Review shows the saved relationship clues alongside the proposed clue. The user can explicitly select a namesake to create a separate private note with its own ID. An import is owner-only, single-use and expires
-after 24 hours. With memory-read permission, all import previews return `interest_matches: [{my_label, their_label, kind}]` (`exact` or `related`); `shared_interests` remains exact-only. Related matches use a curated whole-label vocabulary, not bios or substrings. Both profile lists show both sides of a related match and put stronger matches first without changing the indexes used to confirm.
+after 24 hours. With memory-read permission, all import previews return `interest_matches: [{my_label, their_label, kind}]` (`exact` or `related`); `shared_interests` remains exact-only. Related matches use a curated whole-label vocabulary, including broader/specific pairs like AI ↔ machine learning and sports ↔ tennis, not bios or substrings. Both profile lists show both sides of a related match and put stronger matches first without changing the indexes used to confirm.
 
 ## Relationship maintenance
 

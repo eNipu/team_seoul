@@ -84,7 +84,7 @@ added as private notes, and the form must say so before saving.
 | `POST /api/v1/linkedin/demo-preview` | none (signed in) | people-import payload with 100 fictional profiles and `demo_platform: "linkedin"` |
 
 Both routes use fixed AI-generated examples and do not call social networks, enrichment, or AI services.
-Each profile has five interests. Import candidates include `interest_matches: [{my_label, their_label, kind}]`, with `kind` equal to `exact` or `related`; `shared_interests` contains only exact labels. Evidence comes from the caller’s own saved interests and a curated whole-label vocabulary, not notes or bios.
+Each profile has 8–12 interests. Import candidates include `interest_matches: [{my_label, their_label, kind}]`, with `kind` equal to `exact` or `related`; `shared_interests` contains only exact labels. Related matches include curated broader/specific pairs (e.g. sports ↔ tennis), not unrelated activities under the same umbrella. Evidence comes from the caller’s own saved interests and a curated whole-label vocabulary, not notes or bios.
 Confirm selected entries with `POST /api/v1/people/import`. Saved entries are private preview notes,
 removable with `DELETE /api/v1/sample`.
 
