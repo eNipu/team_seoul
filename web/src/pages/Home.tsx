@@ -52,9 +52,10 @@ function HomeGreeting({ children }: { children: ReactNode }) {
     <div className="home-greeting">
       <h1 id="page-title">{children}</h1>
       <div className="home-greeting__actions">
-        <a className="btn home-greeting__plugin" href="https://chatgpt.com/plugins">
-          Open ChatGPT Plugin
-        </a>
+        <Link className="btn btn--primary home-greeting__plugin" to="/connect">
+          <Icon name="sparkle" size={16} />
+          <span>Connect ChatGPT</span>
+        </Link>
         <a
           className="btn home-greeting__help"
           href={quickstartUrl}
