@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { api } from "../api";
 import { plural, type PeopleImport } from "../types";
-import { Avatar, InlineError, Tag, useAction } from "../ui";
+import { Avatar, InlineError, useAction } from "../ui";
 
 export function ImportReview({
   preview,
@@ -62,8 +62,8 @@ export function ImportReview({
   return (
     <div className="stack">
       <p className="dialog__text" ref={instructions} tabIndex={selectionTools ? -1 : undefined}>
-        Check who to add. Nothing is added until you confirm.
-        {preview.skipped > 0 && ` ${plural(preview.skipped, "entry was", "entries were")} skipped.`}
+        Choose who to add.
+        {preview.skipped > 0 && ` ${plural(preview.skipped, "entry", "entries")} skipped.`}
       </p>
       {intro}
       {selectionTools && (
@@ -102,7 +102,7 @@ export function ImportReview({
                   {!!c.existing_relationships?.length && <span className="small">Already saved: {c.existing_relationships.join(", ")}</span>}
                   {c.notes && <span className="small review__notes">{c.notes}</span>}
                 </span>
-                {c.already_added && <Tag>{selectionTools ? "Already in your people" : "Same name in your people"}</Tag>}
+                {c.already_added && <span className="muted small">{selectionTools ? "Already added" : "Same name saved"}</span>}
               </label>
             </li>
           );

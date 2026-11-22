@@ -6,12 +6,13 @@ import { Icon } from "../icons";
 import { plural, type LinkedInConnections, type LinkedInImport, type PeopleImport } from "../types";
 import { Avatar, Field, InlineError, Notice, Tag, useAction } from "../ui";
 import { ImportReview } from "./ImportReview";
+import "./tools.css";
 
 const MAX_COOKIE_CHARS = 20000;
 
 const MAX_FILE_BYTES = 4_000_000;
 
-const METHODS = { file: "Export file", cookies: "Session cookies", demo: "Demo connections" } as const;
+const METHODS = { file: "Export file", cookies: "Session cookies", demo: "Try with demo people" } as const;
 type Method = keyof typeof METHODS;
 type Preview = { kind: "linkedin"; data: LinkedInImport } | { kind: "demo"; data: PeopleImport };
 
@@ -49,7 +50,7 @@ export function LinkedInFlow({
           setPreview(null);
         }}
         onDone={(count) => onDone(count, "demo")}
-        intro={<Notice tone="quiet">These profiles are fictional. Any you add will be marked as samples.</Notice>}
+        
       />
     );
   }
@@ -88,7 +89,7 @@ export function LinkedInFlow({
           {list.total !== null && list.total > list.count
             ? `Showing your ${list.count} most recent connections of ${list.total}.`
             : `${plural(list.count, "connection", "connections")} found.`}{" "}
-          Choose up to {max} to import. No one is added yet.
+          Pick up to {max}.
         </p>
         {list.stopped && (
           <Notice icon="alert" tone="quiet">
@@ -138,12 +139,6 @@ export function LinkedInFlow({
           {picked.length} of {max} selected
           {overDetails && `. Profile details are fetched for the first ${list.max_details}.`}
         </p>
-        {!list.details_available && (
-          <Notice tone="quiet">
-            People are imported with their name and LinkedIn headline. Company, location and skills need an Apify
-            token on this server.
-          </Notice>
-        )}
         <InlineError message={action.error} />
         <div className="dialog__actions">
           <button type="button" className="btn" disabled={action.busy} onClick={() => setList(null)}>
@@ -176,37 +171,32 @@ export function LinkedInFlow({
   }
 
   const tabs = (
-    <div className="tabs" role="group" aria-label="How to import">
-      {(Object.keys(METHODS) as Method[]).map((t) => (
-        <button
-          key={t}
-          type="button"
-          aria-pressed={way === t}
-          disabled={action.busy}
-          className={`tabs__tab ${way === t ? "tabs__tab--on" : ""}`}
-          onClick={() => {
-            setWay(t);
-            action.clear();
-          }}
-        >
-          {METHODS[t]}
-        </button>
-      ))}
-    </div>
+    <details className="tl__more" open={way !== "file"}>
+      <summary>Other ways</summary>
+      <div className="tl__row" role="group" aria-label="How to import">
+        {(Object.keys(METHODS) as Method[]).map((t) => (
+          <button
+            key={t}
+            type="button"
+            aria-pressed={way === t}
+            disabled={action.busy || way === t}
+            className="tl__link"
+            onClick={() => {
+              setWay(t);
+              action.clear();
+            }}
+          >
+            {METHODS[t]}
+          </button>
+        ))}
+      </div>
+    </details>
   );
 
   if (way === "demo") {
     return (
       <div className="stack">
-        {tabs}
-        <p className="dialog__text">
-          Try the import with 100 fictional, AI-generated LinkedIn-style profiles. No LinkedIn account, cookies,
-          or export file needed.
-        </p>
-        <Notice tone="quiet">
-          Review who to add before saving. On Home, <strong>Remove sample data</strong> clears these profiles along
-          with any other sample data.
-        </Notice>
+        <p className="dialog__text">100 fictional LinkedIn-style people, marked as samples.</p>
         <InlineError message={action.error} />
         <div className="dialog__actions">
           <button type="button" className="btn" onClick={onCancel} disabled={action.busy}>
@@ -226,9 +216,10 @@ export function LinkedInFlow({
               void action.run(async () => setPreview({ kind: "demo", data: await api.demoPeoplePreview("linkedin") }))
             }
           >
-            {action.busy ? "Loading…" : "Review 100 demo connections"}
+            {action.busy ? "Loading…" : "Review demo people"}
           </button>
         </div>
+        {tabs}
       </div>
     );
   }
@@ -236,29 +227,14 @@ export function LinkedInFlow({
   if (way === "file") {
     return (
       <div className="stack">
-        {tabs}
-        <p className="dialog__text">
-          LinkedIn can send you your connections as a file. This is the way LinkedIn allows, and it needs no
-          cookies.
-        </p>
-        <ol className="steps">
-          <li>
-            On LinkedIn: <strong>Settings &amp; Privacy → Data privacy → Get a copy of your data</strong>.
-          </li>
-          <li>
-            Pick <strong>Connections</strong> and request the archive. It arrives by email, usually within
-            minutes.
-          </li>
-          <li>
-            Upload the <code>Connections.csv</code> from it here.
-          </li>
-        </ol>
-        <Field label="Connections.csv" hint="The file is read in your browser and sent to Venn as text.">
-          {(p) => (
+        <p className="dialog__text">Upload your LinkedIn Connections.csv. You choose who to add.</p>
+        <div>
+          <label className="tl__cta">
             <input
-              {...p}
               type="file"
+              className="sr-only"
               accept=".csv,text/csv"
+              disabled={action.busy}
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
@@ -272,18 +248,21 @@ export function LinkedInFlow({
                 });
               }}
             />
-          )}
-        </Field>
-        {action.busy && <p className="muted">Reading {fileName}…</p>}
-        <Notice tone="quiet">
-          Nothing is added until you pick who to import and confirm. Email addresses in the file are ignored.
-        </Notice>
-        <InlineError message={action.error} />
-        <div className="dialog__actions">
-          <button type="button" className="btn" onClick={onCancel} disabled={action.busy}>
-            Cancel
-          </button>
+            Choose Connections.csv
+          </label>
         </div>
+        <details className="tl__more">
+          <summary>Where do I get it?</summary>
+          <p className="dialog__text">
+            <span>
+              On LinkedIn: <strong>Settings → Data privacy → Get a copy of your data → Connections</strong>. It
+              arrives by email.
+            </span>
+          </p>
+        </details>
+        {action.busy && <p className="muted">Reading {fileName}…</p>}
+        <InlineError message={action.error} />
+        {tabs}
       </div>
     );
   }
@@ -304,19 +283,11 @@ export function LinkedInFlow({
         });
       }}
     >
-      {tabs}
       <p className="dialog__text">
-        Venn reads your connection list with your LinkedIn session, then you choose who to import.
+        <span>
+          Copy <strong>all</strong> your LinkedIn cookies with an extension such as “Copy Cookies” and paste them here.
+        </span>
       </p>
-      <ol className="steps">
-        <li>Sign in to LinkedIn in this browser.</li>
-        <li>
-          Copy <strong>all</strong> LinkedIn cookies with a cookie-export extension such as “Copy Cookies”.
-          LinkedIn ties <code>li_at</code> to the other cookies of the same browser, so a partial copy is
-          usually signed out at once.
-        </li>
-        <li>Paste them below.</li>
-      </ol>
       <Field
         label="LinkedIn cookies"
         hint={
@@ -340,10 +311,8 @@ export function LinkedInFlow({
         )}
       </Field>
       <Notice icon="shield" tone="quiet">
-        These cookies give full access to your LinkedIn account. Venn uses them once to read your connection list
-        and does not store them. LinkedIn's terms don't allow automated access: it usually signs the session out
-        after the first pages, so expect your most recent connections only, and to be signed out of LinkedIn. The
-        export file is the reliable way.
+        Cookies give full access to your account. Venn uses them once and doesn't store them. LinkedIn may sign you
+        out and return only recent connections; the export file is more reliable.
       </Notice>
       <label className="check">
         <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
@@ -358,6 +327,7 @@ export function LinkedInFlow({
           {action.busy ? "Reading your connections…" : "Get my connections"}
         </button>
       </div>
+      {tabs}
     </form>
   );
 }
