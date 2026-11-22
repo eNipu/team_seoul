@@ -86,7 +86,12 @@ Read `SCHEDULING.md` before any task in this group.
 
 | ID | Task | Area | Size | Depends on | Status |
 | --- | --- | --- | --- | --- | --- |
+| [T39](T39-chatgpt-replies.md) | Tailored replies inside ChatGPT | both | M | – | done |
 | [T40](T40-site-onboarding.md) | Landing page onboarding preview | site | M | – | done |
+| [T41](T41-venn-conversation-cards.md) | Venn discussion and thread cards | both | M | T39 | done |
+| [T42](T42-landing-connections.md) | Landing-page navigation and connection map | site | M | T40 | done |
+| [T43](T43-chatgpt-preview-distribution.md) | ChatGPT widget preview and account entry | both | M | T41, T42 | done |
+| [T44](T44-product-navigation.md) | Focused landing page and live ChatGPT review | both | M | T43 | done |
 
 T04 and T12 can start right away, in parallel with the backend tasks, because the shapes they
 render are fixed in `CONTRACTS.md`.

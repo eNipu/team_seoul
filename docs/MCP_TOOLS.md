@@ -26,13 +26,33 @@ Annotations: **R** read-only, **W** write, **D** destructive (ChatGPT asks for c
 **UI** = renders the widget (`_meta.ui.resourceUri = ui://venn/app-v2.html`); the result's
 `view` field tells the widget which card to show.
 
-56 tools, 17 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Venn) or
+60 tools, 19 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Venn) or
 `person_id` (a private note about someone who is not); results name it as `kind`
 (`"connection"` \| `"person"`) + `id`.
 
 **UI first.** The server instructions, the tool descriptions and the skill tell the model that the
 first Venn call in a conversation must render a card: the specific card if the request maps
-to one, otherwise `venn_show_dashboard` (home, or the welcome card for an empty account).
+to one, `venn_show_reply` for tailored social answers, or `venn_show_dashboard` for home and set-up.
+
+## Tailored replies
+
+All four tools require `connections.manage` and publish an `outputSchema`. The `reply` argument is
+a plain-text `title` (up to 100 characters) and `body` (up to 1,200), with fields selected by `kind`.
+`advice` and `draft` use the common fields. `checklist` adds one to six `steps` of up to 200
+characters each. `discussion` adds one `question` of up to 200 characters. `thread` adds two to six
+Venn-authored `entries` with a `title` (up to 100 characters) and `body` (up to 400) per entry.
+
+The widget receives the render result through the MCP Apps bridge. The discussion form posts a
+user-authorized turn to ChatGPT via `ui/message`. ChatGPT can call the reply tool again with the
+next result or use a dedicated tool such as `venn_propose_memories` when the user asks to keep a
+memory. The reply tool accepts the task-specific payload and has no conversation-history field.
+
+| Tool | Arguments | Annotation | Result |
+| --- | --- | --- | --- |
+| `venn_show_reply` | `reply` | R, UI | `{view: "reply", reply}`. Displays only the task-specific answer. |
+| `venn_save_reply` | `reply` | W, widget only | `{saved: true, reply_id}`. Saves the displayed reply privately when the user taps Save privately. Repeated saves return the same ID. |
+| `venn_saved_replies` | – | R, UI | `{view: "saved_replies", count}`. The owner's replies are delivered most recent first in widget-only `_meta.replies[{reply_id, reply}]`. |
+| `venn_delete_saved_reply` | `reply_id` | D, widget only | `{deleted: true}`. Removes the owner's saved reply. |
 This is guidance to the model, not something the server can enforce.
 
 **Set-up first.** Set-up has three steps, in order: *about you* (done once a memory is saved),

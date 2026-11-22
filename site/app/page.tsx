@@ -1,32 +1,18 @@
 import HeroBackdrop from "@/components/HeroBackdrop";
-import NextWord from "@/components/NextWord";
-import OnboardingPreview from "@/components/OnboardingPreview";
+import HeroRotator from "@/components/HeroRotator";
+import Motion from "@/components/Motion";
 import PageView from "@/components/PageView";
+import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import Waitlist from "@/components/Waitlist";
+import Faq from "@/components/sections/Faq";
+import NextIn from "@/components/sections/NextIn";
 import { cleanRef } from "@/lib/analytics";
 import { hasDatabase } from "@/lib/db";
+import { heroIndex } from "@/lib/heroes";
 import { cleanVersion, defaultVersion } from "@/lib/version";
 import { inviteHasRoom } from "@/lib/waitlist";
 
-// "You already know your next …": the line under the subtitle shows these one at a time.
-// Each one is a claim; keep "What the copy may claim" in site/README.md in step.
-const NEXT = ["customer", "friend", "business partner"];
-
-const PRINCIPLES = [
-  {
-    title: "Only what you approve",
-    text: "Venn saves the signals you tick and nothing else. Nothing is shared until you say so.",
-  },
-  {
-    title: "People you already know",
-    text: "No cold outreach and no strangers. Venn looks for overlap inside your own circle.",
-  },
-  {
-    title: "You send, not Venn",
-    text: "Venn drafts the intro and stops there. It never contacts anyone for you.",
-  },
-];
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -52,53 +38,33 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
   return (
     <>
       <main>
-        <section className="hero" aria-labelledby="hero-title">
-          <HeroBackdrop />
-          <SiteHeader />
-          <div className="hero__content wrap">
-            <h1 id="hero-title">Venn. Connect your AI memories.</h1>
-            <p className="hero__sub">Build your inner circle.</p>
-            <NextWord words={NEXT} />
-            <Waitlist version={version} invite={invite} />
-          </div>
-        </section>
-
-        <section className="showcase" id="inside" aria-labelledby="inside-title">
-          <div className="wrap">
-            <div className="section-intro">
-              <h2 id="inside-title">Try the onboarding.</h2>
+        <section className="section section--dark" id="hero" aria-labelledby="hero-title" tabIndex={-1}>
+          <SiteHeader current="/" />
+          <div className="wrap hero__grid">
+            <div className="hero__copy">
+              <p className="eyebrow">Early-access waitlist</p>
+              <HeroRotator pinned={heroIndex(first(params.h))} />
             </div>
-            <OnboardingPreview />
-          </div>
-        </section>
-
-        <section className="principles" aria-labelledby="principles-title">
-          <div className="wrap">
-            <h2 id="principles-title" className="sr-only">
-              How Venn treats what you share
-            </h2>
-            <ul className="principles__grid">
-              {PRINCIPLES.map((principle) => (
-                <li key={principle.title} className="principle">
-                  <h3>{principle.title}</h3>
-                  <p>{principle.text}</p>
-                </li>
-              ))}
-            </ul>
-            <div className="closing">
-              <h2>Be in the Founding Circle.</h2>
-              <a className="btn btn--primary" href="#waitlist">
-                Join the Waitlist
-              </a>
+            <div className="hero__join">
+              <HeroBackdrop />
+              <div className="hero__join-card">
+                <Waitlist version={version} invite={invite} />
+                <p className="hero__fine">Free early access · Works with ChatGPT · Your friends opt in</p>
+              </div>
+            </div>
+            <div className="hero__paths">
+              <a className="btn" id="chatgpt-ui" href="/chatgpt">Try the ChatGPT demo</a>
+              <a className="hero__guide" id="inside" href="/how-it-works">How it works</a>
             </div>
           </div>
         </section>
+
+        <NextIn />
+        <Faq />
       </main>
-
-      <footer className="site-footer wrap">
-        <span>© {new Date().getFullYear()} Venn</span>
-      </footer>
+      <SiteFooter top="#hero" />
       <PageView version={version} />
+      <Motion />
     </>
   );
 }

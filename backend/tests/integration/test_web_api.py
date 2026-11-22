@@ -10,6 +10,20 @@ from .test_solo_value import remember
 NO_HEADER: dict = {}
 
 
+def test_public_widget_preview_is_network_isolated_and_creates_no_account(client, settings, db):
+    assert client.get("/widget-preview").status_code == 503
+    settings.widget_path.write_text("<!doctype html><title>Widget fixture</title>")
+    preview = client.get("/widget-preview?view=preview_review")
+    assert preview.status_code == 200
+    assert "Widget fixture" in preview.text
+    csp = preview.headers["Content-Security-Policy"]
+    assert "default-src 'none'" in csp
+    assert "form-action 'none'" in csp
+    assert "frame-ancestors https://joinvennai.com https://www.joinvennai.com" in csp
+    assert "set-cookie" not in preview.headers
+    assert db.query(User).count() == 0
+
+
 # ------------------------------------------------------------------------------- sign-in
 def test_session_reports_signed_out(web):
     anon = web()

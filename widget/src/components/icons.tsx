@@ -19,6 +19,8 @@ const ICONS = {
   "chevron-down": <path d="M6 9.5l6 6 6-6" />,
   check: <path d="M5 12.5l4.5 4.5L19 7.5" />,
   close: <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" />,
+  expand: <path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5" />,
+  collapse: <path d="M4 9h5V4m11 5h-5V4M4 15h5v5m11-5h-5v5" />,
   plus: <path d="M12 5.5v13M5.5 12h13" />,
   help: (
     <>
@@ -77,6 +79,7 @@ const ICONS = {
   ),
   trash: <path d="M5 7h14M10 4h4M7 7l.8 11a2 2 0 0 0 2 1.9h4.4a2 2 0 0 0 2-1.9L17 7M10.5 11v5M13.5 11v5" />,
   pencil: <path d="M4.5 19.5l1-4L16 5a2.05 2.05 0 0 1 2.9 0l.1.1a2.05 2.05 0 0 1 0 2.9L8.5 18.5zM14 7l3 3" />,
+  pen: <path d="m4 20 2-7 7-7 5 5-7 7-7 2 5.5-5.5M13 6l2-2a2 2 0 0 1 3 0l2 2a2 2 0 0 1 0 3l-2 2M9.5 14.5h.01" />,
   note: (
     <>
       <rect x="5" y="4" width="14" height="16" rx="3" />

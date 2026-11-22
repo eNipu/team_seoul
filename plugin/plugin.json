@@ -5,9 +5,9 @@
   "description": "Venn finds the common ground with the people you already know, friends and colleagues alike. It remembers what matters to you (only what you approve) and helps you stay in touch.",
   "author": {
     "name": "Venn",
-    "url": "https://venn.example.com"
+    "url": "https://joinvennai.com"
   },
-  "homepage": "https://venn.example.com",
+  "homepage": "https://joinvennai.com",
   "license": "UNLICENSED",
   "keywords": ["social", "friends", "memories", "relationships", "companion"],
   "extensions": {
@@ -19,9 +19,8 @@
         "developerName": "Venn",
         "category": "Lifestyle",
         "capabilities": ["Interactive", "Write"],
-        "websiteURL": "https://venn.example.com",
-        "privacyPolicyURL": "https://venn.example.com/privacy",
-        "termsOfServiceURL": "https://venn.example.com/terms",
+        "websiteURL": "https://joinvennai.com",
+        "privacyPolicyURL": "https://joinvennai.com/privacy",
         "defaultPrompt": [
           "Set up Venn",
           "Who should I reconnect with this week?",

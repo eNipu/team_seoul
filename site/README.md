@@ -5,17 +5,19 @@ metrics page. A Next.js app (App Router) with its own small API and two tables i
 
 | Path | What it is |
 | --- | --- |
-| `app/page.tsx` | The landing page: hero with the waitlist, the onboarding preview, principles. Rendered per request, because it reads `?w=` and `?ref=` |
+| `app/page.tsx` | The landing page: hero with the waitlist, use cases and FAQ. Rendered per request, because it reads `?w=` and `?ref=` |
 | `app/metrics/page.tsx` | `/metrics`: unique visitors, total waitlist signups, activation rate, UTM and referral breakdown |
 | `app/api/waitlist/route.ts` | `POST` joins the waitlist, `GET ?code=` returns the current spot for an invite code |
 | `app/api/visit/route.ts` | `POST` records one page view |
 | `proxy.ts` | Password check in front of `/metrics` (Next.js 16 calls middleware "proxy") |
 | `app/globals.css` | The page's own styles |
 | `app/venn-kit.css` | Copy of `widget/src/venn-kit.css`: tokens and card primitives shared with the ChatGPT widget. Do not edit here |
-| `components/HeroBackdrop.tsx` | Two overlapping CSS circles behind the hero |
-| `components/NextWord.tsx` | The line under the subtitle, "You already know your next customer.", whose last word rolls |
+| `components/HeroBackdrop.tsx` | What sits behind the join panel: still CSS circles first, then the 3D scene once the page is idle |
+| `components/VennScene.tsx` | The 3D scene: two glass spheres orbiting each other, built with three.js (MIT) |
+| `components/Motion.tsx` | Turns on the scroll reveals for elements marked `data-reveal` |
 | `components/Waitlist.tsx` | The email form and its states after joining |
-| `components/OnboardingPreview.tsx` | The interactive memory, invitation, and shared-interest preview |
+| `app/how-it-works/page.tsx`, `components/OnboardingPreview.tsx` | Product walkthrough and four-step sample onboarding |
+| `components/ChatGptPreview.tsx` | Embeds the actual Venn widget using its in-memory sample bridge |
 | `lib/db.ts`, `lib/waitlist.ts`, `lib/analytics.ts` | Postgres pool and schema, waitlist logic, events and metrics |
 | `lib/version.ts` | The two waitlist versions, `pair` and `open`, and which one is the default |
 | `lib/rate-limit.ts` | Per-address request limit for the API routes |
@@ -27,7 +29,7 @@ metrics page. A Next.js app (App Router) with its own small API and two tables i
 ```bash
 cd site
 npm install
-npm run build                       # copies the kit from ../widget, then next build
+npm run build                       # checks the site kit, then runs Next.js build
 npm run start                       # http://localhost:3000 (PORT overrides)
 npm run dev                         # the same with hot reload
 node check.mjs                      # needs Node 22+, Chrome, and a build
@@ -48,11 +50,10 @@ not recorded, and `/metrics` says so. Nothing is kept in memory as a substitute,
 silently drop signups.
 
 `check.mjs` loads the page at 360, 390, 768 and 1280 px, plus once in dark mode and once with reduced motion. It
-fails on: a missing or empty heading, sideways overflow, a hero that does not fit in the first screen, text below
-WCAG AA contrast, text under 12 px, a control under 44 px, a console error, a request to another origin, a
-cookie, photos or canvas on the landing page, a word under the subtitle that never changes or that changes
-with reduced motion, a broken step in the onboarding preview, a `/metrics`
-that opens without the password, or a waitlist that never answers 429. With `DATABASE_URL`
+checks headings, overflow, signup visibility on the first screen, WCAG AA text contrast, 12 px minimum text,
+44 px controls, console errors, cross-origin requests, cookies other than the consent-region cookie, the hero
+fallback, section navigation, the sample onboarding, `/metrics` authentication, and the waitlist rate limit.
+With `DATABASE_URL`
 it also walks the waitlist on the smallest phone: joining alone with real key presses (Tab to the field,
 Enter, focus on the answer, Tab through both actions, each with a focus ring), arriving with that link (invited, then
 both confirmed), coming back as the first person, a link nobody owns, and the open version. Each state must
@@ -69,6 +70,8 @@ pass the password: `METRICS_PASSWORD=... node check.mjs --url https://<host>/`.
 | `ANALYTICS_SALT` | Optional secret mixed into visitor hashes. Falls back to `DATABASE_URL` |
 | `WAITLIST_VERSION` | `pair` (the default) or `open`: the waitlist a visitor gets without `?w=` in the URL |
 | `PORT` | Port for `npm run start` (Railway sets it) |
+| `WIDGET_PREVIEW_URL` | Absolute URL of the Venn demo iframe. Defaults to `https://app.joinvennai.com/widget-preview`. For local end-to-end checks use the local backend URL. |
+| `CHATGPT_PLUGIN_URL` | Verified, published ChatGPT directory listing. When absent the site offers the beta test connection. |
 
 `.env.example` lists them; copy it to `.env.local` for local work.
 
@@ -144,52 +147,48 @@ First-party only: no third-party scripts, no cookies, nothing stored on the devi
 
 ## Hero and onboarding
 
-The page loads no images, no canvas and no 3D library: the hero's two circles are CSS and paint with the HTML,
-and every drawing in the onboarding is inline SVG styled from the kit tokens.
+The hero has the copy and chat example on the left and the join panel on the right, over two glass
+spheres in the brand yellow and red that orbit each other in 3D. On a phone signup appears before the
+chat example. Invitation and confirmation panels sit immediately below the subtitle to keep their controls
+within reach. A CSS version of the circles is in the HTML and paints first;
+three.js is a separate chunk loaded once the page is idle. The still version stays for reduced motion, data
+saving and no WebGL, and rendering stops when the scene is off screen or the tab is hidden.
 
-Under the subtitle, `NEXT` in `app/page.tsx` lists the words that end "You already know your next …":
-customer, friend, business partner. The last word rolls upward to the next every 2.4 seconds, on one line from
-600 px up and on its own line below that. It holds still with reduced motion, under the pointer, while a form
-field has focus and in a hidden tab, and screen readers get one sentence with every word. There is no pause
-button, so it cannot be stopped from the keyboard (WCAG 2.2.2); add one before a formal audit. Each word is a
-claim: change the list with the claims table, the page description and the sentence `check.mjs` expects.
+Motion (`app/globals.css` › Motion) always plays into the finished page, so nothing is hidden without script
+or with reduced motion: the hero arrives line by line, the underline is drawn and the highlight swept in, and
+sections fade up the first time they scroll into view (`data-reveal="up"`, or `"group"` for children in turn).
 
-`components/OnboardingPreview.tsx` walks through getting in, after the team's prototype, in four steps:
+The landing page links to [How it works](/how-it-works) and the [ChatGPT demo](/chatgpt).
+The ChatGPT demo uses the same built widget that the MCP resource serves. Its sandboxed iframe
+uses sample data and stores changes only in its own tab state.
 
-1. **Connect your AI memories.** Tick sample memories; each one appears as a dot in your circle.
-2. **Invite your +1.** Your circle steps aside for a dashed empty one. "Send invite link" sends an envelope
-   across.
-3. **Maya gets your invite.** Her side: "Someone saved you a place." and "Accept as Maya".
-4. **You're both in.** The circles overlap, her memories appear, the ones you share slide into the overlap
-   and become one dot, and the founding circle shows two seats filled and three open.
-
-One SVG (`.stage`) is drawn for every step and its parts move with CSS transitions between steps, so the four
-screens read as one motion. Nothing loops, and with reduced motion each step simply appears. The preview
-sends and stores nothing; its last step links to the real waitlist. Back keeps the choices, Restart clears
-them.
+On /how-it-works, the visitor selects sample memories, sends a simulated invite, accepts it as Maya,
+and sees the interests they share. A single SVG illustrates the four steps. With reduced motion,
+the SVG jumps to each state. Back preserves the memory selection, and Restart clears it.
+The demo stores no choices. The last step links back to the real waitlist.
 
 ## Shared styling with the widget
 
-`widget/src/venn-kit.css` is the single source for the design tokens and the card primitives (`.panel`, `.card`,
-`.btn`, `.badge`, `.chip`, `.avatar`, `.check`, `.pick`, `.venn-pair`, `.lock-note`). The widget imports it
-directly. `npm run build` here copies it to `app/venn-kit.css` (`scripts/sync-kit.mjs`), and the copy is
-committed because Railway uploads `site/` on its own. Change the widget file, build both, commit both.
+The landing page uses its own `app/venn-kit.css` for the site palette and primitives. Its build verifies
+that the file exists. The ChatGPT widget uses `widget/src/venn-kit.css`.
 
 The landing page is light only (`<html data-theme="light">`); the widget keeps light and dark for the host.
 
 ## Deploy
 
-Railway project `heldly` (it still has the old product name; renaming it there is cosmetic), service `site`.
-Railpack detects Next.js and runs `npm run build` and `npm run start`. The upload root is `site/`.
+Railway deploys the `site` service in the `heldly` project's `production` environment from
+`eNipu/team_seoul` on `main`. The root directory is `/site` and the watch path is `/site/**`,
+measured from the repository root. Railpack detects Next.js and runs `npm run build` and
+`npm run start`. Open feature pull requests against `dev` and promote releases by merging
+`dev` into `main`.
 
 The service has `DATABASE_URL` (a reference to the project's `Postgres` service, shared with the backend),
 `METRICS_PASSWORD` and `ANALYTICS_SALT`. Read the metrics password in the service's Variables tab. Postgres
 has no public address; the site reaches it over Railway's private network.
 
 ```bash
-npm run build && node check.mjs
-railway up ./site --path-as-root --service site -m "what changed"
-node site/check.mjs --url https://site-production-4ef8eb52.up.railway.app/
+npm --prefix site run build
+node site/check.mjs --url https://joinvennai.com/
 ```
 
 ## What the copy may claim
@@ -203,13 +202,12 @@ Keep the page true when the product changes.
 | Shows its own cards in ChatGPT | Works | `widget/` |
 | It never contacts anyone for you | Works | `README.md`, `plugin/skills/venn-social/SKILL.md` |
 | "Connect your AI memories." | Works for approved ChatGPT memories | `venn_import_chatgpt_memory`, memory review and save |
-| "Build your inner circle." | Works | Invite codes and connection requests |
-| "You already know your next customer", "business partner" | In development | Matching what one person needs with what another offers is T08 to T12 |
-| "You already know your next friend" | Works for shared interests | `venn_find_people` and activity ideas |
 | Review, accept, and find shared interests | Preview with a sample person | Memory review, invite redemption and acceptance, `venn_compare` |
 | "We only email you about your invite" | A promise the team must keep | `waitlist_signups` holds the emails. Nothing is sent today |
 | "A confirmed place for both of you", "Your places in the Founding Circle are confirmed" | A promise the team must keep | `confirmed_at`. Whoever opens Venn to the list must honour it |
 | "Someone saved you a place" | Works | Shown only when the link exists and has room (`inviteHasRoom`) |
 | "You join with one person you know" | True of the pair version | A place stays pending until a +1 joins; `?w=open` has no such rule |
+| "Planned pricing at launch. Early access is free." | Pricing decision | `site/PRICING-DECISION.md`; billing is not live |
+| "Invited friends are always free" | Pricing decision | `site/PRICING-DECISION.md`; this must remain true when billing launches |
 
 The onboarding uses an example person. The waitlist collects email addresses. There is no privacy page yet (T17).

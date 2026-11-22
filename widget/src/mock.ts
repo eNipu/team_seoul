@@ -60,6 +60,8 @@ import type {
   SetupStep,
   SharedMemory,
   ViewData,
+  Reply,
+  SavedReply,
   Visibility,
   WelcomeViewData,
 } from "./types";
@@ -96,6 +98,12 @@ export const DEMO_VIEWS = [
   "dashboard_sample",
   "dashboard_plans",
   "memory_review_people",
+  "reply_advice",
+  "reply_checklist",
+  "reply_draft",
+  "reply_discussion",
+  "reply_thread",
+  "saved_replies",
 ] as const;
 
 export function demoParam(name: string): string | null {
@@ -1754,10 +1762,62 @@ function welcomeView(): WelcomeViewData {
   return { view: "welcome", display_name: profile.display_name, goal_options: GOAL_OPTIONS, setup: setupSteps(true), sample_loaded: false };
 }
 
+const demoReplies: Record<string, Reply> = {
+  reply_advice: {
+    kind: "advice",
+    title: "Start with something you share",
+    body: "Send Maya a photo from one of your old walks, or mention a place you used to go together. Give her an easy way to reply before suggesting a date.",
+  },
+  reply_checklist: {
+    kind: "checklist",
+    title: "Plan an easy photo walk",
+    body: "Pick a short route with a café at the end. That gives you somewhere to go if the weather turns.",
+    steps: ["Send Maya two possible times.", "Pick a meeting point near the start of the route.", "Send a quick check-in on the day."],
+  },
+  reply_draft: {
+    kind: "draft",
+    title: "Invite Maya on a photo walk",
+    body: "Hey Maya! I passed our old photo walk spot today and thought of you. Are you up for a short walk and coffee next weekend?",
+  },
+  reply_discussion: {
+    kind: "discussion",
+    title: "Reaching out after a long silence",
+    body: "A small, specific message can make it easier to reconnect. Start with something you both remember and give Maya room to decide what comes next.",
+    question: "What would you like Maya to know when she hears from you?",
+  },
+  reply_thread: {
+    kind: "thread",
+    title: "Picking up with Maya",
+    body: "You want to reconnect without putting pressure on the first message.",
+    entries: [
+      { title: "What feels natural", body: "An old photo walk is an easy place to start. Mention the route you used to take together." },
+      { title: "How to make it easy to answer", body: "Ask how she’s been and give her time to reply before suggesting a date." },
+      { title: "If she wants to meet", body: "Offer a short walk and coffee at a place you both know." },
+    ],
+  },
+};
+
+let savedReplies: SavedReply[] = [];
+
 export function mockInitialView(): ViewData | null {
   switch (demoParam("view")) {
+    case "reply_advice":
+      return { view: "reply", reply: demoReplies.reply_advice };
+    case "reply_checklist":
+      return { view: "reply", reply: demoReplies.reply_checklist };
+    case "reply_draft":
+      return { view: "reply", reply: demoReplies.reply_draft };
+    case "reply_discussion":
+      return { view: "reply", reply: demoReplies.reply_discussion };
+    case "reply_thread":
+      return { view: "reply", reply: demoReplies.reply_thread };
+    case "saved_replies":
+      savedReplies = [{ reply_id: "reply_demo_1", reply: demoReplies.reply_draft }];
+      return { view: "saved_replies", replies: savedReplies };
     case "memory_review":
       return reviewView("conversation", DEMO_PROPOSALS, "prop_demo_1");
+    case "preview_review":
+      return reviewView("conversation", [{ ...DEMO_PROPOSALS[0], suggested_visibility: "PRIVATE" }], "prop_site_demo");
     case "memory_review_import":
       return reviewView("chatgpt_memory", IMPORT_PROPOSALS, "prop_demo_import");
     case "memory_import":
@@ -1862,7 +1922,8 @@ export function createMockBridge(): HostBridge {
   const noChat = demoParam("nochat") === "1";
   let calls = 0;
 
-  const ok = (data: unknown): ToolOutcome => ({ ok: true, data: structuredClone(data) });
+  const ok = (data: unknown, meta?: unknown): ToolOutcome =>
+    ({ ok: true, data: structuredClone(data), meta: structuredClone(meta) });
   const fail = (errorText: string): ToolOutcome => ({ ok: false, errorText });
 
   return {
@@ -1874,6 +1935,25 @@ export function createMockBridge(): HostBridge {
       if (flaky && calls % 2 === 1) return fail("NETWORK_ERROR: simulated failure (flaky mode). Try again.");
 
       switch (name) {
+        case "venn_show_reply": {
+          const view = parseView({ view: "reply", reply: args.reply });
+          return view ? ok(view) : fail("INVALID_REQUEST: reply is missing or invalid");
+        }
+        case "venn_save_reply": {
+          const view = parseView({ view: "reply", reply: args.reply });
+          if (view?.view !== "reply") return fail("INVALID_REQUEST: reply is missing or invalid");
+          const existing = savedReplies.find(({ reply }) => JSON.stringify(reply) === JSON.stringify(view.reply));
+          if (existing) return ok({ saved: true, reply_id: existing.reply_id });
+          const reply_id = nextId("reply");
+          savedReplies = [{ reply_id, reply: view.reply }, ...savedReplies];
+          return ok({ saved: true, reply_id });
+        }
+        case "venn_saved_replies":
+          return ok({ view: "saved_replies", count: savedReplies.length }, { replies: savedReplies });
+        case "venn_delete_saved_reply":
+          if (!savedReplies.some(({ reply_id }) => reply_id === args.reply_id)) return fail("NOT_FOUND: Saved reply not found.");
+          savedReplies = savedReplies.filter(({ reply_id }) => reply_id !== args.reply_id);
+          return ok({ deleted: true });
         case "venn_show_dashboard":
           return ok(dashboardView());
 

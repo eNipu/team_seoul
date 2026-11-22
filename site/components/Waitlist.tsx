@@ -1,6 +1,7 @@
 "use client";
 
 import { type FormEvent, useEffect, useRef, useState } from "react";
+import { trackPixel } from "@/lib/pixel";
 
 import { readCampaignParams } from "@/lib/attribution";
 import { type WaitlistVersion } from "@/lib/version";
@@ -140,6 +141,7 @@ export default function Waitlist({ version, invite }: Props) {
       }
       remember(spot);
       justJoined.current = true;
+      trackPixel("Lead", { content_name: "waitlist" });
       setState({ step: "joined", spot, shareNote: null });
     } catch {
       setState({ step: "form", busy: false, error: "You seem to be offline. Check your connection and try again." });
@@ -178,8 +180,8 @@ export default function Waitlist({ version, invite }: Props) {
             <button type="button" className="btn btn--primary" onClick={() => share(spot)}>
               Invite a connection to move up
             </button>
-            <a className="btn" href="#inside">
-              Try the onboarding
+            <a className="btn" href="/how-it-works#inside">
+              See how it works
             </a>
           </div>
           <p className="waitlist__note" aria-live="polite">
@@ -220,8 +222,8 @@ export default function Waitlist({ version, invite }: Props) {
             <button type="button" className="btn btn--primary" onClick={() => share(spot)}>
               Share my invite link
             </button>
-            <a className="btn" href="#inside">
-              Try the onboarding
+            <a className="btn" href="/how-it-works#inside">
+              See how it works
             </a>
           </div>
           <p className="waitlist__note" aria-live="polite">
@@ -267,7 +269,7 @@ export default function Waitlist({ version, invite }: Props) {
             onChange={(event) => setEmail(event.target.value)}
           />
           <button type="submit" className="btn btn--primary waitlist__submit" disabled={state.busy}>
-            {state.busy ? "Joining…" : invite === "open" ? "Accept the invite" : "Join the Waitlist"}
+            {state.busy ? "Joining…" : invite === "open" ? "Accept the invite" : "Build your inner circle"}
           </button>
         </div>
         <p
@@ -278,7 +280,6 @@ export default function Waitlist({ version, invite }: Props) {
           {state.error ?? formNote(version, invite)}
         </p>
       </form>
-      <a className="btn btn--ghost waitlist__preview" href="#inside">Try the onboarding</a>
     </div>
   );
 }

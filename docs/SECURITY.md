@@ -57,6 +57,14 @@
 
 - Memories are created only from explicit user approval; users can edit, change visibility,
   delete individual memories, or delete their whole account (cascading delete).
+- Venn receives the task-specific answer ChatGPT sends to the reply tool. A preview leaves no
+  saved reply in the database. **Save privately** keeps the displayed reply in the owner's account.
+  Save and delete are widget actions. The server checks OAuth scopes, rejects credential and
+  sensitive-number patterns, and restricts reading and deletion to the owner. Users can delete
+  an individual reply from **Saved replies**. Saved bodies are returned to the widget in MCP
+  result metadata, outside the model-visible result. A discussion answer goes to ChatGPT only
+  when the user selects **Reply in ChatGPT**. The reply tools have no transcript input, and
+  reply-save analytics record the reply kind and a count.
 - Importing from ChatGPT memory: Venn's server cannot read ChatGPT's memory and never
   receives it wholesale. ChatGPT lists what it remembers in the chat; only the items the user
   picks there are sent to `venn_propose_memories`, and only the ones confirmed on the card are
@@ -91,6 +99,19 @@
 - When `OPENAI_API_KEY` is set, the user's text passed to `venn_propose_memories` is sent to
   the OpenAI API for extraction (structured output). Without a key, a local heuristic is used.
 - Logs do not include tokens or memory text.
+
+### LinkedIn import
+
+- The user pastes their own LinkedIn session cookies on the website. They are a full LinkedIn login,
+  so they are used for the connection-list requests and then dropped: not stored, not logged, not in
+  error messages, not sent to Apify (Apify gets only the public profile links of the people picked).
+- Only cookie names and values that cannot split a header are forwarded; requests go to one fixed
+  LinkedIn URL and redirects are not followed.
+- Reading the list this way is automated access that LinkedIn's terms do not allow, and LinkedIn may
+  restrict the account. The website says so and asks the user to confirm before it runs. Reads are
+  limited to 6 per hour per Venn account and stop at the first rate-limit answer.
+- Imported people are third parties who have not agreed to anything: only what the user picks is
+  saved, as private notes, after the usual review.
 
 ## Operational checklist
 

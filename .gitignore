@@ -1,5 +1,16 @@
 .env
+.env.*
+!.env.example
 *.db
+*.sqlite
+*.sqlite3
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+*service-account*.json
+boardy-ai/
 __pycache__/
 .venv/
 .pytest_cache/

@@ -163,7 +163,7 @@ def test_widget_resource_served(alice):
 
 def test_render_tools_bound_to_widget(alice):
     tools = {t["name"]: t for t in alice.rpc("tools/list").json()["result"]["tools"]}
-    assert len(tools) == 56
+    assert len(tools) == 60
     render_tools = (
         "venn_propose_memories",
         "venn_import_chatgpt_memory",
@@ -182,6 +182,8 @@ def test_render_tools_bound_to_widget(alice):
         "venn_this_week",
         "venn_create_question_link",
         "venn_review_answers",
+        "venn_show_reply",
+        "venn_saved_replies",
     )
     for name in render_tools:
         assert tools[name]["_meta"]["ui"]["resourceUri"] == "ui://venn/app-v2.html"
@@ -212,7 +214,12 @@ def test_render_tools_bound_to_widget(alice):
     ):
         assert tools[name]["_meta"]["openai/widgetAccessible"] is True, name
     assert "ui" not in (tools["venn_list_memories"].get("_meta") or {})
-    assert sum("ui" in (t.get("_meta") or {}) for t in tools.values()) == 17
+    assert sum("resourceUri" in t.get("_meta", {}).get("ui", {}) for t in tools.values()) == 19
+    for name in ("venn_save_reply", "venn_delete_saved_reply"):
+        meta = tools[name]["_meta"]
+        assert meta["ui"] == {"visibility": ["app"]}, name
+        assert meta["openai/widgetAccessible"] is True, name
+        assert meta["openai/visibility"] == "private", name
 
 
 # ---------------------------------------------------------------- import from ChatGPT memory

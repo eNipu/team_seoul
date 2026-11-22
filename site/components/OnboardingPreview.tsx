@@ -9,7 +9,7 @@ import VennMark from "./VennMark";
 
 const MEMORIES = ["Photography", "Weekend hikes", "Cooking"] as const;
 type Memory = (typeof MEMORIES)[number];
-const MAYA: readonly string[] = ["Photography", "Weekend hikes", "Live music"];
+const MAYA = ["Photography", "Weekend hikes", "Live music"] as const;
 
 const STEPS = ["Connect your AI memories.", "Invite your +1.", "Maya gets your invite.", "You\u2019re both in."] as const;
 
@@ -20,7 +20,7 @@ const YOUR_DOTS: Record<Memory, [number, number]> = {
   "Weekend hikes": [14, 22],
   Cooking: [-28, 10],
 };
-const MAYA_DOTS: Record<string, [number, number]> = {
+const MAYA_DOTS: Record<(typeof MAYA)[number], [number, number]> = {
   Photography: [8, -26],
   "Weekend hikes": [-4, 24],
   "Live music": [26, 4],
@@ -107,7 +107,7 @@ export default function OnboardingPreview() {
   const [selected, setSelected] = useState<Memory[]>([]);
   const heading = useRef<HTMLHeadingElement>(null);
   const visited = useRef(false);
-  const shared = MAYA.filter((memory) => selected.includes(memory as Memory));
+  const shared = selected.filter((memory) => MAYA.some((interest) => interest === memory));
 
   useEffect(() => {
     if (visited.current) heading.current?.focus();
@@ -146,7 +146,9 @@ export default function OnboardingPreview() {
         </div>
       </header>
 
-      <Stage step={step} sent={sent} selected={selected} shared={shared} />
+      <div className="onboarding__stage">
+        <Stage step={step} sent={sent} selected={selected} shared={shared} />
+      </div>
 
       <div className="onboarding__body" key={step}>
         <h3 ref={heading} tabIndex={-1} aria-describedby="onboarding-step">
@@ -186,7 +188,7 @@ export default function OnboardingPreview() {
         {step === 1 && (
           <>
             <p className="onboarding__hint" role="status">
-              {sent ? "Invite sent. Your place is held." : "Your place is held until your +1 joins."}
+              {sent ? "Sample invite sent. Your place is held." : "Your place is held until your +1 joins."}
             </p>
             {sent ? (
               <button type="button" className="btn btn--primary btn--block" onClick={() => go(2)}>
@@ -194,7 +196,7 @@ export default function OnboardingPreview() {
               </button>
             ) : (
               <button type="button" className="btn btn--primary btn--block" onClick={() => setSent(true)}>
-                Send invite link
+                Send sample invite
               </button>
             )}
           </>
@@ -203,7 +205,7 @@ export default function OnboardingPreview() {
         {step === 2 && (
           <>
             <div className="card onboarding__invite">
-              <strong>Someone saved you a place.</strong>
+              <strong>Your friend saved you a place.</strong>
               <span className="muted">Joining confirms a place for both of you.</span>
             </div>
             <button type="button" className="btn btn--primary btn--block" onClick={() => go(3)}>
@@ -233,7 +235,7 @@ export default function OnboardingPreview() {
               </div>
               <span className="onboarding__hint">2 in your circle. 3 invites left.</span>
             </div>
-            <a className="btn btn--primary btn--block" href="#waitlist">
+            <a className="btn btn--primary btn--block" href="/#waitlist">
               Join the Waitlist
             </a>
           </>
@@ -246,7 +248,7 @@ export default function OnboardingPreview() {
             Back
           </button>
         )}
-        <span>Preview · nothing is saved</span>
+        <span>Sample preview · nothing is sent or saved</span>
         {step > 0 && (
           <button type="button" className="btn btn--ghost" onClick={restart}>
             Restart

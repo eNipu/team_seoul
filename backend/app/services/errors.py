@@ -52,3 +52,9 @@ class ProviderError(VennError):
 
 class Unauthenticated(VennError):
     code = "UNAUTHENTICATED"
+
+
+class UpstreamError(VennError):
+    """A service Venn calls (LinkedIn, Apify) failed or refused."""
+
+    code = "UPSTREAM_ERROR"

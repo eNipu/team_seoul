@@ -48,13 +48,13 @@ wrong form.
 
 ## Copy
 
-The hero heading is "Venn. Connect your AI memories." Everything follows the Copy rules in
+The hero heading is "Connect your AI memories." Everything follows the Copy rules in
 `.agents/skills/venn-site-design/SKILL.md`.
 
 | Where | Text |
 | --- | --- |
 | Hero subtitle | Build your inner circle. |
-| Under the subtitle | You already know your next customer. (then friend, business partner: T25) |
+| Signup button | Build your inner circle |
 | Form note, `pair` | You join with one person you know. We only email you about your invite. |
 | Form note, `open` | Founding Circle. We only email you about your invite. (unchanged) |
 | Pending, lead | Good things come in pairs. |
@@ -69,7 +69,7 @@ The hero heading is "Venn. Connect your AI memories." Everything follows the Cop
 | Invitee, note | No +1 needed. We only email you about your invite. |
 | Full or unknown link | That invite link is no longer open. You can still join. |
 | Primary button, pending and confirmed | Share my invite link |
-| Onboarding link | Try the onboarding |
+| Onboarding link | See how it works |
 | After copying | Invite link copied. Send it to one person you'd like on Venn. ("someone" once confirmed) |
 | Share text | I saved you a place on the Venn waitlist. |
 

@@ -28,7 +28,7 @@ Decide whether to bring a status section back or to keep this task to the claims
 
 - [ ] Every line under "Works today" names something a user can do in ChatGPT today.
 - [ ] `npm --prefix site run build && node site/check.mjs` passes locally.
-- [ ] `node site/check.mjs --url https://site-production-4ef8eb52.up.railway.app/` passes after the deploy.
+- [ ] `node site/check.mjs --url https://<site-host>/` passes after the deploy.
 
 ## Not in this task
 
