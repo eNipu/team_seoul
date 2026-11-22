@@ -23,9 +23,7 @@ def pair(web):
 
 def connect(alice, bob):
     code = alice.ok("POST", "/invites", {"max_uses": 1})["code"]
-    bob.ok("POST", "/invites/redeem", {"code": code})
-    request = alice.ok("GET", "/home")["pending_requests"][0]["request_id"]
-    return alice.ok("POST", f"/requests/{request}", {"accept": True})["connection_id"]
+    return bob.ok("POST", "/invites/redeem", {"code": code})["connection_id"]
 
 
 @pytest.mark.parametrize("cause", ["delete", "connection", "social_block"])

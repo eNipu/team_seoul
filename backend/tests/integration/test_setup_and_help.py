@@ -1,6 +1,6 @@
 """Set-up (onboarding) steps on the home card and the help card."""
 
-from tests.integration.test_social_flow import connect, save
+from tests.integration.test_social_flow import connect, pending_request, save
 
 
 def text(user, tool: str, **arguments) -> str:
@@ -70,10 +70,7 @@ def test_a_connection_completes_people_and_connect_for_both_sides(alice, bob):
 
 
 def test_someone_asking_to_connect_counts_as_connect_but_not_as_people(alice, bob):
-    code = alice.ok("venn_create_invite")["code"]
-    bob.ok("venn_redeem_invite", code=code)
-    # Revoking afterwards changes nothing: the code was used and the request is waiting.
-    alice.ok("venn_revoke_invite", code=code)
+    pending_request(bob, "Bob", alice, "Alice")  # a request not from an invite (invites connect at once)
     done = steps(alice.ok("venn_show_dashboard"))
     assert done["connect"] is True
     assert done["your_people"] is False
@@ -137,6 +134,10 @@ def test_help_examples_are_requests_the_server_instructions_route(alice):
         "venn_find_people",
     ):
         assert tool in instructions
+    # Invites connect at once: the model must not ask anyone to accept.
+    assert "You and {name} are connected." in instructions
+    assert "Never ask anyone to accept" in instructions
+    assert "friends must accept" not in instructions
 
 
 def test_instructions_start_with_a_question_and_state_the_boundary(client):

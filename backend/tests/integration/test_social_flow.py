@@ -1,19 +1,31 @@
 from datetime import timedelta
 
+import pytest
+
 from app.db.database import session_scope
-from app.models import Connection
+from app.models import Connection, ConnectionRequest, Invite, User
 from app.models._base import utcnow
+from app.services.social_service import normalize_code
 
 
 def connect(inviter, invitee) -> str:
     code = inviter.ok("venn_create_invite")["code"]
     redeemed = invitee.ok("venn_redeem_invite", code=code)
-    assert redeemed["status"] == "PENDING"
-    pending = inviter.ok("venn_list_connections")["pending_requests"]
-    request_id = pending[0]["request_id"]
-    accepted = inviter.ok("venn_respond_to_connection", request_id=request_id, accept=True)
-    assert accepted["status"] == "ACCEPTED"
-    return accepted["connection_id"]
+    assert redeemed["status"] == "CONNECTED"
+    return redeemed["connection_id"]
+
+
+def pending_request(sender, sender_name: str, recipient, recipient_name: str) -> str:
+    """A request that did not come from an invite (e.g. sample data); only these need an accept."""
+    for client in (sender, recipient):
+        client.ok("venn_list_connections")  # make sure both accounts exist
+    with session_scope() as db:
+        sender_id = db.query(User).filter(User.display_name == sender_name).one().id
+        recipient_id = db.query(User).filter(User.display_name == recipient_name).one().id
+        req = ConnectionRequest(sender_user_id=sender_id, recipient_user_id=recipient_id, status="PENDING")
+        db.add(req)
+        db.flush()
+        return str(req.id)
 
 
 def save(user, category, title, description, visibility, tags=()):
@@ -28,45 +40,69 @@ def save(user, category, title, description, visibility, tags=()):
     )["saved"][0]
 
 
-def test_invite_redeem_accept_creates_mutual_connection(alice, bob):
+def test_redeem_connects_both_at_once(alice, bob):
     invite = alice.ok("venn_create_invite", max_uses=2)
     assert len(invite["code"]) >= 8
     assert invite["code"] in invite["share_text"]
 
     redeemed = bob.ok("venn_redeem_invite", code=invite["code"].lower())
+    assert redeemed["status"] == "CONNECTED"
     assert redeemed["inviter_display_name"] == "Alice"
-    # Not connected until Alice accepts.
-    assert bob.ok("venn_list_connections")["connections"] == []
-
-    pending = alice.ok("venn_list_connections")["pending_requests"]
-    assert [p["sender_display_name"] for p in pending] == ["Bob"]
-    out = alice.ok("venn_respond_to_connection", request_id=pending[0]["request_id"], accept=True)
-
+    assert redeemed["message"] == "You and Alice are connected."
+    # No pending request and no accept step: both see each other right away.
+    assert alice.ok("venn_list_connections")["pending_requests"] == []
     alice_conns = alice.ok("venn_list_connections")["connections"]
     bob_conns = bob.ok("venn_list_connections")["connections"]
     assert [c["display_name"] for c in alice_conns] == ["Bob"]
     assert [c["display_name"] for c in bob_conns] == ["Alice"]
-    assert alice_conns[0]["connection_id"] == bob_conns[0]["connection_id"] == out["connection_id"]
+    assert alice_conns[0]["connection_id"] == bob_conns[0]["connection_id"] == redeemed["connection_id"]
+
+
+def test_re_redeem_is_idempotent(alice, bob):
+    code = alice.ok("venn_create_invite", max_uses=5)["code"]
+    first = bob.ok("venn_redeem_invite", code=code)
+    again = bob.ok("venn_redeem_invite", code=code)
+    assert again["status"] == "ALREADY_CONNECTED"
+    assert again["connection_id"] == first["connection_id"]
+    assert again["message"] == "You and Alice are connected."
+    assert len(alice.ok("venn_list_connections")["connections"]) == 1
+    # A re-redeem does not use up the code.
+    assert [i["use_count"] for i in alice.ok("venn_list_invites")["invites"]] == [1]
+
+
+def test_redeem_settles_an_older_pending_request(alice, bob):
+    request_id = pending_request(bob, "Bob", alice, "Alice")
+    connect(alice, bob)
+    assert alice.ok("venn_list_connections")["pending_requests"] == []
+    assert alice.err("venn_respond_to_connection", request_id=request_id, accept=True).startswith("INVALID_REQUEST")
+
+
+@pytest.mark.parametrize("how", ["expired", "revoked", "used_up"])
+def test_dead_codes_still_fail(alice, bob, carol, how):
+    code = alice.ok("venn_create_invite", max_uses=1)["code"]
+    if how == "expired":
+        with session_scope() as db:
+            invite = db.query(Invite).filter(Invite.code == normalize_code(code)).one()
+            invite.expires_at = utcnow() - timedelta(minutes=1)
+    elif how == "revoked":
+        alice.ok("venn_revoke_invite", code=code)
+    else:
+        carol.ok("venn_redeem_invite", code=code)
+    assert bob.err("venn_redeem_invite", code=code).startswith("NOT_FOUND")
+    assert bob.ok("venn_list_connections")["connections"] == []
 
 
 def test_decline_request(alice, bob):
-    code = alice.ok("venn_create_invite")["code"]
-    bob.ok("venn_redeem_invite", code=code)
-    request_id = alice.ok("venn_list_connections")["pending_requests"][0]["request_id"]
+    request_id = pending_request(bob, "Bob", alice, "Alice")
     out = alice.ok("venn_respond_to_connection", request_id=request_id, accept=False)
     assert out["status"] == "REJECTED"
     assert alice.ok("venn_list_connections")["connections"] == []
 
 
-def test_duplicate_requests_are_not_created(alice, bob):
-    code = alice.ok("venn_create_invite", max_uses=5)["code"]
-    assert bob.ok("venn_redeem_invite", code=code)["status"] == "PENDING"
-    assert bob.ok("venn_redeem_invite", code=code)["status"] == "ALREADY_PENDING"
-    assert len(alice.ok("venn_list_connections")["pending_requests"]) == 1
-    request_id = alice.ok("venn_list_connections")["pending_requests"][0]["request_id"]
-    alice.ok("venn_respond_to_connection", request_id=request_id, accept=True)
-    assert bob.ok("venn_redeem_invite", code=code)["status"] == "ALREADY_CONNECTED"
-    # Responding twice fails.
+def test_accepting_a_non_invite_request_still_works(alice, bob):
+    request_id = pending_request(bob, "Bob", alice, "Alice")
+    out = alice.ok("venn_respond_to_connection", request_id=request_id, accept=True)
+    assert out["status"] == "ACCEPTED"
     assert alice.err("venn_respond_to_connection", request_id=request_id, accept=True).startswith("INVALID_REQUEST")
 
 

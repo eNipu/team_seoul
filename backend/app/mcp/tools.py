@@ -111,7 +111,8 @@ def _onboarding_guidance(progress) -> str:
             "remember about them (up to 30). Do not list them in chat first. The card saves them privately."
         )
     return (
-        "Step 2 of 3: your person. In one short line ask who they want closer (a partner or a friend), then venn_create_invite "
+        "Step 2 of 3: your person. In one short line ask who they want closer (a partner or a friend), "
+        "then venn_create_invite "
         "so they can send the spark. Later, only if they ask to add more people: an Instagram or LinkedIn "
         "contact import, then venn_find_interest_matches."
     )
@@ -647,8 +648,8 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
         title="Create invite code",
         description=(
             "Create a short-lived invite code and show it on a card with the code, a link and a QR code "
-            "a friend can scan in person. The friend redeems the code to send the user a connection "
-            "request. Venn never sends invites itself — the user shares it."
+            "a friend can scan in person. When the friend redeems the code, the two are connected at once "
+            "(no accept step). Venn never sends invites itself — the user shares it."
         ),
         annotations=WRITE,
     )
@@ -696,8 +697,9 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
         name="venn_redeem_invite",
         title="Redeem invite code",
         description=(
-            "Redeem a friend's Venn invite code. This sends the friend a connection request; they're "
-            "connected only after the friend accepts. Only call when the user provides a code."
+            "Redeem a friend's Venn invite code. This connects the user and the friend at once; nobody "
+            "needs to accept. Afterwards reply with one line: 'You and {name} are connected.' and "
+            "nothing more. Only call when the user provides a code."
         ),
         annotations=WRITE,
         meta=invocation_meta("Redeeming invite…", "Invite redeemed"),

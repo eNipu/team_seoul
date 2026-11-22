@@ -277,17 +277,17 @@ def test_connecting_between_website_and_chatgpt(web, make_user):
     invite = dana.ok("POST", "/invites", {"max_uses": 1})
     assert invite["view"] == "invite" and invite["link"].endswith(f"/i/{invite['code']}")
     bob = make_user("bob", name="Bob")
-    assert bob.ok("venn_redeem_invite", code=invite["code"])["status"] == "PENDING"
-    request = dana.ok("GET", "/home")["pending_requests"][0]
-    accepted = dana.ok("POST", f"/requests/{request['request_id']}", {"accept": True})
-    assert accepted["status"] == "ACCEPTED"
+    redeemed = bob.ok("venn_redeem_invite", code=invite["code"])
+    assert redeemed["status"] == "CONNECTED" and redeemed["message"] == "You and Dana are connected."
+    assert dana.ok("GET", "/home")["pending_requests"] == []
+    accepted = redeemed
     friends = dana.ok("GET", "/friends")["friends"]
     assert friends[0]["kind"] == "connection" and friends[0]["display_name"] == "Bob" and friends[0]["on_venn"] is True
     assert dana.ok("GET", f"/friends/connection/{accepted['connection_id']}")["view"] == "friend"
 
     code = bob.ok("venn_create_invite")["code"]
     carol = web("carol")
-    assert carol.ok("POST", "/invites/redeem", {"code": code})["status"] == "PENDING"
+    assert carol.ok("POST", "/invites/redeem", {"code": code})["status"] == "CONNECTED"
     assert carol.err("POST", "/invites/redeem", {"code": "ZZZZ-ZZZZ"}) == (404, "NOT_FOUND")
 
 

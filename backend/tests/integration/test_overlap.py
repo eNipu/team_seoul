@@ -220,9 +220,7 @@ def test_expired_preferences_are_invisible_and_cannot_introduce(offered, monkeyp
 def test_existing_connections_and_social_blocks_excluded(web, make_user, blocked):
     alice, bob = web("alice"), web("bob")
     code = alice.ok("POST", "/invites", {"max_uses": 1})["code"]
-    bob.ok("POST", "/invites/redeem", {"code": code})
-    request = alice.ok("GET", "/home")["pending_requests"][0]["request_id"]
-    connection = alice.ok("POST", f"/requests/{request}", {"accept": True})
+    connection = bob.ok("POST", "/invites/redeem", {"code": code})
     if blocked:
         make_user("alice").ok("venn_block_user", connection_id=connection["connection_id"])
     for person in (alice, bob):

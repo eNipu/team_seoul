@@ -4,8 +4,9 @@ Relationship maintenance (friend view, activity ideas, reconnection) lives in
 `relationship_service`.
 
 Rules:
-- Connections are mutual: a request (created by redeeming an invite code) must be accepted by
-  the invite creator.
+- Connections are mutual: redeeming an invite code connects the redeemer and the invite creator
+  at once (the creator consented by sharing the code). Requests from other sources must still be
+  accepted by the recipient.
 - Venn never contacts anyone automatically.
 - Blocks are enforced in both directions.
 """
@@ -184,7 +185,12 @@ def revoke_invite(db: Session, user: User, code: str) -> None:
 
 
 def redeem_invite(db: Session, user: User, code: str) -> RedeemInviteOut:
-    """Redeeming a valid code sends a connection request to the invite creator."""
+    """Redeeming a valid code connects the redeemer with the invite creator right away.
+
+    Both sides have consented: the inviter by creating and sharing the code, the friend by
+    redeeming it. Connecting changes nothing about what either side shares; memories stay at the
+    visibility each owner chose.
+    """
     settings = get_settings()
     invite = db.scalar(select(Invite).where(Invite.code == normalize_code(code)).with_for_update())
     # Same error for unknown / revoked / expired / used-up codes: no oracle for code guessing.
@@ -204,28 +210,14 @@ def redeem_invite(db: Session, user: User, code: str) -> RedeemInviteOut:
         raise NotFound("invite code is invalid or expired")
 
     name = display_name(inviter)
-    if get_connection_between(db, user.id, inviter.id):
+    existing = get_connection_between(db, user.id, inviter.id)
+    if existing:
         return RedeemInviteOut(
             status="ALREADY_CONNECTED",
             request_id=None,
+            connection_id=str(existing.id),
             inviter_display_name=name,
-            message=f"You're already connected with {name}.",
-        )
-    pending = db.scalar(
-        select(ConnectionRequest).where(
-            ConnectionRequest.status == "PENDING",
-            or_(
-                (ConnectionRequest.sender_user_id == user.id) & (ConnectionRequest.recipient_user_id == inviter.id),
-                (ConnectionRequest.sender_user_id == inviter.id) & (ConnectionRequest.recipient_user_id == user.id),
-            ),
-        )
-    )
-    if pending:
-        return RedeemInviteOut(
-            status="ALREADY_PENDING",
-            request_id=str(pending.id),
-            inviter_display_name=name,
-            message=f"A connection request with {name} is already pending.",
+            message=f"You and {name} are connected.",
         )
 
     since = utcnow() - timedelta(days=1)
@@ -240,19 +232,51 @@ def redeem_invite(db: Session, user: User, code: str) -> RedeemInviteOut:
     if sent_today >= settings.max_connection_requests_per_day:
         raise RateLimited("Too many connection requests today. Try again tomorrow.")
 
+    now = utcnow()
+    # Any older pending request between the two is settled by this redeem.
+    for pending in db.scalars(
+        select(ConnectionRequest).where(
+            ConnectionRequest.status == "PENDING",
+            or_(
+                (ConnectionRequest.sender_user_id == user.id) & (ConnectionRequest.recipient_user_id == inviter.id),
+                (ConnectionRequest.sender_user_id == inviter.id) & (ConnectionRequest.recipient_user_id == user.id),
+            ),
+        )
+    ).all():
+        pending.status = "ACCEPTED"
+        pending.responded_at = now
+    # Kept as an audit record of which invite created the connection.
     req = ConnectionRequest(
-        sender_user_id=user.id, recipient_user_id=inviter.id, status="PENDING", context_invite_id=invite.id
+        sender_user_id=user.id,
+        recipient_user_id=inviter.id,
+        status="ACCEPTED",
+        context_invite_id=invite.id,
+        responded_at=now,
     )
     invite.use_count += 1
     db.add(req)
     db.flush()
+
+    ua, ub = _pair(user.id, inviter.id)
+    conn = Connection(user_a_id=ua, user_b_id=ub)
+    try:
+        with db.begin_nested():
+            db.add(conn)
+            db.flush()
+    except IntegrityError:  # a concurrent redeem/accept created it first
+        conn = get_connection_between(db, user.id, inviter.id)
+        assert conn is not None
+    else:
+        db.add(RelationshipEvent(connection_id=conn.id, event_type="CONNECTED", event_data={}))
+    db.flush()
     analytics.track(db, "invitation_redeemed", user.id)
-    analytics.track(db, "connection_requested", user.id)
+    analytics.track(db, "connection_accepted", user.id)
     return RedeemInviteOut(
-        status="PENDING",
+        status="CONNECTED",
         request_id=str(req.id),
+        connection_id=str(conn.id),
         inviter_display_name=name,
-        message=f"Connection request sent to {name}. You'll be connected once they accept.",
+        message=f"You and {name} are connected.",
     )
 
 

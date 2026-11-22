@@ -345,8 +345,15 @@ def test_invite_has_link_and_scannable_qr(alice, client):
 
     page = client.get(f"/i/{invite['code']}")
     assert page.status_code == 200
-    assert invite["code"] in page.text
-    assert "Alice" not in page.text  # never names the inviter
+    assert invite["code"] in page.text  # inside the ChatGPT link's redeem prompt
+    assert "Alice" not in page.text  # never names the inviter (static page, no lookup)
+    assert "<h1>A friend wants you closer.</h1>" in page.text
+    assert page.text.count('class="pill"') == 1 and ">Add Venn in ChatGPT</a>" in page.text
+    assert f"https://chatgpt.com/?q=Redeem%20Venn%20invite%20{invite['code']}" in page.text
+    assert "Free. Only what you both choose is shared." in page.text
+    assert page.text.upper().count("#FFD400") == 1  # yellow used once
+    assert 'name="viewport"' in page.text and 'lang="en"' in page.text
+    assert "<script" not in page.text and "accept" not in page.text.lower()
     assert "default-src 'none'" in page.headers["content-security-policy"]
     # Same page for a well-formed code that does not exist: the page is not a validity oracle.
     assert client.get("/i/ZZZZ-9999").text == page.text.replace(invite["code"], "ZZZZ-9999")

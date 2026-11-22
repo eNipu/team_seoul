@@ -236,8 +236,9 @@ class InviteListOut(BaseModel):
 
 
 class RedeemInviteOut(BaseModel):
-    status: Literal["PENDING", "ALREADY_CONNECTED", "ALREADY_PENDING"]
+    status: Literal["CONNECTED", "ALREADY_CONNECTED"]
     request_id: str | None
+    connection_id: str | None = None
     inviter_display_name: str
     message: str
 
