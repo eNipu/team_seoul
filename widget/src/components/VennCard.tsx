@@ -1,7 +1,6 @@
 import { firstName, friendArg, plural, type VennViewData } from "../types";
-import { ActionError, Avatar, SectionTitle, useAction, type ViewProps } from "./common";
+import { ActionError, Avatar, useAction, type ViewProps } from "./common";
 import { Icon } from "./icons";
-import { PlanTools, SuggestionBody } from "./PlanTools";
 
 /** Labels shown inside one region of the diagram; the complete lists follow underneath. */
 const IN_DIAGRAM = 3;
@@ -33,7 +32,6 @@ function Group({ side, title, items, empty }: { side: Side; title: string; items
       <h3 className="vgroup__title">
         <span className={`vgroup__dot vgroup__dot--${side}`} aria-hidden="true" />
         {title}
-        <span className="count">{items.length}</span>
       </h3>
       {items.length > 0 ? (
         <ul className="chips">
@@ -51,7 +49,7 @@ function Group({ side, title, items, empty }: { side: Side; title: string; items
   );
 }
 
-export default function VennCard({ data, bridge, nav }: ViewProps<VennViewData>) {
+export default function VennCard({ data, nav }: ViewProps<VennViewData>) {
   const action = useAction();
   const first = firstName(data.display_name);
   const arg = friendArg(data.kind, data.id);
@@ -62,7 +60,6 @@ export default function VennCard({ data, bridge, nav }: ViewProps<VennViewData>)
   return (
     <section className="panel venn-card">
       <div className="venn-card__head">
-        <p className="eyebrow">Common ground</p>
         <h2>{headline}</h2>
       </div>
 
@@ -105,39 +102,15 @@ export default function VennCard({ data, bridge, nav }: ViewProps<VennViewData>)
           onClick={() => void action.run("ideas", () => nav.openView("venn_suggest_activity", arg))}
         >
           <Icon name="bulb" size={18} />
-          {action.busy === "ideas" ? "Opening…" : "Get more ideas"}
+          {action.busy === "ideas" ? "Opening…" : `Ideas with ${first}`}
         </button>
-        <button
-          type="button"
-          className="btn btn--block"
-          disabled={busy}
-          onClick={() => void action.run("open", () => nav.openView("venn_view_friend", arg))}
-        >
-          <Icon name="user" size={18} />
-          {action.busy === "open" ? "Opening…" : `Open ${first}`}
+        <button type="button" className="onb__link" disabled={busy}
+          onClick={() => void action.run("open", () => nav.openView("venn_view_friend", arg))}>
+          {action.busy === "open" ? "Opening…" : `More about ${first}`}
         </button>
       </div>
 
-      {data.suggestions.length > 0 && (
-        <>
-          <SectionTitle count={data.suggestions.length}>{none ? "Ideas to find common ground" : "Ideas from your overlap"}</SectionTitle>
-          <ul className="list">
-            {data.suggestions.map((s, i) => (
-              <li key={i} className="card">
-                <SuggestionBody s={s} />
-                <PlanTools
-                  bridge={bridge}
-                  title={s.title}
-                  details={s.description}
-                  calendarTitle={`${s.title} with ${data.display_name}`}
-                  friends={[{ kind: data.kind, id: data.id }]}
-                />
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-
+      {/* Ideas live one tap away ("Ideas with …"), one at a time, never as a stack of cards here. */}
       {data.note && <p className="muted small footnote">{data.note}</p>}
     </section>
   );

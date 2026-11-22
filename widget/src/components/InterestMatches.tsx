@@ -10,10 +10,11 @@ interface Props {
   matches: readonly InterestMatchResult[];
   onRetry: () => Completion;
   onCommonGround: (row: InterestMatchResult) => Completion;
-  onPlan: (row: InterestMatchResult) => Completion;
+  /** Plan ideas live one tap further, on the common-ground card ("Get more ideas"). */
+  onPlan?: (row: InterestMatchResult) => Completion;
 }
 
-export function InterestMatches({ matches, onRetry, onCommonGround, onPlan }: Props) {
+export function InterestMatches({ matches, onRetry, onCommonGround }: Props) {
   const heading = useId();
   const action = useAction();
   const busy = action.busy !== null;
@@ -25,9 +26,8 @@ export function InterestMatches({ matches, onRetry, onCommonGround, onPlan }: Pr
   return (
     <section className="panel interest-matches" aria-labelledby={heading}>
       <header>
-        <p className="eyebrow">Your circle</p>
         <h2 id={heading}>Interest matches</h2>
-        <p className="muted">Explore common ground or look at plan ideas. Nothing is sent.</p>
+        <p className="muted">Pick someone to compare.</p>
       </header>
       <ActionError action={action} />
       {grounded.length === 0 ? (
@@ -52,14 +52,9 @@ export function InterestMatches({ matches, onRetry, onCommonGround, onPlan }: Pr
                   </li>
                 ))}
               </ul>
-              <div className="interest-matches__actions">
-                <button type="button" className="btn" disabled={busy} onClick={() => inspect("ground", () => onCommonGround(row))}>
-                  View common ground<span className="sr-only"> with {row.display_name}</span>
-                </button>
-                <button type="button" className="btn" disabled={busy} onClick={() => inspect("plan", () => onPlan(row))}>
-                  Explore plan ideas<span className="sr-only"> with {row.display_name}</span>
-                </button>
-              </div>
+              <button type="button" className="onb__link" disabled={busy} onClick={() => inspect("ground", () => onCommonGround(row))}>
+                {action.busy === "ground" ? "Opening…" : "See what you share"}<span className="sr-only"> with {row.display_name}</span>
+              </button>
             </li>
           ))}
         </ul>

@@ -1,3 +1,4 @@
+import { StepCount } from "./Welcome";
 import { useId, useState } from "react";
 import type { HostBridge } from "../mcp/client";
 import { parseSaveMemories, plural, type Memory, type MemoryReviewViewData } from "../types";
@@ -134,11 +135,11 @@ export default function QuickImport({ data, bridge, nav }: { data: MemoryReviewV
 
   return (
     <section className="onb">
-      <h2 className="onb__title">{plural(saved.length, "memory", "memories")} imported</h2>
+      <StepCount n={3} />
+      <h2 className="onb__title">You're in.</h2>
       <p className="onb__body" role="status">
-        Saved privately.{kept.some((m) => m.category === "INTEREST") && " Imported interests are now on your profile."}
+        {plural(saved.length, "memory", "memories")} saved privately.
       </p>
-      <button type="button" className="btn" disabled={action.busy !== null} onClick={viewProfile}>View profile</button>
       <ActionError action={action} />
       {importFirst ? (
         <>

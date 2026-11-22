@@ -141,3 +141,7 @@
 .onb__bubble--in p { font-size: 1.0625rem; line-height: 1.4; }
 .onb__bubble--in small { font-size: 0.75rem; color: #4c4000; }
 .moment-chat .onb__context { margin: 0 0 -8px; }
+
+/* Invite: the QR is the object. Big, centred, always dark-on-white so it scans. */
+.qr--hero { margin: 4px 0 0; width: 100%; display: flex; justify-content: center; }
+.qr--hero .qr__code { width: min(260px, 72vw); height: auto; border-radius: 16px; border: 1px solid rgba(0, 0, 0, 0.08); }

@@ -25,8 +25,8 @@ export default function Invite({ data, bridge }: ViewProps<InviteViewData>) {
     manualRef.current?.select();
   }, [manual]);
 
-  async function copy(what: Exclude<Copied, null>) {
-    const value = what === "code" ? data.code : what === "link" ? data.link : data.share_text || data.code;
+  async function copy(what: Exclude<Copied, null>, override?: string) {
+    const value = override ?? (what === "code" ? data.code : what === "link" ? data.link : data.share_text || data.code);
     const ok = await copyText(value);
     window.clearTimeout(timer.current);
     if (ok) {
@@ -56,11 +56,13 @@ export default function Invite({ data, bridge }: ViewProps<InviteViewData>) {
 
   const canShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
   async function send() {
-    const text = data.share_text || data.link || data.code;
+    const msg = data.share_text || data.code;
+    // share_text normally already carries the link; add it only when it doesn't.
+    const text = data.link && !msg.includes(data.link) ? `${msg} ${data.link}` : msg;
     if (canShare) {
       try { await navigator.share({ text }); return; } catch { /* fall back to copy */ }
     }
-    await copy("message");
+    await copy("message", text);
   }
 
   if (revoked) {
@@ -71,17 +73,18 @@ export default function Invite({ data, bridge }: ViewProps<InviteViewData>) {
     );
   }
 
+  // The QR is the invite: a friend scans it and lands on the join page. One button shares the same link.
   return (
-    <section className="onb">
-      <h2 className="onb__title">Send the spark.</h2>
-      {data.share_text && (
-        <div className="onb__bubble" aria-label="Your invite message">
-          <p>{data.share_text}</p>
-        </div>
+    <section className="onb onb--invite">
+      <h2 className="onb__title">Scan to connect.</h2>
+      {data.qr.length > 0 && (
+        <figure className="qr qr--hero">
+          <QrCode rows={data.qr} label="QR code that opens your Venn invite link" />
+        </figure>
       )}
       <ActionError action={action} />
       <button type="button" className="onb__cta" onClick={() => void send()}>
-        {copied === "message" ? "Copied. Now send it" : canShare ? "Send invite" : "Copy invite"}
+        {copied === "message" ? "Copied. Now send it" : "Share invite"}
       </button>
       <span className="sr-only" role="status">{copied ? "Copied to clipboard" : ""}</span>
       {manual !== null && (
@@ -91,17 +94,9 @@ export default function Invite({ data, bridge }: ViewProps<InviteViewData>) {
         </label>
       )}
       <details className="onb__more">
-        <summary>Show QR code</summary>
+        <summary>Code or cancel</summary>
         <div className="onb__more-body">
-          {data.qr.length > 0 && (
-            <figure className="qr">
-              <QrCode rows={data.qr} label="QR code that opens your Venn invite link" />
-            </figure>
-          )}
-          <div className="button-row">
-            {data.link && <button type="button" className="btn btn--small" onClick={() => void copy("link")}>{copied === "link" ? "Copied" : "Copy link"}</button>}
-            <button type="button" className="btn btn--small" onClick={() => void copy("code")}>{copied === "code" ? "Copied" : `Code ${data.code}`}</button>
-          </div>
+          <button type="button" className="btn btn--small" onClick={() => void copy("code")}>{copied === "code" ? "Copied" : `Code ${data.code}`}</button>
           {expires && <p className="muted small">Expires {expires}{data.max_uses > 0 ? ` · ${plural(data.max_uses, "use", "uses")}` : ""}</p>}
           {confirming ? (
             <div className="confirm" role="group" aria-label="Confirm cancel">
