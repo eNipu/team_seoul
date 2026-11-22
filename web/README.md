@@ -5,13 +5,15 @@ saved records (people, memories, follow-ups, plans). On the website you start wi
 a plan instead of a chat. Private ChatGPT conversations and ChatGPT's own memory are not synced.
 
 React 19 + TypeScript + Vite, no other runtime dependencies, no remote assets. It talks to the
-JSON API described in `../docs/WEB_API.md` on the same origin (`/api/v1/...`).
+JSON API on the same origin under `/api/v1/`. See the [web API reference](../docs/WEB_API.md).
 
 ## Run
 
+Start the backend with `make dev` from the repository root. Run the commands below from `web/`. For a frontend-only session, use demo mode.
+
 ```sh
 npm install
-npm run dev        # Vite dev server at http://localhost:5173/app/ ; /api is proxied to http://127.0.0.1:8000
+npm run dev        # Vite dev server at http://localhost:5173/app/ ; /api is proxied to http://127.0.0.1:8081
 npm run typecheck  # tsc --noEmit
 npm run build      # tsc --noEmit && vite build  ->  dist/index.html + dist/assets/*
 npm run preview    # Vite's preview of dist

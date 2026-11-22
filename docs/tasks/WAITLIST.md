@@ -11,7 +11,7 @@ Source: prototype screens the team shared on 2026-11-21, branded "kolo" (a place
 - The version comes from `?w=pair` or `?w=open` in the page URL, else from `WAITLIST_VERSION`,
   which defaults to `pair`. It is stored on the signup so `/metrics` can compare the two.
 - An invitation is the person's own link (`/?ref=<code>`), which they share themselves. Venn
-  sends nothing. No names are collected, so an invitee is not told who invited them.
+  emails the new signup a receipt. The user shares their own referral link. No names are collected, so an invitee is not told who invited them.
 - Nobody is turned away: a pending signup is stored like any other.
 - Everyone who joined before this change is `open` and confirmed.
 - At launch a waitlist pair becomes a connection request in Venn, not a connection (T23).

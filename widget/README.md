@@ -18,7 +18,7 @@ The Python server reads `widget/dist/index.html` and serves it as MCP resource
 
 ### Demo mode
 
-When the page isn't inside a host iframe (`window.parent === window`), the widget uses a local
+At `/widget-preview` or when the page is outside a host iframe (`window.parent === window`), the widget uses a local
 mock bridge (`src/mock.ts`) instead of the ext-apps connection. It also works straight from
 `dist/index.html` over `file://`.
 
@@ -306,7 +306,6 @@ src/components/            MemoryReview, MemoryImport, Dashboard (+ MemoriesTab,
                            PeopleImport, PeopleSearch, GroupPlan, Brief, Quiz,
                            FollowUps ("Things to ask about"), CalendarPicker
 src/venn-kit.css           design tokens (light/dark) and the shared primitives: panel, card, buttons, badge,
-                           chip, avatar, check, checklist rows, the Venn pair. Also used by the landing
-                           page: after changing it, run `npm --prefix site run build` and commit the copy
+                           chip, avatar, check, checklist rows, the Venn pair. The public site owns its own kit.
 src/styles.css             everything else; imports venn-kit.css
 ```

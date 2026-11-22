@@ -1,6 +1,6 @@
 # Venn tasks
 
-The product work, cut into small tasks so nobody (person or model) has to read the full PRD.
+This board tracks product work. For shipped behavior and the boundaries between ChatGPT, My Venn and the public site, see the [architecture](../ARCHITECTURE.md).
 
 ## How to use
 

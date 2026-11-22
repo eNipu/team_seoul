@@ -1,1 +1,7 @@
-Generic single-database configuration.
+Venn database migrations
+
+Run make migrate from the repository root to apply Alembic revisions.
+To draft a revision after a model change, run make migration m="describe change"
+and review the generated file in backend/migrations/versions/ before applying it.
+Local SQLite startup and the backend container entrypoint apply migrations automatically.
+The public site manages its waitlist and analytics tables separately in site/lib/db.ts.
