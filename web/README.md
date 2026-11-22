@@ -56,7 +56,7 @@ same URL, so signing in continues where the user was. Sign out is `DELETE /api/v
 | Path | Screen |
 | --- | --- |
 | `/app` | Home (or first-run welcome) |
-| `/app/people` | People (`?new=1` opens "Add a person", `?import=1` opens "Import a list", `?linkedin=1` opens "Import from LinkedIn") |
+| `/app/people` | People (`?new=1` opens "Add a person", `?import=1` opens "Import a list", `?linkedin=1` opens "Import from LinkedIn", `?instagram=1` opens "Instagram demo import") |
 | `/app/people/person/<id>`, `/app/people/connection/<id>` | Person page with the Venn diagram |
 | `/app/memories` | Memories (`?q=` keyword search, `?new=1` opens "Add a memory") |
 | `/app/search?q=…` | Search results with the reason each person came up |
@@ -66,10 +66,12 @@ same URL, so signing in continues where the user was. Sign out is `DELETE /api/v
 | `/app/account` | Profile, "Use Venn in ChatGPT", connect with friends, sign out, delete account |
 | anything else | 404 page |
 
-In **People → Import from LinkedIn → Demo connections**, review up to 100 fictional connections
-without LinkedIn cookies or an export file. Choose profiles individually or click **Select all**, then confirm. On a signed-in account they are saved as private sample notes;
-use **Home → Remove sample data** to clear them. To try the flow without persisting anything, open
-`/app/people?demo=1&linkedin=1` instead.
+In **People → Instagram demo import** or **People → Import from LinkedIn → Demo connections**,
+review 100 fictional profiles without connecting a social account, using cookies, or uploading a
+file. Choose profiles individually or click **Select all**, then confirm. On a signed-in account
+these are saved as private Sample notes. **Home → Remove sample data** clears them without deleting
+ordinary contacts. To try either flow without persisting anything, open
+`/app/people?demo=1&instagram=1` or `/app/people?demo=1&linkedin=1`.
 
 ## Source layout
 

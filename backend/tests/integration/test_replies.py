@@ -76,7 +76,7 @@ def test_reply_tools_advertise_structured_output_and_widget_visibility(alice):
     tools = {tool["name"]: tool for tool in alice.rpc("tools/list").json()["result"]["tools"]}
     show = tools["venn_show_reply"]
     assert show["outputSchema"]["properties"]["reply"]["discriminator"]["propertyName"] == "kind"
-    assert show["_meta"]["ui"]["resourceUri"] == "ui://venn/app-v2.html"
+    assert show["_meta"]["ui"]["resourceUri"] == "ui://venn/app-v3.html"
     assert tools["venn_saved_replies"]["outputSchema"]["properties"].keys() == {"view", "count"}
     for name in ("venn_save_reply", "venn_delete_saved_reply"):
         assert tools[name]["_meta"]["ui"]["visibility"] == ["app"]

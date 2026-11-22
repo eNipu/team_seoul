@@ -187,10 +187,15 @@ def test_search_memories(alice):
 
 
 def test_widget_resource_served(alice):
-    body = alice.rpc("resources/read", {"uri": "ui://venn/app-v2.html"}).json()
-    content = body["result"]["contents"][0]
-    assert content["mimeType"] == "text/html;profile=mcp-app"
-    assert "<html" in content["text"]
+    resources = alice.rpc("resources/list").json()["result"]["resources"]
+    uris = {resource["uri"] for resource in resources}
+    assert {"ui://venn/app-v2.html", "ui://venn/app-v3.html"} <= uris
+    current, legacy = (
+        alice.rpc("resources/read", {"uri": uri}).json()["result"]["contents"][0]
+        for uri in ("ui://venn/app-v3.html", "ui://venn/app-v2.html")
+    )
+    assert current["mimeType"] == legacy["mimeType"] == "text/html;profile=mcp-app"
+    assert current["text"] == legacy["text"] and "<html" in current["text"]
 
 
 def test_render_tools_bound_to_widget(alice):
@@ -219,7 +224,8 @@ def test_render_tools_bound_to_widget(alice):
         "venn_saved_replies",
     )
     for name in render_tools:
-        assert tools[name]["_meta"]["ui"]["resourceUri"] == "ui://venn/app-v2.html"
+        assert tools[name]["_meta"]["ui"]["resourceUri"] == "ui://venn/app-v3.html"
+        assert tools[name]["_meta"]["openai/outputTemplate"] == "ui://venn/app-v3.html"
     # Tools the widget calls directly must be callable from the app.
     for name in (
         "venn_save_memories",
@@ -248,11 +254,16 @@ def test_render_tools_bound_to_widget(alice):
         assert tools[name]["_meta"]["openai/widgetAccessible"] is True, name
     assert "ui" not in (tools["venn_list_memories"].get("_meta") or {})
     assert sum("resourceUri" in t.get("_meta", {}).get("ui", {}) for t in tools.values()) == 20
-    for name in ("venn_save_reply", "venn_delete_saved_reply", "venn_import_demo_people"):
+    for name in ("venn_save_reply", "venn_delete_saved_reply"):
         meta = tools[name]["_meta"]
         assert meta["ui"] == {"visibility": ["app"]}, name
         assert meta["openai/widgetAccessible"] is True, name
         assert meta["openai/visibility"] == "private", name
+    confirm = tools["venn_import_demo_people"]
+    assert confirm["_meta"]["ui"] == {"visibility": ["model", "app"]}
+    assert confirm["_meta"]["openai/widgetAccessible"] is True
+    assert "openai/visibility" not in confirm["_meta"]
+    assert set(confirm["inputSchema"]["required"]) == {"import_id", "indexes", "confirmation_token"}
 
 
 # ---------------------------------------------------------------- import from ChatGPT memory

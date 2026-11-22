@@ -448,6 +448,11 @@ def build_api(settings: Settings) -> APIRouter:  # noqa: C901 - flat list of rou
             who, lambda db, user: people_service.import_people(db, user, body.import_id, body.indexes, channel="web")
         )
 
+    @api.post("/instagram/demo-preview")
+    def instagram_demo_preview(who: Identity = Who) -> Any:
+        """Preview fictional profiles without contacting Instagram."""
+        return run(who, lambda db, user: people_service.propose_demo_import(db, user, "instagram", channel="web"))
+
     # --------------------------------------------------------------- linkedin
     @api.post("/linkedin/demo-preview")
     def linkedin_demo_preview(who: Identity = Who) -> Any:

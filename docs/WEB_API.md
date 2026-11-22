@@ -76,6 +76,17 @@ added as private notes, and the form must say so before saving.
 | `POST /api/v1/people/import-preview` | `{people: [{name, relationship?, notes?, interests?, last_met_days_ago?}], source?}` (1–50) | the people-import payload (`view: "people_import"`) |
 | `POST /api/v1/people/import` | `{import_id, indexes: number[]}` (1–50; up to 100 for a demo preview) | `{imported: Person[], count}` |
 
+### Demo imports
+
+| Route | Body | Returns |
+|---|---|---|
+| `POST /api/v1/instagram/demo-preview` | none (signed in) | people-import payload with 100 fictional profiles and `demo_platform: "instagram"` |
+| `POST /api/v1/linkedin/demo-preview` | none (signed in) | people-import payload with 100 fictional profiles and `demo_platform: "linkedin"` |
+
+Both routes use fixed AI-generated examples and do not call social networks, enrichment, or AI services.
+Confirm selected entries with `POST /api/v1/people/import`. Saved entries are private Sample notes,
+removable with `DELETE /api/v1/sample`.
+
 ### Import from LinkedIn (website only)
 
 | Route | Body | Returns |
@@ -83,10 +94,6 @@ added as private notes, and the form must say so before saving.
 | `POST /api/v1/linkedin/connections` | `{cookies}`: the user's LinkedIn session cookies (cookie-export JSON, `li_at=…; JSESSIONID=…`, or the bare `li_at` value) | `{connections: [{public_identifier, name, headline, profile_url, connected_on, already_added}], count, total, truncated, details_available, max_details, max_import}` |
 | `POST /api/v1/linkedin/export` | `{csv}`: LinkedIn's own `Connections.csv` | the same payload as `/linkedin/connections` |
 | `POST /api/v1/linkedin/import-preview` | `{people: [{public_identifier, name, headline?}]}` (1–50) | the people-import payload plus `details_for` and `details_error`; confirm with `POST /api/v1/people/import` |
-| `POST /api/v1/linkedin/demo-preview` | none (signed in) | the people-import payload with 100 fictional profiles and `source: "linkedin_demo"`; confirm with `POST /api/v1/people/import` |
-
-The demo route uses fixed AI-generated examples and doesn't read LinkedIn or call enrichment or AI services.
-Confirmed examples are private notes marked as samples, removable with `DELETE /api/v1/sample`.
 
 The export route is the reliable one and needs no cookies. The cookie route reads the list behind `linkedin.com/mynetwork/invite-connect/connections/` with the
 user's own session (`app/services/linkedin_service.py`) and saves nothing. The second fetches profile

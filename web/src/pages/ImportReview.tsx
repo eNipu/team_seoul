@@ -29,6 +29,36 @@ export function ImportReview({
     if (selectionTools) instructions.current?.focus();
   }, [selectionTools]);
 
+  const actions = (
+    <>
+      <InlineError message={action.error} />
+      <div className="dialog__actions">
+        <button type="button" className="btn" disabled={action.busy} onClick={onBack}>
+          Back
+        </button>
+        <button
+          type="button"
+          className="btn btn--primary"
+          disabled={action.busy || checked.length === 0}
+          onClick={() =>
+            void action.run(async () => {
+              const people = await api.importPeople(preview.import_id, [...checked].sort((a, b) => a - b));
+              onDone(people.length);
+            })
+          }
+        >
+          {action.busy
+            ? "Adding…"
+            : checked.length === 0
+              ? selectable.length === 0
+                ? "Everyone is already added"
+                : "Choose at least one"
+              : `Add ${plural(checked.length, "person", "people")}`}
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <div className="stack">
       <p className="dialog__text" ref={instructions} tabIndex={selectionTools ? -1 : undefined}>
@@ -49,6 +79,8 @@ export function ImportReview({
           </button>
         </div>
       )}
+      {/* Demo confirmation is reachable without tabbing through 100 checkboxes. */}
+      {selectionTools && actions}
       <ul className="review">
         {preview.candidates.map((c) => {
           const on = checked.includes(c.index);
@@ -75,31 +107,7 @@ export function ImportReview({
           );
         })}
       </ul>
-      <InlineError message={action.error} />
-      <div className="dialog__actions">
-        <button type="button" className="btn" disabled={action.busy} onClick={onBack}>
-          Back
-        </button>
-        <button
-          type="button"
-          className="btn btn--primary"
-          disabled={action.busy || checked.length === 0}
-          onClick={() =>
-            void action.run(async () => {
-              const people = await api.importPeople(preview.import_id, [...checked].sort((a, b) => a - b));
-              onDone(people.length);
-            })
-          }
-        >
-          {action.busy
-            ? "Adding…"
-            : checked.length === 0
-              ? selectable.length === 0
-                ? "Everyone is already added"
-                : "Choose at least one"
-              : `Add ${plural(checked.length, "person", "people")}`}
-        </button>
-      </div>
+      {!selectionTools && actions}
     </div>
   );
 }

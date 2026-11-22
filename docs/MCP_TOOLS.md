@@ -23,7 +23,7 @@ checks the scopes it needs (defense in depth). Tokens issued before `venn.calend
 must reconnect once.
 
 Annotations: **R** read-only, **W** write, **D** destructive (ChatGPT asks for confirmation).
-**UI** = renders the widget (`_meta.ui.resourceUri = ui://venn/app-v2.html`); the result's
+**UI** = renders the widget (`_meta.ui.resourceUri = ui://venn/app-v3.html`); the result's
 `view` field tells the widget which card to show.
 
 62 tools, 20 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Venn) or
@@ -180,8 +180,12 @@ candidates are stored server-side, so nothing can be added that the user was not
 | --- | --- | --- | --- | --- |
 | `venn_propose_people_import` | `people[]` (1–50 `{name, relationship?, notes?, interests?[], last_met_days_ago?}`), `source?` (≤60) | connections | W, UI | `{view: "people_import", import_id, expires_at, source, candidates[{index, name, relationship, notes, interests[], last_met_days_ago, already_added}], skipped, note}` — **adds nobody** |
 | `venn_import_people` | `import_id`, `indexes[]` (1–50) | connections | W | `{imported: Person[], count}`; regular imports only |
-| `venn_preview_demo_people_import` | `platform`: `"instagram"` or `"linkedin"` | connections | W, UI | `people_import` with `demo_platform` and 100 fictional candidates. Adds nobody; no social login or external API |
-| `venn_import_demo_people` | `import_id`, `indexes[]` (1–100) | connections | W, widget only | `{imported: Person[], count}`. Saves only the chosen profiles as owner-only Sample notes. The dashboard's **Remove sample data** clears them |
+| `venn_preview_demo_people_import` | `platform`: `"instagram"` or `"linkedin"` | connections | W, UI | `people_import` with `demo_platform` and 100 fictional candidates. Adds nobody; no social login or external API. Result `_meta` carries the review's confirmation token for the widget |
+| `venn_import_demo_people` | `import_id`, `indexes[]` (1–100), `confirmation_token` | connections | W, widget callback | `{imported: Person[], count}`. Only the widget's **Add** button sends the token and selected indexes. Saves owner-only Sample notes; **Remove sample data** clears them |
+
+The demo confirmation callback is visible in tool discovery so ChatGPT can route widget calls.
+Confirming still requires the initiating account and that review's unused, unexpired proposal
+and widget-only token (`_meta["venn/demoImportConfirmation"]`, not in model-visible content).
 
 Emails, links and phone numbers are stripped from names, relationships and notes; entries
 containing credentials or card/ID numbers are dropped and counted in `skipped`. `already_added`
@@ -284,7 +288,8 @@ owner's review only; nothing reaches the owner's notes until they approve it.
 
 | URI | MIME | Content |
 | --- | --- | --- |
-| `ui://venn/app-v2.html` | `text/html;profile=mcp-app` | The widget bundle (`widget/dist/index.html`) |
+| `ui://venn/app-v3.html` | `text/html;profile=mcp-app` | The widget bundle (`widget/dist/index.html`) |
+| `ui://venn/app-v2.html` | `text/html;profile=mcp-app` | Compatibility alias for older cards |
 
 ## Trying it locally
 

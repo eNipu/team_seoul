@@ -5,7 +5,9 @@ import { Illustration } from "./icons";
 
 export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImportViewData>) {
   const action = useAction();
-  const platform = data.demo_platform && DEMO_PLATFORM_LABELS[data.demo_platform];
+  const demoPlatform = data.demo_platform;
+  const platform = demoPlatform && DEMO_PLATFORM_LABELS[demoPlatform];
+  const token = data.confirmation_token;
   const fresh = data.candidates.filter((c) => !c.already_added);
   const [picked, setPicked] = useState<Set<number>>(() => new Set(platform ? [] : fresh.map((c) => c.index)));
   const [added, setAdded] = useState<{ count: number; names: string[] } | null>(null);
@@ -37,16 +39,24 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
 
   function confirm() {
     const indexes = data.candidates.filter((c) => picked.has(c.index)).map((c) => c.index);
-    if (indexes.length === 0) return;
+    if (indexes.length === 0 || (platform && !token)) return;
     void action.run("import", async () => {
-      const tool = platform ? "venn_import_demo_people" : "venn_import_people";
-      const res = await bridge.callTool(tool, { import_id: data.import_id, indexes });
-      if (!res.ok) return res.errorText;
+      const args = { import_id: data.import_id, indexes };
+      const res = platform
+        ? await bridge.callTool("venn_import_demo_people", { ...args, confirmation_token: token })
+        : await bridge.callTool("venn_import_people", args);
+      if (!res.ok) {
+        if (platform && /mcp resource not found/i.test(res.errorText)) {
+          return "ChatGPT couldn't reach the Add action. Refresh Venn in Plugins, then open a fresh demo in a new chat.";
+        }
+        return res.errorText;
+      }
       const result = parseImportPeople(res.data);
-      if (result.count === 0 && result.imported.length === 0) {
+      if (!result) return "Venn couldn't verify what was added. Check Friends before trying again.";
+      if (result.count === 0) {
         return platform ? "Those profiles are already in Venn. Open a fresh demo to review again." : "Venn didn't add anyone. Try again.";
       }
-      setAdded({ count: result.count || result.imported.length, names: result.imported.map((p) => p.name) });
+      setAdded({ count: result.count, names: result.imported.map((p) => p.name) });
       window.scrollTo?.(0, 0);
       return null;
     });
@@ -110,7 +120,19 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
 
       <ActionError action={action} />
 
-      {data.candidates.length === 0 ? (
+      {demoPlatform && !token ? (
+        <div className="stack">
+          <p className="muted small">This review can’t confirm an import. Open a fresh review to choose who to add.</p>
+          <button
+            type="button"
+            className="btn btn--primary btn--block"
+            disabled={busy}
+            onClick={() => void action.run("reopen", () => nav.replaceView("venn_preview_demo_people_import", { platform: demoPlatform }))}
+          >
+            {action.busy === "reopen" ? "Opening…" : "Open fresh review"}
+          </button>
+        </div>
+      ) : data.candidates.length === 0 ? (
         <EmptyNote art="search" title="No one to add">
           Venn couldn't find any people in that. Try pasting names, one per line.
         </EmptyNote>

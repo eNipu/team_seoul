@@ -398,6 +398,20 @@ const DEMO_ROLES = [
   ["Backend engineer at Driftline Systems", "Python", "developer tools"],
   ["Sound designer at Paper Current Audio", "sound design", "independent film"],
 ];
+const INSTAGRAM_NAMES = ["Mara", "Joon", "Nia", "Elias", "Romy", "Devika", "Oscar", "Aya", "Theo", "Lina"];
+const INSTAGRAM_SURNAMES = ["Solano", "Park", "Boateng", "Moreno", "Delacroix", "Pillai", "Nilsson", "Matsuda", "Okafor", "Haddad"];
+const INSTAGRAM_BIOS = [
+  ["Photographs the city before the shop shutters come up", "street photography", "architecture"],
+  ["Folds dumplings on Sundays and keeps a freezer stash for friends", "food", "dumplings"],
+  ["Paints tiny gouache scenes from the bus window", "art", "gouache"],
+  ["Packs a thermos for foggy ridge walks", "hiking", "landscape photography"],
+  ["Keeps a sketchbook of favorite scenes from matinees", "independent film", "sketching"],
+  ["Shares the records she plays while cooking dinner", "music", "vinyl"],
+  ["Makes mismatched mugs and tests glazes on their handles", "ceramics", "pottery"],
+  ["Collects fallen leaves for cyanotype prints", "printmaking", "botany"],
+  ["Finds quiet bike routes between neighborhood bakeries", "cycling", "baking"],
+  ["Cooks from the handwritten margins of a family recipe book", "home cooking", "food photography"],
+];
 
 const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
@@ -902,17 +916,22 @@ export function createMockApi(options: MockOptions): Api {
           details_error: null,
         };
       }),
-    linkedinDemoPreview: () =>
+    demoPeoplePreview: (platform) =>
       wait(() => {
-        const candidates = DEMO_SURNAMES.flatMap((_, group) =>
-          DEMO_NAMES.map((firstName, i): T.ImportCandidate => {
-            const name = `${firstName} ${DEMO_SURNAMES[(i + group) % DEMO_SURNAMES.length]}`;
-            const [headline, ...interests] = DEMO_ROLES[(i + 3 * group) % DEMO_ROLES.length];
+        const instagram = platform === "instagram";
+        const names = instagram ? INSTAGRAM_NAMES : DEMO_NAMES;
+        const surnames = instagram ? INSTAGRAM_SURNAMES : DEMO_SURNAMES;
+        const bios = instagram ? INSTAGRAM_BIOS : DEMO_ROLES;
+        const relationship = instagram ? "Instagram connection" : "LinkedIn connection";
+        const candidates = surnames.flatMap((_, group) =>
+          names.map((firstName, i): T.ImportCandidate => {
+            const name = `${firstName} ${surnames[(i + group) % surnames.length]}`;
+            const [bio, ...interests] = bios[(i + 3 * group) % bios.length];
             return {
-              index: group * DEMO_NAMES.length + i,
+              index: group * names.length + i,
               name,
-              relationship: "LinkedIn connection",
-              notes: `${headline}.`,
+              relationship,
+              notes: `${bio}.`,
               interests,
               already_added: state.friends.some((f) => f.kind === "person" && same(f.name, name)),
               last_met_days_ago: null,
@@ -926,7 +945,7 @@ export function createMockApi(options: MockOptions): Api {
           view: "people_import" as const,
           import_id: importId,
           expires_at: new Date(expires).toISOString(),
-          source: "linkedin_demo",
+          source: `${platform}_demo`,
           candidates,
           skipped: 0,
           note: "Nothing is added until you confirm.",

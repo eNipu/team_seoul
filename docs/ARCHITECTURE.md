@@ -63,7 +63,8 @@ User ids are **never** taken from tool arguments.
 
 ## Widget (MCP Apps)
 
-- One HTML resource `ui://venn/app-v2.html` (`text/html;profile=mcp-app`), built from
+- One widget bundle published as `ui://venn/app-v3.html` (`text/html;profile=mcp-app`, with
+  `ui://venn/app-v2.html` for older cards), built from
   `widget/` into a single file and served from `widget/dist/index.html` (fallback page if missing).
 - Card-producing tools bind this resource and return a `view` discriminator. For example,
   `venn_propose_memories` opens a review and `venn_show_reply` opens a reply card.
