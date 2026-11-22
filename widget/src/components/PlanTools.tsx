@@ -4,6 +4,7 @@ import { LIMITS, formatDateTime, hasId, type ActivitySuggestion, type FriendKind
 import { ActionError, useAction } from "./common";
 import { Icon } from "./icons";
 import CalendarPicker from "./CalendarPicker";
+import "./cards.css";
 
 export interface PlanFriend {
   kind: FriendKind;
@@ -21,6 +22,9 @@ interface Props {
   friends: PlanFriend[];
   /** Extra actions shown before "Add to calendar" (for example "Plan it"). */
   children?: ReactNode;
+  /** Put "Add to calendar", "Save plan" and `more` behind one quiet disclosure. */
+  quiet?: boolean;
+  more?: ReactNode;
 }
 
 /**
@@ -28,7 +32,7 @@ interface Props {
  * event) and "Save plan" (keeps the idea on the dashboard). A time chosen in the
  * calendar picker is saved with the plan.
  */
-export function PlanTools({ bridge, title, details, calendarTitle, friends, children }: Props) {
+export function PlanTools({ bridge, title, details, calendarTitle, friends, children, quiet, more }: Props) {
   const action = useAction();
   const [open, setOpen] = useState(false);
   const [pickedAt, setPickedAt] = useState<Date | null>(null);
@@ -53,27 +57,41 @@ export function PlanTools({ bridge, title, details, calendarTitle, friends, chil
   }
 
   const when = saved ? formatDateTime(saved.at) : "";
+  const tools = (
+    <>
+      <button type="button" className="vc__link" aria-expanded={open} onClick={() => setOpen(!open)}>
+        Add to calendar
+      </button>
+      {saved ? (
+        <span className="vc__done" role="status">
+          <Icon name="check" size={16} />
+          Saved{when ? ` · ${when}` : ""}
+        </span>
+      ) : (
+        <button type="button" className="vc__link" disabled={action.busy !== null} onClick={save}>
+          {action.busy ? "Saving…" : pickedAt ? `Save for ${formatDateTime(pickedAt.toISOString())}` : "Save idea"}
+        </button>
+      )}
+    </>
+  );
 
   return (
     <>
-      <div className="card__actions">
-        {children}
-        <button type="button" className="btn btn--ghost btn--small" aria-expanded={open} onClick={() => setOpen(!open)}>
-          <Icon name="calendar" size={16} />
-          Add to calendar
-        </button>
-        {saved ? (
-          <span className="saved-plan" role="status">
-            <Icon name="check" size={16} />
-            Saved to your plans{when ? ` · ${when}` : ""}
-          </span>
-        ) : (
-          <button type="button" className="btn btn--ghost btn--small" disabled={action.busy !== null} onClick={save}>
-            <Icon name="bookmark" size={16} />
-            {action.busy ? "Saving…" : pickedAt ? `Save plan for ${formatDateTime(pickedAt.toISOString())}` : "Save plan"}
-          </button>
-        )}
-      </div>
+      {quiet ? (
+        <>
+          {children}
+          <details className="vc__more">
+            <summary>Save it for later</summary>
+            <div className="vc__actions">{tools}{more}</div>
+          </details>
+        </>
+      ) : (
+        <div className="vc__actions">
+          {children}
+          {tools}
+          {more}
+        </div>
+      )}
       {open && (
         <CalendarPicker
           bridge={bridge}
@@ -100,6 +118,40 @@ export function SuggestionBody({ s }: { s: ActivitySuggestion }) {
           <Icon name="arrow-right" size={16} />
           <span>{s.suggested_action}</span>
         </p>
+      )}
+    </>
+  );
+}
+
+/**
+ * Ideas as a short list: the first one open in the yellow moment card with its actions,
+ * the rest one tap away. Keeps a card to one bright element and one set of buttons.
+ */
+export function IdeaList({ ideas, actions }: { ideas: ActivitySuggestion[]; actions: (s: ActivitySuggestion, index: number) => ReactNode }) {
+  const [top, ...rest] = ideas;
+  if (!top) return null;
+  return (
+    <>
+      <div className="vc__moment">
+        <strong className="vc__item-title">{top.title}</strong>
+        {top.description && <p style={{ fontWeight: 500 }}>{top.description}</p>}
+      </div>
+      {actions(top, 0)}
+      {rest.length > 0 && (
+        <ul className="vc__items" aria-label="More ideas">
+          {rest.map((s, j) => (
+            <li key={j + 1}>
+              <details className="vc__more">
+                <summary className="vc__item-title" style={{ color: "var(--text)" }}>{s.title}</summary>
+                <div className="vc__more-body">
+                  {s.description && <p className="vc__body">{s.description}</p>}
+                  {s.suggested_action && <p className="vc__muted">{s.suggested_action}</p>}
+                  {actions(s, j + 1)}
+                </div>
+              </details>
+            </li>
+          ))}
+        </ul>
       )}
     </>
   );

@@ -197,7 +197,7 @@ export default function SignIn({
       </div>
 
       <div className="auth__header">
-        <h1>{isSignUp ? "Create your Venn account" : "Sign in to Venn"}</h1>
+        <h1>{isSignUp ? "Build your inner circle." : "Open your Venn."}</h1>
         <p className="auth__lead">
           {isSignUp
             ? "Use your Google account to get started in one click — no server passcode needed."

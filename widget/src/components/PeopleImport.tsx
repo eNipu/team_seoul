@@ -142,10 +142,9 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
 
   return (
     <section className="panel">
-      <h2 ref={listHeading} tabIndex={-1}>{platform ? `${platform} import` : "Your people radar"}</h2>
+      <h2 ref={listHeading} tabIndex={-1}>{platform ? `${platform} import` : "Add more people."}</h2>
       <p className="muted small lead">
-        {platform ? `Choose fictional ${platform} contacts to add as private notes.` :
-          `Tap a person to see what connects you. People you add become private notes.`}
+        {platform ? `Choose fictional ${platform} contacts to add as private notes.` : `Only you see these.`}
       </p>
 
       <ActionError action={action} />

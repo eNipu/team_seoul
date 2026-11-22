@@ -15,16 +15,14 @@ import {
   Field,
   InlineError,
   Loaded,
-  Notice,
   PageHeader,
   QrBlock,
   Skeleton,
-  copyText,
   useAction,
   useAsync,
   useToast,
 } from "../ui";
-import { CHATGPT_CONNECTORS_URL, DEFAULT_MCP_URL } from "./ConnectChatGpt";
+import { DEFAULT_MCP_URL } from "./ConnectChatGpt";
 import { OverlapLocationCard } from "./OverlapLocationCard";
 
 function ProfileCard({ me, onSaved }: { me: Me; onSaved: () => void }) {
@@ -56,82 +54,36 @@ function ProfileCard({ me, onSaved }: { me: Me; onSaved: () => void }) {
           {(p) => <textarea {...p} rows={3} value={bio} onChange={(e) => setBio(e.target.value)} maxLength={LIMITS.bio} />}
         </Field>
         <InlineError message={act.error} />
-        <div className="row">
-          <button type="submit" className="btn btn--primary" disabled={act.busy || !dirty || !name.trim()}>
-            {act.busy ? "Saving…" : "Save profile"}
-          </button>
-          {me.username && (
-            <span className="muted small">
-              Signed in as {me.username.includes("@") ? me.username : `@${me.username}`}
-            </span>
-          )}
-        </div>
+        {(dirty || act.busy) && (
+          <div className="row">
+            <button type="submit" className="btn btn--primary" disabled={act.busy || !name.trim()}>
+              {act.busy ? "Saving…" : "Save"}
+            </button>
+          </div>
+        )}
       </form>
     </Card>
   );
 }
 
 function ChatGptCard({ me }: { me: Me }) {
-  const toast = useToast();
-  const mcpUrl = me.mcp_url || DEFAULT_MCP_URL;
+  // The guided 1-click workflow lives at /connect; this card is the one quiet way back to it.
   return (
-    <Card title="Use Venn in ChatGPT" icon="sparkle" id="chatgpt" className="card--feature">
-      <p>
-        Venn is one service with two ways in. In ChatGPT you start with a question — “who do I know who likes photography?”
-        — and Venn answers inside the chat. Here you start with a person or a plan.
-      </p>
+    <Card title="Venn in ChatGPT" icon="sparkle" id="chatgpt">
+      <p className="muted">Add Venn once. Then ChatGPT tells you when someone in your circle matters.</p>
       <div className="row">
-        <button
-          type="button"
-          className="btn btn--primary"
-          onClick={async () => {
-            const ok = await copyText(mcpUrl);
-            toast(ok ? "MCP URL copied. Opening ChatGPT settings…" : "Opening ChatGPT settings…");
-            window.open(CHATGPT_CONNECTORS_URL, "_blank", "noopener,noreferrer");
-          }}
-        >
-          <Icon name="external" size={16} />
-          <span>Copy URL &amp; open ChatGPT</span>
-        </button>
-        <Link to="/connect" className="btn">
-          Open step-by-step guide
-        </Link>
+        <Link to="/connect" className="btn btn--primary">Connect to ChatGPT</Link>
       </div>
-      <ol className="numbered">
-        <li>In ChatGPT, add Venn as a connector (an MCP server) with this address and choose OAuth.</li>
-        <li>
-          Sign in with the same account
-          {me.username ? (
-            <>
-              {" "}
-              (<strong className="mono">{me.username}</strong>)
-            </>
-          ) : null}{" "}
-          when ChatGPT asks.
-        </li>
-        <li>Ask about your friends. Anything you approve there shows up here too.</li>
-      </ol>
-      {me.mcp_url ? (
-        <CopyField label="Venn's MCP server URL" value={me.mcp_url} />
-      ) : (
-        <p className="muted">This server didn't report an MCP address.</p>
-      )}
-      <div className="carry">
-        <div className="carry__col carry__col--yes">
-          <h3>
-            <Icon name="check-circle" size={18} />
-            Carries over
-          </h3>
-          <p>Your saved Venn records: approved memories, people, plans and follow-ups. They belong to your Venn account.</p>
-        </div>
-        <div className="carry__col">
-          <h3>
-            <Icon name="ban" size={18} />
-            Does not carry over
-          </h3>
-          <p>Your ChatGPT chats and ChatGPT's own memory. Venn never sees or syncs them.</p>
-        </div>
-      </div>
+      <details className="quiet-details">
+        <summary>Set it up by hand</summary>
+        <ol className="numbered">
+          <li>In ChatGPT, add Venn as a connector with this address.</li>
+          <li>
+            Sign in with the same account{me.username ? <> (<strong className="mono">{me.username}</strong>)</> : null}.
+          </li>
+        </ol>
+        <CopyField label="Venn's address" value={me.mcp_url || DEFAULT_MCP_URL} />
+      </details>
     </Card>
   );
 }
@@ -145,15 +97,11 @@ function ConnectCard({ requests, onChanged }: { requests: PendingRequest[]; onCh
   const respond = useAction();
   const toast = useToast();
   return (
-    <Card title="Connect with friends" icon="users" id="connect">
-      <p>
-        Friends don't need to join for Venn to be useful. If a friend does use Venn, connecting lets each of you see what the
-        other chose to share.
-      </p>
+    <Card title="Invite a friend" icon="users" id="connect">
 
       {requests.length > 0 && (
         <>
-          <h3 className="subhead">Requests waiting for you</h3>
+          <h3 className="subhead">Waiting for you</h3>
           <ul className="list">
             {requests.map((r) => (
               <li key={r.request_id} className="list__item">
@@ -199,7 +147,6 @@ function ConnectCard({ requests, onChanged }: { requests: PendingRequest[]; onCh
         </>
       )}
 
-      <h3 className="subhead">Invite a friend</h3>
       {invite ? (
         <div className="invite">
           <div className="invite__main">
@@ -212,28 +159,25 @@ function ConnectCard({ requests, onChanged }: { requests: PendingRequest[]; onCh
               <CopyButton text={invite.code} label="Copy code" />
               <CopyButton text={invite.share_text} label="Copy message" />
             </div>
-            <p className="muted small">
-              They become a connection only after you accept their request. Expires{" "}
-              {formatDate(invite.expires_at)}.
-            </p>
+            <p className="muted small">Expires {formatDate(invite.expires_at)}.</p>
           </div>
           <QrBlock rows={invite.qr} label="QR code for the invite link" caption="Or let them scan this" />
         </div>
       ) : (
         <button
           type="button"
-          className="btn"
+          className="btn btn--primary"
           id="create-friend-invite"
           disabled={create.busy}
           onClick={() => void create.run(async () => setInvite(await api.createInvite()))}
         >
-          <Icon name="ticket" size={18} />
-          {create.busy ? "Creating…" : "Create an invite"}
+          {create.busy ? "Creating…" : "Create an invite link"}
         </button>
       )}
       <InlineError message={create.error} />
 
-      <h3 className="subhead">Have a code from a friend?</h3>
+      <details className="more more--quiet">
+      <summary>Have a code from a friend?</summary>
       <form
         className="add-row"
         onSubmit={(e) => {
@@ -270,6 +214,7 @@ function ConnectCard({ requests, onChanged }: { requests: PendingRequest[]; onCh
           {redeemed}
         </p>
       )}
+      </details>
     </Card>
   );
 }
@@ -281,23 +226,14 @@ function DangerCard() {
   const out = useAction();
   const del = useAction();
   return (
-    <Card title="Sign out or leave" icon="log-out">
-      <div className="row row--between">
-        <p>Sign out of Venn on this browser. Your account and everything saved stay as they are.</p>
-        <button type="button" className="btn" disabled={out.busy} onClick={() => void out.run(signOut)}>
-          <Icon name="log-out" size={18} />
-          {out.busy ? "Signing out…" : "Sign out"}
-        </button>
-      </div>
+    <div className="account-foot">
+      <button type="button" className="btn" disabled={out.busy} onClick={() => void out.run(signOut)}>
+        {out.busy ? "Signing out…" : "Sign out"}
+      </button>
+      <button type="button" className="link-btn" onClick={() => setOpen(true)}>
+        Delete account
+      </button>
       <InlineError message={out.error} />
-      <hr />
-      <div className="row row--between">
-        <p>Delete your Venn account and everything in it: memories, people, plans, follow-ups and connections.</p>
-        <button type="button" className="btn btn--quiet-danger" onClick={() => setOpen(true)}>
-          <Icon name="trash" size={18} />
-          Delete account
-        </button>
-      </div>
       {open && (
         <Dialog title="Delete your Venn account?" onClose={() => setOpen(false)}>
           <form
@@ -339,7 +275,7 @@ function DangerCard() {
           </form>
         </Dialog>
       )}
-    </Card>
+    </div>
   );
 }
 
@@ -361,18 +297,15 @@ export default function Account() {
   const requests = home.data?.view === "dashboard" ? home.data.pending_requests : [];
   return (
     <div className="page page--narrow">
-      <PageHeader title="Account" lead="One Venn account, on this website and in ChatGPT." />
+      <PageHeader title="Account" />
       <Loaded state={me} skeleton={<Skeleton rows={5} />}>
         {(m) => (
           <div className="stack">
             <ProfileCard key={`${m.profile.display_name}:${m.profile.bio ?? ""}`} me={m} onSaved={me.reload} />
-            <OverlapLocationCard />
-            <ChatGptCard me={m} />
             <ConnectCard requests={requests} onChanged={home.reload} />
-            {fromSetup && <Link to="/" className="btn">Back to Home</Link>}
-            <Notice icon="lock" tone="quiet">
-              Private by default. Venn never sends messages, invitations or calendar events for you.
-            </Notice>
+            <ChatGptCard me={m} />
+            <OverlapLocationCard />
+            {fromSetup && <Link to="/" className="link-btn">Back to Home</Link>}
             <DangerCard />
           </div>
         )}

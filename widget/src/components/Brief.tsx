@@ -1,15 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import {
   CATEGORY_LABELS,
-  formatDate,
-  formatDaysAgo,
-  formatRelative,
   friendArg,
   parseLogInteraction,
   type BriefViewData,
 } from "../types";
-import { ActionError, Avatar, SectionTitle, copyText, useAction, type ViewProps } from "./common";
-import { CategoryIcon, Icon } from "./icons";
+import { ActionError, copyText, useAction, type ViewProps } from "./common";
+import { Icon } from "./icons";
+import "./cards.css";
 import FollowUps from "./FollowUps";
 
 export default function Brief({ data, bridge, nav }: ViewProps<BriefViewData>) {
@@ -26,14 +24,6 @@ export default function Brief({ data, bridge, nav }: ViewProps<BriefViewData>) {
 
   const busy = action.busy !== null;
 
-  const when = logged
-    ? "today"
-    : data.days_since_last_interaction !== null
-      ? formatDaysAgo(data.days_since_last_interaction)
-      : data.last_interaction_at
-        ? formatRelative(data.last_interaction_at)
-        : null;
-  const onDate = !logged && data.last_interaction_at ? formatDate(data.last_interaction_at) : "";
 
   const sharedKeys = new Set(data.shared_interests.map((s) => s.toLowerCase()));
   const others = data.interests.filter((i) => !sharedKeys.has(i.toLowerCase()));
@@ -56,160 +46,95 @@ export default function Brief({ data, bridge, nav }: ViewProps<BriefViewData>) {
     if (ok) timer.current = window.setTimeout(() => setCopied(null), 2000);
   }
 
+  const [lead, ...moreStarters] = data.conversation_starters;
+  const common = data.shared_interests.join(", ");
+
+  function Starter({ text, index, lead: isLead }: { text: string; index: number; lead?: boolean }) {
+    return (
+      <button type="button" className={isLead ? "vc__moment" : "vc__pick"} style={isLead ? { border: 0, textAlign: "left", font: "inherit", cursor: "pointer", width: "100%" } : undefined}
+        onClick={() => void copyStarter(index, text)}>
+        {isLead ? <p>“{text}”</p> : <span>“{text}”</span>}
+        {copied === index ? <small>Copied</small> : <span className="sr-only">Copy</span>}
+      </button>
+    );
+  }
+
   return (
-    <section className="panel">
-      <div className="profile-head">
-        <Avatar name={data.display_name} size="large" />
-        <div className="profile-head__body">
-          <p className="eyebrow">Before you see</p>
-          <h2>{data.display_name}</h2>
-          <div className="row row--wrap">
-            <span className={`badge ${data.on_venn ? "badge--on" : "badge--note"}`}>
-              {data.on_venn ? "On Venn" : "Private note"}
-            </span>
-            {data.relationship && <span className="badge badge--note">{data.relationship}</span>}
-          </div>
-        </div>
-      </div>
+    <section className="vc">
+      <h2 className="vc__title">Before you see {first}</h2>
+      {common && <p className="vc__muted">You both like {common}.</p>}
 
       <ActionError action={action} />
 
-      <div className="last-time">
-        <span className="last-time__icon" aria-hidden="true">
-          <Icon name="clock" />
-        </span>
-        <div>
-          <span className="field__label">Last time</span>
-          {when ? (
-            <>
-              <p className="last-time__when">
-                <strong>{when.charAt(0).toUpperCase() + when.slice(1)}</strong>
-                {onDate && <span className="muted small"> · {onDate}</span>}
-              </p>
-              {!logged && data.last_activity && <p className="small">{data.last_activity}</p>}
-              {logged && <p className="small">Logged just now</p>}
-            </>
-          ) : (
-            <p className="small">No hangouts logged yet. This one can be the first.</p>
-          )}
-        </div>
-      </div>
-
-      <SectionTitle>What you have in common</SectionTitle>
-      {data.shared_interests.length > 0 ? (
-        <div className="chips">
-          {data.shared_interests.map((s, i) => (
-            <span key={`${s}-${i}`} className="chip chip--shared">
-              <Icon name="star" size={14} />
-              {s}
-            </span>
-          ))}
-        </div>
-      ) : (
-        <p className="muted small">Nothing in common recorded yet. A good thing to find out.</p>
+      {lead && <Starter text={lead} index={0} lead />}
+      <span className="sr-only" role="status">
+        {copied !== null ? "Copied to clipboard" : ""}
+      </span>
+      {copyFailed && (
+        <p className="vc__muted" role="status">
+          Couldn't copy from here. Select the line and copy it yourself.
+        </p>
       )}
-      {others.length > 0 && (
-        <div className="chips-line">
-          <span className="muted small">{first} is also into</span>
-          <div className="chips">
-            {others.map((s, i) => (
-              <span key={`${s}-${i}`} className="chip chip--plain">
-                {s}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <FollowUps bridge={bridge} friend={arg} name={first} initial={data.things_to_ask} />
-
-      {data.conversation_starters.length > 0 && (
-        <>
-          <SectionTitle>Conversation starters</SectionTitle>
-          <ul className="list list--tight">
-            {data.conversation_starters.map((s, i) => (
-              <li key={i}>
-                <button type="button" className="starter" onClick={() => void copyStarter(i, s)}>
-                  <span className="starter__quote" aria-hidden="true">
-                    <Icon name="chat" size={18} />
-                  </span>
-                  <span className="starter__text">{s}</span>
-                  <span className="starter__copy">
-                    <Icon name={copied === i ? "check" : "copy"} size={14} />
-                    {copied === i ? "Copied" : "Copy"}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-          <span className="sr-only" role="status">
-            {copied !== null ? "Copied to clipboard" : ""}
-          </span>
-          {copyFailed && (
-            <p className="hint" role="status">
-              Couldn't copy from here. Select the line and copy it yourself.
-            </p>
-          )}
-        </>
-      )}
-
-      {isPerson
-        ? data.notes && (
-            <div className="note-box">
-              <span className="field__label">Your notes</span>
-              <p>{data.notes}</p>
-            </div>
-          )
-        : data.shared_memories.length > 0 && (
-            <>
-              <SectionTitle count={data.shared_memories.length}>What {first} shared with you</SectionTitle>
-              <ul className="list list--tight">
-                {data.shared_memories.map((m, i) => (
-                  <li key={i} className="shared-memory">
-                    <CategoryIcon category={m.category} />
-                    <div>
-                      <strong>{m.title}</strong>
-                      <span className="sr-only"> ({CATEGORY_LABELS[m.category]})</span>
-                      {m.description && <p className="muted small">{m.description}</p>}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
 
       <button
         type="button"
-        className="btn btn--primary btn--block"
+        className="vc__cta"
         disabled={busy}
         onClick={() => void action.run("ideas", () => nav.openView("venn_suggest_activity", arg))}
       >
-        <Icon name="bulb" size={18} />
-        {action.busy === "ideas" ? "Loading…" : "Get ideas for time together"}
+        {action.busy === "ideas" ? "Loading…" : "Plan time together"}
       </button>
-      <div className="button-row">
-        {logged ? (
-          <span className="status-pill status-pill--grow" role="status">
-            <Icon name="check" size={16} /> Hangout logged
-          </span>
-        ) : (
-          <button type="button" className="btn" disabled={busy} onClick={metUp}>
-            <Icon name="check-circle" size={18} />
-            {action.busy === "log" ? "Logging…" : "We met up"}
-          </button>
-        )}
-        <button
-          type="button"
-          className="btn"
-          disabled={busy}
-          onClick={() => void action.run("open", () => nav.openView("venn_view_friend", arg))}
-        >
-          <Icon name="user" size={18} />
-          {action.busy === "open" ? "Opening…" : `Open ${first}`}
-        </button>
-      </div>
 
-      {data.note && <p className="muted small footnote">{data.note}</p>}
+      <details className="vc__more">
+        <summary>More about {first}</summary>
+        <div className="vc__more-body">
+          <FollowUps bridge={bridge} friend={arg} name={first} initial={data.things_to_ask} />
+          {moreStarters.length > 0 && (
+            <ul className="vc__picks" aria-label="More conversation starters">
+              {moreStarters.map((s, i) => <li key={i}><Starter text={s} index={i + 1} /></li>)}
+            </ul>
+          )}
+          {others.length > 0 && <p className="vc__muted">{first} is also into {others.join(", ")}.</p>}
+          {isPerson
+            ? data.notes && (
+                <div className="vc__quiet">
+                  <span className="vc__muted">Your notes</span>
+                  <p className="vc__body">{data.notes}</p>
+                </div>
+              )
+            : data.shared_memories.length > 0 && (
+                <ul className="vc__list" aria-label={`What ${first} shared with you`}>
+                  {data.shared_memories.map((m, i) => (
+                    <li key={i}>
+                      <strong>{m.title}</strong>
+                      <span className="sr-only"> ({CATEGORY_LABELS[m.category]})</span>
+                      {m.description && <span className="vc__muted" style={{ display: "block" }}>{m.description}</span>}
+                    </li>
+                  ))}
+                </ul>
+              )}
+          <div className="vc__actions">
+          {logged ? (
+            <span className="vc__done" role="status">
+              <Icon name="check" size={16} /> Hangout logged
+            </span>
+          ) : (
+            <button type="button" className="vc__link" disabled={busy} onClick={metUp}>
+              {action.busy === "log" ? "Logging…" : "We met up"}
+            </button>
+          )}
+          <button
+            type="button"
+            className="vc__link"
+            disabled={busy}
+            onClick={() => void action.run("open", () => nav.openView("venn_view_friend", arg))}
+          >
+            {action.busy === "open" ? "Opening…" : `Open ${first}`}
+          </button>
+          </div>
+          {data.note && <p className="vc__muted">{data.note}</p>}
+        </div>
+      </details>
     </section>
   );
 }
