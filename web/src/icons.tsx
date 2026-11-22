@@ -241,15 +241,15 @@ export function CategoryIcon({ category, small }: { category: MemoryCategory; sm
   );
 }
 
-/** The Venn mark: a heart, held. Brand coral #E86A4A in both themes. */
+/** The Venn mark: two overlapping circles on brand slate blue #3F72AF. */
 export function BrandMark({ size = 28 }: { size?: number }) {
   return (
     <svg className="brand-mark" width={size} height={size} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-      {/* Two overlapping circles: you, a friend, and what you share. Same mark as plugin/assets. */}
-      <rect width="32" height="32" rx="8" fill="#E86A4A" />
-      <circle cx="11.75" cy="16" r="8.5" fill="#fff" fillOpacity="0.5" />
-      <circle cx="20.25" cy="16" r="8.5" fill="#fff" fillOpacity="0.5" />
-      <path d="M16 8.64a8.5 8.5 0 0 1 0 14.72 8.5 8.5 0 0 1 0-14.72z" fill="#fff" />
+      {/* Two overlapping circles: you, a friend, and what you share. */}
+      <rect width="32" height="32" rx="8" fill="#3F72AF" />
+      <circle cx="11.75" cy="16" r="8.5" fill="#F9F7F7" fillOpacity="0.48" />
+      <circle cx="20.25" cy="16" r="8.5" fill="#F9F7F7" fillOpacity="0.48" />
+      <path d="M16 8.64a8.5 8.5 0 0 1 0 14.72 8.5 8.5 0 0 1 0-14.72z" fill="#F9F7F7" />
     </svg>
   );
 }
