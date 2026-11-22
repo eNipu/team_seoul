@@ -89,6 +89,64 @@ code {
   opacity: 0.75;
 }
 
+.reply__content {
+  display: grid;
+  gap: var(--s-3);
+}
+.reply__header {
+  display: grid;
+  gap: var(--s-1);
+}
+.reply__header h2 {
+  font-size: clamp(1.35rem, 5.5vw, 1.75rem);
+  letter-spacing: -0.025em;
+}
+.reply__body,
+.reply__draft p {
+  white-space: pre-wrap;
+}
+.reply__draft {
+  margin: 0;
+  padding: var(--s-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+.reply__content .btn {
+  justify-self: start;
+}
+.reply__steps {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0;
+  padding-inline-start: 1.5em;
+}
+.reply__steps li {
+  padding-inline-start: var(--s-1);
+  overflow-wrap: anywhere;
+}
+.reply__footer {
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--border);
+}
+.reply__saved {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 44px;
+}
+.saved-reply summary {
+  min-height: 44px;
+  padding-block: var(--s-2);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.saved-reply summary span {
+  display: block;
+}
+.saved-reply[open] > :not(summary) {
+  margin-top: var(--s-2);
+}
+
 /* Sections inside a panel are spaced by one rule instead of ad-hoc margins. */
 .panel,
 .tab-panel {

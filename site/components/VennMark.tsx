@@ -1,17 +1,14 @@
-/** The Venn mark: two circles and the ground they share. Decorative; pair it with the wordmark. */
-export default function VennMark({ size = 28 }: { size?: number }) {
+/** The Venn wordmark. Use the sticker on light surfaces so the yellow stays legible. */
+export default function VennMark({ size = 112, variant = "sticker" }: { size?: number; variant?: "sticker" | "plain" }) {
+  const sticker = variant === "sticker";
   return (
-    <svg
-      className="venn-mark"
-      viewBox="0 0 32 20"
-      width={size}
-      height={(size * 20) / 32}
-      aria-hidden="true"
-      focusable="false"
-    >
-      <circle cx="10" cy="10" r="9" fill="none" stroke="currentColor" strokeWidth="1.75" />
-      <circle cx="22" cy="10" r="9" fill="none" stroke="currentColor" strokeWidth="1.75" />
-      <path d="M16 3.29a9 9 0 0 1 0 13.42a9 9 0 0 1 0-13.42z" fill="currentColor" />
-    </svg>
+    <img
+      className={`vann-logo${sticker ? " sticker" : ""}`}
+      src={sticker ? "/brand/venn-logo-sticker.png" : "/brand/venn-logo-yellow.png"}
+      alt="Venn"
+      width={sticker ? 920 : 800}
+      height={sticker ? 363 : 243}
+      style={{ width: size, height: "auto" }}
+    />
   );
 }

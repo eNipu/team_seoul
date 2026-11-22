@@ -82,14 +82,21 @@ Read `SCHEDULING.md` before any task in this group.
 | [T37](T37-reply-to-book.md) | Reply on Telegram or WhatsApp to pick a time | backend | M | T32, T36 | todo |
 | [T38](T38-schedule-skill-and-docs.md) | Teach the model to schedule; update the docs | docs | S | T32, T36 | todo |
 
+### F. ChatGPT experience
+
+| ID | Task | Area | Size | Depends on | Status |
+| --- | --- | --- | --- | --- | --- |
+| [T39](T39-chatgpt-replies.md) | Tailored replies inside ChatGPT | both | M | – | done |
+| [T40](T40-site-onboarding.md) | Landing page onboarding preview | site | M | – | done |
+
 T04 and T12 can start right away, in parallel with the backend tasks, because the shapes they
 render are fixed in `CONTRACTS.md`.
 
 ## Order
 
-Group D is done except T23, which waits for an identity provider. The hero now says "You already
-know your next customer" and "business partner", so the shortest path to making that true is
-T08, T09, T01, T02, T03, T10, T11, then T04 and T12. T05, T06 and T07 wait.
+Group D is done except T23, which waits for an identity provider. For interest and opportunity
+matching, start with T08, T09, T01, T02, T03, T10 and T11, with T04 and T12 available in parallel.
+T05, T06 and T07 wait.
 
 Group E runs alongside it in two tracks: calendar (T29, T30, T31, T32, with T33 in parallel)
 and messaging (T34, T35), joined by T36 and T37. T38 closes it.

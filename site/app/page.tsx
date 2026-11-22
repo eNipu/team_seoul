@@ -1,41 +1,19 @@
-import ChatPreview from "@/components/ChatPreview";
 import HeroBackdrop from "@/components/HeroBackdrop";
-import HeroCollage, { type CollageProps } from "@/components/HeroCollage";
-import NextWord from "@/components/NextWord";
+import Motion from "@/components/Motion";
+import OnboardingPreview from "@/components/OnboardingPreview";
 import PageView from "@/components/PageView";
 import SiteHeader from "@/components/SiteHeader";
 import Waitlist from "@/components/Waitlist";
+import Faq from "@/components/sections/Faq";
+import HowItWorks from "@/components/sections/HowItWorks";
+import Moment from "@/components/sections/Moment";
+import PrivacyPrinciples from "@/components/sections/PrivacyPrinciples";
+import UseCases from "@/components/sections/UseCases";
 import { cleanRef } from "@/lib/analytics";
 import { hasDatabase } from "@/lib/db";
 import { cleanVersion, defaultVersion } from "@/lib/version";
 import { inviteHasRoom } from "@/lib/waitlist";
 
-// Optional hero visual. Add `image: "/people/you.jpg"` to either person to show a
-// portrait instead of initials, or set this to null to remove the collage.
-const COLLAGE: CollageProps | null = {
-  left: { name: "You", context: "Launching in Berlin" },
-  right: { name: "Teodor Marin", context: "Just moved into Berlin B2B growth" },
-  shared: "Berlin",
-};
-
-// "You already know your next …": the line under the headline shows these one at a time.
-// Each one is a claim; keep "What the copy may claim" in site/README.md in step.
-const NEXT = ["customer", "friend", "business partner"];
-
-const PRINCIPLES = [
-  {
-    title: "Only what you approve",
-    text: "Venn saves the signals you tick and nothing else. Nothing is shared until you say so.",
-  },
-  {
-    title: "People you already know",
-    text: "No cold outreach and no strangers. Venn looks for overlap inside your own circle.",
-  },
-  {
-    title: "You send, not Venn",
-    text: "Venn drafts the intro and stops there. It never contacts anyone for you.",
-  },
-];
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
@@ -61,60 +39,87 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
   return (
     <>
       <main>
-        <section className="hero" aria-labelledby="hero-title">
-          <HeroBackdrop />
+        <section className="section section--dark" id="hero" aria-labelledby="hero-title">
           <SiteHeader />
-          <div className="hero__content wrap">
-            <h1 id="hero-title">Find the common ground.</h1>
-            <NextWord words={NEXT} />
-            <p className="hero__sub">
-              Venn shows where you overlap, from what each of you approves, right inside ChatGPT.
-            </p>
-            <Waitlist version={version} invite={invite} />
-            {COLLAGE && <HeroCollage {...COLLAGE} />}
-          </div>
-        </section>
-
-        <section className="showcase" id="inside" aria-labelledby="inside-title">
-          <div className="wrap">
-            <div className="section-intro">
-              <span className="eyebrow">Inside ChatGPT</span>
-              <h2 id="inside-title">Two taps to common ground.</h2>
-              <p>Approve what Venn may use, then see who you share ground with. Try it here.</p>
+          <div className="wrap hero__grid">
+            <div className="hero__copy">
+              <p className="eyebrow">Early-access waitlist</p>
+              <h1 className="h-display" id="hero-title">Connect your AI memories.</h1>
+              <p className="h-sub"><span>Build your inner circle.</span></p>
+              <p className="lead hero__what">
+                Your ChatGPT tells you which friend, colleague or partner to talk to, from updates they choose to share.
+              </p>
+              <div className="chat hero__chat" aria-label="Example inside ChatGPT">
+                <p className="chat__user">I have no plans this weekend. Ideas?</p>
+                <Moment person="Emma" text="Emma from uni is in Berlin on Saturday. You haven't seen her in 2 years." yellow />
+              </div>
             </div>
-            <ChatPreview />
-            <p className="showcase__note">A preview with made-up people. Venn is in development.</p>
+            {/* The join panel, with the 3D circles behind it: beside the copy on a wide screen. */}
+            <div className="hero__join">
+              <HeroBackdrop />
+              <div className="hero__join-card">
+                <Waitlist version={version} invite={invite} />
+                <p className="hero__fine">Free early access · Works with ChatGPT · Your friends opt in</p>
+              </div>
+            </div>
           </div>
         </section>
 
-        <section className="principles" aria-labelledby="principles-title">
-          <div className="wrap">
-            <h2 id="principles-title" className="sr-only">
-              How Venn treats what you share
+        <section className="section section--dark manifesto" aria-labelledby="manifesto-title">
+          <div className="wrap" data-reveal="group">
+            <h2 className="h-display" id="manifesto-title">
+              Connecting is solved.<br />
+              <span className="manifesto__hit">Keeping relationships is not.</span>
             </h2>
-            <ul className="principles__grid">
-              {PRINCIPLES.map((principle) => (
-                <li key={principle.title} className="principle">
-                  <h3>{principle.title}</h3>
-                  <p>{principle.text}</p>
-                </li>
-              ))}
-            </ul>
-            <div className="closing">
-              <h2>Be in the Founding Circle.</h2>
-              <a className="btn btn--primary" href="#waitlist">
-                Join the Waitlist
-              </a>
+            <p className="lead">
+              You meet people at every conference, every trip, every job. Then life happens and you lose them. Venn makes sure
+              you don&apos;t forget the people you connected with.
+            </p>
+          </div>
+        </section>
+
+        <HowItWorks />
+        <UseCases />
+
+        <section className="section section--paper" id="inside" aria-labelledby="inside-title">
+          <div className="wrap">
+            <h2 className="h-section" id="inside-title" data-reveal="up">One week with Venn.</h2>
+            <p className="lead" data-reveal="up">Your AI drafts your week. You keep what you want. The right friend hears about it.</p>
+            <div data-reveal="up">
+              <OnboardingPreview />
             </div>
+          </div>
+        </section>
+
+        <PrivacyPrinciples />
+        <Faq />
+
+        <section className="section" id="early-access" aria-labelledby="closing-title">
+          <div className="closing wrap" data-reveal="group">
+            <img
+              className="mark mark--faces"
+              src="/brand/mark-faces-circle.webp"
+              width={665}
+              height={700}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+            />
+            <h2 className="h-section" id="closing-title">Join the Founding Circle.</h2>
+            <p className="lead">Early access opens by invitation. Get on the list.</p>
+            <a className="btn btn--primary" href="#waitlist">
+              Build your inner circle.
+            </a>
           </div>
         </section>
       </main>
 
-      <footer className="site-footer wrap">
+      <footer className="wrap">
         <span>© {new Date().getFullYear()} Venn</span>
-        <span>The people in the examples are made up.</span>
+        <p>The people in the examples are made up.</p>
       </footer>
       <PageView version={version} />
+      <Motion />
     </>
   );
 }

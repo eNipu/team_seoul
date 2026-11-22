@@ -48,13 +48,13 @@ wrong form.
 
 ## Copy
 
-The hero `h1` stays "Find the common ground." Everything follows the Copy rules in
+The hero heading is "Venn. Connect your AI memories." Everything follows the Copy rules in
 `.agents/skills/venn-site-design/SKILL.md`.
 
 | Where | Text |
 | --- | --- |
-| Under the headline | You already know your next customer. (then friend, business partner: T25) |
-| Hero subhead | Venn shows where you overlap, from what each of you approves, right inside ChatGPT. |
+| Hero subtitle | Build your inner circle. |
+| Under the subtitle | You already know your next customer. (then friend, business partner: T25) |
 | Form note, `pair` | You join with one person you know. We only email you about your invite. |
 | Form note, `open` | Founding Circle. We only email you about your invite. (unchanged) |
 | Pending, lead | Good things come in pairs. |
@@ -69,18 +69,18 @@ The hero `h1` stays "Find the common ground." Everything follows the Copy rules 
 | Invitee, note | No +1 needed. We only email you about your invite. |
 | Full or unknown link | That invite link is no longer open. You can still join. |
 | Primary button, pending and confirmed | Share my invite link |
-| Second button | See it inside ChatGPT (unchanged) |
+| Onboarding link | Try the onboarding |
 | After copying | Invite link copied. Send it to one person you'd like on Venn. ("someone" once confirmed) |
-| Share text | Find the common ground. I saved you a place on the Venn waitlist. |
+| Share text | I saved you a place on the Venn waitlist. |
 
-The `open` version keeps "You're #104 in the Founding Circle." and "Invite a connection to move up".
+The `open` version keeps "You're #104 in the Founding Circle." and "Invite a connection to move up". The note beneath these actions appears when someone has joined with the link or when sharing gives feedback.
 
 ## Words from the prototype that are not used
 
 | Prototype | Why not | Instead |
 | --- | --- | --- |
-| Connect your AI with the AIs of your professional network | The AIs do not talk to each other. Venn shows two connected people what each approved | The hero subhead above |
-| Your next opportunity is someone you already know | Replaced by the team's own line | You already know your next customer. |
+| Connect your AI with the AIs of your professional network | The AIs do not talk to each other. Venn shows two connected people what each approved | The onboarding preview |
+| Your next opportunity is someone you already know | Replaced by the current subtitle | Build your inner circle. |
 | Private beta · invitation only | Anyone can join without a link | The form notes above |
 | Share private invitation, Gift another invitation | A link can be forwarded, and it is one link, not several | Share my invite link |
 | Your early access is secured | No access date exists to promise | Your places in the Founding Circle are confirmed. |

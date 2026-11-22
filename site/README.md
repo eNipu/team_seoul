@@ -1,23 +1,22 @@
 # Venn site
 
-The public landing page for Venn ("Find the common ground."), its Founding Circle waitlist, and the launch
+The public landing page for Venn ("Venn. Connect your AI memories."), its Founding Circle waitlist, and the launch
 metrics page. A Next.js app (App Router) with its own small API and two tables in Postgres.
 
 | Path | What it is |
 | --- | --- |
-| `app/page.tsx` | The landing page: hero with the waitlist, the "Inside ChatGPT" preview, principles. Rendered per request, because it reads `?w=` and `?ref=` |
+| `app/page.tsx` | The landing page: hero with the waitlist, the onboarding preview, principles. Rendered per request, because it reads `?w=` and `?ref=` |
 | `app/metrics/page.tsx` | `/metrics`: unique visitors, total waitlist signups, activation rate, UTM and referral breakdown |
 | `app/api/waitlist/route.ts` | `POST` joins the waitlist, `GET ?code=` returns the current spot for an invite code |
 | `app/api/visit/route.ts` | `POST` records one page view |
 | `proxy.ts` | Password check in front of `/metrics` (Next.js 16 calls middleware "proxy") |
 | `app/globals.css` | The page's own styles |
 | `app/venn-kit.css` | Copy of `widget/src/venn-kit.css`: tokens and card primitives shared with the ChatGPT widget. Do not edit here |
-| `components/VennScene.tsx` | The 3D hero background, built with three.js (MIT) |
-| `components/HeroBackdrop.tsx` | Loads the scene lazily and holds its CSS fallback |
-| `components/HeroCollage.tsx` | Optional hero visual: two overlapping portraits and their shared ground |
-| `components/NextWord.tsx` | The line under the headline, "You already know your next customer.", whose last word changes |
+| `components/HeroBackdrop.tsx` | What sits behind the join panel: still CSS circles first, then the 3D scene once the page is idle |
+| `components/VennScene.tsx` | The 3D scene: two glass spheres orbiting each other, built with three.js (MIT) |
+| `components/Motion.tsx` | Turns on the scroll reveals for elements marked `data-reveal` |
 | `components/Waitlist.tsx` | The email form and its states after joining |
-| `components/ChatPreview.tsx` | The two-step preview: Memory Sync card, then Common Ground Match card |
+| `components/OnboardingPreview.tsx` | The interactive memory, invitation, and shared-interest preview |
 | `lib/db.ts`, `lib/waitlist.ts`, `lib/analytics.ts` | Postgres pool and schema, waitlist logic, events and metrics |
 | `lib/version.ts` | The two waitlist versions, `pair` and `open`, and which one is the default |
 | `lib/rate-limit.ts` | Per-address request limit for the API routes |
@@ -52,9 +51,8 @@ silently drop signups.
 `check.mjs` loads the page at 360, 390, 768 and 1280 px, plus once in dark mode and once with reduced motion. It
 fails on: a missing or empty heading, sideways overflow, a hero that does not fit in the first screen, text below
 WCAG AA contrast, text under 12 px, a control under 44 px, a console error, a request to another origin, a
-cookie, a broken step in the preview, a hero scene that does not draw, a scene that loads when reduced motion
-is on, a word under the headline that never changes or that changes with reduced motion, a `/metrics` that
-opens without the password, or a waitlist that never answers 429. With `DATABASE_URL`
+cookie, photos or canvas on the landing page, a broken step in the onboarding preview, a `/metrics`
+that opens without the password, or a waitlist that never answers 429. With `DATABASE_URL`
 it also walks the waitlist on the smallest phone: joining alone with real key presses (Tab to the field,
 Enter, focus on the answer, Tab through both actions, each with a focus ring), arriving with that link (invited, then
 both confirmed), coming back as the first person, a link nobody owns, and the open version. Each state must
@@ -144,38 +142,25 @@ First-party only: no third-party scripts, no cookies, nothing stored on the devi
   closed with a 503 until the variable is set. `next dev` opens it without one.
 - It shows counts only: no emails. Invite codes appear in the referral table.
 
-## The hero scene
+## Hero and onboarding
 
-Two glass spheres orbit each other slowly; the volume they share is lit in a third color. It sits behind the
-hero as a full-bleed background that ignores the pointer, under a radial veil that keeps the text contrast high.
+The hero has the copy on the left and the join panel (the waitlist form) on the right, over two glass
+spheres in the brand yellow and red that orbit each other in 3D. On a phone the panel follows the copy and the
+scene reaches up behind the example card. A CSS version of the circles is in the HTML and paints first;
+three.js is a separate chunk loaded once the page is idle. The still version stays for reduced motion, data
+saving and no WebGL, and rendering stops when the scene is off screen or the tab is hidden.
 
-- A CSS version (two blended circles) is in the HTML and paints first. three.js is a separate chunk loaded with
-  `next/dynamic` and `ssr: false` once the page is idle, and the canvas fades in after its first frame.
-- The CSS version stays when the visitor asks for reduced motion or data saving, or when WebGL is unavailable.
-- Two spheres and one small shader. The pixel ratio is capped at 1.75, and rendering stops when the hero is off
-  screen or the tab is hidden.
-- The colors come from the kit tokens `--venn-a`, `--venn-b` and `--venn-shared`.
+Motion (`app/globals.css` › Motion) always plays into the finished page, so nothing is hidden without script
+or with reduced motion: the hero arrives line by line, the underline is drawn and the highlight swept in, and
+sections fade up the first time they scroll into view (`data-reveal="up"`, or `"group"` for children in turn).
 
-## The changing word
+The onboarding preview uses
+inline SVG for the invitation and the transition from two separate people to a circle.
 
-`NEXT` in `app/page.tsx` lists the words that end "You already know your next …": customer, friend, business
-partner. It is one line, and the last word rolls upward to the next one every 2.4 seconds. The slot is as wide
-as the word in it, so the sentence stays centered, and its width is animated so the words before it glide
-rather than jump. On a phone the sentence is wider than the screen, so below 600 px the word takes the line
-underneath. The first word is in the HTML, so the line is whole without script. The word holds still when the
-visitor asks for reduced motion, while the pointer is on the line, while a form field has focus, and while the
-tab is hidden. Screen readers get one sentence with every word. There is no pause button, so the word cannot be
-stopped from the keyboard; WCAG 2.2.2 asks for that, and it should be added before a formal audit.
-
-Each word is a claim. Change the list together with the claims table, the page description in
-`app/layout.tsx`, and the sentence `check.mjs` expects a screen reader to get.
-
-## The hero collage
-
-`COLLAGE` in `app/page.tsx` fills the optional slot under the form. Give either person an `image` (a square
-portrait under `public/`) to show a photo instead of initials, or set `COLLAGE` to `null` to remove it. It is
-shown only when the hero has room (at least 720 px wide and 800 px tall), so it never pushes the form below the
-fold on a phone.
+The preview starts with sample memories. The visitor chooses what to share, opens a sample invitation,
+accepts as Maya, and sees the overlap calculated from the chosen memories. The preview does not submit
+or persist its choices. The last step links back to the live waitlist. Back preserves the choices and
+Restart clears them.
 
 ## Shared styling with the widget
 
@@ -203,7 +188,7 @@ node site/check.mjs --url https://site-production-4ef8eb52.up.railway.app/
 
 ## What the copy may claim
 
-The page describes the product the team is building and says, under the preview, that it is in development.
+The page labels the onboarding as a preview and tells visitors that their choices are not saved.
 Keep the page true when the product changes.
 
 | Claim | Status | Source |
@@ -211,15 +196,11 @@ Keep the page true when the product changes.
 | Saves only what you approve | Works | `venn_propose_memories`, `venn_save_memories` |
 | Shows its own cards in ChatGPT | Works | `widget/` |
 | It never contacts anyone for you | Works | `README.md`, `plugin/skills/venn-social/SKILL.md` |
-| Memory Sync card with these four signals, sensitive info off by default | Preview | The real card is the memory review card; `Looking for` and `Can help with` are T08 |
-| Common Ground Match card, "Draft warm intro" | In development | T10 to T12 |
-| "You already know your next customer", "business partner" | In development | Matching what one person needs with what another offers is T08 to T12 |
-| "You already know your next friend" | Works for shared interests | `venn_find_people` ("who do I know who climbs?") and activity ideas |
-| "Venn shows where you overlap, from what each of you approves" | Works for shared interests | Activity ideas use what both people chose to share; ChatGPT extracts, the user approves |
+| "Connect your AI memories." | Works for approved ChatGPT memories | `venn_import_chatgpt_memory`, memory review and save |
+| Review, accept, and find shared interests | Preview with a sample person | Memory review, invite redemption and acceptance, `venn_compare` |
 | "We only email you about your invite" | A promise the team must keep | `waitlist_signups` holds the emails. Nothing is sent today |
 | "A confirmed place for both of you", "Your places in the Founding Circle are confirmed" | A promise the team must keep | `confirmed_at`. Whoever opens Venn to the list must honour it |
 | "Someone saved you a place" | Works | Shown only when the link exists and has room (`inviteHasRoom`) |
 | "You join with one person you know" | True of the pair version | A place stays pending until a +1 joins; `?w=open` has no such rule |
 
-The people in the examples are made up, and the footer says so. There is no privacy page yet (T17), and the
-waitlist now collects email addresses.
+The onboarding uses an example person. The waitlist collects email addresses. There is no privacy page yet (T17).

@@ -42,19 +42,19 @@ Use tokens, never raw hex, in `globals.css`. All of them come from the kit excep
 | Role | Token | Where |
 | --- | --- | --- |
 | Page and card surface | `--surface` | Hero, principles, panels, the form field |
-| Recessed band or fill | `--bg`, `--surface-2`, `--surface-3` | The "Inside ChatGPT" band, chat bubble, step track |
+| Recessed band or fill | `--bg`, `--surface-2`, `--surface-3` | The onboarding band, progress track |
 | Text | `--text` | Headings, body, controls |
 | Secondary text | `--text-2` | Hero subhead, section intros, principle text, form note |
 | Tertiary text | `--muted` | Footnotes, footer, labels inside cards |
 | Hairlines | `--border`, `--border-strong` | Card edges; control and pill edges |
 | Action | `--primary`, `--on-primary` | The one primary button per view |
-| The circles | `--venn-a`, `--venn-b`, `--venn-shared` | The hero scene, its CSS fallback, `.venn-pair`. Nowhere else |
+| The circles | `--venn-a`, `--venn-b`, `--venn-shared` | The hero circles, the onboarding stage, `.venn-pair`. Nowhere else |
 | Status | `--danger`, `--focus` | Form errors, focus rings |
 
 - Ink is the accent. Do not introduce a brand color for links, headings, icons, or highlights.
 - The circle colors are for the circles. Do not reuse them for buttons, badges, text, or section
   backgrounds; that is what keeps the figure legible as the signature.
-- Use `--text-2`, not `--muted`, for anything that sits over the hero scene.
+- Use `--text-2`, not `--muted`, for anything that sits over the hero circles.
 - Tint with `color-mix(in srgb, var(--token) N%, transparent)` rather than a new token.
 - Sections alternate white and `--bg`. Separate them with the surface change, not rules or shadows.
 - The page is light only (`<html data-theme="light">`). Do not add a dark theme here; the kit's
@@ -103,12 +103,14 @@ typeface, no webfont from another origin.
 
 ### The hero is exactly one screen
 
-The header, `h1`, the changing line, subhead, and waitlist must all end above the fold at 360 x 640. Anything else
-in the hero is optional and gated like `.collage` (shown only at 720px wide and 800px tall or
-more). The backdrop stays `position: absolute`, behind the content, with `pointer-events: none`,
-under `.hero__veil`, which is what keeps the text contrast safe. If you change how the circles
-are arranged, change `VennScene.tsx` and `.venn-fallback` together: the CSS version paints first
-and must match (side by side on wide screens, stacked when the aspect ratio is under 4:5).
+The header, `h1`, subtitle, the changing line, and waitlist must all end above the fold at
+360 x 640. Anything else in the hero must be hidden where it does not fit. The backdrop
+(`.hero__circles`, pure CSS: side by side on wide screens, stacked when the aspect ratio is under
+4:5) stays `position: absolute`, behind the content, with `pointer-events: none`, under
+`.hero__veil`, which is what keeps the text contrast safe.
+
+The page loads no images, canvas, 3D or animation library. Drawings are inline SVG in the kit
+tokens, like the onboarding stage.
 
 ## Components
 
@@ -131,21 +133,23 @@ Compose from the kit before writing new CSS: `.panel`, `.card`, `.notice`, `.btn
 
 ## Motion
 
-- Ambient only in the hero: the slow orbit, or a 14s breathe in the CSS fallback, and the one
-  changing word under the headline (`NextWord`: every 2.4s the word rolls out through the top
-  and the next rises from below, 0.5s, the same easing as `rise`).
-  Nothing else on the page loops, and no second line of text may change on its own.
+- The only thing that moves on its own is the changing word under the subtitle (`NextWord`: every
+  2.4s the word rolls out through the top and the next rises from below, 0.5s, the same easing as
+  `rise`). Nothing else on the page loops, and no second line of text may change on its own.
+- The onboarding stage moves only when the visitor acts: 0.6s transitions between steps, with
+  short delays so the overlap fills in order. Under reduced motion it jumps straight to each step.
 - Text that changes never makes its neighbours jump: the slot is as wide as its word and that
   width is animated, so the sentence stays centered and the words before it glide.
 - New content enters with the shared `rise` keyframes (8px, 0.4 to 0.5s,
   `cubic-bezier(0.2, 0.8, 0.2, 1)`). Control feedback is a 0.15s transition.
 - No scroll-triggered reveals, parallax, hover lifts, or animation libraries.
-- The reduced-motion block at the end of `globals.css` switches everything off, and the hero then
-  stays on the still CSS circles. New motion must be covered by both.
+- The reduced-motion block at the end of `globals.css` switches everything off. New motion must
+  be covered by it, and any transition delay reset as the stage does.
 
 ## Copy
 
-- Short declarative sentences with a full stop, headlines included: "Find the common ground."
+- Short declarative sentences with a full stop, headlines included: "Venn. Connect your AI
+  memories."
 - Sentence case everywhere. Title Case only for the CTA "Join the Waitlist", the proper name
   "Founding Circle", and the metric names on the `/metrics` tiles.
 - Second person; Venn is the subject of what it does and, just as often, of what it does not do
@@ -163,7 +167,8 @@ Compose from the kit before writing new CSS: `.panel`, `.card`, `.notice`, `.btn
 
 - One `h1` per page. Each `<section>` has `aria-labelledby`; a section with no visible title gets
   an `.sr-only` heading.
-- Decorative visuals are `aria-hidden` and carry an `.sr-only` text equivalent (see `HeroCollage`).
+- Decorative visuals are `aria-hidden` and the same facts are in text beside them (see the
+  onboarding stage and the chips under it).
   Symbols such as "↔" are hidden and replaced with a spoken word.
 - Results appear in `role="status"`, errors in `role="alert"`, and focus moves to a confirmation
   that replaces a form.
@@ -177,7 +182,8 @@ Design within these, because the check runs at 360, 390, 768, and 1280px, once w
 system setting and once with reduced motion:
 
 - More or fewer than one `h1`, an empty heading, or a landing `h1` that is not
-  "Find the common ground." or is under 32px
+  "Venn. Connect your AI memories." or is under 32px, or a subtitle that is not "Build your inner
+  circle."
 - Any sideways overflow, or any visible element crossing the viewport edge (wide tables scroll
   inside `.metrics__scroll`)
 - A hero taller than the screen, or its header, `h1`, changing line, subhead, or waitlist below
@@ -187,11 +193,11 @@ system setting and once with reduced motion:
 - Text under AA contrast or under 12px
 - A control under 44px in either dimension
 - A console error, an uncaught script error, a request to another origin, or a cookie
-- A hero scene that does not draw, or that loads under reduced motion
+- A hero without its two CSS circles, or any image or canvas on the landing page
 - A word under the headline that never changes, that changes under reduced motion, or that on a
   wide screen is off the sentence's line or leaves the sentence off center
-- A change to the preview's wording or steps. `exercisePreview` matches the signal labels,
-  button text, and notes literally, and the waitlist and `/metrics` checks match theirs. When
+- A change to the onboarding's wording or steps. `exercisePreview` matches the memory labels,
+  button text, and notes literally, and checks the stage's state at each step, and the waitlist and `/metrics` checks match theirs. When
   you change that copy on purpose, update `check.mjs` in the same change.
 
 So: fonts and images are self-hosted under `site/public/`, nothing loads from a CDN, and no

@@ -26,13 +26,26 @@ Annotations: **R** read-only, **W** write, **D** destructive (ChatGPT asks for c
 **UI** = renders the widget (`_meta.ui.resourceUri = ui://venn/app-v2.html`); the result's
 `view` field tells the widget which card to show.
 
-56 tools, 17 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Venn) or
+60 tools, 19 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Venn) or
 `person_id` (a private note about someone who is not); results name it as `kind`
 (`"connection"` \| `"person"`) + `id`.
 
 **UI first.** The server instructions, the tool descriptions and the skill tell the model that the
 first Venn call in a conversation must render a card: the specific card if the request maps
-to one, otherwise `venn_show_dashboard` (home, or the welcome card for an empty account).
+to one, `venn_show_reply` for tailored social answers, or `venn_show_dashboard` for home and set-up.
+
+## Tailored replies
+
+All four tools require `connections.manage`. The `reply` argument is a plain-text `title` (up to 100
+characters) and `body` (up to 1,200) with `kind` set to `advice`, `checklist`, or `draft`.
+A checklist also requires one to six `steps` of up to 200 characters each.
+
+| Tool | Arguments | Annotation | Result |
+| --- | --- | --- | --- |
+| `venn_show_reply` | `reply` | R, UI | `{view: "reply", reply}`. Displays only the task-specific answer. |
+| `venn_save_reply` | `reply` | W, widget only | `{saved: true, reply_id}`. Saves the displayed reply privately when the user taps Save privately. Repeated saves return the same ID. |
+| `venn_saved_replies` | – | R, UI | `{view: "saved_replies", replies[{reply_id, reply}]}`. Owner's saved replies, most recent first. |
+| `venn_delete_saved_reply` | `reply_id` | D, widget only | `{deleted: true}`. Removes the owner's saved reply. |
 This is guidance to the model, not something the server can enforce.
 
 **Set-up first.** Set-up has three steps, in order: *about you* (done once a memory is saved),

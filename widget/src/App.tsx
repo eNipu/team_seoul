@@ -20,6 +20,8 @@ import GroupPlan from "./components/GroupPlan";
 import Brief from "./components/Brief";
 import Quiz from "./components/Quiz";
 import Help from "./components/Help";
+import ReplyCard, { SavedReplies } from "./components/Reply";
+import type { McpUiHostContext } from "@modelcontextprotocol/ext-apps";
 import { BrandMark, Icon, Illustration } from "./components/icons";
 import ErrorBanner from "./components/ErrorBanner";
 import { Spinner, type Nav } from "./components/common";
@@ -118,6 +120,7 @@ function demoTab(): DashboardTab | null {
 }
 
 export default function App() {
+  const [hostContext, setHostContext] = useState<McpUiHostContext>({});
   const [bridge, setBridge] = useState<HostBridge | null>(null);
   const [stack, setStackState] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -186,7 +189,8 @@ export default function App() {
         setLoading(false);
       },
       onHostContext: (ctx) => {
-        /* theme is applied inside the bridge; the tool name only picks a skeleton shape */
+        setHostContext(ctx);
+        // The bridge applies the theme. The tool name picks a skeleton shape.
         const name = ctx.toolInfo?.tool?.name;
         if (typeof name === "string") setSkeleton(skeletonFor(name));
       },
@@ -279,22 +283,35 @@ export default function App() {
   const showSkeleton = loading && !error;
   const top = stack.length > 0 ? stack[stack.length - 1] : null;
 
-  const [openingHelp, setOpeningHelp] = useState(false);
-  const openHelp = useCallback(async () => {
-    setOpeningHelp(true);
-    let message: string | null;
-    try {
-      message = await openView("venn_help", {});
-    } catch (e) {
-      message = e instanceof Error ? e.message : "Venn couldn't open help.";
-    }
-    setOpeningHelp(false);
+  const [opening, setOpening] = useState<"Help" | "Saved replies" | null>(null);
+  const openHeaderView = async (label: "Help" | "Saved replies") => {
+    setOpening(label);
+    const message = await openView(label === "Help" ? "venn_help" : "venn_saved_replies", {});
+    setOpening(null);
     if (message) setError(message);
-  }, [openView]);
-  const showHelp = bridge !== null && !showSkeleton && top?.view.view !== "help";
+  };
+  const [changingMode, setChangingMode] = useState(false);
+  const fullscreen = hostContext.displayMode === "fullscreen";
+  const targetMode = fullscreen ? "inline" : "fullscreen";
+  const canChangeMode = bridge?.requestDisplayMode && hostContext.availableDisplayModes?.includes(targetMode);
+  const insets = fullscreen ? hostContext.safeAreaInsets : undefined;
+
+  async function changeMode() {
+    if (!bridge?.requestDisplayMode) return;
+    setChangingMode(true);
+    const mode = await bridge.requestDisplayMode(targetMode);
+    setChangingMode(false);
+    if (mode) setHostContext((current) => ({ ...current, displayMode: mode }));
+    if (mode !== targetMode) setError("ChatGPT couldn't change how Venn is displayed.");
+  }
 
   return (
-    <div className="venn">
+    <div className="venn" style={insets && {
+      paddingTop: `calc(var(--s-3) + ${insets.top}px)`,
+      paddingRight: `calc(var(--s-3) + ${insets.right}px)`,
+      paddingBottom: `calc(var(--s-3) + ${insets.bottom}px)`,
+      paddingLeft: `calc(var(--s-3) + ${insets.left}px)`,
+    }}>
       <header className="venn__header">
         {canGoBack && !showSkeleton && (
           <button type="button" className="icon-btn back" onClick={back} aria-label="Back" title="Back">
@@ -304,14 +321,27 @@ export default function App() {
         <BrandMark />
         <span className="venn__brand">Venn</span>
         <span className="venn__spacer" />
-        {(refreshing || openingHelp) && <Spinner label={openingHelp ? "Opening help" : "Refreshing"} />}
+        {(refreshing || opening) && <Spinner label={opening ? `Opening ${opening.toLowerCase()}` : "Refreshing"} />}
         {bridge?.isMock && <span className="badge badge--demo">Demo</span>}
-        {showHelp && (
+        {bridge && !showSkeleton && top?.view.view !== "saved_replies" && (
+          <button type="button" className="icon-btn" disabled={opening !== null}
+            onClick={() => void openHeaderView("Saved replies")} aria-label="Saved replies" title="Saved replies">
+            <Icon name="bookmark" />
+          </button>
+        )}
+        {canChangeMode && (
+          <button type="button" className="icon-btn" disabled={changingMode} onClick={() => void changeMode()}
+            aria-label={fullscreen ? "Return Venn to chat" : "Open Venn fullscreen"}
+            title={fullscreen ? "Return Venn to chat" : "Open Venn fullscreen"}>
+            <Icon name={fullscreen ? "collapse" : "expand"} />
+          </button>
+        )}
+        {bridge && !showSkeleton && top?.view.view !== "help" && (
           <button
             type="button"
             className="icon-btn"
-            onClick={() => void openHelp()}
-            disabled={openingHelp}
+            onClick={() => void openHeaderView("Help")}
+            disabled={opening !== null}
             aria-label="Help"
             title="Help"
           >
@@ -343,6 +373,10 @@ function renderView(
   onTabChange: (t: DashboardTab) => void,
 ) {
   switch (view.view) {
+    case "reply":
+      return <ReplyCard key={key} data={view} bridge={bridge} nav={nav} />;
+    case "saved_replies":
+      return <SavedReplies key={key} data={view} bridge={bridge} nav={nav} />;
     case "memory_review":
       return <MemoryReview key={key} data={view} bridge={bridge} nav={nav} />;
     case "memory_import":

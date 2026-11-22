@@ -57,6 +57,11 @@
 
 - Memories are created only from explicit user approval; users can edit, change visibility,
   delete individual memories, or delete their whole account (cascading delete).
+- Venn receives the task-specific answer ChatGPT sends to the reply tool. A preview leaves no
+  saved reply in the database. **Save privately** keeps the displayed reply in the owner's account.
+  Save and delete are widget actions. The server checks OAuth scopes, rejects credential and
+  sensitive-number patterns, and restricts reading and deletion to the owner. Users can delete
+  an individual reply from **Saved replies**. The reply tools have no transcript input.
 - Importing from ChatGPT memory: Venn's server cannot read ChatGPT's memory and never
   receives it wholesale. ChatGPT lists what it remembers in the chat; only the items the user
   picks there are sent to `venn_propose_memories`, and only the ones confirmed on the card are

@@ -5,10 +5,8 @@
 //   node check.mjs --url <url>          check a running or deployed copy instead
 //
 // Covers: headings, horizontal overflow, the hero fitting in one screen, text contrast,
-// control sizes, console errors, third-party requests, cookies, the hero scene (it must
-// draw, and must stay on the still CSS version with reduced motion), the two-step
-// changing word under the headline (it must move on, and hold still with reduced motion),
-// the "Inside ChatGPT" preview, the /metrics password, /metrics itself, and the waitlist
+// control sizes, console errors, third-party requests, cookies, the CSS-only hero,
+// the four-step onboarding preview, the /metrics password, /metrics itself, and the waitlist
 // with its rate limit: both versions, what an invited person sees, a full link, and
 // joining with the keyboard alone.
 //
@@ -256,14 +254,18 @@ function auditFold() {
   if (hero.getBoundingClientRect().bottom > fold) {
     problems.push(`hero is ${Math.round(hero.getBoundingClientRect().height)}px tall, taller than the ${window.innerHeight}px screen`);
   }
-  for (const selector of [".site-header", "h1", ".hero__next", ".hero__sub", ".waitlist"]) {
+  for (const selector of [".site-header", "h1", ".hero__sub", ".waitlist"]) {
     const el = hero.querySelector(selector);
     if (!el) problems.push(`hero has no ${selector}`);
     else if (el.getBoundingClientRect().bottom > fold) problems.push(`${selector} ends below the fold`);
   }
   const h1 = hero.querySelector("h1");
-  if (h1 && h1.textContent.trim() !== "Find the common ground.") problems.push(`h1 reads "${h1.textContent.trim()}"`);
+  if (h1 && h1.textContent.trim() !== "Venn. Connect your AI memories.") problems.push(`h1 reads "${h1.textContent.trim()}"`);
   if (h1 && parseFloat(getComputedStyle(h1).fontSize) < 32) problems.push("h1 is smaller than 32px");
+  if (hero.querySelector(".hero__sub")?.textContent !== "Build your inner circle.") problems.push("unexpected hero subtitle");
+  if (hero.querySelectorAll(".hero__circle").length !== 2 || document.querySelector("main img, main canvas")) {
+    problems.push("the hero must use two CSS circles and the page must load no photos or canvas");
+  }
   const backdrop = getComputedStyle(hero.querySelector(".hero__backdrop"));
   if (backdrop.pointerEvents !== "none" || backdrop.position !== "absolute" || Number(backdrop.zIndex) >= 0) {
     problems.push("the hero backdrop must be absolute, behind the content and ignore the pointer");
@@ -271,93 +273,61 @@ function auditFold() {
   return problems;
 }
 
-// Runs in the page. Plays the two-step "Inside ChatGPT" preview.
+// Runs in the page. Exercises consent, both invitation views, overlap, back and restart.
 async function exercisePreview() {
   const problems = [];
   const expect = (ok, message) => ok || problems.push(`preview: ${message}`);
   const tick = () => new Promise((done) => requestAnimationFrame(() => setTimeout(done, 30)));
-  const root = document.querySelector(".chat");
-  if (!root) return ["preview: .chat is missing"];
-  const button = (text) => [...root.querySelectorAll("button")].find((b) => b.textContent.includes(text));
+  const root = document.querySelector(".onboarding");
+  if (!root) return ["preview: onboarding is missing"];
+  const button = (text) => [...root.querySelectorAll("button")].find((b) => b.textContent.trim() === text);
   const boxes = () => [...root.querySelectorAll('input[type="checkbox"]')];
-  const labels = () => [...root.querySelectorAll(".pick__name strong")].map((n) => n.textContent);
-
-  expect(
-    labels().join() === "Building,Based in,Looking for,Can help with,Personal & sensitive info",
-    `signals were "${labels().join()}"`,
-  );
-  expect(boxes().map((b) => b.checked).join() === "true,true,true,true,false", "four signals on, sensitive info off at start");
-  expect(root.textContent.includes("Nothing is shared until you approve it"), "the approval note is shown");
-  expect(!!button("Approve 4 signals"), "approve button counts the ticked signals");
-
-  button("Approve")?.click();
-  await tick();
-  expect(root.querySelectorAll(".venn-pair__who").length === 2, "match card shows two overlapping circles");
-  expect(root.querySelector(".venn-pair__shared")?.textContent === "Berlin", "the shared ground is named");
-  expect(/launching in Berlin.*Teodor just shifted into Berlin B2B growth/s.test(root.textContent), "match line is shown");
-  button("Draft warm intro")?.click();
-  await tick();
-  expect(!!root.querySelector(".match__draft") && !button("Draft warm intro"), "a draft replaces the button");
-  expect(root.textContent.includes("Venn never sends anything for you"), "the draft says Venn does not send it");
-
-  // Without the two signals the match rests on, there is nothing to show.
-  button("Memory sync")?.click();
-  await tick();
-  boxes()[1]?.click();
-  boxes()[2]?.click();
-  await tick();
-  button("Approve")?.click();
-  await tick();
-  expect(root.textContent.includes("No common ground yet"), "no match without the signals it needs");
-
-  // Leave the preview as a visitor first sees it.
-  button("Memory sync")?.click();
-  await tick();
-  boxes()[1]?.click();
-  boxes()[2]?.click();
-  await tick();
-  return problems;
-}
-
-// Runs in the page. Waits for the hero scene to settle and reports its state.
-function sceneState() {
-  return new Promise((done) => {
-    const host = document.querySelector("[data-scene]");
-    const started = performance.now();
-    const frames = () => Number(host?.querySelector(".venn-scene")?.dataset.frames ?? 0);
-    const poll = () => {
-      const state = host?.dataset.scene;
-      const waited = performance.now() - started;
-      if ((state === "webgl" && frames() > 1) || waited > 8000) {
-        done({ state: state ?? "missing", frames: frames(), canvas: !!host?.querySelector("canvas") });
-      } else setTimeout(poll, 100);
-    };
-    poll();
-  });
-}
-
-// Runs in the page. The line under the headline: the word on show, and what a screen reader gets.
-// Waits out a roll in progress first, so the word is measured at rest.
-async function nextWord() {
-  for (let waited = 0; waited < 1500; waited += 50) {
-    const on = document.querySelector(".hero__next-word--on");
-    const style = on && getComputedStyle(on);
-    if (style && style.transform === "none" && style.opacity === "1" && !document.querySelector(".hero__next-words").getAnimations().length) break;
-    await new Promise((done) => setTimeout(done, 50));
-  }
-  const lead = document.querySelector(".hero__next-lead")?.getBoundingClientRect();
-  const word = document.querySelector(".hero__next-word--on")?.getBoundingClientRect();
-  const line = document.querySelector(".hero__next-line")?.getBoundingClientRect();
-  return {
-    shown: document.querySelector(".hero__next-word--on")?.textContent ?? "",
-    spoken: document.querySelector(".hero__next .sr-only")?.textContent ?? "",
-    // The word starts where the sentence ends, at the same height. (The two boxes differ in
-    // height by the line's leading, so their edges are not compared.)
-    oneLine:
-      !!lead && !!word && word.left >= lead.right - 1 && Math.abs((word.top + word.bottom - lead.top - lead.bottom) / 2) < 3,
-    // How far the sentence's middle is from the middle of the page.
-    offCenter: line ? Math.round(Math.abs((line.left + line.right) / 2 - window.innerWidth / 2)) : -1,
+  const step = (number) => {
+    expect(root.querySelectorAll('.onboarding__progress [data-complete="true"]').length === number, `progress at step ${number}`);
+    expect(document.activeElement === root.querySelector("h3"), `focus on heading at step ${number}`);
   };
+  const storageBefore = JSON.stringify(localStorage);
+
+  expect(boxes().length === 3 && boxes().every((b) => !b.checked), "memories start unselected");
+  expect(button("Select a memory to continue")?.disabled, "empty selection cannot advance");
+  boxes()[0]?.click();
+  boxes()[2]?.click();
+  await tick();
+  button("Approve 2 memories")?.click();
+  await tick();
+  step(2);
+  expect(root.querySelector("svg.onboarding__circle .onboarding__outline"), "pending circle shown");
+  button("Preview Maya’s invitation")?.click();
+  await tick();
+  step(3);
+  expect(root.textContent.includes("Someone invited you to Venn."), "invitee sees an invitation");
+  button("Accept as Maya")?.click();
+  await tick();
+  step(4);
+  expect(root.querySelectorAll(".onboarding__member").length === 2, "both people shown after acceptance");
+  expect(root.querySelector(".onboarding__interests")?.textContent === "Photography", "only shared approved memories shown");
+  expect(root.querySelector('a[href="#waitlist"]')?.textContent === "Join the Waitlist", "result links to live signup");
+  button("Back")?.click();
+  await tick();
+  step(3);
+  button("Restart")?.click();
+  await tick();
+  step(1);
+
+  boxes()[2]?.click();
+  await tick();
+  button("Approve 1 memory")?.click();
+  await tick();
+  button("Preview Maya’s invitation")?.click();
+  await tick();
+  button("Accept as Maya")?.click();
+  await tick();
+  expect(root.textContent.includes("No shared interests in the memories you chose."), "no overlap for an unshared interest");
+  button("Restart")?.click();
+  await tick();
+  expect(boxes().every((b) => !b.checked), "restart clears choices");
+  expect(JSON.stringify(localStorage) === storageBefore, "preview did not change local storage");
+  return problems;
 }
 
 // Runs in the page. Where keyboard focus is, and whether a focus ring is drawn for it.
@@ -519,63 +489,32 @@ async function main() {
       label = `${viewport.name}${scheme === "dark" ? "/dark" : ""}${motion === "reduce" ? "/reduced-motion" : ""}`;
       await open("/", viewport, { scheme, motion });
 
-      const scene = await run(sceneState);
-      if (motion === "reduce") {
-        if (scene.state !== "css" || scene.canvas) {
-          failures.push(`${label}: with reduced motion the hero must stay on the CSS circles (state "${scene.state}")`);
-        }
-      } else if (scene.state !== "webgl" || !scene.canvas) {
-        failures.push(`${label}: hero scene state is "${scene.state}", expected "webgl"`);
-      } else {
-        await sleep(400);
-        const later = await run(sceneState);
-        if (later.frames <= scene.frames) failures.push(`${label}: hero scene is not animating (${scene.frames} frames)`);
-      }
-
       for (const problem of await run(auditFold)) failures.push(`${label}: ${problem}`);
       for (const problem of await run(audit)) failures.push(`${label}: ${problem}`);
       await shot(`${label}-fold`, false);
       await shot(label);
 
-      // The changing word, once with motion and once without. One step is 2.4s.
-      if (viewport === VIEWPORTS[3]) {
-        const before = await run(nextWord);
-        await sleep(2900);
-        const after = await run(nextWord);
-        if (before.spoken !== "You already know your next customer, friend or business partner.") {
-          failures.push(`${label}: the line under the headline reads "${before.spoken}" to a screen reader`);
-        }
-        // One line on a wide screen, and centered whichever word is showing.
-        for (const at of [before, after]) {
-          if (!at.oneLine) failures.push(`${label}: "${at.shown}" is not on the same line as the sentence before it`);
-          if (at.offCenter > 2) failures.push(`${label}: with "${at.shown}" the line is ${at.offCenter}px off center`);
-        }
-        if (motion === "reduce") {
-          if (before.shown !== "customer." || after.shown !== "customer.") {
-            failures.push(`${label}: with reduced motion the word must stay "customer." (saw "${before.shown}", then "${after.shown}")`);
-          }
-        } else if (!before.shown || before.shown === after.shown) {
-          failures.push(`${label}: the word under the headline did not change ("${before.shown}")`);
-        }
-      }
-
-      if (scheme === "light" && motion !== "reduce") {
-        for (const problem of await run(exercisePreview)) failures.push(`${label}: ${problem}`);
-      }
-      console.log(`checked ${label} (scene: ${scene.state})`);
+      for (const problem of await run(exercisePreview)) failures.push(`${label}: ${problem}`);
+      console.log(`checked ${label}`);
     }
 
-    // The preview's second card, for the screenshots.
     if (shotsDir) {
-      label = "phone/preview-match";
-      await open("/", VIEWPORTS[1]);
-      await run(`async () => {
-        const find = (text) => [...document.querySelectorAll(".chat button")].find((b) => b.textContent.includes(text));
-        find("Approve").click();
-        await new Promise((done) => setTimeout(done, 100));
-        document.querySelector(".chat").scrollIntoView({ block: "start" });
-        await new Promise((done) => setTimeout(done, 500));
+      label = "phone/onboarding";
+      await open("/", VIEWPORTS[1], { motion: "reduce" });
+      const next = await run(`async () => {
+        const preview = document.querySelector(".onboarding");
+        preview.querySelector('input').click();
+        const actions = ["Approve 1 memory", "Preview Maya’s invitation", "Accept as Maya"];
+        for (const action of actions) {
+          await new Promise((done) => requestAnimationFrame(done));
+          Array.from(preview.querySelectorAll("button")).find((b) => b.textContent.trim() === action).click();
+        }
+        await new Promise((done) => requestAnimationFrame(done));
+        preview.scrollIntoView({ block: "center" });
+        return preview.querySelector("h3").textContent;
       }`);
+      if (next !== "Your circle starts here.") failures.push("onboarding screenshot did not reach the result");
+      for (const problem of await run(audit)) failures.push(`${label}: ${problem}`);
       await shot(label, false);
     }
 
@@ -638,7 +577,7 @@ async function main() {
       notes.push("waitlist signup skipped: start the check with DATABASE_URL to exercise it");
     } else {
       const stamp = Date.now();
-      const actions = "Share my invite link|See it inside ChatGPT";
+      const actions = "Share my invite link|Try the onboarding";
 
       // Pair: joining alone holds the place. Done with the keyboard only: the first Tab
       // lands in the email field, Enter joins, and focus moves to the answer.
@@ -665,7 +604,7 @@ async function main() {
       await tab();
       await focusIs("Share my invite link");
       await tab();
-      await focusIs("See it inside ChatGPT");
+      await focusIs("Try the onboarding");
       await enter();
       await sleep(300);
       expect((await run(`() => location.hash`)) === "#inside", "keyboard: Enter on the preview link did not go to #inside");
@@ -714,8 +653,8 @@ async function main() {
       expect(third.joined, `open signup did not answer: "${third.error}"`);
       const joined = await look("joined", {
         lead: /#\d{3,}/,
-        buttons: "Invite a connection to move up|See it inside ChatGPT",
-        note: "Everyone who joins with your link moves you up the list.",
+        buttons: "Invite a connection to move up|Try the onboarding",
+        note: "",
         jump: "#inside",
       });
       expect(joined.saved && !joined.saved.includes("@"), "the spot should be remembered without the email");
