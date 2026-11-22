@@ -24,6 +24,17 @@ has to be redone once: reconnect the server in ChatGPT, use the new scopes at th
 
 The one game is a quiz built from what friends chose to share; there are no other games.
 
+## Live endpoints
+
+| Use | URL |
+| --- | --- |
+| Connect Venn in ChatGPT (MCP over streamable HTTP, OAuth) | [https://app.joinvennai.com/mcp](https://app.joinvennai.com/mcp) |
+| Sign in to My Venn | [https://app.joinvennai.com/app/](https://app.joinvennai.com/app/) |
+| Public landing page and waitlist | [https://joinvennai.com](https://joinvennai.com) |
+| Preview the weekly review with sample data | [https://app.joinvennai.com/widget-preview?view=weekly_review](https://app.joinvennai.com/widget-preview?view=weekly_review) |
+| MCP OAuth discovery | [Protected resource metadata](https://app.joinvennai.com/.well-known/oauth-protected-resource/mcp) · [Authorization server metadata](https://app.joinvennai.com/.well-known/oauth-authorization-server) |
+| Backend and database readiness | [https://app.joinvennai.com/readyz](https://app.joinvennai.com/readyz) |
+
 ## One account, two ways in
 
 Venn is one service: use it inside ChatGPT, or sign in at the website (`http://localhost:8081/app`
@@ -267,11 +278,11 @@ See [docs/SECURITY.md](docs/SECURITY.md) for the full checklist.
 
 Railway project `heldly` (the old product name), environment `production`:
 
-| Service | URL | Notes |
-| --- | --- | --- |
-| `backend` | `https://app.joinvennai.com` (MCP at `/mcp`) | Root `/`, root `Dockerfile`. Watches `backend/`, `widget/`, `web/`, `Dockerfile`, and `.dockerignore`. |
-| `site` | `https://joinvennai.com` | Root `/site`, Railpack. Watches `site/`. |
-| `Postgres` | private network only | Used by both |
+| Service | Build and watch paths |
+| --- | --- |
+| `backend` | Serves MCP and My Venn. Builds from the root `Dockerfile` and watches `backend/`, `widget/`, `web/`, `Dockerfile`, and `.dockerignore`. |
+| `site` | Serves the landing page and waitlist. Builds with Railpack from `/site` and watches `site/`. |
+| `Postgres` | Private database used by both services. |
 
 Both services track `main` in `eNipu/team_seoul`. Railway builds a service when a push or
 merge into `main` changes one of its watched paths.
