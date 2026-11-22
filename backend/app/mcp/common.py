@@ -58,6 +58,14 @@ def ui_meta(invoking: str, invoked: str) -> dict[str, Any]:
     }
 
 
+def app_only_meta(invoking: str, invoked: str) -> dict[str, Any]:
+    return {
+        **invocation_meta(invoking, invoked, widget_accessible=True),
+        "ui": {"visibility": ["app"]},
+        "openai/visibility": "private",
+    }
+
+
 async def run_as_user[T](scopes: Iterable[str], fn: Callable[[Session, User, bool], T]) -> T:
     """Authenticate (from the verified token only), then run `fn(db, user, created)` in a thread."""
     token = current_token(scopes)

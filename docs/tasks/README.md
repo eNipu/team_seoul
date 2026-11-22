@@ -86,6 +86,7 @@ Read `SCHEDULING.md` before any task in this group.
 
 | ID | Task | Area | Size | Depends on | Status |
 | --- | --- | --- | --- | --- | --- |
+| [T39](T39-chatgpt-replies.md) | Tailored replies inside ChatGPT | both | M | – | done |
 | [T40](T40-site-onboarding.md) | Landing page onboarding preview | site | M | – | done |
 
 T04 and T12 can start right away, in parallel with the backend tasks, because the shapes they
