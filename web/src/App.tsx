@@ -187,7 +187,9 @@ function AccountMenu() {
         <div className="menu">
           <div className="menu__who">
             <strong>{displayName}</strong>
-            {session.username && <span>@{session.username}</span>}
+            {session.username && (
+              <span>{session.username.includes("@") ? session.username : `@${session.username}`}</span>
+            )}
           </div>
           <Link to="/account" className="menu__item">
             <Icon name="user" size={18} />
@@ -383,6 +385,8 @@ function SessionGate() {
     if (!session.sign_in_available) return <SignInUnavailable />;
     return (
       <SignIn
+        googleSsoAvailable={session.google_sso_available}
+        devSignInAvailable={session.dev_sign_in_available}
         passcodeRequired={session.passcode_required}
         onSignedIn={(result) => {
           setDisplayName(result.display_name);

@@ -246,7 +246,7 @@ export function BrandMark({ size = 28 }: { size?: number }) {
   return (
     <svg className="brand-mark" width={size} height={size} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
       {/* Two overlapping circles: you, a friend, and what you share. */}
-      <rect width="32" height="32" rx="8" fill="#3F72AF" />
+      <rect width="32" height="32" rx="8" fill="#2E73B8" />
       <circle cx="11.75" cy="16" r="8.5" fill="#F9F7F7" fillOpacity="0.48" />
       <circle cx="20.25" cy="16" r="8.5" fill="#F9F7F7" fillOpacity="0.48" />
       <path d="M16 8.64a8.5 8.5 0 0 1 0 14.72 8.5 8.5 0 0 1 0-14.72z" fill="#F9F7F7" />

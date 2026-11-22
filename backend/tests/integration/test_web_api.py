@@ -32,6 +32,8 @@ def test_session_reports_signed_out(web):
         "signed_in": False,
         "auth_mode": "dev",
         "sign_in_available": True,
+        "google_sso_available": False,
+        "dev_sign_in_available": True,
         "passcode_required": False,
         "display_name": None,
         "username": None,

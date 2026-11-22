@@ -29,6 +29,7 @@ from app.mcp.server import build_mcp_server
 from app.services import calendar_service, question_service
 from app.services.errors import VennError
 from app.web.api import build_api, install_error_handlers
+from app.web.google_auth import install_google_auth
 from app.web.site import install_site
 
 # A friend's answers are four short lines; anything much larger is not that form.
@@ -172,6 +173,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     install_error_handlers(app)
     app.include_router(build_api(settings))
+    install_google_auth(app, settings)
     install_site(app, settings)
 
     # The MCP Starlette app owns /mcp, OAuth metadata (/.well-known/*), and (dev) /authorize,/token,/register.

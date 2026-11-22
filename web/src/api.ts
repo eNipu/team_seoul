@@ -12,6 +12,7 @@ export interface Api {
   // Sign-in
   getSession(): Promise<T.Session>;
   signIn(input: T.SignInInput): Promise<T.SignInResult>;
+  signInWithGoogle?(mode: "signin" | "signup"): Promise<T.SignInResult>;
   signOut(): Promise<void>;
   getOverlap(): Promise<T.OverlapState>;
   optInOverlap(input: T.OverlapInput): Promise<T.OverlapState>;
@@ -332,6 +333,13 @@ const realApi: Api = {
   removeSample: async () => T.parseSampleRemoved(await request("DELETE", "/sample")),
 };
 
+export function googleAuthStartUrl(mode: "signin" | "signup"): string {
+  const next = `${window.location.pathname}${window.location.search}`;
+  const safeNext = next.startsWith("/app") ? next : "/app/";
+  const query = new URLSearchParams({ mode, next: safeNext });
+  return `/auth/google/start?${query.toString()}`;
+}
+
 export const api: Api = DEMO
   ? createMockApi({
       overlapSeat: params.get("seat"),
@@ -339,5 +347,6 @@ export const api: Api = DEMO
       passcode: params.get("passcode") === "1",
       fresh: params.get("fresh") === "1",
       external: params.get("external") === "1",
+      googleSso: params.get("nogoogle") !== "1",
     })
   : realApi;
