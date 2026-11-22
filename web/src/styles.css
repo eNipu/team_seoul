@@ -589,6 +589,18 @@ textarea::placeholder {
   gap: 6px;
 }
 
+.home-greeting {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.home-greeting h1 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 /* --------------------------------------------------------------- buttons */
 
 .btn {
@@ -1968,6 +1980,10 @@ input[type="radio"] {
   gap: 12px;
   padding: 16px 0 4px;
   text-align: center;
+}
+
+.welcome .home-greeting {
+  justify-content: center;
 }
 
 .welcome .lead {

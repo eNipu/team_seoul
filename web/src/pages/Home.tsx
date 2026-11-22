@@ -1,6 +1,6 @@
 // Home: start with a person or a plan, not a chat.
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { api } from "../api";
 import { Icon, Illustration, type IconName } from "../icons";
 import { Link, navigate, type Query } from "../router";
@@ -44,6 +44,17 @@ function greeting(): string {
   if (h < 12) return "Good morning";
   if (h < 18) return "Good afternoon";
   return "Good evening";
+}
+
+function HomeGreeting({ children }: { children: ReactNode }) {
+  return (
+    <div className="home-greeting">
+      <h1 id="page-title">{children}</h1>
+      <a className="btn btn--small" href="https://chatgpt.com/plugins">
+        Open ChatGPT Plugin
+      </a>
+    </div>
+  );
 }
 
 function HeroSearch() {
@@ -248,7 +259,7 @@ function Welcome({ name, steps, onLoaded }: { name: string; steps: SetupStep[]; 
     <div className="page page--narrow">
       <section className="welcome">
         <Illustration name="welcome" size="lg" />
-        <h1 id="page-title">Welcome to Venn, {firstName(name) || "friend"}</h1>
+        <HomeGreeting>Welcome to Venn, {firstName(name) || "friend"}</HomeGreeting>
         <p className="lead">
           A private place to stay close to the people who matter. Start with a person or a plan — your friends don't need to
           join for Venn to be useful.
@@ -317,9 +328,9 @@ function Dashboard({ home, reloadHome }: { home: DashboardHome; reloadHome: () =
   return (
     <div className="page">
       <header className="home-head">
-        <h1 id="page-title">
+        <HomeGreeting>
           {greeting()}, {firstName(home.profile.display_name)}
-        </h1>
+        </HomeGreeting>
         <p className="lead">Start with a person or a plan.</p>
       </header>
 
