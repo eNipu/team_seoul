@@ -4,6 +4,7 @@ import { DEMO_VIEWS, createMockBridge, demoParam, mockInitialView } from "./mock
 import { friendArg, parseView, type ViewData } from "./types";
 import QuickImport from "./components/QuickImport";
 import vennLogo from "./venn-logo.webp";
+import "./components/onboarding.css";
 import MemoryReview, { type PreviewReview } from "./components/MemoryReview";
 import MemoryImport from "./components/MemoryImport";
 import Dashboard, { type DashboardTab } from "./components/Dashboard";
@@ -304,10 +305,10 @@ export default function App() {
   const showSkeleton = loading && !error;
   const top = stack.length > 0 ? stack[stack.length - 1] : null;
 
-  const [opening, setOpening] = useState<"Help" | "Saved replies" | null>(null);
-  const openHeaderView = async (label: "Help" | "Saved replies") => {
+  const [opening, setOpening] = useState<"Help" | null>(null);
+  const openHeaderView = async (label: "Help") => {
     setOpening(label);
-    const message = await openView(label === "Help" ? "venn_help" : "venn_saved_replies", {});
+    const message = await openView("venn_help", {});
     setOpening(null);
     if (message) setError(message);
   };
@@ -344,13 +345,6 @@ export default function App() {
         </div>
         <span className="venn__spacer" />
         {(refreshing || opening) && <Spinner label={opening ? `Opening ${opening.toLowerCase()}` : "Refreshing"} />}
-        {bridge?.isMock && <span className="badge badge--demo">Demo</span>}
-        {bridge && !showSkeleton && top?.view.view !== "saved_replies" && (
-          <button type="button" className="icon-btn" disabled={opening !== null}
-            onClick={() => void openHeaderView("Saved replies")} aria-label="Saved replies" title="Saved replies">
-            <Icon name="bookmark" />
-          </button>
-        )}
         {canChangeMode && (
           <button type="button" className="icon-btn" disabled={changingMode} onClick={() => void changeMode()}
             aria-label={fullscreen ? "Return Venn to chat" : "Open Venn fullscreen"}
