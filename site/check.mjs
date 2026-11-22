@@ -273,7 +273,7 @@ function auditFold() {
   return problems;
 }
 
-// Runs in the page. Walks the sample invite and both shared-interest outcomes.
+// Runs in the page. Exercises the audience choice, withheld signals, matching, back and reset.
 async function exercisePreview() {
   const problems = [];
   const expect = (ok, message) => ok || problems.push(`preview: ${message}`);
@@ -282,10 +282,79 @@ async function exercisePreview() {
   if (!root) return ["preview: onboarding is missing"];
   const button = (text) => [...root.querySelectorAll("button")].find((b) => b.textContent.trim() === text);
   const boxes = () => [...root.querySelectorAll('input[type="checkbox"]')];
+  const circle = () => root.querySelector('input[type="radio"]:checked')?.nextElementSibling.textContent;
+  const map = root.querySelector(".connection-map");
+  const signals = () => map?.querySelectorAll('.connection-map__signal:not(.connection-map__signal--match)[data-active="true"]').length;
+  const matched = () => map?.querySelector('.connection-map__signal--match')?.dataset.active === "true";
+  const step = (number) => {
+    expect(root.querySelector(".connection-map") === map && !!map, "connection map stays mounted");
+    expect(root.querySelectorAll('.onboarding__progress [data-complete="true"]').length === number, `progress at step ${number}`);
+    expect(document.activeElement === root.querySelector("h3"), `focus on heading at step ${number}`);
+  };
+  const storageBefore = JSON.stringify(localStorage);
+
+  expect(boxes().length === 3 && boxes().every((box) => box.checked), "all three sample signals start selected");
+  expect(signals() === 0 && !matched(), "draft routes are inactive before sharing");
+  for (const box of boxes()) {
+    box.click();
+    await tick();
+  }
+  expect(button("Keep at least one to share")?.disabled, "empty selection cannot advance");
+  boxes()[0]?.click();
+  await tick();
+  button("Share 1 with close friends")?.click();
+  await tick();
+  step(2);
+  expect(signals() === 1 && !matched(), "only the approved signal reaches the circle");
+  expect(root.querySelectorAll(".demo__shared li").length === 1, "only the approved signal is listed");
+  button("See it from Maya's side")?.click();
+  await tick();
+  step(3);
+  expect(!matched() && root.textContent.includes("Nothing comes up:"), "withheld match stays private");
+  root.querySelector('.onboarding__back')?.click();
+  await tick();
+  step(2);
+  root.querySelector('.onboarding__back')?.click();
+  await tick();
+  step(1);
+  expect(boxes().map((box) => box.checked).join(",") === "true,false,false", "back preserves choices");
+  root.querySelectorAll('input[type="radio"]')[1]?.click();
+  boxes()[1]?.click();
+  await tick();
+  expect(circle() === "Work network" && map?.textContent.includes("Work network"), "graph follows the selected audience");
+  button("Share 2 with work network")?.click();
+  await tick();
+  step(2);
+  expect(signals() === 2 && !matched(), "two routes reach the selected circle");
+  button("See it from Maya's side")?.click();
+  await tick();
+  step(3);
+  expect(matched() && root.querySelector(".moment__text")?.textContent.includes("Web Summit"), "approved match reaches Maya");
+  expect(root.querySelector('a[href="/#waitlist"]')?.textContent.trim() === "Build your inner circle", "result links to live signup");
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches && map) {
+    expect(getComputedStyle(map.querySelector(".connection-map__signal")).transitionDuration === "0s", "routes are still under reduced motion");
+  }
+  button("Start again")?.click();
+  await tick();
+  step(1);
+  expect(boxes().every((box) => box.checked) && circle() === "Close friends", "restart restores the initial choices");
+  expect(JSON.stringify(localStorage) === storageBefore, "preview did not change local storage");
+  return problems;
+}
+
+// Runs in the page. Walks the sample invite and both shared-interest outcomes.
+async function exerciseWalkthrough() {
+  const problems = [];
+  const expect = (ok, message) => ok || problems.push(`preview: ${message}`);
+  const tick = () => new Promise((done) => requestAnimationFrame(() => setTimeout(done, 30)));
+  const root = document.querySelector(".walkthrough");
+  if (!root) return ["preview: onboarding is missing"];
+  const button = (text) => [...root.querySelectorAll("button")].find((b) => b.textContent.trim() === text);
+  const boxes = () => [...root.querySelectorAll('input[type="checkbox"]')];
   const step = (number) => {
     expect(stage && root.querySelector("svg.stage") === stage, "the SVG stays mounted");
     expect(stage?.dataset.step === String(number - 1), `SVG at step ${number}`);
-    expect(root.querySelectorAll('.onboarding__progress [data-complete="true"]').length === number, `progress at step ${number}`);
+    expect(root.querySelectorAll('.walkthrough__progress [data-complete="true"]').length === number, `progress at step ${number}`);
     expect(document.activeElement === root.querySelector("h3"), `focus on heading at step ${number}`);
   };
   const storageBefore = JSON.stringify(localStorage);
@@ -314,7 +383,7 @@ async function exercisePreview() {
   step(4);
   expect(stage?.dataset.step === "3", "the circles come together");
   expect(root.querySelector(".stage__common--on"), "shared ground lights up in the overlap");
-  expect(root.querySelector(".onboarding__interests")?.textContent === "Photography", "only shared approved memories shown");
+  expect(root.querySelector(".walkthrough__interests")?.textContent === "Photography", "only shared approved memories shown");
   expect(root.querySelector('a[href="/#waitlist"]')?.textContent === "Join the Waitlist", "result links to live signup");
   button("Back")?.click();
   await tick();
@@ -353,7 +422,7 @@ async function exerciseNavigation(href) {
     failures.push("section navigation does not follow the motion preference");
   }
   const header = document.querySelector(".site-header");
-  for (const path of ["/", "/how-it-works", "/chatgpt", "/pricing"]) {
+  for (const path of ["/", "/how-it-works", "/pricing"]) {
     if (!header?.querySelector(`a[href="${path}"]`)) failures.push(`missing navigation link to ${path}`);
   }
   const link = document.querySelector(`.scroll-arrow[href="${href}"]`);
@@ -622,8 +691,11 @@ async function main() {
       await shot(label);
 
       for (const problem of await run(exerciseNavigation, "#hero")) failures.push(`${label}: ${problem}`);
-      if (await run(() => Boolean(document.querySelector("iframe, .onboarding")))) {
-        failures.push(`${label}: the homepage contains a full product demo`);
+      if (await run(() => !document.querySelector(".onboarding") || !!document.querySelector("iframe, .walkthrough"))) {
+        failures.push(`${label}: the homepage must keep the weekly demo without an embedded widget or walkthrough`);
+      }
+      if (motion === "reduce") {
+        for (const problem of await run(exercisePreview)) failures.push(`${label}: ${problem}`);
       }
       console.log(`checked ${label}`);
     }
@@ -633,11 +705,19 @@ async function main() {
       await open("/how-it-works", viewport, { motion: "reduce" });
       for (const problem of await run(audit)) failures.push(`${label}: ${problem}`);
       for (const problem of await run(exerciseNavigation, "#top")) failures.push(`${label}: ${problem}`);
-      for (const problem of await run(exercisePreview)) failures.push(`${label}: ${problem}`);
+      for (const problem of await run(exerciseWalkthrough)) failures.push(`${label}: ${problem}`);
       console.log(`checked ${label}`);
 
       label = `${viewport.name}/chatgpt`;
       await open("/chatgpt", viewport, { motion: "reduce" });
+      const redirected = await run(() => location.pathname === "/" && location.hash === "#inside");
+      if (redirected) {
+        if (await run(() => !document.querySelector("#inside .onboarding") || !!document.querySelector("iframe"))) {
+          failures.push(`${label}: the old ChatGPT link must open the homepage demo`);
+        }
+        console.log(`checked ${label} redirect`);
+        continue;
+      }
       for (const problem of await run(audit)) failures.push(`${label}: ${problem}`);
       for (const problem of await run(exerciseChatGptPreview)) failures.push(`${label}: ${problem}`);
       if (viewport.name === "desktop") {
@@ -682,7 +762,7 @@ async function main() {
         await open(`/how-it-works?preview=${viewport.name}#inside`, viewport, { motion: "reduce" });
         const matched = await run(`async () => {
           document.querySelector(".consent button:last-child")?.click();
-          const preview = document.querySelector(".onboarding");
+          const preview = document.querySelector(".walkthrough");
           preview.querySelector('input[type="checkbox"]')?.click();
           await new Promise((done) => requestAnimationFrame(done));
           for (const action of ["Approve 1 memory", "Send sample invite", "See what Maya sees", "Accept as Maya"]) {

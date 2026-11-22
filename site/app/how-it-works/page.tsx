@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
 import Motion from "@/components/Motion";
-import OnboardingPreview from "@/components/OnboardingPreview";
+import ConnectionWalkthrough from "@/components/ConnectionWalkthrough";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import HowItWorks from "@/components/sections/HowItWorks";
 import PrivacyPrinciples from "@/components/sections/PrivacyPrinciples";
 import UseCases from "@/components/sections/UseCases";
+import JoinCircle from "@/components/sections/JoinCircle";
 
 export const metadata: Metadata = {
   title: "How it works · Venn",
   description: "See how approved signals reach the right person and try connecting with a friend.",
 };
+
+export const dynamic = "force-dynamic";
 
 export default function HowItWorksPage() {
   return (
@@ -25,13 +28,13 @@ export default function HowItWorksPage() {
                 <h2 className="h-section" id="inside-title">Try connecting with a friend.</h2>
                 <p className="lead">Choose sample memories, preview an invite, and see what you and Maya have in common.</p>
               </div>
-              <a className="btn" href="/chatgpt">ChatGPT demo</a>
             </div>
-            <OnboardingPreview />
+            <ConnectionWalkthrough />
           </div>
         </section>
         <UseCases />
         <PrivacyPrinciples />
+        <JoinCircle />
       </main>
       <SiteFooter />
       <Motion />

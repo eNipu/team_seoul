@@ -5,7 +5,7 @@ metrics page. A Next.js app (App Router) with its own small API and two tables i
 
 | Path | What it is |
 | --- | --- |
-| `app/page.tsx` | The landing page: hero with the waitlist, use cases and FAQ. Rendered per request, because it reads `?w=` and `?ref=` |
+| `app/page.tsx` | The landing page: hero with the waitlist, weekly preview, use cases and FAQ. Rendered per request, because it reads `?w=` and `?ref=` |
 | `app/metrics/page.tsx` | `/metrics`: unique visitors, total waitlist signups, activation rate, UTM and referral breakdown |
 | `app/api/waitlist/route.ts` | `POST` joins the waitlist, `GET ?code=` returns the current spot for an invite code |
 | `app/api/visit/route.ts` | `POST` records one page view |
@@ -16,8 +16,9 @@ metrics page. A Next.js app (App Router) with its own small API and two tables i
 | `components/VennScene.tsx` | The 3D scene: two glass spheres orbiting each other, built with three.js (MIT) |
 | `components/Motion.tsx` | Turns on the scroll reveals for elements marked `data-reveal` |
 | `components/Waitlist.tsx` | The email form and its states after joining |
-| `app/how-it-works/page.tsx`, `components/OnboardingPreview.tsx` | Product walkthrough and four-step sample onboarding |
-| `components/ChatGptPreview.tsx` | Embeds the actual Venn widget using its in-memory sample bridge |
+| `app/how-it-works/page.tsx`, `components/ConnectionWalkthrough.tsx` | Product walkthrough and four-step sample onboarding |
+| `components/OnboardingPreview.tsx`, `components/ConnectionMap.tsx` | The homepage weekly preview and its animated connection map |
+| `components/ChatGptPreview.tsx` | Widget demo retained for future use. The /chatgpt route redirects to the homepage demo |
 | `lib/db.ts`, `lib/waitlist.ts`, `lib/analytics.ts` | Postgres pool and schema, waitlist logic, events and metrics |
 | `lib/version.ts` | The two waitlist versions, `pair` and `open`, and which one is the default |
 | `lib/rate-limit.ts` | Per-address request limit for the API routes |
@@ -158,9 +159,8 @@ Motion (`app/globals.css` › Motion) always plays into the finished page, so no
 or with reduced motion: the hero arrives line by line, the underline is drawn and the highlight swept in, and
 sections fade up the first time they scroll into view (`data-reveal="up"`, or `"group"` for children in turn).
 
-The landing page links to [How it works](/how-it-works) and the [ChatGPT demo](/chatgpt).
-The ChatGPT demo uses the same built widget that the MCP resource serves. Its sandboxed iframe
-uses sample data and stores changes only in its own tab state.
+The landing page links to [How it works](/how-it-works) and hosts the weekly signal preview.
+The old /chatgpt route redirects to that preview.
 
 On /how-it-works, the visitor selects sample memories, sends a simulated invite, accepts it as Maya,
 and sees the interests they share. A single SVG illustrates the four steps. With reduced motion,
