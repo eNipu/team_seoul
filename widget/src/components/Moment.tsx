@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import type { HostBridge } from "../mcp/client";
 import { firstName, friendArg, parseView, type FriendKind, type FriendViewData } from "../types";
-import { ActionError, ManualCopy, useAction, type Nav } from "./common";
+import { ActionError, ChatFallback, ManualCopy, useAction, type Nav } from "./common";
+import { IMPORT_CONTACTS_PROMPT } from "../memoryImport";
 import "./onboarding.css";
 
 /** The web app: a side path for seeing and editing everything. Never a required step. */
@@ -93,17 +94,27 @@ export function momentText(name: string, f: FriendSignals | null, idea?: string 
  */
 export function QuietHome({ bridge, nav }: { bridge: HostBridge; nav: Nav }) {
   const action = useAction();
+  const [importFallback, setImportFallback] = useState(false);
+  async function importContacts() {
+    let sent = false;
+    try { sent = await bridge.sendMessage(IMPORT_CONTACTS_PROMPT); } catch { sent = false; }
+    setImportFallback(!sent);
+  }
   return (
     <section className="onb">
       <h2 className="onb__title">Venn will tell you here, in ChatGPT, when something matters.</h2>
       <ActionError action={action} />
       <div className="onb__row">
+        <button type="button" className="onb__link" disabled={action.busy !== null} onClick={() => void importContacts()}>
+          Import contacts
+        </button>
         <button type="button" className="onb__link" disabled={action.busy !== null}
           onClick={() => void action.run("invite", () => nav.openView("venn_create_invite", {}))}>
           {action.busy === "invite" ? "Opening…" : "Invite someone"}
         </button>
         <OpenMyVenn bridge={bridge} />
       </div>
+      {importFallback && <ChatFallback text={IMPORT_CONTACTS_PROMPT} />}
     </section>
   );
 }
