@@ -436,7 +436,7 @@ const IMPORT_CANDIDATES: ImportCandidate[] = [
   },
 ];
 
-const imports = new Map<string, { candidates: ImportCandidate[]; isSample: boolean }>();
+const imports = new Map<string, { candidates: ImportCandidate[]; isSample: boolean; confirmationToken: string | null }>();
 
 const DEMO_GIVEN_NAMES = ["Nadia", "Lucia", "Anika", "Sana", "Matteo", "Linh", "Ivo", "Farah", "Sacha", "Tariq"];
 const DEMO_SURNAMES = {
@@ -1429,13 +1429,15 @@ function importView(platform: DemoPlatform | null = null): PeopleImportViewData 
     last_met_days_ago: null,
   }))) : IMPORT_CANDIDATES;
   const candidates = profiles.map((c) => ({ ...c, already_added: taken.has(c.name.toLowerCase()) }));
-  imports.set(import_id, { candidates, isSample: platform !== null });
+  const confirmationToken = platform ? import_id.padEnd(43, "_") : null;
+  imports.set(import_id, { candidates, isSample: platform !== null, confirmationToken });
   return structuredClone({
     view: "people_import" as const,
     import_id,
     expires_at: iso(1),
     source: platform ? `${platform}_demo` : "pasted list",
     demo_platform: platform,
+    confirmation_token: confirmationToken,
     candidates,
     skipped: platform ? 0 : 1,
     note: "Nothing is saved until you confirm. These stay private notes only you can see.",
@@ -2220,17 +2222,24 @@ export function createMockBridge(): HostBridge {
         case "venn_propose_people_import":
           return ok(importView());
 
-        case "venn_preview_demo_people_import":
-          return args.platform === "instagram" || args.platform === "linkedin"
-            ? ok(importView(args.platform)) : fail("INVALID_ARGUMENT: choose Instagram or LinkedIn");
+        case "venn_preview_demo_people_import": {
+          if (args.platform !== "instagram" && args.platform !== "linkedin") {
+            return fail("INVALID_ARGUMENT: choose Instagram or LinkedIn");
+          }
+          const { confirmation_token, ...view } = importView(args.platform);
+          return ok(view, { "venn/demoImportConfirmation": confirmation_token });
+        }
 
         case "venn_import_people":
         case "venn_import_demo_people": {
           const proposal = typeof args.import_id === "string" ? imports.get(args.import_id) : undefined;
           if (!proposal) return fail("NOT_FOUND: this import has expired. Open a fresh review.");
-          const { candidates, isSample } = proposal;
+          const { candidates, isSample, confirmationToken } = proposal;
           if (isSample !== (name === "venn_import_demo_people")) {
             return fail("INVALID_ARGUMENT: use the Add button on the matching import review card");
+          }
+          if (isSample && args.confirmation_token !== confirmationToken) {
+            return fail("INVALID_ARGUMENT: Open a fresh demo review and use its Add button to confirm your selection.");
           }
           const wanted = new Set(Array.isArray(args.indexes) ? args.indexes : []);
           if (!wanted.size) return fail("INVALID_ARGUMENT: pick at least one person");

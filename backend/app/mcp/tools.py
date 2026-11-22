@@ -22,6 +22,7 @@ Conventions
 from __future__ import annotations
 
 from datetime import datetime
+from secrets import token_urlsafe
 from typing import TYPE_CHECKING, Annotated, Literal
 
 from mcp.server.apps import Apps
@@ -898,12 +899,19 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
     )
     async def venn_preview_demo_people_import(platform: DemoPlatform) -> CallToolResult:
         async def body():
+            confirmation_token = token_urlsafe(32)
             view = await run_as_user(
                 [CONNECTIONS],
-                lambda db, user, _: people_service.propose_demo_import(db, user, platform, channel="chatgpt"),
+                lambda db, user, _: people_service.propose_demo_import(
+                    db, user, platform, channel="chatgpt", confirmation_token=confirmation_token
+                ),
             )
             label = "Instagram" if platform == "instagram" else "LinkedIn"
-            return ok(f"Showing {len(view.candidates)} fictional {label}-style profiles. Nothing has been added.", view)
+            return ok(
+                f"Showing {len(view.candidates)} fictional {label}-style profiles. Nothing has been added.",
+                view,
+                meta={"venn/demoImportConfirmation": confirmation_token},
+            )
 
         return await guarded(body)
 
@@ -936,20 +944,33 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
     @mcp.tool(
         name="venn_import_demo_people",
         title="Add the picked sample profiles",
-        description="Add explicitly selected fictional profiles from the demo import review card. App only.",
+        description=(
+            "Confirmation callback for the Add button on a demo import card. Only the review widget should "
+            "call it, with the user's selected indexes and the confirmation token from that preview's "
+            "widget metadata. Do not call this from the conversation or ask the user for a token."
+        ),
         annotations=WRITE,
-        meta=app_only_meta("Adding sample profiles…", "Sample profiles added"),
+        # Advertise like other widget actions so ChatGPT can route it. The server verifies the card token.
+        meta={
+            **invocation_meta("Adding sample profiles…", "Sample profiles added", widget_accessible=True),
+            "ui": {"visibility": ["model", "app"]},
+        },
     )
     async def venn_import_demo_people(
         import_id: Annotated[str, Field(description="import_id from venn_preview_demo_people_import")],
         indexes: Annotated[
             list[Annotated[int, Field(ge=0)]], Field(min_length=1, max_length=people_service.MAX_DEMO_IMPORT_CANDIDATES)
         ],
+        confirmation_token: Annotated[
+            str, Field(min_length=43, max_length=43, description="Private confirmation token supplied to the widget")
+        ],
     ) -> CallToolResult:
         async def body():
             result = await run_as_user(
                 [CONNECTIONS],
-                lambda db, user, _: people_service.import_people(db, user, import_id, indexes, channel="chatgpt"),
+                lambda db, user, _: people_service.import_people(
+                    db, user, import_id, indexes, channel="chatgpt", confirmation_token=confirmation_token
+                ),
             )
             return ok(f"Added {result.count} fictional profiles as private sample notes.", result)
 

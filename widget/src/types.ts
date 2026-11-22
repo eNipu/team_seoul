@@ -374,6 +374,7 @@ export interface PeopleImportViewData {
   expires_at: string;
   source: string | null;
   demo_platform: DemoPlatform | null;
+  confirmation_token: string | null;
   candidates: ImportCandidate[];
   skipped: number;
   note: string;
@@ -1027,13 +1028,16 @@ export function parseView(sc: unknown, meta?: unknown): ViewData | null {
         follow_ups: parseFollowUps(sc.follow_ups),
       };
     }
-    case "people_import":
+    case "people_import": {
+      const platform = sc.demo_platform === "instagram" || sc.demo_platform === "linkedin" ? sc.demo_platform : null;
+      const token = isObj(meta) ? meta["venn/demoImportConfirmation"] : null;
       return {
         view: "people_import",
         import_id: str(sc.import_id),
         expires_at: str(sc.expires_at),
         source: strOrNull(sc.source),
-        demo_platform: sc.demo_platform === "instagram" || sc.demo_platform === "linkedin" ? sc.demo_platform : null,
+        demo_platform: platform,
+        confirmation_token: platform && typeof token === "string" && /^[A-Za-z0-9_-]{43}$/.test(token) ? token : null,
         candidates: objs(sc.candidates).map((c, i) => ({
           index: Math.floor(num(c.index, i)),
           name: str(c.name, "Someone") || "Someone",
@@ -1046,6 +1050,7 @@ export function parseView(sc: unknown, meta?: unknown): ViewData | null {
         skipped: Math.max(0, Math.floor(num(sc.skipped))),
         note: str(sc.note),
       };
+    }
     case "people_search": {
       const results = objs(sc.results)
         .map((r): SearchResult => {
@@ -1306,10 +1311,10 @@ export function parseRespondConnection(v: unknown): RespondConnectionResult {
   };
 }
 
-export function parseImportPeople(v: unknown): ImportPeopleResult {
-  const o = isObj(v) ? v : {};
-  const imported = objs(o.imported).map(parsePerson);
-  return { imported, count: Math.max(0, Math.floor(num(o.count, imported.length))) };
+export function parseImportPeople(v: unknown): ImportPeopleResult | null {
+  if (!isObj(v) || typeof v.count !== "number" || !Array.isArray(v.imported)) return null;
+  const imported = objs(v.imported).map(parsePerson);
+  return imported.length === v.count && imported.length === v.imported.length ? { imported, count: v.count } : null;
 }
 
 export function parseLogInteraction(v: unknown): LogInteractionResult {

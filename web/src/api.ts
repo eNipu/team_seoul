@@ -37,10 +37,10 @@ export interface Api {
   deletePerson(personId: string): Promise<void>;
   previewImport(people: T.PersonInput[], source?: string): Promise<T.PeopleImport>;
   importPeople(importId: string, indexes: number[]): Promise<T.Person[]>;
+  demoPeoplePreview(platform: "instagram" | "linkedin"): Promise<T.PeopleImport>;
   /** Reads the user's own LinkedIn connections with the cookies they pasted. Saves nothing. */
   linkedinConnections(cookies: string): Promise<T.LinkedInConnections>;
   linkedinPreview(people: T.LinkedInPick[]): Promise<T.LinkedInImport>;
-  linkedinDemoPreview(): Promise<T.PeopleImport>;
   /** Reads LinkedIn's own connections export file (no cookies). Saves nothing. */
   linkedinExport(csv: string): Promise<T.LinkedInConnections>;
   // Friends
@@ -227,6 +227,8 @@ const realApi: Api = {
   // POST /people/import
   importPeople: async (importId, indexes) =>
     T.parsePeople(await request("POST", "/people/import", { body: { import_id: importId, indexes } }), "imported"),
+  // POST /instagram/demo-preview or /linkedin/demo-preview
+  demoPeoplePreview: async (platform) => T.parsePeopleImport(await request("POST", `/${platform}/demo-preview`)),
   // POST /linkedin/connections
   linkedinConnections: async (cookies) =>
     T.parseLinkedInConnections(await request("POST", "/linkedin/connections", { body: { cookies } })),
@@ -236,8 +238,6 @@ const realApi: Api = {
   // POST /linkedin/import-preview
   linkedinPreview: async (people) =>
     T.parseLinkedInImport(await request("POST", "/linkedin/import-preview", { body: { people } })),
-  // POST /linkedin/demo-preview
-  linkedinDemoPreview: async () => T.parsePeopleImport(await request("POST", "/linkedin/demo-preview")),
 
   // GET /friends
   listFriends: async () => T.parseFriendSummaries(await request("GET", "/friends")),

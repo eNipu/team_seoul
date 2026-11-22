@@ -32,6 +32,7 @@ import {
   useToast,
 } from "../ui";
 import { ImportReview } from "./ImportReview";
+import { InstagramDemoFlow } from "./InstagramDemoImport";
 import { LinkedInFlow } from "./LinkedInImport";
 import { PersonForm } from "./shared";
 
@@ -173,7 +174,9 @@ export default function People() {
         ? "import"
         : loc.query.get("linkedin") === "1"
           ? "linkedin"
-          : null;
+          : loc.query.get("instagram") === "1"
+            ? "instagram"
+            : null;
   const close = () => navigate("/people", {}, { replace: true });
 
   const shown = useMemo(() => {
@@ -205,6 +208,10 @@ export default function People() {
             <Link to="/people" query={{ linkedin: "1" }} className="btn">
               <Icon name="briefcase" size={18} />
               Import from LinkedIn
+            </Link>
+            <Link to="/people" query={{ instagram: "1" }} className="btn">
+              <Icon name="camera" size={18} />
+              Instagram demo import
             </Link>
             <Link to="/people" query={{ import: "1" }} className="btn">
               <Icon name="import" size={18} />
@@ -308,6 +315,18 @@ export default function People() {
               } else {
                 toast(`Added ${plural(n, "person", "people")} from LinkedIn.`);
               }
+              close();
+              friends.reload();
+            }}
+          />
+        </Dialog>
+      )}
+      {dialog === "instagram" && (
+        <Dialog title="Instagram demo import" onClose={close} wide>
+          <InstagramDemoFlow
+            onCancel={close}
+            onDone={(n) => {
+              toast(n ? `Added ${plural(n, "sample profile", "sample profiles")}.` : "No new sample profiles to add.");
               close();
               friends.reload();
             }}

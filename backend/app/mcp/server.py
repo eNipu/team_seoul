@@ -9,12 +9,15 @@ from typing import Any
 from mcp.server.apps import Apps, ResourceCsp
 from mcp.server.auth.settings import AuthSettings, ClientRegistrationOptions, RevocationOptions
 from mcp.server.mcpserver import MCPServer
+from mcp.server.mcpserver.exceptions import ToolError
+from pydantic import ValidationError
 
 from app.auth.dev_provider import DevOAuthProvider
 from app.auth.jwt_verifier import JWTTokenVerifier
 from app.config import ALL_SCOPES, Settings
-from app.mcp.common import WIDGET_URI
+from app.mcp.common import LEGACY_WIDGET_URI, WIDGET_URI, error
 from app.mcp.tools import register_tools
+from app.services.errors import InvalidRequest
 
 log = logging.getLogger("venn.mcp")
 
@@ -143,17 +146,33 @@ class DeferredTools:
             mcp.tool(**kwargs)(fn)
 
 
+class VennMCPServer(MCPServer):
+    async def call_tool(self, name, arguments, context=None):
+        try:
+            return await super().call_tool(name, arguments, context)
+        except ToolError as exc:
+            if name == "venn_import_demo_people" and isinstance(exc.__cause__, ValidationError):
+                # SDK validation errors can echo arguments, including the review's private capability.
+                return error(
+                    InvalidRequest("Open a fresh demo review and use its Add button to confirm your selection.")
+                )
+            raise
+
+
 def build_mcp_server(settings: Settings) -> tuple[MCPServer, DevOAuthProvider | None]:
     apps = Apps()
-    apps.add_html_resource(
-        WIDGET_URI,
-        load_widget_html(settings.widget_path),
-        name="venn-app",
-        title="Venn",
-        description="Interactive Venn cards for memories, friends, plans, results, discussions and threads.",
-        csp=ResourceCsp(connect_domains=[], resource_domains=[]),
-        prefers_border=True,
-    )
+    html = load_widget_html(settings.widget_path)
+    # Old chat cards can still resolve their resource; newly advertised tools use the versioned URI.
+    for uri, name in ((WIDGET_URI, "venn-app"), (LEGACY_WIDGET_URI, "venn-app-v2")):
+        apps.add_html_resource(
+            uri,
+            html,
+            name=name,
+            title="Venn",
+            description="Interactive Venn cards for memories, friends, plans, results, discussions and threads.",
+            csp=ResourceCsp(connect_domains=[], resource_domains=[]),
+            prefers_border=True,
+        )
 
     auth = AuthSettings(
         issuer_url=settings.public_base_url if settings.auth_mode == "dev" else settings.oauth_issuer,
@@ -181,7 +200,7 @@ def build_mcp_server(settings: Settings) -> tuple[MCPServer, DevOAuthProvider | 
     deferred = DeferredTools()
     register_tools(deferred, apps)
 
-    mcp = MCPServer(
+    mcp = VennMCPServer(
         name="venn",
         title="Venn",
         description="Consent-based memories and common ground with the people you already know.",

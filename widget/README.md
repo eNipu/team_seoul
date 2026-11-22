@@ -14,7 +14,8 @@ npm run dev        # local demo harness
 ```
 
 The Python server reads `widget/dist/index.html` and serves it as MCP resource
-`ui://venn/app-v2.html` with mimeType `text/html;profile=mcp-app`.
+`ui://venn/app-v3.html` with mimeType `text/html;profile=mcp-app`. Older cards can still
+resolve `ui://venn/app-v2.html`.
 
 ### Demo mode
 
@@ -208,8 +209,8 @@ or after an action that returns a dashboard).
 | We did this / We met up / Log a hangout | `venn_log_interaction` | `{ ...friendArg, activity? }` | `{ recorded: true, kind, id, last_interaction_at }` |
 | Invite a friend | `venn_create_invite` | `{}` | `invite` view |
 | Revoke code | `venn_revoke_invite` | `{ code }` | `{ revoked: true }` |
-| Try a demo import → Instagram / LinkedIn demo | `venn_preview_demo_people_import` | `{ platform: "instagram" or "linkedin" }` | `people_import` view |
-| Add N sample profiles | `venn_import_demo_people` (app only) | `{ import_id, indexes: number[] }` | `{ imported: Person[], count }` |
+| Try a demo import → Instagram / LinkedIn demo | `venn_preview_demo_people_import` | `{ platform: "instagram" or "linkedin" }` | `people_import` view plus widget-only `_meta["venn/demoImportConfirmation"]` |
+| Add N sample profiles | `venn_import_demo_people` | `{ import_id, indexes: number[], confirmation_token }` | `{ imported: Person[], count }`; the widget forwards the token from that review only on **Add** |
 | Add N people (regular import) | `venn_import_people` | `{ import_id, indexes: number[] }` | `{ imported: Person[], count }` |
 | Friends tab search; search again | `venn_find_people` | `{ query }` | `people_search` view |
 | Plan a group hangout; Plan something together | `venn_plan_group` | `{ connection_ids: string[], person_ids: string[] }` (2 to 6 in total) | `group_plan` view |

@@ -14,6 +14,8 @@ from __future__ import annotations
 import re
 import uuid
 from datetime import datetime, timedelta
+from hashlib import sha256
+from secrets import compare_digest
 from typing import Literal
 
 from sqlalchemy import func, select
@@ -255,7 +257,14 @@ def propose_import(
     return _propose_import(db, user, people[:MAX_IMPORT_CANDIDATES], source)
 
 
-def propose_demo_import(db: Session, user: User, platform: DemoPlatform, *, channel: DemoChannel) -> PeopleImportView:
+def propose_demo_import(
+    db: Session,
+    user: User,
+    platform: DemoPlatform,
+    *,
+    channel: DemoChannel,
+    confirmation_token: str | None = None,
+) -> PeopleImportView:
     lock_people_writes(db, user)
     _clear_demo_previews(db, user, expired_only=True)
     fixture = instagram_demo if platform == "instagram" else linkedin_demo
@@ -266,6 +275,7 @@ def propose_demo_import(db: Session, user: User, platform: DemoPlatform, *, chan
         fixture.SOURCE,
         demo_platform=platform,
         demo_channel=channel,
+        confirmation_token=confirmation_token,
     )
 
 
@@ -277,6 +287,7 @@ def _propose_import(
     *,
     demo_platform: DemoPlatform | None = None,
     demo_channel: DemoChannel | None = None,
+    confirmation_token: str | None = None,
 ) -> PeopleImportView:
     is_sample = demo_platform is not None
     existing = existing_names(db, user, include_samples=is_sample)
@@ -312,6 +323,9 @@ def _propose_import(
         )
     if not items:
         raise InvalidRequest("No people to import. Ask the user who they'd like to add.")
+    if demo_channel == "chatgpt" and confirmation_token:
+        # The proposal, not the tool caller, controls which widget can confirm it.
+        items[0]["confirmation_digest"] = sha256(confirmation_token.encode()).hexdigest()
     row = PeopleImport(
         user_id=user.id,
         items=items,
@@ -340,6 +354,7 @@ def import_people(
     indexes: list[int],
     *,
     channel: Literal["regular"] | DemoChannel = "regular",
+    confirmation_token: str | None = None,
 ) -> ImportPeopleOut:
     """Add the entries the user picked from an import they were shown. Single-use."""
     try:
@@ -361,6 +376,14 @@ def import_people(
         demo_channel = items[0].get("demo_channel", "web")
         if demo_channel != channel:
             raise InvalidRequest("Use the Add button on the matching import review card.")
+        if channel == "chatgpt":
+            digest = items[0].get("confirmation_digest")
+            if (
+                not digest
+                or not confirmation_token
+                or not compare_digest(digest, sha256(confirmation_token.encode()).hexdigest())
+            ):
+                raise InvalidRequest("Open a fresh demo review and use its Add button to confirm your selection.")
     elif channel == "chatgpt":
         raise InvalidRequest("Use the Add button on the matching import review card.")
     limit = MAX_DEMO_IMPORT_CANDIDATES if is_sample else MAX_IMPORT_CANDIDATES

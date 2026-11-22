@@ -222,7 +222,9 @@ export function LinkedInFlow({
                 button.focus();
               }
             }}
-            onClick={() => void action.run(async () => setPreview({ kind: "demo", data: await api.linkedinDemoPreview() }))}
+            onClick={() =>
+              void action.run(async () => setPreview({ kind: "demo", data: await api.demoPeoplePreview("linkedin") }))
+            }
           >
             {action.busy ? "Loading…" : "Review 100 demo connections"}
           </button>
