@@ -23,7 +23,7 @@ export interface HostBridge {
   /** Call a tool on the Venn MCP server (proxied by the host). Never throws. */
   callTool(name: string, args: Record<string, unknown>): Promise<ToolOutcome>;
   /** Update the model's context for future turns. Resolves false if unsupported/failed. */
-  updateModelContext(text: string): Promise<boolean>;
+  updateModelContext(text: string, structuredContent?: Record<string, unknown>): Promise<boolean>;
   /** Send a user message into the conversation. Resolves false if unsupported/failed. */
   sendMessage(text: string): Promise<boolean>;
   /** Ask the host to open an external link. Resolves false if unsupported/denied/failed. */
@@ -91,13 +91,13 @@ class ExtAppsBridge implements HostBridge {
     }
   }
 
-  async updateModelContext(text: string): Promise<boolean> {
+  async updateModelContext(text: string, structuredContent?: Record<string, unknown>): Promise<boolean> {
     // Feature-detect: method present and host advertises the capability.
     if (typeof this.app.updateModelContext !== "function") return false;
     const caps = this.app.getHostCapabilities();
     if (caps && !caps.updateModelContext) return false;
     try {
-      await this.app.updateModelContext({ content: [{ type: "text", text }] });
+      await this.app.updateModelContext({ content: [{ type: "text", text }], structuredContent });
       return true;
     } catch {
       return false;

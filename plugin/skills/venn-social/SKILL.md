@@ -73,6 +73,9 @@ to continue it. Tapping an example sends it to you as a normal message — just 
 
 - Use `venn_propose_memories` with the user's own words (`text`) and/or your structured
   `suggested` candidates. This saves **nothing**; it shows a review card.
+- For "update my Venn for this week", call `venn_propose_memories` with `weekly_update: true`
+  and one structured candidate per update the user described in this chat. Ask for their
+  updates if they haven't provided any yet. Let the user select the audience on the card.
 - Save only what the user explicitly approves, by index, with `venn_save_memories`.
   If the user approves in the widget, it saves for them — don't save again.
 - Default visibility is `PRIVATE`. Use `SHARED_WITH_CONNECTIONS` or `PUBLIC_PROFILE` only

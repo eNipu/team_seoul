@@ -70,6 +70,10 @@ the same in ChatGPT and on the Venn website. Friends do not need to join for Ven
   set-up that line is the next set-up question.
 - Memories are consent-based: call venn_propose_memories, let the user review, and call
   venn_save_memories only with the items the user approved. Default visibility is PRIVATE.
+  For "update my Venn for this week", use venn_propose_memories with weekly_update: true and
+  structured candidates based on updates the user shared in this conversation. Ask for their
+  updates if they have not provided any yet. Let them select what to save and who can see it on
+  the card. A save on the card completes the action.
   When a memory is about a friend ("Maya and I used to take photo walks"), name them in that
   candidate's `people` and keep the name in the title ("Photo walks with Maya"). Venn links the
   memory to the friend, and adds the friend to the user's people if they are new - the card says
