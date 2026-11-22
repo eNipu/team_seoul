@@ -278,7 +278,8 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
             'Set `source` to "chatgpt_memory" ONLY when the items come from what you already remember '
             "about the user (your saved memories or past chats) and the user has seen that list in the chat "
             "and told you which ones to keep — pass just those (up to 30). Otherwise leave `source` out "
-            "(up to 8 items from the current conversation)."
+            "(up to 8 items from the current conversation). For requests to update Venn with the user's "
+            "week, set `weekly_update: true` and pass one structured candidate per update the user described."
         ),
         annotations=WRITE,
     )
@@ -302,6 +303,9 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
                 )
             ),
         ] = "conversation",
+        weekly_update: Annotated[
+            bool, Field(description="Show the weekly-update review for drafts from this conversation.")
+        ] = False,
     ) -> CallToolResult:
         async def body():
             if not (text and text.strip()) and not suggested:
@@ -318,6 +322,8 @@ def register_tools(mcp: MCPServer | DeferredTools, apps: Apps) -> None:  # noqa:
                 for p in proposal.proposals
             ]
             data = {"view": "memory_review", **proposal.model_dump(mode="json")}
+            if weekly_update and source == "conversation":
+                data["weekly_update"] = True
             return ok(
                 f"Proposed {len(lines)} memories (proposal_id {proposal.proposal_id}). Nothing saved yet; "
                 "the user confirms on the card, or tells you which to keep and with what visibility "

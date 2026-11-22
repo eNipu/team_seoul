@@ -92,6 +92,7 @@ Read `SCHEDULING.md` before any task in this group.
 | [T42](T42-landing-connections.md) | Landing-page navigation and connection map | site | M | T40 | done |
 | [T43](T43-chatgpt-preview-distribution.md) | ChatGPT widget preview and account entry | both | M | T41, T42 | done |
 | [T44](T44-product-navigation.md) | Focused landing page and live ChatGPT review | both | M | T43 | done |
+| [T45](T45-plugin-weekly-review.md) | Review and save weekly updates in ChatGPT | both | M | – | done |
 
 T04 and T12 can start right away, in parallel with the backend tasks, because the shapes they
 render are fixed in `CONTRACTS.md`.
