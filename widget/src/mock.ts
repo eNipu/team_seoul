@@ -16,6 +16,7 @@
 // friend view and coming back).
 
 import type { HostBridge, ToolOutcome } from "./mcp/client";
+import { previewInterests } from "../../shared/importInterests";
 import { mockQrRows } from "./mockQr";
 import type {
   ActivityIdeasViewData,
@@ -42,6 +43,7 @@ import type {
   HelpViewData,
   ImportCandidate,
   Interaction,
+  InterestMatchesViewData,
   InviteViewData,
   Memory,
   MemoryCategory,
@@ -89,6 +91,10 @@ export const DEMO_VIEWS = [
   "memory_review_import",
   "help",
   "dashboard_setup",
+  "onboarding_contacts",
+  "onboarding_matches",
+  "interest_matches",
+  "interest_matches_empty",
   "venn",
   "venn_empty",
   "venn_full",
@@ -437,7 +443,7 @@ const IMPORT_CANDIDATES: ImportCandidate[] = [
   },
 ];
 
-const imports = new Map<string, { candidates: ImportCandidate[]; isSample: boolean; confirmationToken: string | null }>();
+const imports = new Map<string, { candidates: ImportCandidate[]; isSample: boolean; platform: DemoPlatform | null; confirmationToken: string | null }>();
 
 const DEMO_GIVEN_NAMES = ["Nadia", "Lucia", "Anika", "Sana", "Matteo", "Linh", "Ivo", "Farah", "Sacha", "Tariq"];
 const DEMO_SURNAMES = {
@@ -445,8 +451,20 @@ const DEMO_SURNAMES = {
   linkedin: ["Ames", "Pereira", "Silva", "Duarte", "Laurent", "Novak", "Qadir", "Verma", "Molina", "Tan"],
 };
 const DEMO_TOPICS = {
-  instagram: ["Film photography", "Ceramics", "Plant care", "Food illustration", "Streetwear"],
-  linkedin: ["UX research", "Climate tech", "Data visualization", "Design systems", "Social enterprise"],
+  instagram: [
+    ["Film photography", "Architecture", "Walking tours", "Darkroom printing", "Zines"],
+    ["Ceramics", "Espresso", "Glaze chemistry", "Surface design", "Tea"],
+    ["Plant care", "Container gardening", "Macro photography", "Pollinators", "Nature journaling"],
+    ["Food illustration", "Watercolor", "Cookbooks", "Food markets", "Hand lettering"],
+    ["Streetwear", "Embroidery", "Upcycling", "Sewing", "Portrait photography"],
+  ],
+  linkedin: [
+    ["UX research", "Interviews", "Accessibility", "Public transit", "Wayfinding"],
+    ["Climate tech", "Clean energy", "Cycling", "Weather maps", "Open source"],
+    ["Data visualization", "Cartography", "Rail travel", "Data journalism", "Typography"],
+    ["Design systems", "Prototyping", "Typography", "Creative coding", "Accessibility"],
+    ["Coffee roasting", "Social enterprise", "Mentorship", "Fundraising", "Hosting"],
+  ],
 };
 
 const invites = new Map<string, { max_uses: number; expires_at: string }>();
@@ -497,11 +515,11 @@ const IMPORT_PROPOSALS: ProposalSeed[] = [
     suggested_visibility: "PUBLIC_PROFILE",
   },
   {
-    category: "WORK",
-    title: "Product designer at a fintech startup",
-    description: "Leads design for the mobile app on a small team.",
-    tags: ["design", "job"],
-    suggested_visibility: "SHARED_WITH_CONNECTIONS",
+    category: "INTEREST",
+    title: "Film photography",
+    description: "Takes a film camera on neighborhood photo walks.",
+    tags: ["photo walks"],
+    suggested_visibility: "PRIVATE",
   },
   {
     category: "WORK",
@@ -696,7 +714,47 @@ function findFriend(args: Record<string, unknown>):
   return null;
 }
 
-/** The three onboarding steps, derived from what the store already holds. */
+// Import provenance is separate from is_sample: starter notes have that flag too.
+const platformPeople = new Set<string>();
+let reviewedAt = 0;
+
+function onboardingState() {
+  const approved = memories.filter(m => m.source !== "sample");
+  const imported = people.filter(p => platformPeople.has(p.person_id));
+  const existedAtReview = (record: { created_at: string }) => Date.parse(record.created_at) <= reviewedAt;
+  return {
+    memories_ready: approved.length > 0, contacts_ready: imported.length > 0,
+    matches_reviewed: approved.some(existedAtReview) && imported.some(existedAtReview),
+  };
+}
+
+function myInterestLabels() {
+  return memories.filter(m => m.category === "INTEREST" && m.source !== "sample" && !m.people.length)
+    .flatMap(m => [m.title, ...m.tags]);
+}
+
+function interestMatches(limit: number): InterestMatchesViewData {
+  const mine = myInterestLabels();
+  const eligible = [
+    ...people.filter(p => platformPeople.has(p.person_id)).map(p => ({
+      kind: "person" as const, id: p.person_id, display_name: p.name, interests: p.interests,
+    })),
+    // For peers, only explicit interest labels from memories already visible to this connection.
+    ...connections.filter(c => !c.is_sample).map(c => ({
+      kind: "connection" as const, id: c.connection_id, display_name: c.display_name,
+      interests: c.shared_memories.filter(m => m.category === "INTEREST").flatMap(m => [m.title, ...m.tags]),
+    })),
+  ];
+  const matches = eligible.flatMap(({ interests, ...friend }) => {
+    const { interest_matches } = previewInterests(mine, interests);
+    return interest_matches.length ? [{ ...friend, interest_matches }] : [];
+  });
+  matches.sort((a, b) => Number(a.interest_matches[0].kind === "related") - Number(b.interest_matches[0].kind === "related")
+    || a.display_name.localeCompare(b.display_name) || a.kind.localeCompare(b.kind) || a.id.localeCompare(b.id));
+  return { view: "interest_matches", matches: matches.slice(0, limit) };
+}
+
+/** Legacy setup data remains available alongside the guided flow. */
 function setupSteps(fresh = false): SetupStep[] {
   const connected = !fresh && connections.length > 0;
   return [
@@ -725,7 +783,7 @@ const HELP_TOPICS: HelpTopic[] = [
   {
     key: "setup",
     title: "Getting set up",
-    description: "Three short steps: tell Venn about you, add your people, connect with friends.",
+    description: "Review memories, choose contacts from Instagram or LinkedIn previews, then see which interests overlap.",
     examples: ["Set up Venn"],
   },
   {
@@ -765,6 +823,7 @@ function helpView(): HelpViewData {
     view: "help" as const,
     display_name: profile.display_name,
     topics: HELP_TOPICS,
+    onboarding: onboardingState(),
     setup: setupSteps(),
     privacy: [
       "Nothing is saved until you approve it.",
@@ -792,6 +851,7 @@ function dashboardView(): DashboardViewData {
     people,
     pending_requests: pending,
     setup: setupSteps(),
+    onboarding: onboardingState(),
     plans: openPlans(),
     pending_answers: answerInbox.length,
     sample_loaded: sampleLoaded,
@@ -1114,7 +1174,10 @@ function removeSampleCircle() {
   for (const [id, proposal] of imports) {
     if (proposal.isSample) imports.delete(id);
   }
+  platformPeople.clear();
+  reviewedAt = 0;
   sampleLoaded = false;
+  rememberGuidedProgress();
   return { removed: true, friends, people: persons, memories: mems };
 }
 
@@ -1418,28 +1481,31 @@ function inviteView(maxUses: unknown, code = newCode()): InviteViewData {
 // ---------------------------------------------------------------------------
 
 
-function importView(platform: DemoPlatform | null = null, entries: ImportCandidate[] = IMPORT_CANDIDATES): PeopleImportViewData {
+function importView(platform: DemoPlatform | null = null, entries: ImportCandidate[] = IMPORT_CANDIDATES, exportSource: DemoPlatform | null = null): PeopleImportViewData {
   const import_id = nextId("imp");
   const profiles = platform ? DEMO_GIVEN_NAMES.flatMap((first, row) => DEMO_SURNAMES[platform].map((last, col) => ({
     index: row * DEMO_SURNAMES[platform].length + col,
     name: `${first} ${last}`,
     relationship: null,
     notes: null,
-    interests: [DEMO_TOPICS[platform][(row + col) % DEMO_TOPICS[platform].length]],
+    interests: [...DEMO_TOPICS[platform][(row + col) % DEMO_TOPICS[platform].length]],
     last_met_days_ago: null,
   }))) : entries;
+  const mine = myInterestLabels();
   const candidates = profiles.map((c) => {
     const matches = people.filter((p) => (platform || !p.is_sample) && p.name.toLowerCase() === c.name.toLowerCase());
-    return { ...c, shared_interests: c.interests.filter((interest) => profile.interests.some((mine) => mine.toLowerCase() === interest.toLowerCase())), already_added: matches.length > 0, existing_relationships: matches.flatMap((p) => p.relationship ? [p.relationship] : []) };
+    return { ...c, ...previewInterests(mine, c.interests), already_added: matches.length > 0, existing_relationships: matches.flatMap((p) => p.relationship ? [p.relationship] : []) };
   });
 
-  const confirmationToken = platform ? import_id.padEnd(43, "_") : null;
-  imports.set(import_id, { candidates, isSample: platform !== null, confirmationToken });
+  const confirmationToken = platform
+    ? btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")
+    : null;
+  imports.set(import_id, { candidates, isSample: platform !== null, platform: platform ?? exportSource, confirmationToken });
   return structuredClone({
     view: "people_import" as const,
     import_id,
     expires_at: iso(1),
-    source: platform ? `${platform}_demo` : "pasted list",
+    source: platform ? `${platform}_demo` : exportSource ?? "pasted list",
     demo_platform: platform,
     confirmation_token: confirmationToken,
     candidates,
@@ -1798,7 +1864,7 @@ function quizView(args: Record<string, unknown>): QuizViewData | null {
 
 function welcomeView(): WelcomeViewData {
   // The welcome card is for a brand-new user: every step is still open.
-  return { view: "welcome", display_name: profile.display_name, goal_options: GOAL_OPTIONS, setup: setupSteps(true), sample_loaded: false };
+  return { view: "welcome", display_name: profile.display_name, goal_options: GOAL_OPTIONS, setup: setupSteps(true), onboarding: onboardingState(), sample_loaded: sampleLoaded };
 }
 
 const demoReplies: Record<string, Reply> = {
@@ -1843,7 +1909,38 @@ const demoReplies: Record<string, Reply> = {
 
 let savedReplies: SavedReply[] = [];
 
+// Keep a guided rehearsal resumable on reload, scoped to this preview's history entry.
+// Unapproved drafts, confirmation tokens and pending import candidates never leave memory.
+const guidedDemos = new Set(["welcome", "memory_review_import", "dashboard_setup", "onboarding_contacts", "onboarding_matches"]);
+function rememberGuidedProgress() {
+  const scenario = demoParam("view") ?? "";
+  if (!guidedDemos.has(scenario)) return;
+  try {
+    window.history.replaceState({ ...window.history.state, vennGuidedDemo: {
+      scenario, memories, people, platformPeople: [...platformPeople], reviewedAt, seq, sampleLoaded,
+    } }, "");
+  } catch { /* Restricted preview hosts still have the in-memory flow. */ }
+}
+
 export function mockInitialView(): ViewData | null {
+  const initial = scenarioView();
+  const scenario = demoParam("view") ?? "";
+  if (!guidedDemos.has(scenario)) return initial;
+  const snapshot = window.history.state?.vennGuidedDemo;
+  if (snapshot?.scenario !== scenario || !Array.isArray(snapshot.platformPeople) || !Number.isSafeInteger(snapshot.seq)) return initial;
+  const restored = parseView({ view: "dashboard", memories: snapshot.memories, people: snapshot.people });
+  if (restored?.view !== "dashboard") return initial;
+  memories = restored.memories;
+  people = restored.people;
+  platformPeople.clear();
+  for (const p of people) if (snapshot.platformPeople.includes(p.person_id)) platformPeople.add(p.person_id);
+  seq = Math.max(seq, snapshot.seq);
+  reviewedAt = Number.isSafeInteger(snapshot.reviewedAt) ? snapshot.reviewedAt : 0;
+  sampleLoaded = snapshot.sampleLoaded === true;
+  return scenario === "welcome" && !memories.length && !people.length ? welcomeView() : dashboardView();
+}
+
+function scenarioView(): ViewData | null {
   switch (demoParam("view")) {
     case "reply_nudge":
       return { view: "reply", reply: demoReplies.reply_nudge };
@@ -1911,6 +2008,28 @@ export function mockInitialView(): ViewData | null {
       return quizView({});
     case "help":
       return helpView();
+    case "onboarding_matches":
+    case "interest_matches":
+    case "interest_matches_empty": {
+      const empty = demoParam("view") === "interest_matches_empty";
+      memories = [{
+        memory_id: "onboarding_m1", category: "INTEREST", title: empty ? "Cello" : "Film photography",
+        description: empty ? "Learning a new piece on the cello." : "I like to photograph buildings and try specialty coffee.",
+        tags: empty ? [] : ["Architecture", "Specialty coffee"], visibility: "PRIVATE", created_at: iso(-2), source: "chatgpt_memory", people: [],
+      }];
+      connections = [];
+      pending = [];
+      people = [0, 1].map(col => ({
+        person_id: `preview_ig_${col}`, name: `${DEMO_GIVEN_NAMES[0]} ${DEMO_SURNAMES.instagram[col]}`,
+        interests: [...DEMO_TOPICS.instagram[col]], notes: null, relationship: null, created_at: iso(-1), last_interaction_at: null, is_sample: true,
+      }));
+      for (const person of people) platformPeople.add(person.person_id);
+      sampleLoaded = true;
+      if (demoParam("view") === "onboarding_matches") return dashboardView();
+      reviewedAt = Date.now();
+      return interestMatches(10);
+    }
+    case "onboarding_contacts":
     case "dashboard_setup":
       // A user who saved memories but has not added or connected with anyone yet.
       people = [];
@@ -2029,6 +2148,7 @@ export function createMockBridge(): HostBridge {
             title: String(m.title ?? ""),
             description: String(m.description ?? ""),
             tags: list(m.tags) ?? [],
+            people: list(m.people) ?? [],
             suggested_visibility: (typeof m.suggested_visibility === "string" ? m.suggested_visibility : "PRIVATE") as Visibility,
           }));
           const weeklyUpdate = args.weekly_update === true;
@@ -2036,17 +2156,24 @@ export function createMockBridge(): HostBridge {
           return ok(reviewView(source, seeds.length > 0 ? seeds : fallback, nextId("prop"), weeklyUpdate));
         }
 
+        case "mock_preview_photo_memory":
+          return ok(reviewView("chatgpt_memory", IMPORT_PROPOSALS.filter(p => p.title === "Film photography"), nextId("prop")));
+
         case "venn_save_memories": {
           const approvals: Record<string, unknown>[] = Array.isArray(args.approvals) ? args.approvals : [];
           const review = proposalStore.get(String(args.proposal_id));
-          if (!review) return fail("NOT_FOUND: proposal not found or expired");
+          if (!review || Date.parse(review.expires_at) <= Date.now()) return fail("NOT_FOUND: proposal not found or expired");
+          if (!approvals.length || approvals.some(a => !a || !review.proposals.some(p => p.index === a.index)) ||
+              new Set(approvals.map(a => a.index)).size !== approvals.length) {
+            return fail("INVALID_ARGUMENT: Choose one or more items from this review.");
+          }
           const saved: Memory[] = approvals.map((a) => {
             const proposal = review.proposals.find((p) => p.index === a.index);
             return {
               memory_id: nextId("mem"),
               category: proposal?.category ?? "PERSONAL_MEMORY",
-              title: String(a.title ?? ""),
-              description: String(a.description ?? ""),
+              title: String(a.title ?? proposal?.title ?? ""),
+              description: String(a.description ?? proposal?.description ?? ""),
               tags: proposal?.tags ?? [],
               visibility: (a.visibility as Visibility) ?? "PRIVATE",
               created_at: new Date().toISOString(),
@@ -2076,6 +2203,7 @@ export function createMockBridge(): HostBridge {
             }
           }
           proposalStore.delete(String(args.proposal_id));
+          rememberGuidedProgress();
           return ok({ saved, count: saved.length, people_added: peopleAdded });
         }
 
@@ -2096,12 +2224,15 @@ export function createMockBridge(): HostBridge {
           const description = text(args.description, 500);
           if (description !== undefined) m.description = description;
           if (typeof args.visibility === "string") m.visibility = args.visibility as Visibility;
+          rememberGuidedProgress();
           return ok(m);
         }
 
         case "venn_delete_memory": {
           if (!memories.some((m) => m.memory_id === args.memory_id)) return fail("NOT_FOUND: memory not found");
           memories = memories.filter((m) => m.memory_id !== args.memory_id);
+          if (!onboardingState().memories_ready) reviewedAt = 0;
+          rememberGuidedProgress();
           return ok({ deleted: true, memory_id: args.memory_id });
         }
 
@@ -2209,12 +2340,16 @@ export function createMockBridge(): HostBridge {
           person.relationship = textOrNull(text(args.relationship, 80), person.relationship);
           person.notes = textOrNull(text(args.notes, 1000), person.notes);
           person.interests = list(args.interests) ?? person.interests;
+          rememberGuidedProgress();
           return ok(person);
         }
 
         case "venn_delete_person": {
           if (!people.some((p) => p.person_id === args.person_id)) return fail("NOT_FOUND: person not found");
           people = people.filter((p) => p.person_id !== args.person_id);
+          platformPeople.delete(String(args.person_id));
+          if (!onboardingState().contacts_ready) reviewedAt = 0;
+          rememberGuidedProgress();
           delete interactions[`person:${String(args.person_id)}`];
           delete followUps[`person:${String(args.person_id)}`];
           return ok({ deleted: true, person_id: args.person_id });
@@ -2237,7 +2372,7 @@ export function createMockBridge(): HostBridge {
             notes: person.notes ?? null, interests: person.interests ?? [],
             last_met_days_ago: person.last_met_days_ago ?? null, already_added: false,
           }));
-          return ok(importView(null, entries));
+          return ok(importView(null, entries, args.source === "instagram" || args.source === "linkedin" ? args.source : null));
         }
 
         case "venn_preview_demo_people_import": {
@@ -2257,7 +2392,7 @@ export function createMockBridge(): HostBridge {
             return fail("INVALID_ARGUMENT: use the Add button on the matching import review card");
           }
           if (isSample && args.confirmation_token !== confirmationToken) {
-            return fail("INVALID_ARGUMENT: Open a fresh demo review and use its Add button to confirm your selection.");
+            return fail("INVALID_ARGUMENT: Open a fresh import review and use its Add button to confirm your selection.");
           }
           const wanted = new Set(Array.isArray(args.indexes) ? args.indexes : []);
           if (!wanted.size) return fail("INVALID_ARGUMENT: pick at least one person");
@@ -2276,8 +2411,20 @@ export function createMockBridge(): HostBridge {
             }));
           people = [...people, ...imported];
           if (isSample && imported.length) sampleLoaded = true;
+          if (proposal.platform) for (const person of imported) platformPeople.add(person.person_id);
           imports.delete(String(args.import_id));
+          rememberGuidedProgress();
           return ok({ imported, count: imported.length });
+        }
+
+        case "venn_find_interest_matches": {
+          const state = onboardingState();
+          if (!state.memories_ready || !state.contacts_ready) return fail("Approve a memory and confirm an Instagram or LinkedIn contact import first.");
+          const limit = args.limit ?? 10;
+          if (typeof limit !== "number" || !Number.isInteger(limit) || limit < 1 || limit > 20) return fail("Choose a limit between 1 and 20.");
+          reviewedAt = Date.now();
+          rememberGuidedProgress();
+          return ok(interestMatches(limit));
         }
 
         case "venn_find_people":

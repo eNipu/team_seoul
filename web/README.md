@@ -73,10 +73,10 @@ same URL, so signing in continues where the user was. Sign out is `DELETE /api/v
 | `/app/account` | Profile, "Use Venn in ChatGPT", connect with friends, sign out, delete account |
 | anything else | 404 page |
 
-In **People → Instagram demo import** or **People → Import from LinkedIn → Demo connections**,
+In **People → Instagram import** or **People → LinkedIn import → Built-in preview**,
 review 100 fictional profiles without connecting a social account, using cookies, or uploading a
 file. Choose profiles individually or click **Select all**, then confirm. On a signed-in account
-these are saved as private Sample notes. **Home → Remove sample data** clears them without deleting
+these are saved as private preview notes. **Home → Clear preview data** clears them without deleting
 ordinary contacts. To try either flow without persisting anything, open
 `/app/people?demo=1&instagram=1` or `/app/people?demo=1&linkedin=1`.
 

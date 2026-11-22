@@ -396,7 +396,7 @@ export default function PersonPage({ kind, id }: Props) {
           <p className="profile__meta">
             {f.relationship && <span>{f.relationship}</span>}
             <KindTag onVenn={f.on_venn} />
-            {f.is_sample && <Tag tone="info">Sample</Tag>}
+            {f.is_sample && <Tag tone="info">Preview</Tag>}
           </p>
           <p className="muted">
             <Icon name="clock" size={16} /> {formatLastSeen(f.last_interaction_at)}
@@ -477,7 +477,7 @@ export default function PersonPage({ kind, id }: Props) {
 
       {editing && (
         <Dialog title={`Edit ${f.display_name}`} onClose={() => setEditing(false)}>
-          {f.is_sample && <Notice tone="quiet">Removing sample data also removes edits you make to this note.</Notice>}
+          {f.is_sample && <Notice tone="quiet">Clearing preview data also removes edits you make to this note.</Notice>}
           <PersonForm
             person={{ person_id: id, name: f.display_name, relationship: f.relationship, notes: f.notes, interests: f.interests }}
             onCancel={() => setEditing(false)}

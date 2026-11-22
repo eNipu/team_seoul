@@ -85,33 +85,29 @@ function HeroSearch() {
   );
 }
 
-export function SampleBanner({ onRemoved }: { onRemoved: () => void }) {
+function PreviewCleanup({ onRemoved }: { onRemoved: () => void }) {
   const [confirm, setConfirm] = useState(false);
   const toast = useToast();
   return (
-    <div className="banner" role="status">
-      <Icon name="sparkle" size={20} />
-      <p>
-        <strong>You're looking at sample friends.</strong> They're made up, so you can try Venn before adding your own.
-      </p>
+    <div>
       <button type="button" className="btn btn--small" onClick={() => setConfirm(true)}>
-        Remove sample data
+        Clear preview data
       </button>
       {confirm && (
         <ConfirmDialog
-          title="Remove the sample friends?"
+          title="Clear preview data?"
           body={
             <p>
-              This removes sample friends, their notes and follow-ups (including edits), and sample memories. Your own
+              This removes preview profiles, their notes and follow-ups (including edits), and preview memories. Your own
               contacts and memories stay.
             </p>
           }
-          confirmLabel="Remove sample data"
+          confirmLabel="Clear preview data"
           danger
           onClose={() => setConfirm(false)}
           onConfirm={async () => {
             await api.removeSample();
-            toast("Sample data removed.");
+            toast("Preview data cleared.");
             onRemoved();
           }}
         />
@@ -280,7 +276,7 @@ function Welcome({ name, steps, onLoaded }: { name: string; steps: SetupStep[]; 
           onClick={() =>
             void act.run(async () => {
               const r = await api.loadSample();
-              toast(`Loaded ${plural(r.connections + r.people, "sample friend", "sample friends")}.`);
+              toast(`Starter circle ready: ${plural(r.connections + r.people, "person", "people")}.`);
               onLoaded();
             })
           }
@@ -288,8 +284,8 @@ function Welcome({ name, steps, onLoaded }: { name: string; steps: SetupStep[]; 
           <span className="start__icon">
             <Icon name="sparkle" size={22} />
           </span>
-          <strong>{act.busy ? "Loading sample friends…" : "Try with sample friends"}</strong>
-          <span>A made-up circle to explore. Remove it with one click.</span>
+          <strong>{act.busy ? "Loading starter circle…" : "Explore a starter circle"}</strong>
+          <span>Explore Venn with a built-in circle instead of importing your contacts.</span>
         </button>
       </div>
       <InlineError message={act.error} />
@@ -326,8 +322,6 @@ function Dashboard({ home, reloadHome }: { home: DashboardHome; reloadHome: () =
         </h1>
         <p className="lead">Start with a person or a plan.</p>
       </header>
-
-      {home.sample_loaded && <SampleBanner onRemoved={refresh} />}
 
       <Card title="This week" icon="sparkle" className="card--feature">
         <Loaded state={week} skeleton={<Skeleton rows={1} />}>
@@ -493,6 +487,7 @@ function Dashboard({ home, reloadHome }: { home: DashboardHome; reloadHome: () =
           )}
         </div>
       </div>
+      {home.sample_loaded && <PreviewCleanup onRemoved={refresh} />}
     </div>
   );
 }
@@ -517,12 +512,12 @@ export default function Home() {
   if (home.data.view === "welcome") {
     return (
       <>
+        <Welcome name={home.data.display_name || displayName} steps={home.data.setup} onLoaded={home.reload} />
         {home.data.sample_loaded && (
           <div className="page page--narrow">
-            <SampleBanner onRemoved={home.reload} />
+            <PreviewCleanup onRemoved={home.reload} />
           </div>
         )}
-        <Welcome name={home.data.display_name || displayName} steps={home.data.setup} onLoaded={home.reload} />
       </>
     );
   }

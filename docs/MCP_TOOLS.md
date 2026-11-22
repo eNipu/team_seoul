@@ -26,7 +26,7 @@ Annotations: **R** read-only, **W** write, **D** destructive (ChatGPT asks for c
 **UI** = renders the widget (`_meta.ui.resourceUri = ui://venn/app-v3.html`); the result's
 `view` field tells the widget which card to show.
 
-63 tools, 20 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Venn) or
+64 tools, 21 of which render a card. A **friend** is addressed by exactly one of `connection_id` (someone on Venn) or
 `person_id` (a private note about someone who is not); results name it as `kind`
 (`"connection"` \| `"person"`) + `id`.
 
@@ -59,21 +59,7 @@ memory. The reply tool accepts the task-specific payload and has no conversation
 | `venn_delete_saved_reply` | `reply_id` | D, widget only | `{deleted: true}`. Removes the owner's saved reply. |
 This is guidance to the model, not something the server can enforce.
 
-**Starting actions and optional set-up.** "Open Venn" opens the home card without starting set-up.
-The welcome card offers **Set up Venn**, **Import my ChatGPT memory**, and **Try a demo import**.
-Set-up has three steps, in order: *about you* (done once a memory is saved),
-*your people* (done once there is a people note or a connection), *connect* (done once there is
-a connection, a pending request, or an invite that is active or was used). Nothing extra is
-stored: each step is derived from the data it produces.
-- The home, welcome and help cards carry them as `setup[{key, title, description, done}]`. While
-  a step is open the home card shows a "Finish setting up" checklist with a button per step, so
-  set-up is always one tap away even if the model says nothing.
-- `venn_show_dashboard` includes the open steps in its result text. Start the first open one
-  only when the user asks for set-up, then move on when a step is done or skipped. Demo
-  imports and the sample circle do not count toward set-up.
-  The first About you question asks who the user wants to spend time with and what they would enjoy together.
-- What the model does with that text is guidance, not enforced; the checklist on the card is
-  what is guaranteed. Every step still ends in a review card.
+**Guided setup.** “Open Venn” shows the first unfinished step on the card: import memories → import Instagram and/or LinkedIn contacts → find connections with similar interests. Welcome, dashboard and help carry `onboarding: { memories_ready, contacts_ready, matches_reviewed }`. Opening a review, loading a starter circle, or sending an invite does not complete a step. A user-approved non-sample memory and one confirmed platform contact suffice for the final step. An explicit search counts even if it finds no matches. Dedicated tools outside guided setup remain available. `setup[]` is the separate web checklist, not authoritative for plugin onboarding.
 
 ## Profile
 
@@ -119,7 +105,7 @@ it remembers. So the import is a conversation, with Venn's cards at both ends:
    goals, experiences ticked; personal life unticked). Health, money, passwords and ID numbers
    are not offered.
 2. "Preview my ChatGPT memory" posts a message into the chat (`ui/message`) asking ChatGPT to
-   **list in the chat** what it remembers in those areas — numbered, at most 30 — and to send
+   **list in the chat** what it remembers in those areas — up to three numbered items per turn, at most 30 total — and to send
    nothing to Venn yet.
 3. The user says which ones to keep ("all except 3 and 7").
 4. ChatGPT calls `venn_propose_memories` with `source: "chatgpt_memory"` and only those items.
@@ -136,6 +122,7 @@ it does enforce is that nothing is saved without the user's confirmation on the 
 | Tool | Args | Scope | | Returns |
 | --- | --- | --- | --- | --- |
 | `venn_show_dashboard` | – | profile.read, memories.read, connections.manage | R, UI | `{view: "dashboard", profile, memories[], connections[{connection_id, user_id, display_name, since, last_interaction_at}], people[Person], pending_requests[{request_id, sender_display_name, created_at}]}` — or, for an account with no memories, friends, requests or goals, `{view: "welcome", display_name, goal_options[{value, label}], setup[]}`. The dashboard has `setup[{key, title, description, done}]` too (keys `about_you`, `your_people`, `connect`). |
+| `venn_find_interest_matches` | `limit?` (1–20, default 10) | memories.read, connections.manage | UI | `{view: "interest_matches", matches[]}`. Each entry has `kind, id, display_name, interest_matches[{my_label, their_label, kind}]`. Exact before related; no messages or invitations. Records the lookup for setup. |
 | `venn_help` | – | profile.read, memories.read, connections.manage | R, UI | `{view: "help", display_name, topics[{key, title, description, examples[]}], setup[], privacy[], note}` — what Venn can do, with example requests the user can tap (the widget sends the example as a chat message). Topic keys: `setup`, `memories`, `people`, `connect`, `stay_close`, `quiz`. Changes nothing. The widget header has a Help button that opens this card from any other card. |
 
 ## Invites & connections
@@ -186,7 +173,7 @@ candidates are stored server-side, so nothing can be added that the user was not
 | `venn_propose_people_import` | `people[]` (1–50 `{name, relationship?, notes?, interests?[], last_met_days_ago?}`), `source?` (≤60) | connections | W, UI | `{view: "people_import", import_id, expires_at, source, candidates[{index, name, relationship, notes, interests[], last_met_days_ago, already_added, existing_relationships[], shared_interests[]}], skipped, note}` — **adds nobody** |
 | `venn_import_people` | `import_id`, `indexes[]` (1–50) | connections | W | `{imported: Person[], count}`; regular imports only |
 | `venn_preview_demo_people_import` | `platform`: `"instagram"` or `"linkedin"` | connections | W, UI | `people_import` with `demo_platform` and 100 fictional candidates. Adds nobody; no social login or external API. Result `_meta` carries the review's confirmation token for the widget |
-| `venn_import_demo_people` | `import_id`, `indexes[]` (1–100), `confirmation_token` | connections | W, widget callback | `{imported: Person[], count}`. Only the widget's **Add** button sends the token and selected indexes. Saves owner-only Sample notes; **Remove sample data** clears them |
+| `venn_import_demo_people` | `import_id`, `indexes[]` (1–100), `confirmation_token` | connections | W, widget callback | `{imported: Person[], count}`. Only the widget's **Add** button sends the token and selected indexes. Saves owner-only preview notes; **Clear preview data** clears them |
 
 The demo confirmation callback is visible in tool discovery so ChatGPT can route widget calls.
 Confirming still requires the initiating account and that review's unused, unexpired proposal
@@ -195,7 +182,7 @@ and widget-only token (`_meta["venn/demoImportConfirmation"]`, not in model-visi
 Emails, links and phone numbers are stripped from names, relationships and notes; entries
 containing credentials or card/ID numbers are dropped and counted in `skipped`. `already_added`
 marks a name the user already has a note for. Review shows the saved relationship clues alongside the proposed clue. The user can explicitly select a namesake to create a separate private note with its own ID. An import is owner-only, single-use and expires
-after 24 hours. The ChatGPT radar highlights candidate interests matching the owner’s saved interest titles or tags when the caller has memory-read permission.
+after 24 hours. With memory-read permission, all import previews return `interest_matches: [{my_label, their_label, kind}]` (`exact` or `related`); `shared_interests` remains exact-only. Related matches use a curated whole-label vocabulary, not bios or substrings. Both profile lists show both sides of a related match and put stronger matches first without changing the indexes used to confirm.
 
 ## Relationship maintenance
 

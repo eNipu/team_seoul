@@ -332,7 +332,7 @@ export function MemoryCard({
               From ChatGPT
             </Tag>
           )}
-          {memory.source === "sample" && <Tag tone="info">Sample</Tag>}
+          {memory.source === "sample" && <Tag tone="info">Preview</Tag>}
           {memory.people.map((p) => (
             <Tag key={p} icon="user">
               {p}

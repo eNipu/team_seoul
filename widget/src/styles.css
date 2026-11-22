@@ -1198,11 +1198,10 @@ input[type="datetime-local"] {
   gap: 6px;
 }
 .pick-list--demo {
-  max-block-size: 21rem;
-  overflow: auto;
-  padding: 4px; /* Leave room for the checkbox focus outline. */
-  scrollbar-gutter: stable;
+  padding: 4px; /* Leave room for checkbox focus; paging replaces nested scrolling. */
 }
+.own-import { margin-block: 12px; }
+.own-import summary { cursor: pointer; padding-block: 10px; }
 .pick__notes,
 .snippet {
   display: -webkit-box;

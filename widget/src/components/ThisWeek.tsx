@@ -200,9 +200,10 @@ export default function ThisWeek({ data, bridge, nav }: ViewProps<ThisWeekViewDa
             </button>
             <button type="button" className="btn" disabled={busy} onClick={trySample}>
               <Icon name="sparkle" size={18} />
-              {action.busy === "sample" ? "Loading…" : "Try with sample friends"}
+              {action.busy === "sample" ? "Loading starter circle…" : "Explore a starter circle"}
             </button>
           </div>
+          <p className="muted small">The starter circle uses fictional people, not your contacts.</p>
         </>
       ) : (
         <ul className="list">

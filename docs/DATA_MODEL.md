@@ -9,7 +9,7 @@ timestamps are timezone-aware UTC, JSON columns are `JSONB` on Postgres.
 
 | Table | Columns | Notes |
 | --- | --- | --- |
-| `users` | id*, auth_subject* (unique), display_name, created_at*, updated_at* | `auth_subject = "<issuer>\|<sub>"` from the verified token. Created on first tool call. |
+| `users` | id*, auth_subject* (unique), display_name, matches_reviewed_at, created_at*, updated_at* | `auth_subject = "<issuer>\|<sub>"` from the verified token. Created on first tool call. |
 | `user_profiles` | id*, user_id* (unique, FK cascade), bio, social_goals* (JSON list), visibility* (`PRIVATE`/`CONNECTIONS`/`PUBLIC`), created_at*, updated_at* | Social goals: `make_friends`, `maintain_friendships`, `deepen_relationships`, `find_activity_partners`, `reconnect`, `meet_people_with_shared_interests`. |
 
 ## Memories
@@ -39,10 +39,12 @@ Limits: 500 memories per user, 8 items per proposal (30 for an import from ChatG
 
 | Table | Columns | Notes |
 | --- | --- | --- |
-| `people` | id*, owner_user_id* (FK cascade), name*, relationship, notes, interests* (JSON list), created_at*, updated_at* | Private note written by the owner. Never shared, never linked to a Venn account, never used to contact the person. |
+| `people` | id*, owner_user_id* (FK cascade), name*, relationship, notes, interests* (JSON list), is_sample*, import_platform, created_at*, updated_at* | Private note written by the owner. Never shared, never linked to a Venn account, never used to contact the person. |
 | `person_interactions` | id*, person_id* (FK cascade), activity, created_at* | Hangouts the owner logged; drives "last seen" and reconnection suggestions. |
 | `people_imports` | id*, user_id* (FK cascade), items* (JSON list of candidates), source, expires_at*, consumed_at, created_at* | Server-side record of the people shown on an import card. 24h TTL, single use; items are cleared once used. Nobody in here is a saved note. |
 | `follow_ups` | id*, owner_user_id* (FK cascade), connection_id (FK cascade), person_id (FK cascade), text*, done_at, created_at* | "Ask about this next time." Private to the owner. Exactly one of connection_id / person_id (check constraint). |
+
+`people.import_platform` records `instagram` or `linkedin` only on selected, saved notes from a confirmed platform import (including the built-in review). Manual, generic, starter-circle and pre-migration notes have no inferred platform. Removing a note removes its provenance. `users.matches_reviewed_at` records an explicit successful lookup, including zero results, after both prerequisites exist. Completion requires a surviving non-sample approved memory and platform note that existed at lookup time; merely viewing progress never records a lookup.
 
 Limits: 500 people per user, 50 candidates per import, 20 open follow-ups per friend (≤ 200 chars), name/relationship ≤ 80, notes ≤ 1000, 12 interests of ≤ 40 chars.
 

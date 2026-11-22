@@ -1,147 +1,69 @@
-// The set-up ("onboarding") card: three steps, the first open one emphasised.
-// Shown on the dashboard and the help card while any step is open; the welcome
-// card draws the same steps as a numbered path (see Welcome.tsx).
-
 import { useState } from "react";
-import type { HostBridge } from "../mcp/client";
-import type { SetupKey, SetupStep } from "../types";
-import { ActionError, ChatFallback, Ring, useAction, type Nav } from "./common";
-import { Icon, type IconName } from "./icons";
+import type { DashboardViewData, HelpViewData, WelcomeViewData } from "../types";
+import { ActionError, useAction, type Nav } from "./common";
+import { Icon } from "./icons";
 
-export const ABOUT_YOU_PROMPT = "Let's set up Venn. Ask me a few questions about what I enjoy and what I like to avoid.";
-export const YOUR_PEOPLE_PROMPT =
-  "I'd like to add my friends to Venn. I'll paste a list, upload a contacts file, or just tell you about them.";
+type SetupData = DashboardViewData | HelpViewData | WelcomeViewData;
+const titles = ["Import memories", "Import contacts", "Find connections with similar interests"];
+const descriptions = [
+  "Choose which interests to preview in chat. Only the memories you select and approve are saved.",
+  "Choose Instagram or LinkedIn. Review built-in profiles or bring your own contact list. One source is enough; nothing is added until you confirm.",
+  "Compare your saved interests with your circle. Looking at a match doesn’t contact anyone.",
+];
 
-type StepAction =
-  | { id: string; label: string; busyLabel: string; icon: IconName; tool: string }
-  | { id: string; label: string; busyLabel: string; icon: IconName; prompt: string };
-
-const STEP_ACTIONS: Record<SetupKey, StepAction[]> = {
-  about_you: [
-    { id: "import", label: "Import from ChatGPT", busyLabel: "Opening…", icon: "import", tool: "venn_import_chatgpt_memory" },
-    { id: "questions", label: "Answer a few questions", busyLabel: "Asking…", icon: "chat", prompt: ABOUT_YOU_PROMPT },
-  ],
-  your_people: [{ id: "people", label: "Add your people", busyLabel: "Asking…", icon: "users", prompt: YOUR_PEOPLE_PROMPT }],
-  connect: [{ id: "invite", label: "Invite a friend", busyLabel: "Creating code…", icon: "user-plus", tool: "venn_create_invite" }],
-};
-
-type Sent = { key: SetupKey; ok: true } | { key: SetupKey; ok: false; text: string };
-
-/** Runs a step's actions and remembers how the last chat hand-off went. */
-export function useSetupActions(bridge: HostBridge, nav: Nav) {
+export default function SetupCard({ data, nav }: { data: SetupData; nav: Nav }) {
   const action = useAction();
-  const [sent, setSent] = useState<Sent | null>(null);
+  const [platform, setPlatform] = useState<"instagram" | "linkedin">("instagram");
+  const progress = data.onboarding;
+  const current = [progress?.memories_ready, progress?.contacts_ready, progress?.matches_reviewed].findIndex((ready) => ready !== true);
+  if (current < 0) return data.view === "welcome" ? (
+    <section className="panel"><h2>You’re all set</h2><p className="muted">Ask Venn about the interests you share with someone in your circle.</p></section>
+  ) : null;
+  if (!progress && data.view !== "welcome") return null;
 
-  function run(key: SetupKey, a: StepAction) {
-    void action.run(`${key}:${a.id}`, async () => {
-      if ("tool" in a) return nav.openView(a.tool, {});
-      let ok = false;
-      try {
-        ok = await bridge.sendMessage(a.prompt);
-      } catch {
-        ok = false;
-      }
-      setSent(ok ? { key, ok: true } : { key, ok: false, text: a.prompt });
-      return null;
+  const platformName = platform === "instagram" ? "Instagram" : "LinkedIn";
+  const labels = ["Choose memory areas", `Preview ${platformName} profiles`, "Find matches"];
+  function openStep() {
+    void action.run("open", () => {
+      if (current === 0) return nav.openView("venn_import_chatgpt_memory", {});
+      if (current === 1) return nav.openView("venn_preview_demo_people_import", { platform });
+      return nav.openView("venn_find_interest_matches", {});
     });
   }
 
-  return { action, sent, run };
-}
-
-/** Buttons for one step, plus the "continue in the chat" / copy fallback underneath. */
-export function StepActions({
-  step,
-  emphasis,
-  setup,
-}: {
-  step: SetupStep;
-  /** The first open step gets the card's primary button. */
-  emphasis: boolean;
-  setup: ReturnType<typeof useSetupActions>;
-}) {
-  const { action, sent, run } = setup;
-  const mine = sent?.key === step.key ? sent : null;
-  return (
-    <>
-      <div className="setup-step__actions">
-        {STEP_ACTIONS[step.key].map((a, i) => {
-          const id = `${step.key}:${a.id}`;
-          const primary = emphasis && i === 0;
-          return (
-            <button
-              key={a.id}
-              type="button"
-              className={`btn ${primary ? "btn--primary" : ""} ${emphasis ? "" : "btn--small"}`}
-              disabled={action.busy !== null}
-              onClick={() => run(step.key, a)}
-            >
-              <Icon name={a.icon} size={18} />
-              {action.busy === id ? a.busyLabel : a.label}
-            </button>
-          );
-        })}
-      </div>
-      {mine?.ok === true && (
-        <p className="hint hint--ok" role="status">
-          <Icon name="chat" size={16} /> Continue in the chat
-        </p>
-      )}
-      {mine?.ok === false && <ChatFallback text={mine.text} />}
-    </>
-  );
-}
-
-interface Props {
-  steps: SetupStep[];
-  bridge: HostBridge;
-  nav: Nav;
-}
-
-export default function SetupCard({ steps, bridge, nav }: Props) {
-  const setup = useSetupActions(bridge, nav);
-  const done = steps.filter((s) => s.done).length;
-  if (steps.length === 0 || done === steps.length) return null;
-  const firstOpen = steps.find((s) => !s.done);
-
   return (
     <section className="setup" aria-labelledby="setup-title">
-      <div className="setup__head">
-        <Ring ratio={done / steps.length} label={`${done}/${steps.length}`} />
-        <div className="setup__head-text">
-          <h2 id="setup-title" className="setup__title">
-            Finish setting up
-          </h2>
-          <p className="muted small">
-            {done} of {steps.length} done
-          </p>
-        </div>
-      </div>
-      <ol className="setup-steps">
-        {steps.map((step, i) => {
-          const current = step === firstOpen;
-          return (
-            <li
-              key={step.key}
-              className={`setup-step ${step.done ? "setup-step--done" : ""} ${current ? "setup-step--current" : ""}`}
-              aria-current={current ? "step" : undefined}
-            >
-              <span className="setup-step__marker" aria-hidden="true">
-                {step.done ? <Icon name="check" size={16} /> : i + 1}
-              </span>
-              <div className="setup-step__body">
-                <p className="setup-step__title">
-                  {step.title}
-                  {step.done && <span className="sr-only"> (done)</span>}
-                </p>
-                {!step.done && step.description && <p className="muted small">{step.description}</p>}
-                {!step.done && <StepActions step={step} emphasis={current} setup={setup} />}
-              </div>
-            </li>
-          );
-        })}
+      <header className="setup__head-text">
+        <p className="small muted">Getting started · Step {current + 1} of 3</p>
+        <h2 className="setup__title" id="setup-title">Find common ground in your circle</h2>
+        <p className="small muted">This guide is optional. You can keep using Venn in chat without importing anything.</p>
+      </header>
+      <ol className="setup-steps setup-steps--path">
+        {titles.map((title, i) => (
+          <li key={title} className={`setup-step ${i === current ? "setup-step--current" : i < current ? "setup-step--done" : ""}`} aria-current={i === current ? "step" : undefined}>
+            <span className="setup-step__marker" aria-hidden="true">{i < current ? <Icon name="check" size={16} /> : i + 1}</span>
+            <div className="setup-step__body">
+              <h3 className="setup-step__title">{title}</h3>
+              {i !== current ? <p className="muted small">{i < current ? "Complete" : `Locked until step ${i} is complete`}</p> : <>
+                <p className="muted small">{descriptions[i]}</p>
+                {i === 1 && <fieldset className="goal-picker" disabled={action.busy !== null}>
+                  <legend className="sr-only">Profile source</legend>
+                  <div className="chips">{(["instagram", "linkedin"] as const).map((source) => (
+                    <button key={source} type="button" className={`btn ${source === platform ? "chip--on" : ""}`} aria-pressed={source === platform} onClick={() => { action.clear(); setPlatform(source); }}>
+                      {source === platform && <Icon name="check" size={16} />}{source === "instagram" ? "Instagram" : "LinkedIn"}
+                    </button>
+                  ))}</div>
+                </fieldset>}
+                <div className="setup-step__actions"><button className="btn btn--primary" type="button" disabled={action.busy !== null} onClick={openStep}>
+                  {action.busy ? "Opening…" : labels[i]}
+                </button></div>
+                <ActionError action={action} />
+                {action.failure && <p className="muted small">Or ask in chat: “{["Open Venn’s memory import", `Preview Venn’s built-in ${platformName} profiles`, "Find connections with similar interests in Venn"][i]}.”</p>}
+              </>}
+            </div>
+          </li>
+        ))}
       </ol>
-      <ActionError action={setup.action} />
     </section>
   );
 }

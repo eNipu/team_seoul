@@ -141,7 +141,7 @@ function PersonRow({ f }: { f: FriendSummary }) {
           <span className="person-row__name">
             <strong>{f.display_name}</strong>
             <KindTag onVenn={f.on_venn} />
-            {f.is_sample && <Tag tone="info">Sample</Tag>}
+            {f.is_sample && <Tag tone="info">Preview</Tag>}
           </span>
           <span className="muted small">
             {[f.relationship, formatLastSeen(f.last_interaction_at)].filter(Boolean).join(" · ")}
@@ -207,11 +207,11 @@ export default function People() {
           <>
             <Link to="/people" query={{ linkedin: "1" }} className="btn">
               <Icon name="briefcase" size={18} />
-              Import from LinkedIn
+              LinkedIn import
             </Link>
             <Link to="/people" query={{ instagram: "1" }} className="btn">
               <Icon name="camera" size={18} />
-              Instagram demo import
+              Instagram import
             </Link>
             <Link to="/people" query={{ import: "1" }} className="btn">
               <Icon name="import" size={18} />
@@ -239,7 +239,7 @@ export default function People() {
                     Import a list
                   </Link>
                   <Link to="/people" query={{ linkedin: "1" }} className="btn">
-                    Import from LinkedIn
+                    LinkedIn import
                   </Link>
                 </>
               }
@@ -306,12 +306,12 @@ export default function People() {
         </Dialog>
       )}
       {dialog === "linkedin" && (
-        <Dialog title="Import from LinkedIn" onClose={close} wide>
+        <Dialog title="LinkedIn import" onClose={close} wide>
           <LinkedInFlow
             onCancel={close}
             onDone={(n, kind) => {
               if (kind === "demo") {
-                toast(n ? `Added ${plural(n, "demo connection", "demo connections")}.` : "No new demo connections to add.");
+                toast(n ? `Added ${plural(n, "profile", "profiles")}.` : "No new profiles to add.");
               } else {
                 toast(`Added ${plural(n, "person", "people")} from LinkedIn.`);
               }
@@ -322,11 +322,11 @@ export default function People() {
         </Dialog>
       )}
       {dialog === "instagram" && (
-        <Dialog title="Instagram demo import" onClose={close} wide>
+        <Dialog title="Instagram import" onClose={close} wide>
           <InstagramDemoFlow
             onCancel={close}
             onDone={(n) => {
-              toast(n ? `Added ${plural(n, "sample profile", "sample profiles")}.` : "No new sample profiles to add.");
+              toast(n ? `Added ${plural(n, "profile", "profiles")}.` : "No new profiles to add.");
               close();
               friends.reload();
             }}

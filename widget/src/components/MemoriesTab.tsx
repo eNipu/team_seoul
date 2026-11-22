@@ -40,9 +40,14 @@ export default function MemoriesTab({ memories, bridge, nav, action, onChange }:
   const [editing, setEditing] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
+  const [page, setPage] = useState(0);
+  const pageSize = 6;
   const q = query.trim().toLowerCase();
   const visible = q ? memories.filter((m) => matches(m, q)) : memories;
-  const groups = MEMORY_CATEGORIES.map((c) => ({ category: c, items: visible.filter((m) => m.category === c) })).filter(
+  const pages = Math.ceil(visible.length / pageSize);
+  const currentPage = Math.max(0, Math.min(page, pages - 1));
+  const slice = visible.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
+  const groups = MEMORY_CATEGORIES.map((c) => ({ category: c, items: slice.filter((m) => m.category === c) })).filter(
     (g) => g.items.length > 0,
   );
   const busy = action.busy !== null;
@@ -129,7 +134,7 @@ export default function MemoriesTab({ memories, bridge, nav, action, onChange }:
           value={query}
           placeholder="Search memories"
           autoComplete="off"
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => { setPage(0); setQuery(e.target.value); }}
         />
       </div>
       {q && (
@@ -138,6 +143,11 @@ export default function MemoriesTab({ memories, bridge, nav, action, onChange }:
         </p>
       )}
 
+      {pages > 1 && <nav className="button-row" aria-label="Saved memory pages">
+        <button type="button" className="btn" disabled={busy || currentPage === 0} onClick={() => setPage(currentPage - 1)}>Previous</button>
+        <span role="status" className="small muted">Page {currentPage + 1} of {pages}</span>
+        <button type="button" className="btn" disabled={busy || currentPage + 1 >= pages} onClick={() => setPage(currentPage + 1)}>Next</button>
+      </nav>}
       {groups.length === 0 ? (
         <EmptyNote art="search" title="No matches">
           Nothing matches “{query.trim()}”.{" "}

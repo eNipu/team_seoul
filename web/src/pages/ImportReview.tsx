@@ -1,9 +1,22 @@
 // The last step of every people import: tick who to add. Nothing is added before this.
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { strongestFirst } from "../../../shared/importInterests";
 import { api } from "../api";
 import { plural, type PeopleImport } from "../types";
 import { Avatar, InlineError, Tag, useAction } from "../ui";
+
+function ReviewInterests({ interests, shared_interests = [], related_interests = [] }: {
+  interests: string[];
+  shared_interests?: string[];
+  related_interests?: string[];
+}) {
+  return <>
+    {interests.length > 0 && <span className="muted small">Interests: {interests.join(", ")}</span>}
+    {shared_interests.length > 0 && <span className="small">In common: {shared_interests.join(", ")}</span>}
+    {related_interests.length > 0 && <span className="small">Related interests: {related_interests.join(", ")}</span>}
+  </>;
+}
 
 export function ImportReview({
   preview,
@@ -82,7 +95,7 @@ export function ImportReview({
       {/* Demo confirmation is reachable without tabbing through 100 checkboxes. */}
       {selectionTools && actions}
       <ul className="review">
-        {preview.candidates.map((c) => {
+        {(selectionTools ? strongestFirst(preview.candidates) : preview.candidates).map((c) => {
           const on = checked.includes(c.index);
           return (
             <li key={c.index}>
@@ -96,9 +109,8 @@ export function ImportReview({
                 <Avatar name={c.name} size="small" />
                 <span className="review__text">
                   <strong>{c.name}</strong>
-                  <span className="muted small">
-                    {[c.relationship, c.interests.join(", ")].filter(Boolean).join(" · ") || "No details"}
-                  </span>
+                  {c.relationship && <span className="muted small">{c.relationship}</span>}
+                  <ReviewInterests {...c} />
                   {!!c.existing_relationships?.length && <span className="small">Already saved: {c.existing_relationships.join(", ")}</span>}
                   {c.notes && <span className="small review__notes">{c.notes}</span>}
                 </span>

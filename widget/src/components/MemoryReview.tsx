@@ -25,7 +25,7 @@ interface Props {
   onPreviewReview?: (review: PreviewReview | null) => void;
 }
 
-const BULK_CONTROLS_ABOVE = 3;
+const PAGE_SIZE = 3;
 const AUDIENCE_LABELS: Record<Visibility, string> = {
   PRIVATE: "Only you",
   SHARED_WITH_CONNECTIONS: "Connections",
@@ -40,36 +40,29 @@ export type PreviewReview = { phase: Exclude<Phase, "discarding">; records: Revi
 function ReviewProgress({ saved }: { saved: boolean }) {
   return (
     <header className="review-progress">
-      <strong>Inside ChatGPT, with Venn</strong>
-      <span className="muted small">{saved ? 2 : 1} of 2</span>
+      <strong><Icon name="venn" size={22} /> Memory {saved ? "receipt" : "review"}</strong>
+      <span className="small">{saved ? "Saved" : "Draft"}</span>
       <div className="review-progress__track" data-saved={saved} aria-hidden="true"><span /><span /></div>
     </header>
   );
 }
 
-function ReviewMap({ count, visibility }: { count: number; visibility: Visibility | null }) {
-  const audience = count === 0 ? "No one" : visibility ? AUDIENCE_LABELS[visibility] : "Mixed visibility";
+function Pager({ page, total, busy, change }: {
+  page: number; total: number; busy: boolean; change: (page: number) => void;
+}) {
+  const pages = Math.ceil(total / PAGE_SIZE);
+  const position = useRef<HTMLSpanElement>(null);
+  if (pages <= 1) return null;
+  function turn(next: number) {
+    position.current?.focus();
+    change(next);
+  }
   return (
-    <div className="review-map" aria-hidden="true">
-      <span className="review-map__count">{plural(count, "selected update", "selected updates")}</span>
-      <div className="review-map__nodes">
-        <div className="review-map__node">
-          <span className="review-map__icon review-map__icon--you"><Icon name="plus" size={24} /></span>
-          <strong>You</strong>
-        </div>
-        <div className="review-map__node">
-          <span className="review-map__icon review-map__icon--venn">
-            <Icon name="venn" size={28} />
-            <span className="review-map__signal" data-selected={count > 0} />
-          </span>
-          <strong>Venn</strong>
-        </div>
-        <div className="review-map__node">
-          <span className="review-map__icon"><Icon name={visibility === "PRIVATE" || !count ? "lock" : "users"} size={22} /></span>
-          <strong>{audience}</strong>
-        </div>
-      </div>
-    </div>
+    <nav className="review-pager" aria-label="Memory pages">
+      <span ref={position} tabIndex={-1} aria-live="polite">Page <b>{page + 1}</b> of {pages}</span>
+      <button className="btn btn--ghost" type="button" disabled={busy || page === 0} onClick={() => turn(page - 1)}>Previous</button>
+      <button className="btn btn--ghost" type="button" disabled={busy || page + 1 >= pages} onClick={() => turn(page + 1)}>Next</button>
+    </nav>
   );
 }
 
@@ -78,10 +71,12 @@ export default function MemoryReview({ data, bridge, nav, onPreviewReview }: Pro
   const formId = useId();
   const outcome = useRef<HTMLHeadingElement>(null);
   const fromChatGpt = data.source === "chatgpt_memory";
+  const [page, setPage] = useState(0);
+  const start = page * PAGE_SIZE;
   const [drafts, setDrafts] = useState<Draft[]>(() =>
     data.proposals.map((p) => ({
       index: p.index,
-      checked: !p.already_saved,
+      checked: !fromChatGpt && data.proposals.length <= PAGE_SIZE && !p.already_saved,
       category: p.category,
       title: p.title,
       description: p.description,
@@ -112,11 +107,6 @@ export default function MemoryReview({ data, bridge, nav, onPreviewReview }: Pro
 
   const update = (index: number, patch: Partial<Draft>) =>
     setDrafts((ds) => ds.map((d) => (d.index === index ? { ...d, ...patch } : d)));
-
-  const setAll = (checked: boolean) =>
-    setDrafts((ds) =>
-      ds.map((d, i) => ({ ...d, checked: checked && !data.proposals[i].already_saved })),
-    );
 
   const selected = drafts.filter((d) => d.checked);
   const invalid = selected.some((d) => !d.title.trim() || !d.description.trim());
@@ -152,6 +142,7 @@ export default function MemoryReview({ data, bridge, nav, onPreviewReview }: Pro
       return;
     }
     const result = parseSaveMemories(res.data);
+    setPage(0);
     setSaved(result.saved);
     setPeopleAdded(result.people_added);
     setPhase("saved");
@@ -189,8 +180,9 @@ export default function MemoryReview({ data, bridge, nav, onPreviewReview }: Pro
               : `Saved ${plural(saved.length, "update", "updates")} to Venn`}
           </h2>
         </div>
+        <Pager page={page} total={saved.length} change={setPage} busy={false} />
         <ul className="list">
-          {saved.map((m) => (
+          {saved.slice(start, start + PAGE_SIZE).map((m) => (
             <li key={m.memory_id} className="card">
               <div className="row row--between">
                 <strong>{m.title}</strong>
@@ -214,9 +206,9 @@ export default function MemoryReview({ data, bridge, nav, onPreviewReview }: Pro
           type="button"
           className="btn btn--primary btn--block"
           disabled={action.busy !== null}
-          onClick={() => void action.run("dashboard", () => nav.openView("venn_show_dashboard", {}))}
+          onClick={() => void action.run("dashboard", () => fromChatGpt ? nav.openDashboard("profile") : nav.openView("venn_show_dashboard", {}))}
         >
-          {action.busy === "dashboard" ? "Loading…" : "Open my Venn"}
+          {action.busy === "dashboard" ? "Loading…" : fromChatGpt ? "Continue to contacts" : "Open my Venn"}
         </button>
       </section>
     );
@@ -246,9 +238,8 @@ export default function MemoryReview({ data, bridge, nav, onPreviewReview }: Pro
       <div className="memory-review__layout">
         <div className="memory-review__intro">
           <h2 id={`${formId}-title`}>{title}</h2>
-          <p className="muted">Keep what you want, edit the wording, and choose who can see each update.</p>
+          <p className="muted">Choose what to keep and who can see it. Leave sensitive details out.</p>
         </div>
-        <ReviewMap count={selected.length} visibility={visibility} />
         <div className="memory-review__form">
           {expired && <p className="text-danger">This proposal has expired. Ask Venn for a new draft.</p>}
           {error && (
@@ -257,29 +248,22 @@ export default function MemoryReview({ data, bridge, nav, onPreviewReview }: Pro
           )}
           {drafts.length === 0 ? <p className="muted">There are no memories to review.</p> : (
             <>
-              {drafts.length > BULK_CONTROLS_ABOVE && (
-                <div className="pick-bar">
-                  <span className="pick-bar__count" role="status">{selected.length} of {drafts.length} selected</span>
-                  <button type="button" className="btn btn--ghost" disabled={busy} onClick={() => setAll(true)}>Select all</button>
-                  <button type="button" className="btn btn--ghost" disabled={busy} onClick={() => setAll(false)}>None</button>
-                </div>
-              )}
+              <Pager page={page} total={drafts.length} busy={busy} change={setPage} />
               <ul className="list">
-                {drafts.map((draft, i) => {
-                  const proposal = data.proposals[i];
+                {drafts.slice(start, start + PAGE_SIZE).map((draft, i) => {
+                  const proposal = data.proposals[start + i];
                   const id = `${formId}-mem-${draft.index}`;
                   return (
                     <li key={draft.index} className="review-choice" data-checked={draft.checked}>
                       <label className="review-choice__label">
                         <input type="checkbox" checked={draft.checked} disabled={busy}
-                          aria-labelledby={`${id}-label`} aria-describedby={`${id}-description`}
+                          aria-labelledby={`${id}-label`} aria-describedby={[`${id}-meta`, `${id}-description`, proposal.already_saved && `${id}-duplicate`, proposal.new_people.length > 0 && `${id}-adds`].filter(Boolean).join(" ")}
                           onChange={(e) => update(draft.index, { checked: e.target.checked })} />
                         <span>
-                          <span className="review-choice__category">{CATEGORY_LABELS[draft.category]}</span>
+                          <span className="review-choice__category" id={`${id}-meta`}> {CATEGORY_LABELS[draft.category]} · {AUDIENCE_LABELS[draft.visibility]}</span>
                           <strong id={`${id}-label`}>{draft.title || "Untitled update"}</strong>
                           <span className="review-choice__description" id={`${id}-description`}>{draft.description}</span>
-                          {proposal.already_saved && <span className="badge badge--on">Already in Venn</span>}
-                          {draft.checked && !visibility && <span className="badge">{AUDIENCE_LABELS[draft.visibility]}</span>}
+                          {proposal.already_saved && <span id={`${id}-duplicate`} className="badge badge--on">Already in Venn</span>}
                         </span>
                       </label>
                       <button type="button" className="review-choice__edit" disabled={busy}
@@ -291,16 +275,16 @@ export default function MemoryReview({ data, bridge, nav, onPreviewReview }: Pro
                         <label className="field">
                           <span className="field__label">Title</span>
                           <input id={`${id}-title`} type="text" value={draft.title} maxLength={120}
-                            disabled={busy || !draft.checked} onChange={(e) => update(draft.index, { title: e.target.value })} />
+                            disabled={busy} onChange={(e) => update(draft.index, { title: e.target.value })} />
                         </label>
                         <label className="field">
                           <span className="field__label">Description</span>
                           <textarea rows={2} value={draft.description} maxLength={500}
-                            disabled={busy || !draft.checked} onChange={(e) => update(draft.index, { description: e.target.value })} />
+                            disabled={busy} onChange={(e) => update(draft.index, { description: e.target.value })} />
                         </label>
                         <label className="field">
                           <span className="field__label">Who can see this</span>
-                          <select value={draft.visibility} disabled={busy || !draft.checked}
+                          <select value={draft.visibility} disabled={busy}
                             onChange={(e) => update(draft.index, { visibility: e.target.value as Visibility })}>
                             {VISIBILITIES.map((v) => <option key={v} value={v}>{VISIBILITY_LABELS[v]}</option>)}
                           </select>
@@ -315,7 +299,7 @@ export default function MemoryReview({ data, bridge, nav, onPreviewReview }: Pro
                         <div className="review-choice__people">
                           <PeopleChips people={proposal.people} />
                           {proposal.new_people.length > 0 && (
-                            <p className="also-adds">
+                            <p className="also-adds" id={`${id}-adds`}>
                               <Icon name="user-plus" size={16} />
                               <span>Also adds <strong>{joinNames(proposal.new_people)}</strong> to your people as {proposal.new_people.length === 1 ? "a private note" : "private notes"}.</span>
                             </p>
@@ -327,7 +311,7 @@ export default function MemoryReview({ data, bridge, nav, onPreviewReview }: Pro
                 })}
               </ul>
               <fieldset className="review-audience" disabled={busy || selected.length === 0}>
-                <legend>Who can see selected updates</legend>
+                <legend>Audience for all selected updates <b aria-live="polite">({selected.length})</b></legend>
                 <div className="review-audience__options">
                   {VISIBILITIES.map((v) => (
                     <label key={v}>
@@ -341,7 +325,7 @@ export default function MemoryReview({ data, bridge, nav, onPreviewReview }: Pro
             </>
           )}
           {invalid && <p className="small text-danger">Each selected update needs a title and description.</p>}
-          <div className={`memory-review__actions${drafts.length > BULK_CONTROLS_ABOVE ? " sticky-bar sticky-bar--actions" : ""}`}>
+          <div className="memory-review__actions">
             <button type="button" className="btn btn--primary btn--block" onClick={save}
               disabled={busy || expired || selected.length === 0 || invalid}>
               {phase === "saving" ? "Saving…" : saveLabel}

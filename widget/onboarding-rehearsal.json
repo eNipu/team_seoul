@@ -1,0 +1,18 @@
+[
+  {
+    "url": "/?view=welcome", "w": 360, "h": 740, "scheme": "dark",
+    "steps": [
+      "waitFor:Step 1 of 3", "click('Choose memory areas')", "waitFor:Choose memories to preview", "document.querySelector('.memory-import-topics input').click()", "click('Preview in chat')", "waitFor:Check the chat",
+      "click('Review “Film photography”')", "waitFor:Memory review", "document.querySelector('.review-choice input').click()",
+      "click('Save 1 privately')", "waitFor:Continue to contacts", "click('Continue to contacts')", "waitFor:Step 2 of 3",
+      "click('Preview Instagram profiles')", "waitFor:Instagram import", "click('Nadia Amari')", "clickLabel('Next profiles')", "waitFor:Page 2 of", "clickLabel('Previous profiles')",
+      "click('Add 1 profile')", "waitFor:Added 1 profile", "click('Continue to interest matches')", "waitFor:Interest matches", "has('Nadia Amari')", "has('In common:')", "overflow()"
+    ]
+  },
+  {
+    "url": "/?view=memory_review_import", "w": 760, "h": 850, "scheme": "light",
+    "steps": [
+      "waitFor:Page 1 of 4", "document.querySelectorAll('.review-choice').length === 3 ? 'ok' : 'MISSING page cap'", "click('Film photography')", "click('Next')", "waitFor:Page 2 of 4", "document.querySelector('.review-choice input').click()", "click('Previous')", "waitFor:Page 1 of 4", "document.querySelectorAll('.review-choice input:checked').length === 1 ? 'ok' : 'MISSING retained pick'", "overflow()"
+    ]
+  }
+]

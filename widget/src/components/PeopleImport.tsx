@@ -1,6 +1,8 @@
-import { useState } from "react";
-import { DEMO_PLATFORM_LABELS, formatDaysAgo, parseImportPeople, plural, type ImportCandidate, type PeopleImportViewData } from "../types";
-import { ActionError, Avatar, EmptyNote, useAction, type ViewProps } from "./common";
+import { strongestFirst } from "../../../shared/importInterests";
+import { useEffect, useRef, useState } from "react";
+import { DEMO_PLATFORM_LABELS, formatDaysAgo, parseImportPeople, parseView, plural, type ImportCandidate, type PeopleImportViewData } from "../types";
+import { ActionError, Avatar, ChatStatus, EmptyNote, useAction, useChatPrompt, type ViewProps } from "./common";
+import ImportInterests from "./ImportInterests";
 import PeopleRadar from "./PeopleRadar";
 import { Illustration } from "./icons";
 
@@ -9,13 +11,39 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
   const demoPlatform = data.demo_platform;
   const platform = demoPlatform && DEMO_PLATFORM_LABELS[demoPlatform];
   const token = data.confirmation_token;
+  const ownImport = useChatPrompt(bridge);
+  const socialSource = demoPlatform ?? (data.source === "instagram" || data.source === "linkedin" ? data.source : null);
+  const [page, setPage] = useState(0);
+  const listHeading = useRef<HTMLHeadingElement>(null);
+  const resultHeading = useRef<HTMLHeadingElement>(null);
+  const pageSize = 4;
+  const pages = Math.ceil(data.candidates.length / pageSize);
+  const visible = platform ? strongestFirst(data.candidates).slice(page * pageSize, (page + 1) * pageSize) : [];
+  function showPage(next: number) {
+    setPage(next);
+    listHeading.current?.focus();
+  }
   const fresh = data.candidates.filter((c) => !c.already_added);
   const [picked, setPicked] = useState<Set<number>>(() => new Set());
   const [added, setAdded] = useState<{ count: number; names: string[] } | null>(null);
 
+  useEffect(() => { if (added) resultHeading.current?.focus(); }, [added]);
+
+  async function continueSetup() {
+    // A standalone import may have happened before step one. Consult current account state;
+    // don't use this open card as proof that its prerequisites are still satisfied.
+    const result = await bridge.callTool("venn_show_dashboard", {});
+    if (!result.ok) return result.errorText;
+    const home = parseView(result.data);
+    if (home?.view === "dashboard" && home.onboarding?.memories_ready && home.onboarding.contacts_ready) {
+      return nav.openView("venn_find_interest_matches", {});
+    }
+    return nav.openDashboard("profile");
+  }
+
   const busy = action.busy !== null;
   const count = picked.size;
-  const selection = platform ? plural(count, "sample profile", "sample profiles") : plural(count, "person", "people");
+  const selection = platform ? plural(count, "profile", "profiles") : plural(count, "person", "people");
   const confirmLabel = action.busy === "import" ? "Adding…" :
     platform && fresh.length === 0 ? "All profiles already added" : count === 0 ? "Pick someone to add" : `Add ${selection}`;
   const skippedLine =
@@ -48,14 +76,14 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
         : await bridge.callTool("venn_import_people", args);
       if (!res.ok) {
         if (platform && /mcp resource not found/i.test(res.errorText)) {
-          return "ChatGPT couldn't reach the Add action. Refresh Venn in Plugins, then open a fresh demo in a new chat.";
+          return "ChatGPT couldn't reach the Add action. Refresh Venn in Plugins, then open a fresh preview in a new chat.";
         }
         return res.errorText;
       }
       const result = parseImportPeople(res.data);
       if (!result) return "Venn couldn't verify what was added. Check Friends before trying again.";
       if (result.count === 0) {
-        return platform ? "Those profiles are already in Venn. Open a fresh demo to review again." : "Venn didn't add anyone. Try again.";
+        return platform ? "Those profiles are already in Venn. Open a fresh preview to review again." : "Venn didn't add anyone. Try again.";
       }
       setAdded({ count: result.count, names: result.imported.map((p) => p.name) });
       window.scrollTo?.(0, 0);
@@ -69,9 +97,9 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
       <section className="panel celebrate">
         <ActionError action={action} />
         <Illustration name="friends" />
-        <h2 role="status">Added {platform ? plural(added.count, "sample profile", "sample profiles") : plural(added.count, "person", "people")}</h2>
+        <h2 ref={resultHeading} tabIndex={-1} role="status">Added {platform ? plural(added.count, "profile", "profiles") : plural(added.count, "person", "people")}</h2>
         <p className="muted">
-          {platform ? "Only you can see these notes. To clear them, choose Remove sample data on the dashboard." :
+          {platform ? "Only you can see these notes. To clear them, choose Clear preview data on the dashboard." :
             "They're saved as private notes. Only you can see them."}
         </p>
         {shown.length > 0 && (
@@ -88,17 +116,19 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
             type="button"
             className="btn btn--primary"
             disabled={busy}
-            onClick={() => void action.run("friends", () => nav.openDashboard("friends"))}
+            onClick={() => void action.run("friends", socialSource ? continueSetup : () => nav.openDashboard("friends"))}
           >
-            {action.busy === "friends" ? "Loading…" : "See my friends"}
+            {action.busy === "friends" ? "Loading…" : socialSource ? "Continue to interest matches" : "See my friends"}
           </button>
           <button
             type="button"
             className="btn"
             disabled={busy}
-            onClick={() => void action.run("reconnect", () => nav.openView("venn_reconnection_suggestions", {}))}
+            onClick={() => void action.run("reconnect", () => socialSource
+              ? nav.replaceView("venn_preview_demo_people_import", { platform: socialSource === "instagram" ? "linkedin" : "instagram" })
+              : nav.openView("venn_reconnection_suggestions", {}))}
           >
-            {action.busy === "reconnect" ? "Looking…" : "Who should I reconnect with?"}
+            {action.busy === "reconnect" ? "Opening…" : socialSource ? `Also review ${socialSource === "instagram" ? "LinkedIn" : "Instagram"} profiles` : "Who should I reconnect with?"}
           </button>
         </div>
       </section>
@@ -113,14 +143,20 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
 
   return (
     <section className="panel">
-      <h2>{platform ? `${platform} demo import` : "Your people radar"}</h2>
+      <h2 ref={listHeading} tabIndex={-1}>{platform ? `${platform} import` : "Your people radar"}</h2>
       <p className="muted small lead">
-        {platform ? `${plural(data.candidates.length, "fictional profile", "fictional profiles")}, not from a real ${platform} account. Pick the ones you want to add as private sample notes.` :
+        {platform ? `These built-in profiles aren’t from your ${platform} account. Add the ones you choose as private notes.` :
           `Tap a person to see what connects you. People you add become private notes.`}
       </p>
 
       <ActionError action={action} />
 
+      {platform && <details className="own-import">
+        <summary>Use my own {platform} contacts instead</summary>
+        <p className="muted small">Paste names or attach your export in chat. No password or account connection is needed.</p>
+        <button type="button" className="btn" disabled={busy || ownImport.state === "sending" || ownImport.state === "sent"} onClick={() => void ownImport.send(`Help me review my own ${platform} contacts. Ask me to paste names or attach my export, then call venn_propose_people_import with source '${demoPlatform}'. Use only details I supply. I’ll choose who to add on the card.`)}>Continue in chat</button>
+        <ChatStatus state={ownImport.state} prompt={ownImport.prompt} />
+      </details>}
       {demoPlatform && !token ? (
         <div className="stack">
           <p className="muted small">This review can’t confirm an import. Open a fresh review to choose who to add.</p>
@@ -147,10 +183,12 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
             <button
               type="button"
               className="btn btn--ghost btn--small"
-              disabled={busy || fresh.length === 0}
-              onClick={() => replaceSelection(new Set(fresh.map((c) => c.index)))}
+              disabled={busy || (platform ? visible.every(c => c.already_added || picked.has(c.index)) : fresh.length === 0)}
+              onClick={() => replaceSelection(platform
+                ? new Set([...picked, ...visible.filter(c => !c.already_added).map(c => c.index)])
+                : new Set(fresh.map(c => c.index)))}
             >
-              {platform ? "Select all" : "Select new names"}
+              {platform ? "Select this page" : "Select new names"}
             </button>
             <button type="button" className="btn btn--ghost btn--small" disabled={busy || count === 0} onClick={() => replaceSelection(new Set())}>
               Clear
@@ -159,20 +197,23 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
 
           {platform && (
             <>
-              {addButton}
+              {pages > 1 && <nav aria-label="Profile pages" className="button-row">
+                <button type="button" className="btn" disabled={busy || page === 0} aria-label="Previous profiles" onClick={() => showPage(page - 1)}>Previous</button>
+                <span className="muted small" role="status">Page {page + 1} of {pages}</span>
+                <button type="button" className="btn" disabled={busy || page + 1 >= pages} aria-label="Next profiles" onClick={() => showPage(page + 1)}>Next</button>
+              </nav>}
 
               <ul
                 className="list pick-list pick-list--demo"
-                tabIndex={0}
-                aria-label="Fictional profiles"
+                aria-label="Preview profiles"
               >
-                {data.candidates.map((c, i) => {
+                {visible.map((c) => {
                   const on = picked.has(c.index);
                   const meta = [c.relationship, c.last_met_days_ago !== null ? `Last met ${approxDays(c.last_met_days_ago)}` : null]
                     .filter(Boolean)
                     .join(" · ");
                   return (
-                    <li key={`${c.index}-${i}`}>
+                    <li key={c.index}>
                       <label className={`pick ${on ? "pick--on" : ""}`}>
                         <input type="checkbox" checked={on} disabled={busy || c.already_added} onChange={() => toggle(c)} />
                         <Avatar name={c.name} size="small" />
@@ -183,15 +224,7 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
                           </span>
                           {meta && <span className="muted small">{meta}</span>}
                           {c.notes && <span className="muted small pick__notes">{c.notes}</span>}
-                          {c.interests.length > 0 && (
-                            <span className="chips">
-                              {c.interests.map((it, j) => (
-                                <span key={`${it}-${j}`} className="chip chip--small">
-                                  {it}
-                                </span>
-                              ))}
-                            </span>
-                          )}
+                          <ImportInterests {...c} />
                         </span>
                       </label>
                     </li>
@@ -203,7 +236,7 @@ export default function PeopleImport({ data, bridge, nav }: ViewProps<PeopleImpo
 
           {skippedLine && <p className="muted small">{skippedLine}</p>}
 
-          {!platform && <div className="sticky-bar">{addButton}</div>}
+          <div className="sticky-bar">{addButton}</div>
         </>
       )}
     </section>

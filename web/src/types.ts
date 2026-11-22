@@ -81,6 +81,7 @@ export type FriendKind = (typeof FRIEND_KINDS)[number];
 
 /* ------------------------------------------------------------------ shapes */
 
+import { relatedLabels } from "../../shared/importInterests";
 import { openSlots, seoulWeek } from "./overlapWindow";
 
 export const OVERLAP_AREAS = ["seongsu", "hongdae", "yeonnam"] as const;
@@ -470,6 +471,8 @@ export interface Quiz {
 }
 
 export interface ImportCandidate {
+  shared_interests?: string[];
+  related_interests?: string[];
   existing_relationships?: string[];
   index: number;
   name: string;
@@ -1200,6 +1203,8 @@ export function parsePeopleImport(v: unknown): PeopleImport {
         notes: strOrNull(c.notes),
         interests: strArr(c.interests),
         last_met_days_ago: numOrNull(c.last_met_days_ago),
+        shared_interests: strArr(c.shared_interests),
+        related_interests: relatedLabels(c.interest_matches),
         existing_relationships: strArr(c.existing_relationships),
         already_added: bool(c.already_added),
       }))
