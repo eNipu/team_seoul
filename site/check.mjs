@@ -342,6 +342,79 @@ async function exercisePreview() {
   return problems;
 }
 
+// Runs in the page. Walks the sample invite and both shared-interest outcomes.
+async function exerciseWalkthrough() {
+  const problems = [];
+  const expect = (ok, message) => ok || problems.push(`preview: ${message}`);
+  const tick = () => new Promise((done) => requestAnimationFrame(() => setTimeout(done, 30)));
+  const root = document.querySelector(".walkthrough");
+  if (!root) return ["preview: onboarding is missing"];
+  const button = (text) => [...root.querySelectorAll("button")].find((b) => b.textContent.trim() === text);
+  const boxes = () => [...root.querySelectorAll('input[type="checkbox"]')];
+  const step = (number) => {
+    expect(stage && root.querySelector("svg.stage") === stage, "the SVG stays mounted");
+    expect(stage?.dataset.step === String(number - 1), `SVG at step ${number}`);
+    expect(root.querySelectorAll('.walkthrough__progress [data-complete="true"]').length === number, `progress at step ${number}`);
+    expect(document.activeElement === root.querySelector("h3"), `focus on heading at step ${number}`);
+  };
+  const storageBefore = JSON.stringify(localStorage);
+
+  expect(boxes().length === 3 && boxes().every((b) => !b.checked), "memories start unselected");
+  expect(button("Tick a memory to continue")?.disabled, "empty selection cannot advance");
+  const stage = root.querySelector("svg.stage");
+  expect(stage?.getAttribute("aria-hidden") === "true", "the stage is one decorative SVG");
+  boxes()[0]?.click();
+  boxes()[2]?.click();
+  await tick();
+  button("Approve 2 memories")?.click();
+  await tick();
+  step(2);
+  expect(root.querySelectorAll(".stage__dot--on").length === 2, "each approved memory is a dot in your circle");
+  expect(!stage?.hasAttribute("data-sent"), "the invite waits for a tap");
+  button("Send sample invite")?.click();
+  await tick();
+  expect(stage?.hasAttribute("data-sent") && root.textContent.includes("Sample invite sent."), "sending moves the envelope");
+  button("See what Maya sees")?.click();
+  await tick();
+  step(3);
+  expect(root.textContent.includes("Your friend saved you a place."), "invitee sees an invitation");
+  button("Accept as Maya")?.click();
+  await tick();
+  step(4);
+  expect(stage?.dataset.step === "3", "the circles come together");
+  expect(root.querySelector(".stage__common--on"), "shared ground lights up in the overlap");
+  expect(root.querySelector(".walkthrough__interests")?.textContent === "Photography", "only shared approved memories shown");
+  expect(root.querySelector('a[href="/#waitlist"]')?.textContent === "Join the Waitlist", "result links to live signup");
+  button("Back")?.click();
+  await tick();
+  step(3);
+  button("Restart")?.click();
+  await tick();
+  step(1);
+
+  boxes()[2]?.click();
+  await tick();
+  button("Approve 1 memory")?.click();
+  await tick();
+  button("Send sample invite")?.click();
+  await tick();
+  button("See what Maya sees")?.click();
+  await tick();
+  button("Accept as Maya")?.click();
+  await tick();
+  expect(root.textContent.includes("Nothing in common yet."), "no overlap for an unshared interest");
+  expect(!root.querySelector(".stage__common--on"), "no shared dot without shared memories");
+  button("Restart")?.click();
+  await tick();
+  expect(boxes().every((b) => !b.checked), "restart clears choices");
+  expect(JSON.stringify(localStorage) === storageBefore, "preview did not change local storage");
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches && stage) {
+    const dotStyle = getComputedStyle(stage.querySelector(".stage__dot"));
+    expect(dotStyle.transitionDuration === "0s" && dotStyle.transitionDelay === "0s", "SVG motion is disabled");
+  }
+  return problems;
+}
+
 async function exerciseNavigation(href) {
   const failures = [];
   const motion = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -349,7 +422,7 @@ async function exerciseNavigation(href) {
     failures.push("section navigation does not follow the motion preference");
   }
   const header = document.querySelector(".site-header");
-  for (const path of ["/", "/how-it-works", "/chatgpt", "/pricing"]) {
+  for (const path of ["/", "/how-it-works", "/pricing"]) {
     if (!header?.querySelector(`a[href="${path}"]`)) failures.push(`missing navigation link to ${path}`);
   }
   const link = document.querySelector(`.scroll-arrow[href="${href}"]`);
@@ -618,8 +691,11 @@ async function main() {
       await shot(label);
 
       for (const problem of await run(exerciseNavigation, "#hero")) failures.push(`${label}: ${problem}`);
-      if (await run(() => Boolean(document.querySelector("iframe, .onboarding")))) {
-        failures.push(`${label}: the homepage contains a full product demo`);
+      if (await run(() => !document.querySelector(".onboarding") || !!document.querySelector("iframe, .walkthrough"))) {
+        failures.push(`${label}: the homepage must keep the weekly demo without an embedded widget or walkthrough`);
+      }
+      if (motion === "reduce") {
+        for (const problem of await run(exercisePreview)) failures.push(`${label}: ${problem}`);
       }
       console.log(`checked ${label}`);
     }
@@ -629,11 +705,19 @@ async function main() {
       await open("/how-it-works", viewport, { motion: "reduce" });
       for (const problem of await run(audit)) failures.push(`${label}: ${problem}`);
       for (const problem of await run(exerciseNavigation, "#top")) failures.push(`${label}: ${problem}`);
-      for (const problem of await run(exercisePreview)) failures.push(`${label}: ${problem}`);
+      for (const problem of await run(exerciseWalkthrough)) failures.push(`${label}: ${problem}`);
       console.log(`checked ${label}`);
 
       label = `${viewport.name}/chatgpt`;
       await open("/chatgpt", viewport, { motion: "reduce" });
+      const redirected = await run(() => location.pathname === "/" && location.hash === "#inside");
+      if (redirected) {
+        if (await run(() => !document.querySelector("#inside .onboarding") || !!document.querySelector("iframe"))) {
+          failures.push(`${label}: the old ChatGPT link must open the homepage demo`);
+        }
+        console.log(`checked ${label} redirect`);
+        continue;
+      }
       for (const problem of await run(audit)) failures.push(`${label}: ${problem}`);
       for (const problem of await run(exerciseChatGptPreview)) failures.push(`${label}: ${problem}`);
       if (viewport.name === "desktop") {
@@ -678,13 +762,15 @@ async function main() {
         await open(`/how-it-works?preview=${viewport.name}#inside`, viewport, { motion: "reduce" });
         const matched = await run(`async () => {
           document.querySelector(".consent button:last-child")?.click();
-          const preview = document.querySelector(".onboarding");
-          for (const action of ["Share 3 with close friends", "See it from Maya's side"]) {
+          const preview = document.querySelector(".walkthrough");
+          preview.querySelector('input[type="checkbox"]')?.click();
+          await new Promise((done) => requestAnimationFrame(done));
+          for (const action of ["Approve 1 memory", "Send sample invite", "See what Maya sees", "Accept as Maya"]) {
             Array.from(preview.querySelectorAll("button")).find((b) => b.textContent.trim() === action)?.click();
             await new Promise((done) => requestAnimationFrame(done));
           }
           preview.scrollIntoView({ block: "center" });
-          return preview.querySelector(".connection-map__signal--match")?.dataset.active === "true";
+          return preview.querySelector('svg.stage[data-step="3"] .stage__common--on') !== null;
         }`);
         if (!matched) failures.push(`${label}: screenshot did not reach the match`);
         for (const problem of await run(audit)) failures.push(`${label}: ${problem}`);
@@ -754,15 +840,13 @@ async function main() {
       const stamp = Date.now();
       const actions = "Share my invite link|See how it works";
 
-      // Pair: joining alone holds the place. Navigate past the preview link, enter an email,
+      // Pair: joining alone holds the place. Navigate from the mobile menu to the email field,
       // submit with the keyboard and verify that focus moves to the answer.
       await open(pairUrl, small);
       await tab();
       await focusIs("Venn home");
       await tab();
       await focusIs("Menu");
-      await tab();
-      await focusIs("My Venn");
       await tab();
       await focusIs("#waitlist-email");
       await send("Input.insertText", { text: `check+${stamp}@example.com` });

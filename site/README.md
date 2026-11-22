@@ -5,7 +5,7 @@ metrics page. A Next.js app (App Router) with its own small API and two tables i
 
 | Path | What it is |
 | --- | --- |
-| `app/page.tsx` | The landing page: hero with the waitlist, the onboarding preview, principles. Rendered per request, because it reads `?w=` and `?ref=` |
+| `app/page.tsx` | The landing page: hero with the waitlist, weekly preview, use cases and FAQ. Rendered per request, because it reads `?w=` and `?ref=` |
 | `app/metrics/page.tsx` | `/metrics`: unique visitors, total waitlist signups, activation rate, UTM and referral breakdown |
 | `app/api/waitlist/route.ts` | `POST` joins the waitlist, `GET ?code=` returns the current spot for an invite code |
 | `app/api/visit/route.ts` | `POST` records one page view |
@@ -16,8 +16,9 @@ metrics page. A Next.js app (App Router) with its own small API and two tables i
 | `components/VennScene.tsx` | The 3D scene: two glass spheres orbiting each other, built with three.js (MIT) |
 | `components/Motion.tsx` | Turns on the scroll reveals for elements marked `data-reveal` |
 | `components/Waitlist.tsx` | The email form and its states after joining |
-| `components/OnboardingPreview.tsx`, `components/ConnectionMap.tsx` | The weekly signal preview and its animated connection map |
-| `components/ChatGptPreview.tsx` | Embeds the actual Venn widget using its in-memory sample bridge |
+| `app/how-it-works/page.tsx`, `components/ConnectionWalkthrough.tsx` | Product walkthrough and four-step sample onboarding |
+| `components/OnboardingPreview.tsx`, `components/ConnectionMap.tsx` | The homepage weekly preview and its animated connection map |
+| `components/ChatGptPreview.tsx` | Widget demo retained for future use. The /chatgpt route redirects to the homepage demo |
 | `lib/db.ts`, `lib/waitlist.ts`, `lib/analytics.ts` | Postgres pool and schema, waitlist logic, events and metrics |
 | `lib/version.ts` | The two waitlist versions, `pair` and `open`, and which one is the default |
 | `lib/rate-limit.ts` | Per-address request limit for the API routes |
@@ -52,7 +53,7 @@ silently drop signups.
 `check.mjs` loads the page at 360, 390, 768 and 1280 px, plus once in dark mode and once with reduced motion. It
 checks headings, overflow, signup visibility on the first screen, WCAG AA text contrast, 12 px minimum text,
 44 px controls, console errors, cross-origin requests, cookies other than the consent-region cookie, the hero
-fallback, section navigation, the weekly preview, `/metrics` authentication, and the waitlist rate limit.
+fallback, section navigation, the sample onboarding, `/metrics` authentication, and the waitlist rate limit.
 With `DATABASE_URL`
 it also walks the waitlist on the smallest phone: joining alone with real key presses (Tab to the field,
 Enter, focus on the answer, Tab through both actions, each with a focus ring), arriving with that link (invited, then
@@ -158,19 +159,13 @@ Motion (`app/globals.css` › Motion) always plays into the finished page, so no
 or with reduced motion: the hero arrives line by line, the underline is drawn and the highlight swept in, and
 sections fade up the first time they scroll into view (`data-reveal="up"`, or `"group"` for children in turn).
 
-The section arrows link from the hero to the weekly preview, from there to the Founding Circle, and from
-the footer back to the hero. The links move keyboard focus to the destination and respect reduced motion.
+The landing page links to [How it works](/how-it-works) and hosts the weekly signal preview.
+The old /chatgpt route redirects to that preview.
 
-The hero arrow first opens [Venn inside ChatGPT](#chatgpt-ui), then continues to the weekly preview.
-The three screens use the same built widget that the MCP resource serves. The sandboxed iframe uses
-sample data, has no network access after loading, and stores changes only in its own tab state.
-`My Venn` goes directly to `https://app.joinvennai.com/app/account`. The web app keeps that URL
-through sign-in. The separate waitlist flow is for early-access interest.
-
-The weekly preview animates paths through one persistent SVG connection map. The visitor keeps sample
-signals and picks their audience. The approved routes draw as they reach that circle, and the link to Maya
-lights up when an approved signal matches her question. The demo stores no choices. The last step links
-back to the waitlist. Going back preserves choices, and **Start again** restores the sample defaults.
+On /how-it-works, the visitor selects sample memories, sends a simulated invite, accepts it as Maya,
+and sees the interests they share. A single SVG illustrates the four steps. With reduced motion,
+the SVG jumps to each state. Back preserves the memory selection, and Restart clears it.
+The demo stores no choices. The last step links back to the real waitlist.
 
 ## Shared styling with the widget
 

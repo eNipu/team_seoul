@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Motion from "@/components/Motion";
-import OnboardingPreview from "@/components/OnboardingPreview";
+import ConnectionWalkthrough from "@/components/ConnectionWalkthrough";
 import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import HowItWorks from "@/components/sections/HowItWorks";
@@ -10,7 +10,7 @@ import JoinCircle from "@/components/sections/JoinCircle";
 
 export const metadata: Metadata = {
   title: "How it works · Venn",
-  description: "See how approved signals reach the right person and try a week with Venn.",
+  description: "See how approved signals reach the right person and try connecting with a friend.",
 };
 
 export const dynamic = "force-dynamic";
@@ -25,11 +25,11 @@ export default function HowItWorksPage() {
           <div className="wrap">
             <div className="inside__heading">
               <div>
-                <h2 className="h-section" id="inside-title">One week with Venn.</h2>
-                <p className="lead">Your AI drafts your week. You keep what you want. The right friend hears about it.</p>
+                <h2 className="h-section" id="inside-title">Try connecting with a friend.</h2>
+                <p className="lead">Choose sample memories, preview an invite, and see what you and Maya have in common.</p>
               </div>
             </div>
-            <OnboardingPreview />
+            <ConnectionWalkthrough />
           </div>
         </section>
         <UseCases />
