@@ -198,7 +198,7 @@ def test_widget_resource_served(alice):
 
 def test_render_tools_bound_to_widget(alice):
     tools = {t["name"]: t for t in alice.rpc("tools/list").json()["result"]["tools"]}
-    assert len(tools) == 64
+    assert len(tools) == 65
     nudge = tools["venn_find_nudge"]
     assert nudge["annotations"]["readOnlyHint"] is True
     assert nudge["_meta"]["ui"] == {"visibility": ["model"]}
@@ -336,9 +336,7 @@ def test_quick_import_flags_the_card_and_tells_the_model_not_to_list(alice):
     assert "saving them privately" in said and "Do NOT list" in said
     assert "Hobby 0" not in said  # the memories are not echoed back for the model to repeat
     assert alice.ok("venn_list_memories")["count"] == 0  # the card does the save
-    saved = alice.ok(
-        "venn_save_memories", proposal_id=card["proposal_id"], approvals=[{"index": i} for i in range(12)]
-    )
+    saved = alice.ok("venn_save_memories", proposal_id=card["proposal_id"], approvals=[{"index": i} for i in range(12)])
     assert saved["count"] == 12
     assert {m["visibility"] for m in saved["saved"]} == {"PRIVATE"}
     assert {m["source"] for m in saved["saved"]} == {"chatgpt_memory"}

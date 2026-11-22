@@ -16,7 +16,7 @@ import uuid
 from collections import Counter
 from collections.abc import Iterable
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
@@ -52,6 +52,8 @@ from app.schemas.social import (
     ThisWeekAction,
     ThisWeekView,
     VennView,
+    WhatsNewSignal,
+    WhatsNewView,
 )
 from app.services import analytics, memory_service, people_service, social_service
 from app.services.activity_topics import activity_topic as normalize_activity
@@ -1329,3 +1331,125 @@ def this_week(db: Session, user: User) -> ThisWeekView:
     analytics.track(db, "this_week", user.id, count=len(actions))
     empty = None if actions else "Nothing needs your attention this week. You're all caught up."
     return ThisWeekView(actions=actions, empty_reason=empty)
+
+
+# -------------------------------------------------------------- what's new (signals)
+WHATS_NEW_DAYS = 14
+WHATS_NEW_MAX = 3
+_PLACE = re.compile(
+    r"\b(?i:in|visiting|moving to|moved to|back in|travel(?:l)?ing to|heading to|trip to)\s+"
+    r"((?:[A-Z][\w'-]+)(?:\s+[A-Z][\w'-]+)?)"
+)
+_NOT_PLACES = frozenset({"I", "The", "A", "My", "Our", "This", "That", "Venn"})
+_LOOKING = re.compile(
+    r"\b(?:looking for|searching for|need(?:s|ing)?|hiring|seeking|want(?:s)? to find)\b\s*(.*)", re.I
+)
+_SKIP_SIGNAL = {"DISLIKE", "RELATIONSHIP_CONTEXT"}
+_KIND_RANK = {"in_town": 0, "looking_for": 1, "working_on": 2, "into": 3}
+
+
+def _place(m: Memory) -> str | None:
+    for text in (m.title, m.description or ""):
+        for match in _PLACE.finditer(text):
+            words = [w for w in match.group(1).split() if w not in _NOT_PLACES]
+            if words:
+                return " ".join(words)
+    return None
+
+
+def _shared_at(m: Memory) -> datetime:
+    return as_aware(max(d for d in (m.created_at, m.updated_at, m.approved_at) if d is not None))
+
+
+def _own_signal_terms(mine: list[Memory]) -> set[str]:
+    """Everything the user's own memories are about (all categories but dislikes)."""
+    out: set[str] = set()
+    for m in mine:
+        if m.category != "DISLIKE":
+            out |= terms_of(_topic(m), m.description or "", *(m.tags or []))
+    return out
+
+
+def _classify(m: Memory) -> tuple[str, str, str | None]:
+    """(kind, phrase after the friend's name, place)."""
+    place = _place(m)
+    title = m.title.strip().rstrip(".")
+    lowered = title[:1].lower() + title[1:]
+    looking = _LOOKING.search(title) or _LOOKING.search(m.description or "")
+    if place and m.category not in {"INTEREST", "PREFERENCE"}:
+        return "in_town", f"is in {place} right now", place
+    if m.category == "SOCIAL_GOAL" or looking:
+        what = (looking.group(1).strip().rstrip(".") if looking else "") or lowered
+        return "looking_for", f"is looking for {what}", None
+    if m.category == "WORK":
+        return "working_on", f"is working on {lowered}", None
+    return "into", f"is into {lowered}", None
+
+
+def _recommend(kind: str, matched: list[str]) -> str:
+    topic = matched[0] if matched else None
+    if kind == "in_town":
+        return "reconnect while they're around"
+    if kind == "looking_for":
+        return f"see if you can help, since you know {topic}" if topic else "see if you can help"
+    if kind == "working_on":
+        return f"swap notes on {topic}" if topic else "ask how it's going"
+    return f"do something {topic} together" if topic else "reconnect"
+
+
+def whats_new(db: Session, user: User, limit: int = WHATS_NEW_MAX, days: int = WHATS_NEW_DAYS) -> WhatsNewView:
+    """Fresh signals connections chose to share (never PRIVATE ones), matched to the user's own memories.
+
+    Only signals that connect to something in the user's memories are returned, newest first, at most
+    one per friend. Person notes are the user's own words, not signals, so they are never used here.
+    """
+    friends = [f for f in all_friends(db, user) if f.kind == "connection"]
+    if not friends:
+        return WhatsNewView(signals=[], empty_reason="No connections on Venn yet, so nothing new.")
+    mine_memories = own_memories(db, user)
+    mine = _own_signal_terms(mine_memories)
+    mine_interests = _memory_terms(mine_memories)
+    cutoff = utcnow() - timedelta(days=days)
+    found: list[WhatsNewSignal] = []
+    for friend in friends:
+        best: WhatsNewSignal | None = None
+        candidates: list[WhatsNewSignal] = []
+        common = compact(mine_interests & friend.terms)
+        for m in sorted(friend.memories, key=_shared_at, reverse=True):
+            if m.category in _SKIP_SIGNAL or m.people or _shared_at(m) < cutoff:
+                continue
+            kind, phrase, place = _classify(m)
+            own = compact(terms_of(_topic(m), m.description or "", *(m.tags or [])) & mine)
+            if place and place.lower() in mine:
+                own = [place.lower(), *[t for t in own if t != place.lower()]]
+            matched = own or (common if kind == "in_town" else [])
+            if not matched:
+                continue
+            first = first_name(friend.display_name)
+            extra = next((c for c in common if c not in phrase.lower()), None) if kind == "in_town" else None
+            rec = _recommend(kind, [t for t in matched if not place or t != place.lower()] or matched)
+            line = (
+                f"Btw, {first} {phrase}" + (f" and is into {extra}" if extra else "") + f". I think you should {rec}."
+            )
+            candidates.append(
+                WhatsNewSignal(
+                    connection_id=friend.id,
+                    display_name=friend.display_name,
+                    kind=kind,  # type: ignore[arg-type]
+                    signal=phrase,
+                    shared_title=m.title,
+                    shared_at=_shared_at(m),
+                    matched=matched[:4],
+                    recommendation=rec,
+                    line=line,
+                    is_sample=friend.is_sample,
+                )
+            )
+        # The most timely kind of signal wins; within a kind, the newest.
+        best = min(candidates, key=lambda c: (_KIND_RANK[c.kind], -c.shared_at.timestamp()), default=None)
+        if best is not None:
+            found.append(best)
+    found.sort(key=lambda s: s.shared_at, reverse=True)
+    found = found[:limit]
+    analytics.track(db, "whats_new", user.id, count=len(found))
+    return WhatsNewView(signals=found, empty_reason=None if found else "Nothing new that matches you.")
