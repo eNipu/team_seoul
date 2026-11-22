@@ -236,8 +236,9 @@ class InviteListOut(BaseModel):
 
 
 class RedeemInviteOut(BaseModel):
-    status: Literal["PENDING", "ALREADY_CONNECTED", "ALREADY_PENDING"]
+    status: Literal["CONNECTED", "ALREADY_CONNECTED"]
     request_id: str | None
+    connection_id: str | None = None
     inviter_display_name: str
     message: str
 
@@ -530,6 +531,38 @@ class ThisWeekView(BaseModel):
     note: str = (
         "Up to three things the user could do this week. Drafts are for the user to copy; "
         "Venn never sends anything or contacts anyone."
+    )
+
+
+# ------------------------------------------------------- what's new (signals)
+SignalKind = Literal["in_town", "working_on", "looking_for", "into"]
+
+
+class WhatsNewSignal(BaseModel):
+    """One fresh thing a connection chose to share, matched against the user's own memories."""
+
+    connection_id: str
+    display_name: str
+    kind: SignalKind
+    signal: str
+    """What they shared, as a phrase after their name: "is in Berlin right now"."""
+    shared_title: str
+    shared_at: datetime
+    matched: list[str]
+    """Overlap with the user's own memories (may be empty only when the signal itself is location)."""
+    recommendation: str
+    """One thing the user could do, as a phrase after "I think you should": "reconnect while they're around"."""
+    line: str
+    """A ready two-sentence example in the expected style."""
+    is_sample: bool = False
+
+
+class WhatsNewView(BaseModel):
+    signals: list[WhatsNewSignal]
+    empty_reason: str | None = None
+    note: str = (
+        "Signals come only from what connections chose to share with the user on Venn. "
+        "Mention at most one, in plain text; Venn never contacts anyone."
     )
 
 

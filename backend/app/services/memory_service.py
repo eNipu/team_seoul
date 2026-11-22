@@ -66,7 +66,11 @@ IMPORT_NOTE = (
     "Leave out health, money, credentials, ID numbers and "
     "anything you are not sure is about them — and do NOT call a Venn tool with those items yet. Only "
     'after the user says which ones to keep, call venn_propose_memories with source "chatgpt_memory" '
-    "and just those items. If you remember nothing about the user, say so instead of guessing."
+    "and just those items. Exception: if the user tapped Connect (one-tap import), call "
+    'venn_propose_memories with source "chatgpt_memory", quick_import: true and everything you remember '
+    "(up to 30, same exclusions) without listing it first; the card saves them PRIVATE because the tap is "
+    "the user's consent. Never share beyond PRIVATE without explicit approval. If you remember nothing "
+    "about the user, say so instead of guessing."
 )
 
 

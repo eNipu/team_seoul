@@ -11,7 +11,7 @@ import pytest
 
 from app.config import ALL_SCOPES, Settings
 from tests.conftest import MCPUser, mint_token
-from tests.integration.test_social_flow import connect, save
+from tests.integration.test_social_flow import connect, pending_request, save
 
 
 def _proposal(user, title="Jazz"):
@@ -109,9 +109,7 @@ def test_malformed_ids_do_not_leak(alice):
 
 
 def test_only_recipient_can_respond_to_request(alice, bob, carol):
-    code = alice.ok("venn_create_invite")["code"]
-    bob.ok("venn_redeem_invite", code=code)
-    request_id = alice.ok("venn_list_connections")["pending_requests"][0]["request_id"]
+    request_id = pending_request(bob, "Bob", alice, "Alice")
     # Neither the sender nor a third party can accept on Alice's behalf.
     assert bob.err("venn_respond_to_connection", request_id=request_id, accept=True).startswith("NOT_FOUND")
     assert carol.err("venn_respond_to_connection", request_id=request_id, accept=True).startswith("NOT_FOUND")

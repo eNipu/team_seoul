@@ -1,8 +1,9 @@
 """The page behind an invite link / QR code.
 
-It only shows the code and how to redeem it in ChatGPT. It is static: no database lookup, no
-inviter name, and the same response for any well-formed code, so it reveals nothing about
-whether a code exists. Redeeming still requires signing in to Venn inside ChatGPT.
+One headline, one button that opens ChatGPT with the redeem prompt, one quiet line. It is static:
+no database lookup, no inviter name, and the same response for any well-formed code, so it reveals
+nothing about whether a code exists. Redeeming still requires signing in to Venn inside ChatGPT,
+and redeeming connects both people at once.
 """
 
 from __future__ import annotations
@@ -11,23 +12,38 @@ import html
 import re
 from urllib.parse import quote
 
-from app.branding import HEART_PATH, page
-
 _CODE = re.compile(r"^[A-Z0-9]{4}-?[A-Z0-9]{4}$")
 
-# Two people connected by a heart. Decorative.
-_ART = (
-    '<svg class="art" viewBox="0 0 220 96" aria-hidden="true" focusable="false">'
-    '<path d="M62 60 Q110 14 158 60" fill="none" stroke="#E86A4A" stroke-width="2.5" stroke-linecap="round" '
-    'stroke-dasharray="1 8" opacity=".7"/>'
-    '<circle cx="50" cy="56" r="28" fill="#E86A4A" opacity=".16"/>'
-    '<circle cx="50" cy="48" r="10" fill="#E86A4A"/>'
-    '<path d="M31 76a19 19 0 0 1 38 0z" fill="#E86A4A"/>'
-    '<circle cx="170" cy="56" r="28" fill="#F2B544" opacity=".2"/>'
-    '<circle cx="170" cy="48" r="10" fill="#F2B544"/>'
-    '<path d="M151 76a19 19 0 0 1 38 0z" fill="#F2B544"/>'
-    '<circle cx="110" cy="30" r="17" fill="#E86A4A"/>'
-    f'<path fill="#fff" transform="translate(92.4 11.5) scale(.55)" d="{HEART_PATH}"/>'
+# Venn landing look: white, black heavy headline, one black pill, yellow used once (the mark).
+# Plain string (not a format template), so braces are literal CSS. No scripts, fonts or images,
+# so the page works under `default-src 'none'; style-src 'unsafe-inline'`.
+_CSS = """
+:root { color-scheme: light; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #fff; color: #000; }
+body { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; justify-content: center;
+  padding: 32px 24px calc(32px + env(safe-area-inset-bottom));
+  font: 17px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased; }
+main { width: 100%; max-width: 440px; margin: 0 auto; }
+.mark { display: block; width: 44px; height: 44px; margin: 0 0 28px; }
+h1 { margin: 0 0 32px; font-size: clamp(40px, 12vw, 60px); line-height: 1.02; font-weight: 900;
+  letter-spacing: -0.035em; overflow-wrap: break-word; }
+.pill { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 56px;
+  padding: 16px 28px; border-radius: 999px; background: #000; color: #fff; text-decoration: none;
+  font-weight: 700; font-size: 18px; letter-spacing: -0.01em; }
+.pill:hover { background: #222; }
+.pill:focus-visible { outline: 3px solid #000; outline-offset: 3px; }
+.quiet { margin: 16px 0 0; color: #555; font-size: 15px; text-align: center; }
+@media (prefers-reduced-motion: no-preference) { .pill { transition: background .15s ease; } }
+"""
+
+# Two overlapping circles; the overlap is the single use of the brand yellow. Decorative.
+_MARK = (
+    '<svg class="mark" viewBox="0 0 44 44" aria-hidden="true" focusable="false">'
+    '<circle cx="16" cy="22" r="13" fill="none" stroke="#000" stroke-width="3"/>'
+    '<circle cx="28" cy="22" r="13" fill="none" stroke="#000" stroke-width="3"/>'
+    '<path d="M22 10.4a13 13 0 0 1 0 23.2 13 13 0 0 1 0-23.2z" fill="#FFD400"/>'
     "</svg>"
 )
 
@@ -46,19 +62,15 @@ def render_invite_page(code: str) -> str | None:
     if pretty is None:
         return None
     prompt = f"Redeem Venn invite {pretty}"
-    code = html.escape(pretty)
     chatgpt_url = html.escape(f"https://chatgpt.com/?q={quote(prompt)}", quote=True)
-    return page(
-        "You're invited to connect on Venn",
-        f"""{_ART}
-<h1>A friend wants to connect on Venn</h1>
-<p>Venn finds the common ground with the people you already know, inside ChatGPT. Use this invite code:</p>
-<div class="code" aria-label="Invite code">{code}</div>
-<ol class="steps">
-  <li>Open ChatGPT with the Venn app added.</li>
-  <li>Say: <strong>Redeem Venn invite {code}</strong></li>
-  <li>Your friend gets a request and decides whether to accept.</li>
-</ol>
-<a class="button" href="{chatgpt_url}" rel="noopener noreferrer">Open in ChatGPT</a>
-<small>Only redeem codes from people you know. Codes expire and can be revoked.</small>""",
+    return (
+        '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n'
+        '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
+        '<meta name="robots" content="noindex">\n<meta name="theme-color" content="#ffffff">\n'
+        f"<title>You're invited to Venn</title>\n<style>{_CSS}</style>\n</head>\n<body>\n<main>\n"
+        f"{_MARK}\n"
+        "<h1>A friend invited you to Venn.</h1>\n"
+        f'<a class="pill" href="{chatgpt_url}" rel="noopener noreferrer">Add Venn in ChatGPT</a>\n'
+        '<p class="quiet">Free. You choose what you share.</p>\n'
+        "</main>\n</body>\n</html>\n"
     )

@@ -3405,3 +3405,4 @@ button.try:disabled {
     transition: none !important;
   }
 }
+.venn__logo { display: block; height: 26px; width: auto; transform: rotate(-2deg); }
