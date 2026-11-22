@@ -6,6 +6,7 @@ import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import Waitlist from "@/components/Waitlist";
 import Faq from "@/components/sections/Faq";
+import OnboardingPreview from "@/components/OnboardingPreview";
 import NextIn from "@/components/sections/NextIn";
 import { cleanRef } from "@/lib/analytics";
 import { hasDatabase } from "@/lib/db";
@@ -53,13 +54,24 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
               </div>
             </div>
             <div className="hero__paths">
-              <a className="btn" id="chatgpt-ui" href="/chatgpt">Try the ChatGPT demo</a>
-              <a className="hero__guide" id="inside" href="/how-it-works">How it works</a>
+              <a className="btn" href="#inside">Try the demo</a>
+              <a className="hero__guide" href="/how-it-works">How it works</a>
             </div>
           </div>
         </section>
 
         <NextIn />
+        <section className="section section--paper" id="inside" aria-labelledby="inside-title" tabIndex={-1}>
+          <div className="wrap">
+            <div className="inside__heading">
+              <div>
+                <h2 className="h-section" id="inside-title">One week with Venn.</h2>
+                <p className="lead">Your AI drafts your week. You keep what you want. The right friend hears about it.</p>
+              </div>
+            </div>
+            <OnboardingPreview />
+          </div>
+        </section>
         <Faq />
       </main>
       <SiteFooter top="#hero" />
