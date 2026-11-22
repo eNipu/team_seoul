@@ -1,5 +1,5 @@
-/* Venn website. Clean Notion-inspired typography with self-hosted Inter and
-   the slate/navy palette (#F9F7F7, #DBE2EF, #3F72AF, #112D4E). */
+/* Venn website. Clean Notion-inspired light dashboard using #F9F7F7 and #DBE2EF
+   with high-contrast neutral typography (#191919) and self-hosted Inter. */
 
 @font-face {
   font-family: "Inter";
@@ -10,21 +10,22 @@
 }
 
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   --bg: #F9F7F7;
+  --sidebar-bg: #EEF2F8;
   --surface: #ffffff;
-  --surface-2: #EEF2F8;
-  --surface-3: #DBE2EF;
+  --surface-2: #DBE2EF;
+  --surface-3: #CFD9EA;
   --border: #DBE2EF;
   --border-strong: #C2CEE2;
-  --control-border: #768AA6;
-  --text: #112D4E;
-  --muted: #465B75;
-  --accent: #3F72AF;
-  --primary: #3F72AF;
-  --primary-hover: #2F5B94;
+  --control-border: #8796AE;
+  --text: #191919;
+  --muted: #525866;
+  --accent: #2E73B8;
+  --primary: #2E73B8;
+  --primary-hover: #255FA0;
   --on-primary: #ffffff;
-  --accent-strong: #2B548A;
+  --accent-strong: #255FA0;
   --accent-soft: #DBE2EF;
   --danger: #b42318;
   --danger-bg: #b42318;
@@ -33,32 +34,32 @@
   --success: #166534;
   --success-soft: #ecfdf3;
   --success-line: #a7f3d0;
-  --info: #2B548A;
-  --info-soft: #EAF0FA;
+  --info: #255FA0;
+  --info-soft: #E9EFF8;
   --warn: #7a5200;
   --warn-soft: #fef7e0;
-  --focus: #3F72AF;
-  --shadow-sm: 0 1px 2px rgba(17, 45, 78, 0.05);
-  --shadow: 0 1px 2px rgba(17, 45, 78, 0.05), 0 4px 14px rgba(17, 45, 78, 0.06);
-  --shadow-lg: 0 2px 6px rgba(17, 45, 78, 0.06), 0 16px 40px rgba(17, 45, 78, 0.12);
-  --brand: #3F72AF;
+  --focus: #2E73B8;
+  --shadow-sm: 0 1px 2px rgba(25, 25, 25, 0.04);
+  --shadow: 0 1px 2px rgba(25, 25, 25, 0.04), 0 4px 14px rgba(25, 25, 25, 0.05);
+  --shadow-lg: 0 2px 6px rgba(25, 25, 25, 0.06), 0 16px 40px rgba(25, 25, 25, 0.1);
+  --brand: #2E73B8;
   --ill-blob: #DBE2EF;
   --ill-paper: #ffffff;
   --ill-edge: #C2CEE2;
-  --ill-ink: #9AB0CD;
+  --ill-ink: #94A7C4;
   --ill-ink-soft: #D3DDEC;
-  --ill-tint-a: #B8CBE6;
-  --ill-tint-b: #D2DCEF;
+  --ill-tint-a: #C6D5EB;
+  --ill-tint-b: #DBE2EF;
   --tint-s: 42%;
   --tint-l: 90%;
-  --tint-fg-s: 52%;
+  --tint-fg-s: 48%;
   --tint-fg-l: 22%;
-  --venn-you: rgba(63, 114, 175, 0.18);
-  --venn-you-line: #3F72AF;
-  --venn-them: rgba(17, 45, 78, 0.12);
-  --venn-them-line: #112D4E;
-  --venn-lens: rgba(63, 114, 175, 0.24);
-  --backdrop: rgba(17, 45, 78, 0.42);
+  --venn-you: rgba(46, 115, 184, 0.16);
+  --venn-you-line: #2E73B8;
+  --venn-them: rgba(82, 88, 102, 0.12);
+  --venn-them-line: #525866;
+  --venn-lens: rgba(46, 115, 184, 0.24);
+  --backdrop: rgba(25, 25, 25, 0.38);
   --radius-lg: 12px;
   --radius: 8px;
   --radius-sm: 6px;
@@ -67,58 +68,6 @@
   --topbar: 60px;
   --font: "Inter", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0B192C;
-    --surface: #112D4E;
-    --surface-2: #183A63;
-    --surface-3: #204877;
-    --border: #244A75;
-    --border-strong: #35608F;
-    --control-border: #7495BF;
-    --text: #F9F7F7;
-    --muted: #B8C7DE;
-    --accent: #8AB4E8;
-    --primary: #8AB4E8;
-    --primary-hover: #A4C5EE;
-    --on-primary: #0B192C;
-    --accent-strong: #B8D4F6;
-    --accent-soft: #1B416E;
-    --danger: #fca5a5;
-    --danger-bg: #f87171;
-    --on-danger: #1f0a0a;
-    --danger-soft: #3c1c24;
-    --success: #86efac;
-    --success-soft: #133529;
-    --success-line: #2f7d57;
-    --info: #B8D4F6;
-    --info-soft: #183A63;
-    --warn: #fcd34d;
-    --warn-soft: #382e14;
-    --focus: #B8D4F6;
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 18px rgba(0, 0, 0, 0.28);
-    --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.4), 0 18px 48px rgba(0, 0, 0, 0.48);
-    --ill-blob: #183A63;
-    --ill-paper: #F9F7F7;
-    --ill-edge: #35608F;
-    --ill-ink: #7FA0C8;
-    --ill-ink-soft: #B8C7DE;
-    --ill-tint-a: #2E5A8F;
-    --ill-tint-b: #234974;
-    --tint-s: 36%;
-    --tint-l: 26%;
-    --tint-fg-s: 70%;
-    --tint-fg-l: 88%;
-    --venn-you: rgba(138, 180, 232, 0.24);
-    --venn-you-line: #8AB4E8;
-    --venn-them: rgba(219, 226, 239, 0.16);
-    --venn-them-line: #DBE2EF;
-    --venn-lens: rgba(138, 180, 232, 0.32);
-    --backdrop: rgba(5, 12, 24, 0.68);
-  }
 }
 
 /* ------------------------------------------------------------------ base */
@@ -328,7 +277,7 @@ hr {
   flex-direction: column;
   gap: 20px;
   padding: 18px 14px;
-  background: var(--surface);
+  background: var(--sidebar-bg);
   border-right: 1px solid var(--border);
   overflow-y: auto;
 }
@@ -2911,16 +2860,6 @@ input[type="radio"] {
   color: var(--text);
   font-weight: 600;
   box-shadow: var(--shadow-sm);
-}
-
-@media (prefers-color-scheme: dark) {
-  .auth__tabs {
-    background: var(--bg);
-  }
-
-  .auth__tab--on {
-    background: var(--surface-2);
-  }
 }
 
 .auth__header {
