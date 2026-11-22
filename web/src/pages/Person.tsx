@@ -16,14 +16,12 @@ import {
 } from "../types";
 import {
   Avatar,
-  CalendarLink,
   Card,
   Chips,
   ConfirmDialog,
   Dialog,
   ErrorState,
   InlineError,
-  KindTag,
   Loaded,
   Notice,
   PageHeader,
@@ -51,6 +49,8 @@ function VennSection({ kind, id, name, version }: Props & { name: string; versio
           <>
             <p className="venn-summary">{v.summary}</p>
             <VennDiagram you={v.you_only} shared={v.shared} them={v.them_only} themName={first} />
+            <details className="more">
+            <summary>See every interest</summary>
             <div className="venn-lists">
               <div>
                 <h3 className="subhead">Only you</h3>
@@ -69,6 +69,7 @@ function VennSection({ kind, id, name, version }: Props & { name: string; versio
                 {v.them_only.length ? <Chips items={v.them_only} /> : <p className="muted small">Nothing on record yet.</p>}
               </div>
             </div>
+            </details>
           </>
         )}
       </Loaded>
@@ -85,17 +86,11 @@ function IdeaItem({ idea, kind, id, name }: Props & { idea: ActivitySuggestion; 
       <div className="idea__text">
         <h3>{idea.title}</h3>
         <p>{idea.description}</p>
-        {idea.grounded_in.length > 0 && (
-          <p className="reason">
-            <Icon name="link" size={14} />
-            Based on {idea.grounded_in.join(", ")}
-          </p>
-        )}
       </div>
       <div className="row">
         <button
           type="button"
-          className="btn btn--small btn--primary"
+          className="btn btn--small"
           disabled={act.busy || saved}
           onClick={() =>
             void act.run(async () => {
@@ -109,10 +104,8 @@ function IdeaItem({ idea, kind, id, name }: Props & { idea: ActivitySuggestion; 
             })
           }
         >
-          <Icon name={saved ? "check" : "bookmark"} size={16} />
           {saved ? "Plan saved" : "Save plan"}
         </button>
-        <CalendarLink title={`${idea.title} with ${firstName(name)}`} details={idea.description} />
       </div>
       <InlineError message={act.error} />
     </li>
@@ -122,7 +115,7 @@ function IdeaItem({ idea, kind, id, name }: Props & { idea: ActivitySuggestion; 
 function IdeasSection({ kind, id, name, version }: Props & { name: string; version: number }) {
   const ideas = useAsync(() => api.getIdeas(kind, id), [kind, id, version]);
   return (
-    <Card title="Ideas for next time" icon="bulb">
+    <Card title="Something to do together" icon="bulb">
       <Loaded state={ideas} skeleton={<Skeleton rows={2} />}>
         {(d) =>
           d.suggestions.length === 0 ? (
@@ -130,11 +123,10 @@ function IdeasSection({ kind, id, name, version }: Props & { name: string; versi
           ) : (
             <>
               <ul className="ideas">
-                {d.suggestions.map((s) => (
+                {d.suggestions.slice(0, 1).map((s) => (
                   <IdeaItem key={s.title} idea={s} kind={kind} id={id} name={name} />
                 ))}
               </ul>
-              <p className="fine">Saving a plan keeps it in Venn. The calendar link opens Google Calendar in a new tab.</p>
             </>
           )
         }
@@ -363,7 +355,7 @@ export default function PersonPage({ kind, id }: Props) {
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const toast = useToast();
-  const back = { to: "/people", label: "People" };
+  const back = { to: "/people", label: "Circle" };
 
   if (friend.data === null) {
     return (
@@ -395,27 +387,17 @@ export default function PersonPage({ kind, id }: Props) {
         <div className="profile__main">
           <p className="profile__meta">
             {f.relationship && <span>{f.relationship}</span>}
-            <KindTag onVenn={f.on_venn} />
             {f.is_sample && <Tag tone="info">Sample</Tag>}
           </p>
           <p className="muted">
             <Icon name="clock" size={16} /> {formatLastSeen(f.last_interaction_at)}
           </p>
-          <p className="muted small">
-            {f.on_venn
-              ? `${first} has a Venn account. You see only what ${first} chose to share with you.`
-              : `A private note of yours. ${first} doesn't need a Venn account and can't see this.`}
-          </p>
+          <p className="muted small">{f.on_venn ? `Shares with you on Venn` : `Only you see this`}</p>
         </div>
         {kind === "person" && (
           <div className="profile__actions">
-            <button type="button" className="btn btn--small" onClick={() => setEditing(true)}>
-              <Icon name="pencil" size={16} />
+            <button type="button" className="link-btn" onClick={() => setEditing(true)}>
               Edit
-            </button>
-            <button type="button" className="btn btn--small btn--quiet-danger" onClick={() => setDeleting(true)}>
-              <Icon name="trash" size={16} />
-              Delete
             </button>
           </div>
         )}
@@ -430,10 +412,6 @@ export default function PersonPage({ kind, id }: Props) {
               {f.notes ? <p className="notes">{f.notes}</p> : <p className="muted">No notes yet.</p>}
               <h3 className="subhead">Interests</h3>
               {f.interests.length ? <Chips items={f.interests} /> : <p className="muted small">None added yet.</p>}
-              <p className="fine">
-                <Icon name="lock" size={14} />
-                Only you can see this.
-              </p>
             </Card>
           ) : (
             <Card title={`What ${first} shares with you`} icon="users">
@@ -459,21 +437,28 @@ export default function PersonPage({ kind, id }: Props) {
                   ))}
                 </ul>
               )}
-              <p className="fine">
-                <Icon name="shield" size={14} />
-                This is what {first} chose to share with connections. You can't edit it, and {first} sees only what you share.
-              </p>
             </Card>
           )}
           <FollowUpsSection friend={f} onChanged={changed} />
-          <HangoutsSection friend={f} onChanged={changed} />
         </div>
         <div className="stack">
           <IdeasSection kind={kind} id={id} name={f.display_name} version={version} />
+        </div>
+      </div>
+
+      <details className="more">
+        <summary>More about {first}</summary>
+        <div className="grid-2 grid-2--even">
+          <HangoutsSection friend={f} onChanged={changed} />
           <BriefSection kind={kind} id={id} name={f.display_name} version={version} />
           {kind === "person" && <AskSection friend={f} />}
         </div>
-      </div>
+        {kind === "person" && (
+          <button type="button" className="link-btn link-btn--danger" onClick={() => setDeleting(true)}>
+            Delete {first}
+          </button>
+        )}
+      </details>
 
       {editing && (
         <Dialog title={`Edit ${f.display_name}`} onClose={() => setEditing(false)}>

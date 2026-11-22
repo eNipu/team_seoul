@@ -8,6 +8,7 @@
 // Illustrations share one style: a soft blob, flat "paper" shapes and a little
 // brand coral. Their colours are CSS variables (--ill-*) so they follow the theme.
 
+import vennLogo from "./venn-logo.webp";
 import type { MemoryCategory } from "./types";
 
 const dot = (cx: number, cy: number, r = 1.15) => <circle cx={cx} cy={cy} r={r} fill="currentColor" stroke="none" />;
@@ -242,16 +243,9 @@ export function CategoryIcon({ category, small }: { category: MemoryCategory; sm
 }
 
 /** The Venn mark: two overlapping circles on brand slate blue #3F72AF. */
+/** The yellow hand-drawn "venn." sticker, slightly tilted, as on the landing. */
 export function BrandMark({ size = 28 }: { size?: number }) {
-  return (
-    <svg className="brand-mark" width={size} height={size} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-      {/* Two overlapping circles: you, a friend, and what you share. */}
-      <rect width="32" height="32" rx="8" fill="#3F72AF" />
-      <circle cx="11.75" cy="16" r="8.5" fill="#F9F7F7" fillOpacity="0.48" />
-      <circle cx="20.25" cy="16" r="8.5" fill="#F9F7F7" fillOpacity="0.48" />
-      <path d="M16 8.64a8.5 8.5 0 0 1 0 14.72 8.5 8.5 0 0 1 0-14.72z" fill="#F9F7F7" />
-    </svg>
-  );
+  return <img className="brand-mark" src={vennLogo} alt="" width={Math.round(size * 2.64)} height={size} aria-hidden="true" />;
 }
 
 // ---------------------------------------------------------------------------
