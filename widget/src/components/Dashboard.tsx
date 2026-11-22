@@ -22,7 +22,8 @@ import DemoImport from "./DemoImport";
 import MemoriesTab from "./MemoriesTab";
 import FriendsTab from "./FriendsTab";
 import SetupCard from "./Setup";
-import { HomeTiles, Plans, SampleBanner } from "./DashboardHome";
+import { HomeMoment, Plans, SampleBanner } from "./DashboardHome";
+import { OpenMyVenn } from "./Moment";
 import { Icon, type IconName } from "./icons";
 
 export type DashboardTab = "profile" | "memories" | "friends";
@@ -37,6 +38,7 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
   const action = useAction();
   const demoAction = useAction();
   const [tab, setTabState] = useState<DashboardTab>(initialTab ?? "profile");
+  const [showAll, setShowAll] = useState(initialTab !== null);
   const [profile, setProfile] = useState<Profile>(data.profile);
   const [memories, setMemories] = useState<Memory[]>(data.memories);
   const [connections, setConnections] = useState<Connection[]>(data.connections);
@@ -86,19 +88,46 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
 
   return (
     <>
-    {sampleLoaded && <SampleBanner bridge={bridge} onChanged={() => nav.replaceView("venn_show_dashboard", {})} />}
-    <HomeTiles pendingAnswers={pendingAnswers} bridge={bridge} nav={nav} />
-    <DemoImport nav={nav} action={demoAction} />
-    <ActionError action={demoAction} />
-    <SetupCard steps={setup} bridge={bridge} nav={nav} />
-    <Plans
-      plans={plans}
-      bridge={bridge}
-      onChanged={(next) => {
-        setPlans(next);
-        void reload();
-      }}
-    />
+    <HomeMoment bridge={bridge} nav={nav} footer={
+      <>
+        <button type="button" className="btn btn--ghost btn--block" aria-expanded={showAll} onClick={() => setShowAll(!showAll)}>
+          {showAll ? "Hide everything else" : "Everything else"}
+        </button>
+        <OpenMyVenn bridge={bridge} />
+      </>
+    } />
+    {showAll && (
+    <div className="home-more">
+        <div className="home-more__body">
+          <div className="home-more__links">
+            {pendingAnswers > 0 && (
+              <button type="button" className="btn btn--block" disabled={demoAction.busy !== null}
+                onClick={() => void demoAction.run("answers", () => nav.openView("venn_review_answers", {}))}>
+                {demoAction.busy === "answers" ? "Opening…" : `${plural(pendingAnswers, "answer", "answers")} to review`}
+              </button>
+            )}
+            <button type="button" className="btn btn--block" disabled={demoAction.busy !== null}
+              onClick={() => void demoAction.run("week", () => nav.openView("venn_this_week", {}))}>
+              {demoAction.busy === "week" ? "Opening…" : "All of this week"}
+            </button>
+            <button type="button" className="btn btn--block" disabled={demoAction.busy !== null}
+              onClick={() => void demoAction.run("saved", () => nav.openView("venn_saved_replies", {}))}>
+              {demoAction.busy === "saved" ? "Opening…" : "Saved replies"}
+            </button>
+            <button type="button" className="btn btn--block" onClick={() => setTab("friends")}>Add more people</button>
+          </div>
+          <ActionError action={demoAction} />
+          {sampleLoaded && <SampleBanner bridge={bridge} onChanged={() => nav.replaceView("venn_show_dashboard", {})} />}
+          <SetupCard steps={setup} bridge={bridge} nav={nav} />
+          <Plans
+            plans={plans}
+            bridge={bridge}
+            onChanged={(next) => {
+              setPlans(next);
+              void reload();
+            }}
+          />
+          <DemoImport nav={nav} action={demoAction} />
     <section className="panel panel--tabs">
       <div className="tabs" role="tablist" aria-label="Dashboard sections">
         {tabs.map((t) => (
@@ -153,6 +182,9 @@ export default function Dashboard({ data, bridge, nav, initialTab, onTabChange }
         )}
       </div>
     </section>
+        </div>
+    </div>
+    )}
     </>
   );
 }

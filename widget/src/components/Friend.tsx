@@ -12,7 +12,7 @@ import {
   type FriendViewData,
   type Interaction,
 } from "../types";
-import { ActionError, Avatar, ChatStatus, SectionTitle, useAction, useChatPrompt, type ViewProps } from "./common";
+import { ActionError, ChatStatus, SectionTitle, useAction, useChatPrompt, type ViewProps } from "./common";
 import FollowUps from "./FollowUps";
 import { CategoryIcon, Icon, Illustration } from "./icons";
 import PersonForm, { type PersonValues } from "./PersonForm";
@@ -152,28 +152,12 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
   const chips = [...details.interests, ...(isPerson ? [] : data.shared_interests.filter((s) => !listed.has(s.toLowerCase())))];
 
   return (
-    <section className="panel">
-      <div className="profile-head">
-        <Avatar name={details.name} size="large" />
-        <div className="profile-head__body">
-          <h2>{details.name}</h2>
-          <p className="muted small">
-            {isPerson || !data.on_venn
-              ? "Private note · only you can see this"
-              : data.since
-                ? `On Venn since ${formatDate(data.since)}`
-                : "On Venn"}
-          </p>
-          <div className="row row--wrap">
-            {details.relationship && <span className="badge badge--note">{details.relationship}</span>}
-            <span className="badge">
-              <Icon name="clock" size={12} />
-              {lastAt ? `Last met ${formatRelative(lastAt)}` : "No hangouts yet"}
-            </span>
-          </div>
-        </div>
-      </div>
-
+    <section className="onb friend">
+      <h2 className="onb__title">{details.name}</h2>
+      <p className="onb__body">
+        {lastAt ? `Last met ${formatRelative(lastAt)}` : "No hangouts yet"}
+        {details.relationship ? ` · ${details.relationship}` : ""}
+      </p>
       <ActionError action={action} />
 
       {mode === "edit" ? (
@@ -195,62 +179,17 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
         </div>
       ) : (
         <>
-          {!isPerson && data.bio && <p>{data.bio}</p>}
-          {isPerson && details.notes && (
-            <div className="note-box">
-              <span className="field__label">Your notes</span>
-              <p>{details.notes}</p>
+          {!isPerson && data.shared_memories.length > 0 ? (
+            <div className="onb__moment">
+              <p>{data.shared_memories[0].title}</p>
+              <small>Shared by {details.name}{details.name.endsWith("s") ? "'" : "'s"} AI · via <b>venn</b></small>
             </div>
-          )}
+          ) : !isPerson && data.bio ? <p className="onb__body">{data.bio}</p> : null}
+          {isPerson && details.notes && <p className="onb__body">{details.notes}</p>}
 
-          <button type="button" className="btn btn--primary btn--block" disabled={busy} onClick={ideas}>
-            <Icon name="bulb" size={18} />
-            {action.busy === "ideas" ? "Loading…" : "Get ideas for time together"}
+          <button type="button" className="onb__cta" disabled={busy} onClick={ideas}>
+            {action.busy === "ideas" ? "Loading…" : "Get ideas"}
           </button>
-          <div className="tool-grid" role="group" aria-label={`More with ${details.name}`}>
-            <button type="button" className="tool" disabled={busy} onClick={compare}>
-              <Icon name="venn" />
-              {action.busy === "compare" ? "Loading…" : "Common ground"}
-            </button>
-            <button
-              type="button"
-              className="tool"
-              disabled={busy}
-              aria-expanded={mode === "log"}
-              onClick={() => setMode(mode === "log" ? "view" : "log")}
-            >
-              <Icon name="check-circle" />
-              Log a hangout
-            </button>
-            <button
-              type="button"
-              className="tool"
-              disabled={chat.state === "sending"}
-              onClick={() =>
-                void chat.send(`Help me draft a short, warm message to reconnect with ${details.name}. I will send it myself.`)
-              }
-            >
-              <Icon name="pencil" />
-              {chat.state === "sending" ? "Asking…" : "Draft a message"}
-            </button>
-            <button type="button" className="tool" disabled={busy} onClick={prep}>
-              <Icon name="note" />
-              {action.busy === "prep" ? "Loading…" : "Prep for a meetup"}
-            </button>
-            {isPerson ? (
-              <button type="button" className="tool" disabled={busy} onClick={ask}>
-                <Icon name="link" />
-                {action.busy === "ask" ? "Creating…" : "Ask them a few questions"}
-              </button>
-            ) : (
-              <button type="button" className="tool" disabled={busy} onClick={quiz}>
-                <Icon name="dice" />
-                {action.busy === "quiz" ? "Loading…" : "Quiz"}
-              </button>
-            )}
-          </div>
-          <ChatStatus state={chat.state} prompt={chat.prompt} />
-
           {mode === "log" && (
             <form className="inline-form form" onSubmit={logHangout}>
               <label className="field" htmlFor={`${formId}-activity`}>
@@ -276,6 +215,34 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
               </div>
             </form>
           )}
+          <div className="onb__row">
+            <button type="button" className="onb__link" disabled={busy} aria-expanded={mode === "log"}
+              onClick={() => setMode(mode === "log" ? "view" : "log")}>
+              We met up
+            </button>
+            <details className="onb__more">
+              <summary>More</summary>
+              <div className="onb__more-body">
+            <button type="button" className="btn btn--block" disabled={chat.state === "sending"}
+              onClick={() => void chat.send(`Help me draft a short, warm message to reconnect with ${details.name}. I will send it myself.`)}>
+              {chat.state === "sending" ? "Asking…" : "Draft a message"}
+            </button>
+            <button type="button" className="btn btn--block" disabled={busy} onClick={prep}>
+              {action.busy === "prep" ? "Loading…" : "Prep for a meetup"}
+            </button>
+            <button type="button" className="btn btn--block" disabled={busy} onClick={compare}>
+              {action.busy === "compare" ? "Loading…" : "Common ground"}
+            </button>
+            {isPerson ? (
+              <button type="button" className="btn btn--block" disabled={busy} onClick={ask}>
+                {action.busy === "ask" ? "Creating…" : "Ask them a few questions"}
+              </button>
+            ) : (
+              <button type="button" className="btn btn--block" disabled={busy} onClick={quiz}>
+                {action.busy === "quiz" ? "Loading…" : "Quiz"}
+              </button>
+            )}
+          <ChatStatus state={chat.state} prompt={chat.prompt} />
 
           <FollowUps bridge={bridge} friend={arg} name={details.name} initial={data.follow_ups} />
 
@@ -380,6 +347,9 @@ export default function Friend({ data, bridge, nav }: ViewProps<FriendViewData>)
                 </button>
               </>
             )}
+          </div>
+              </div>
+            </details>
           </div>
         </>
       )}

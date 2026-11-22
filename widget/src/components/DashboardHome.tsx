@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { MomentCard } from "./Moment";
 import { firstName, formatDateTime, isObj, joinNames, parseView, plural, type Plan, type WeekAction } from "../types";
 import type { HostBridge } from "../mcp/client";
 import { ActionError, Avatar, SectionTitle, useAction, type Nav } from "./common";
@@ -51,63 +52,61 @@ export function SampleBanner({ bridge, onChanged }: { bridge: HostBridge; onChan
   );
 }
 
-/** The dashboard's home rows: this week, and answers that wait for review. */
-export function HomeTiles({ pendingAnswers, bridge, nav }: { pendingAnswers: number; bridge: HostBridge; nav: Nav }) {
-  const [featured, setFeatured] = useState<WeekAction | null>(null);
+/**
+ * The dashboard's home: one proactive moment (who to reach out to now, why, one action),
+ * not a dashboard. Falls back to "Invite your person" while there is nobody to nudge.
+ */
+export function HomeMoment({ bridge, nav, footer }: { bridge: HostBridge; nav: Nav; footer: ReactNode }) {
+  const [actions, setActions] = useState<WeekAction[] | null>(null);
+  const [at, setAt] = useState(0);
   useEffect(() => {
     let active = true;
-    setFeatured(null);
-    async function loadPreview() {
+    setActions(null);
+    async function load() {
       const res = await bridge.callTool("venn_this_week", {});
       const week = res.ok ? parseView(res.data, res.meta) : null;
-      if (!active || week?.view !== "this_week") return;
-      const actions = week.actions.filter((item) => item.title.trim() && item.reason.trim());
-      setFeatured(actions.find((item) => item.type === "follow_up") ?? actions[0] ?? null);
+      if (!active) return;
+      setActions(week?.view === "this_week" ? week.actions.filter((item) => item.title.trim()) : []);
     }
-    // The ordinary weekly shortcut stays available if its preview can't load.
-    void loadPreview().catch(() => {});
+    void load().catch(() => { if (active) setActions([]); });
     return () => { active = false; };
   }, [bridge]);
 
   const action = useAction();
   const busy = action.busy !== null;
-  return (
-    <div className="home-tiles">
-      <button
-        type="button"
-        className="home-tile home-tile--week"
-        disabled={busy}
-        onClick={() => void action.run("week", () => nav.openView("venn_this_week", {}))}
-      >
-        <span className="home-tile__icon" aria-hidden="true">
-          <Icon name="calendar-check" size={22} />
-        </span>
-        <span className="home-tile__body">
-          {featured && <span className="small">This week</span>}
-          <strong>{featured?.title ?? "This week"}</strong>
-          <span className="small">{action.busy === "week" ? "Opening…" : featured?.reason ?? "Up to three small things that keep you close"}</span>
-        </span>
-        <Icon name="chevron-right" size={18} />
-      </button>
-      {pendingAnswers > 0 && (
-        <button
-          type="button"
-          className="home-tile home-tile--answers"
-          disabled={busy}
-          onClick={() => void action.run("answers", () => nav.openView("venn_review_answers", {}))}
-        >
-          <span className="home-tile__icon" aria-hidden="true">
-            <Icon name="inbox" size={22} />
-          </span>
-          <span className="home-tile__body">
-            <strong>{plural(pendingAnswers, "answer", "answers")} waiting for your review</strong>
-            <span className="small">{action.busy === "answers" ? "Opening…" : "From friends you sent a question link"}</span>
-          </span>
-          <Icon name="chevron-right" size={18} />
+  if (actions === null) {
+    return (
+      <section className="onb" aria-busy="true" aria-live="polite">
+        <h2 className="onb__title">Looking at your week…</h2>
+      </section>
+    );
+  }
+  if (actions.length === 0) {
+    return (
+      <section className="onb">
+        <h2 className="onb__title">Bring your person in.</h2>
+        <p className="onb__body">Venn tells you when to reach out.</p>
+        <ActionError action={action} />
+        <button type="button" className="onb__cta" disabled={busy}
+          onClick={() => void action.run("invite", () => nav.openView("venn_create_invite", {}))}>
+          {action.busy === "invite" ? "Opening…" : "Invite your person"}
         </button>
-      )}
-      <ActionError action={action} />
-    </div>
+        <div className="onb__row">
+          <span />
+          <details className="onb__more">
+            <summary>More</summary>
+            <div className="onb__more-body">{footer}</div>
+          </details>
+        </div>
+      </section>
+    );
+  }
+  const a = actions[at % actions.length];
+  const next = actions.length > 1 ? actions[(at + 1) % actions.length] : null;
+  return (
+    <MomentCard key={`${a.kind}:${a.id}:${at}`} a={a} bridge={bridge} nav={nav}
+      onNext={next ? () => setAt(at + 1) : undefined}
+      nextLabel={next ? `Next: ${firstName(next.display_name)}` : undefined} footer={footer} />
   );
 }
 
