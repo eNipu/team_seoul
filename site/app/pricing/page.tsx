@@ -47,7 +47,7 @@ export default function PricingPage() {
     <>
       <main>
         <section className="section section--paper pricing-hero" aria-labelledby="pricing-title">
-          <SiteHeader note="Planned pricing" />
+          <SiteHeader current="/pricing" />
           <div className="wrap pricing-hero__body">
             <p className="eyebrow">Early access is free</p>
             <h1 className="h-section" id="pricing-title">The more you invite, the less you pay.</h1>

@@ -1,18 +1,10 @@
 import HeroBackdrop from "@/components/HeroBackdrop";
-import ChatGptConnection from "@/components/ChatGptConnection";
-import ChatGptPreview from "@/components/ChatGptPreview";
 import Motion from "@/components/Motion";
-import OnboardingPreview from "@/components/OnboardingPreview";
 import PageView from "@/components/PageView";
-import ScrollArrow from "@/components/ScrollArrow";
+import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import Waitlist from "@/components/Waitlist";
-import { CookieSettingsLink } from "@/components/ConsentBanner";
 import Faq from "@/components/sections/Faq";
-import HowItWorks from "@/components/sections/HowItWorks";
-import Moment from "@/components/sections/Moment";
-import PrivacyPrinciples from "@/components/sections/PrivacyPrinciples";
-import UseCases from "@/components/sections/UseCases";
 import { cleanRef } from "@/lib/analytics";
 import { hasDatabase } from "@/lib/db";
 import { cleanVersion, defaultVersion } from "@/lib/version";
@@ -22,18 +14,6 @@ import { inviteHasRoom } from "@/lib/waitlist";
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
-const PROFILE_URL = "https://app.joinvennai.com/app/account";
-
-function directoryListingUrl(): string | null {
-  if (!process.env.CHATGPT_PLUGIN_URL) return null;
-  try {
-    const url = new URL(process.env.CHATGPT_PLUGIN_URL);
-    return url.origin === "https://chatgpt.com" && !url.username && !url.password
-      && url.pathname.split("/").filter(Boolean).length > 1 ? url.href : null;
-  } catch {
-    return null;
-  }
-}
 
 // Someone who arrives with `?ref=` is told whether that link still holds a place for them.
 // Looked up here rather than in the browser, so the form is right when it first paints.
@@ -56,8 +36,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
     <>
       <main>
         <section className="section section--dark" id="hero" aria-labelledby="hero-title" tabIndex={-1}>
-          <SiteHeader note={<a className="site-header__account" href={PROFILE_URL}>My Venn</a>}
-            action={<ScrollArrow href="#chatgpt-ui" label="Go to the ChatGPT preview" />} />
+          <SiteHeader current="/" />
           <div className="wrap hero__grid">
             <div className="hero__copy">
               <p className="eyebrow">Early-access waitlist</p>
@@ -74,95 +53,16 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                 <p className="hero__fine">Free early access · Works with ChatGPT · Your friends opt in</p>
               </div>
             </div>
-            <div className="chat hero__chat" aria-label="Example inside ChatGPT">
-              <p className="chat__user">I have no plans this weekend. Ideas?</p>
-              <Moment person="Emma" text="Emma from uni is in Berlin on Saturday. You haven't seen her in 2 years." yellow />
+            <div className="hero__paths">
+              <a className="btn" id="chatgpt-ui" href="/chatgpt">Try the ChatGPT demo</a>
+              <a className="hero__guide" id="inside" href="/how-it-works">How it works</a>
             </div>
           </div>
         </section>
 
-        <section className="section section--dark manifesto" aria-labelledby="manifesto-title">
-          <div className="wrap" data-reveal="group">
-            <h2 className="h-display" id="manifesto-title">
-              Connecting is solved.<br />
-              <span className="manifesto__hit">Keeping relationships is not.</span>
-            </h2>
-            <p className="lead">
-              You meet people at every conference, every trip, every job. Then life happens and you lose them. Venn makes sure
-              you don&apos;t forget the people you connected with.
-            </p>
-          </div>
-        </section>
-
-        <HowItWorks />
-        <UseCases />
-
-        <section className="section chatgpt-preview" id="chatgpt-ui" aria-labelledby="chatgpt-ui-title" tabIndex={-1}>
-          <div className="wrap">
-            <div className="inside__heading">
-              <div>
-                <h2 className="h-section" id="chatgpt-ui-title">Venn inside ChatGPT.</h2>
-                <p className="lead">Try the welcome card, see how Venn replies, and approve a sample memory. This preview uses sample data and saves nothing to an account.</p>
-              </div>
-              <ScrollArrow href="#inside" label="Go to One week with Venn" />
-            </div>
-            <ChatGptPreview widgetUrl={process.env.WIDGET_PREVIEW_URL ?? "https://app.joinvennai.com/widget-preview"} />
-            <div className="chatgpt-preview__links" id="connect-chatgpt">
-              <ChatGptConnection listingUrl={directoryListingUrl()} />
-              <a className="btn" href={PROFILE_URL}>Open my Venn profile</a>
-            </div>
-          </div>
-        </section>
-
-        <section className="section section--paper" id="inside" aria-labelledby="inside-title" tabIndex={-1}>
-          <div className="wrap">
-            <div className="inside__heading">
-              <div>
-                <h2 className="h-section" id="inside-title">One week with Venn.</h2>
-                <p className="lead">Your AI drafts your week. You keep what you want. The right friend hears about it.</p>
-              </div>
-              <ScrollArrow href="#early-access" label="Go to the Founding Circle" />
-            </div>
-            <OnboardingPreview />
-          </div>
-        </section>
-
-        <PrivacyPrinciples />
         <Faq />
-
-        <section className="section" id="early-access" aria-labelledby="closing-title" tabIndex={-1}>
-          <div className="closing wrap" data-reveal="group">
-            <img
-              className="mark mark--faces"
-              src="/brand/mark-faces-circle.webp"
-              width={665}
-              height={700}
-              alt=""
-              aria-hidden="true"
-              loading="lazy"
-            />
-            <h2 className="h-section" id="closing-title">Join the Founding Circle.</h2>
-            <p className="lead">Early access opens by invitation. Get on the list.</p>
-            <a className="btn btn--primary" href="#waitlist">
-              Build your inner circle.
-            </a>
-          </div>
-        </section>
       </main>
-
-      <footer className="site-footer wrap">
-        <div>
-          <div className="site-footer__links">
-            <span>© {new Date().getFullYear()} Venn</span>
-            <a href="/privacy">Privacy</a>
-            <a href="/pricing">Pricing</a>
-            <a href={PROFILE_URL}>My Venn</a>
-            <CookieSettingsLink />
-          </div>
-          <p>The people in the examples are made up.</p>
-        </div>
-        <ScrollArrow href="#hero" label="Back to top" direction="up" />
-      </footer>
+      <SiteFooter top="#hero" />
       <PageView version={version} />
       <Motion />
     </>

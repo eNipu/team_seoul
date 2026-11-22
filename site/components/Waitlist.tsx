@@ -180,7 +180,7 @@ export default function Waitlist({ version, invite }: Props) {
             <button type="button" className="btn btn--primary" onClick={() => share(spot)}>
               Invite a connection to move up
             </button>
-            <a className="btn" href="#inside">
+            <a className="btn" href="/how-it-works#inside">
               See how it works
             </a>
           </div>
@@ -222,7 +222,7 @@ export default function Waitlist({ version, invite }: Props) {
             <button type="button" className="btn btn--primary" onClick={() => share(spot)}>
               Share my invite link
             </button>
-            <a className="btn" href="#inside">
+            <a className="btn" href="/how-it-works#inside">
               See how it works
             </a>
           </div>

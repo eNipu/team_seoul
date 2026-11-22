@@ -330,7 +330,7 @@ async function exercisePreview() {
   await tick();
   step(3);
   expect(matched() && root.querySelector(".moment__text")?.textContent.includes("Web Summit"), "approved match reaches Maya");
-  expect(root.querySelector('a[href="#waitlist"]')?.textContent.trim() === "Build your inner circle", "result links to live signup");
+  expect(root.querySelector('a[href="/#waitlist"]')?.textContent.trim() === "Build your inner circle", "result links to live signup");
   if (matchMedia("(prefers-reduced-motion: reduce)").matches && map) {
     expect(getComputedStyle(map.querySelector(".connection-map__signal")).transitionDuration === "0s", "routes are still under reduced motion");
   }
@@ -342,37 +342,31 @@ async function exercisePreview() {
   return problems;
 }
 
-async function exerciseNavigation() {
+async function exerciseNavigation(href) {
   const failures = [];
   const motion = matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (getComputedStyle(document.documentElement).scrollBehavior !== (motion ? "auto" : "smooth")) {
     failures.push("section navigation does not follow the motion preference");
   }
-  for (const href of ["#chatgpt-ui", "#inside", "#early-access", "#hero"]) {
-    const link = document.querySelector(`.scroll-arrow[href="${href}"]`);
-    const target = document.querySelector(href);
-    if (!link || !target) {
-      failures.push(`missing section link to ${href}`);
-      continue;
-    }
-    if (href === "#hero") {
-      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
-      const box = link.getBoundingClientRect();
-      if (!link.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2))) {
-        failures.push("the back-to-top control is covered at the bottom of the page");
-      }
-    }
-    const end = document.documentElement.scrollHeight - window.innerHeight;
-    const destination = Math.min(end, target.getBoundingClientRect().top + window.scrollY);
-    link.click();
-    const deadline = performance.now() + 1600;
-    while (Math.abs(window.scrollY - destination) > 2 && performance.now() < deadline) {
-      await new Promise((done) => requestAnimationFrame(done));
-    }
-    const rect = target.getBoundingClientRect();
-    if (location.hash !== href || document.activeElement !== target || rect.top >= window.innerHeight || rect.bottom <= 0) {
-      failures.push(`section link did not move focus and view to ${href}`);
-    }
+  const header = document.querySelector(".site-header");
+  for (const path of ["/", "/how-it-works", "/chatgpt", "/pricing", "https://app.joinvennai.com/app/account"]) {
+    if (!header?.querySelector(`a[href="${path}"]`)) failures.push(`missing navigation link to ${path}`);
+  }
+  const link = document.querySelector(`.scroll-arrow[href="${href}"]`);
+  const target = document.querySelector(href);
+  if (!link || !target) return [...failures, `missing back-to-top link to ${href}`];
+  window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
+  const box = link.getBoundingClientRect();
+  if (!link.contains(document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2))) {
+    failures.push("the back-to-top control is covered at the bottom of the page");
+  }
+  link.click();
+  const deadline = performance.now() + 1600;
+  while (window.scrollY > 2 && performance.now() < deadline) {
+    await new Promise((done) => requestAnimationFrame(done));
+  }
+  if (location.hash !== href || document.activeElement !== target || window.scrollY > 2) {
+    failures.push(`section link did not move focus and view to ${href}`);
   }
   return failures;
 }
@@ -383,7 +377,10 @@ async function exerciseChatGptPreview() {
   const failures = [];
   const buttons = [...root.querySelectorAll(".chatgpt-preview__switch button")];
   if (buttons.length !== 3) failures.push("expected three widget preview screens");
-  for (const button of buttons) {
+  if (buttons.find((button) => button.getAttribute("aria-pressed") === "true")?.textContent.trim() !== "Custom response") {
+    failures.push("expected the shorter custom response on first load");
+  }
+  for (const button of [buttons[1], buttons[0], buttons[2]].filter(Boolean)) {
     if (button.getAttribute("aria-pressed") !== "true") button.click();
     const deadline = performance.now() + 5500;
     let frame;
@@ -396,8 +393,15 @@ async function exerciseChatGptPreview() {
       failures.push(`the ${button.textContent.trim()} widget did not report a rendered height`);
     }
     if (frame?.getAttribute("sandbox") !== "allow-scripts") failures.push("the widget preview is not isolated");
+    if (button === buttons[1] && window.innerWidth >= 1000 && frame?.getBoundingClientRect().bottom > innerHeight) {
+      failures.push("the default reply extends below the desktop viewport");
+    }
   }
-  if (!root.querySelector("pre")?.textContent.includes('"visibility": "PRIVATE"')) failures.push("sample data example is missing");
+  const deadline = performance.now() + 2500;
+  while (!root.querySelector("pre")?.textContent.includes('"visibility": "PRIVATE"') && performance.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  if (!root.querySelector("pre")?.textContent.includes('"visibility": "PRIVATE"')) failures.push("live sample record is missing");
   if (document.querySelector(".site-header__account")?.getAttribute("href") !== "https://app.joinvennai.com/app/account") {
     failures.push("header does not link directly to the connected account route");
   }
@@ -416,7 +420,7 @@ function focused() {
   let what = el.tagName.toLowerCase();
   if (el.id) what = `#${el.id}`;
   else if (el.classList.contains("waitlist__joined")) what = ".waitlist__joined";
-  else if (el.matches("a, button")) what = el.getAttribute("aria-label") ?? el.textContent.trim();
+  else if (el.matches("a, button, summary")) what = el.getAttribute("aria-label") ?? el.textContent.trim();
   return { what, ring: ringed(el) || (!!field && ringed(field)) };
 }
 
@@ -451,7 +455,7 @@ function waitlistState() {
     seats: [...root.querySelectorAll(".waitlist__circle .avatar")]
       .map((seat) => (seat.classList.contains("waitlist__seat") ? "open" : "taken"))
       .join(","),
-    jump: joined?.querySelector('a[href="#inside"]') ? "#inside" : "",
+    jump: joined?.querySelector('a[href$="#inside"]')?.getAttribute("href") ?? "",
     saved: localStorage.getItem("venn.waitlist"),
   };
 }
@@ -500,6 +504,42 @@ async function main() {
       if (exceptionDetails) throw new Error(exceptionDetails.exception?.description ?? exceptionDetails.text);
       return result.value;
     };
+    const runInPreview = async (fn, ...args) => {
+      const url = await run(() => document.querySelector(".chatgpt-preview__frame")?.src);
+      const { targetInfos } = await cdp.send("Target.getTargets");
+      const iframe = targetInfos.find((target) => target.type === "iframe" && target.url === url);
+      const child = iframe && await cdp.send("Target.attachToTarget", { targetId: iframe.targetId, flatten: true });
+      let contextId;
+      if (!child) {
+        const { frameTree } = await send("Page.getFrameTree");
+        const frame = frameTree.childFrames?.find((entry) => entry.frame.url === url);
+        if (!frame) throw new Error("Cannot find the widget frame in Chrome");
+        const world = await send("Page.createIsolatedWorld", { frameId: frame.frame.id, worldName: "venn-check" });
+        contextId = world.executionContextId;
+      }
+      try {
+        const { exceptionDetails } = await cdp.send("Runtime.evaluate", {
+          expression: `(${fn})(${args.map((arg) => JSON.stringify(arg)).join(",")})`,
+          contextId,
+        }, child?.sessionId ?? sessionId);
+        if (exceptionDetails) throw new Error(exceptionDetails.exception?.description ?? exceptionDetails.text);
+      } finally {
+        if (child) await cdp.send("Target.detachFromTarget", { sessionId: child.sessionId });
+      }
+    };
+
+    const reviewState = () => ({
+      status: document.querySelector(".chatgpt-preview__status")?.textContent,
+      records: JSON.parse(document.querySelector("#chatgpt-ui pre")?.textContent ?? "[]"),
+    });
+    const expectReview = async (status, check, message) => {
+      for (let attempt = 0; attempt < 60; attempt += 1) {
+        const state = await run(reviewState);
+        if (state.status === status && check(state.records)) return;
+        await sleep(50);
+      }
+      failures.push(`${label}: ${message}`);
+    };
 
     let label = "";
     cdp.on((message) => {
@@ -517,6 +557,7 @@ async function main() {
       }
     });
     for (const domain of ["Page", "Runtime", "Network", "Log"]) await send(`${domain}.enable`);
+    await send("Emulation.setTimezoneOverride", { timezoneId: "Europe/Berlin" });
 
     const open = async (path, viewport, { scheme = "light", motion = "no-preference" } = {}) => {
       await send("Emulation.setDeviceMetricsOverride", {
@@ -574,18 +615,60 @@ async function main() {
       await shot(`${label}-fold`, false);
       await shot(label);
 
-      for (const problem of await run(exerciseNavigation)) failures.push(`${label}: ${problem}`);
-      for (const problem of await run(exercisePreview)) failures.push(`${label}: ${problem}`);
-      if (["phone", "desktop"].includes(label)) {
-        for (const problem of await run(exerciseChatGptPreview)) failures.push(`${label}: ${problem}`);
+      for (const problem of await run(exerciseNavigation, "#hero")) failures.push(`${label}: ${problem}`);
+      if (await run(() => Boolean(document.querySelector("iframe, .onboarding")))) {
+        failures.push(`${label}: the homepage contains a full product demo`);
       }
+      console.log(`checked ${label}`);
+    }
+
+    for (const viewport of [VIEWPORTS[0], VIEWPORTS[3]]) {
+      label = `${viewport.name}/how-it-works`;
+      await open("/how-it-works", viewport, { motion: "reduce" });
+      for (const problem of await run(audit)) failures.push(`${label}: ${problem}`);
+      for (const problem of await run(exerciseNavigation, "#top")) failures.push(`${label}: ${problem}`);
+      for (const problem of await run(exercisePreview)) failures.push(`${label}: ${problem}`);
+      console.log(`checked ${label}`);
+
+      label = `${viewport.name}/chatgpt`;
+      await open("/chatgpt", viewport, { motion: "reduce" });
+      for (const problem of await run(audit)) failures.push(`${label}: ${problem}`);
+      for (const problem of await run(exerciseChatGptPreview)) failures.push(`${label}: ${problem}`);
+      if (viewport.name === "desktop") {
+        await runInPreview(() => {
+          const title = document.querySelector('input[id$="-title"]');
+          Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(title, "Weekend photo walks");
+          title.dispatchEvent(new Event("input", { bubbles: true }));
+          const visibility = document.querySelector("select");
+          visibility.value = "SHARED_WITH_CONNECTIONS";
+          visibility.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+        const edited = (records) => records[0]?.title === "Weekend photo walks" && records[0]?.visibility === "SHARED_WITH_CONNECTIONS";
+        await expectReview("Awaiting approval", edited, "record did not follow the widget edits");
+        await runInPreview(() => document.querySelector('input[type="checkbox"]').click());
+        await expectReview("No memories selected", (records) => !records.length, "deselected record still appears");
+        await runInPreview(() => document.querySelector('input[type="checkbox"]').click());
+        await expectReview("Awaiting approval", edited, "reselecting did not restore the draft");
+        await runInPreview(() => [...document.querySelectorAll("button")].find((button) => button.textContent.includes("Save selected")).click());
+        await expectReview("Saved in this demo", edited, "approval did not update the record state");
+        await run(() => document.querySelector(".consent button")?.click());
+        await shot("desktop-chatgpt-review", false);
+        await run(() => localStorage.removeItem("venn.consent"));
+        await run(() => document.querySelectorAll(".chatgpt-preview__switch button")[1].click());
+        await run(() => document.querySelectorAll(".chatgpt-preview__switch button")[2].click());
+        await expectReview("Awaiting approval", (records) => records[0]?.title === "Getting into film photography",
+          "changing screens reused an approved record");
+        await runInPreview(() => [...document.querySelectorAll("button")].find((button) => button.textContent.trim() === "Discard").click());
+        await expectReview("Draft discarded", (records) => !records.length, "discarded record still appears");
+      }
+      for (const problem of await run(exerciseNavigation, "#top")) failures.push(`${label}: ${problem}`);
       console.log(`checked ${label}`);
     }
 
     if (shotsDir) {
       for (const viewport of [VIEWPORTS[1], VIEWPORTS[3]]) {
         label = `${viewport.name}/connections`;
-        await open(`/?preview=${viewport.name}#inside`, viewport, { motion: "reduce" });
+        await open(`/how-it-works?preview=${viewport.name}#inside`, viewport, { motion: "reduce" });
         const matched = await run(`async () => {
           document.querySelector(".consent button:last-child")?.click();
           const preview = document.querySelector(".onboarding");
@@ -668,9 +751,11 @@ async function main() {
       // submit with the keyboard and verify that focus moves to the answer.
       await open(pairUrl, small);
       await tab();
-      await focusIs("My Venn");
+      await focusIs("Venn home");
       await tab();
-      await focusIs("Go to the ChatGPT preview");
+      await focusIs("Menu");
+      await tab();
+      await focusIs("My Venn");
       await tab();
       await focusIs("#waitlist-email");
       await send("Input.insertText", { text: `check+${stamp}@example.com` });
@@ -685,7 +770,7 @@ async function main() {
         buttons: actions,
         note: "One link. A confirmed place for both of you.",
         seats: "",
-        jump: "#inside",
+        jump: "/how-it-works#inside",
       });
       expect(pending.saved && !pending.saved.includes("@"), "the spot should be remembered without the email");
       const code = pending.saved ? JSON.parse(pending.saved).refCode : "";
@@ -696,7 +781,7 @@ async function main() {
       await focusIs("See how it works");
       await enter();
       await sleep(300);
-      expect((await run(`() => location.hash`)) === "#inside", "keyboard: Enter on the preview link did not go to #inside");
+      expect((await run(`() => location.pathname + location.hash`)) === "/how-it-works#inside", "keyboard: preview link did not open the guide");
       await run(`() => localStorage.clear()`);
 
       // The invited person: told a place is saved, not by whom, and joining confirms both.
@@ -744,7 +829,7 @@ async function main() {
         lead: /#\d{3,}/,
         buttons: "Invite a connection to move up|See how it works",
         note: "",
-        jump: "#inside",
+        jump: "/how-it-works#inside",
       });
       expect(joined.saved && !joined.saved.includes("@"), "the spot should be remembered without the email");
       console.log(`checked ${label} (${joined.lead})`);

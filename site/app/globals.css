@@ -130,6 +130,51 @@ ul { padding: 0; list-style: none; }
   color: var(--text);
   text-underline-offset: 0.2em;
 }
+.site-header__nav, .site-header__menu nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem 1rem;
+}
+.site-header__nav a, .site-header__menu a, .site-header__menu summary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--text);
+  font-size: var(--fs-small);
+  font-weight: 650;
+  text-decoration: none;
+}
+.site-header__nav a:hover, .site-header__menu a:hover,
+.site-header__end a[aria-current="page"] {
+  text-decoration: underline;
+  text-underline-offset: 0.22em;
+}
+.site-header__menu { display: none; position: relative; }
+.site-header__menu summary {
+  justify-content: center;
+  min-width: 44px;
+  cursor: pointer;
+}
+.site-header__menu summary::-webkit-details-marker { display: none; }
+.site-header__menu nav {
+  position: absolute;
+  z-index: 3;
+  inset-block-start: 100%;
+  inset-inline-end: 0;
+  min-width: 10.5rem;
+  padding: 0.25rem 0.8rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--white);
+  box-shadow: var(--shadow);
+}
+.site-header__menu nav a { display: flex; }
+.site-header__menu:not([open]) nav { display: none; }
+@media (max-width: 45.99rem) {
+  .site-header__nav { display: none; }
+  .site-header__menu { display: block; }
+  .site-header__menu[open] nav { display: grid; }
+}
 .scroll-arrow {
   display: inline-grid;
   place-items: center;
@@ -789,8 +834,10 @@ body:has(> .consent) > .site-footer { padding-block-end: 9rem; }
 }
 
 
-/* Weekly preview */
+/* ChatGPT demo */
 .chatgpt-preview { background: var(--white); }
+.chatgpt-page { padding-block: clamp(1rem, 3vw, 2rem) clamp(2rem, 4vw, 4rem); }
+.chatgpt-page > .lead { margin-block: 0.65rem 1rem; }
 .chatgpt-preview__switch, .chatgpt-preview__links {
   display: flex;
   flex-wrap: wrap;
@@ -801,8 +848,8 @@ body:has(> .consent) > .site-footer { padding-block-end: 9rem; }
 .chatgpt-preview__layout {
   display: grid;
   align-items: start;
-  gap: clamp(1rem, 4vw, 2.75rem);
-  margin-block: 1rem 1.5rem;
+  gap: clamp(1rem, 3vw, 2rem);
+  margin-block: 0.75rem 1.25rem;
 }
 .chatgpt-preview__conversation {
   display: grid;
@@ -823,7 +870,7 @@ body:has(> .consent) > .site-footer { padding-block-end: 9rem; }
 .chatgpt-preview__frame {
   display: block;
   width: 100%;
-  height: 34rem;
+  height: 27rem;
   border: 0;
   border-radius: var(--radius);
 }
@@ -836,6 +883,8 @@ body:has(> .consent) > .site-footer { padding-block-end: 9rem; }
 }
 .chatgpt-preview__explanation h4 { margin: 0.65rem 0 0; font-size: 0.9375rem; }
 .chatgpt-preview__explanation p, .chatgpt-preview__connection p { color: var(--text-2); }
+.chatgpt-preview__explanation .chatgpt-preview__status { color: var(--text); font-weight: 650; }
+.chatgpt-preview__standalone { display: inline-flex; align-items: center; min-height: 44px; justify-self: start; }
 .chatgpt-preview__explanation pre {
   margin: 0;
   padding: 0.8rem;
@@ -868,13 +917,20 @@ body:has(> .consent) > .site-footer { padding-block-end: 9rem; }
 }
 @media (min-width: 52rem) {
   .chatgpt-preview__layout { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
+  .chatgpt-preview__explanation { position: sticky; top: 1rem; }
 }
+
+/* Weekly preview */
 .inside__heading {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
   margin-bottom: clamp(1.5rem, 4vw, 3rem);
+}
+.inside__heading .btn { flex-shrink: 0; }
+@media (max-width: 38rem) {
+  .inside__heading { flex-direction: column; }
 }
 .onboarding {
   display: grid;
@@ -989,8 +1045,8 @@ body:has(> .consent) > .site-footer { padding-block-end: 9rem; }
 .h-sub { color: #000 !important; }
 .h-sub span { background: linear-gradient(transparent 18%, #FFD400 18%, #FFD400 88%, transparent 88%); padding: 0 .15em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
 .hero__what { position: relative; z-index: 1; max-width: 34ch; color: #1d1d1f; }
-.hero__chat { margin: 1.5rem 0 1.25rem; display: grid; gap: .75rem; max-width: 34rem; }
-.hero__chat .chat__user { justify-self: end; background: #e9e9eb; color: #000; border-radius: 22px; padding: .7rem 1.05rem; font-size: 1rem; max-width: 85%; }
+.hero__paths { position: relative; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 1rem; }
+.hero__guide { display: inline-flex; align-items: center; min-height: 44px; font-size: var(--fs-small); font-weight: 650; }
 .hero__fine { margin-top: .75rem; font-size: .875rem; color: #424245; }
 
 /* weekly demo */
@@ -1039,7 +1095,6 @@ body:has(> .consent) > .site-footer { padding-block-end: 9rem; }
   gap: clamp(0.875rem, 2vw, 1.375rem);
 }
 .hero__copy > * { min-width: 0; }
-#hero .hero__chat { position: relative; z-index: 1; margin: 0; }
 
 /* The panel sits in the middle of the scene, where the two spheres overlap. */
 .hero__join {
@@ -1128,9 +1183,9 @@ body:has(> .consent) > .site-footer { padding-block-end: 9rem; }
     grid-template-rows: 1fr auto auto;
     align-items: end;
   }
-  #hero .hero__grid > .hero__join { grid-area: 1 / 2 / 4; align-self: stretch; min-height: 36rem; padding-block: 2rem; }
+  #hero .hero__grid > .hero__join { grid-area: 1 / 2 / 4; align-self: stretch; min-height: 30rem; padding-block: 2rem; }
   #hero .hero__what { grid-area: 2 / 1; }
-  #hero .hero__chat { grid-area: 3 / 1; }
+  #hero .hero__paths { grid-area: 3 / 1; padding-bottom: clamp(1rem, 4vw, 4rem); }
   .hero__join .hero__backdrop { inset-block: 0; inset-inline: -1.5rem calc(-1 * var(--gutter)); }
 }
 
@@ -1153,8 +1208,6 @@ body:has(> .consent) > .site-footer { padding-block-end: 9rem; }
 .hero__what { animation: rise 0.7s var(--ease-out) 270ms both; }
 #hero .h-display::after { animation: draw 0.7s var(--ease-out) 0.7s both; }
 .h-sub span { background-repeat: no-repeat; animation: sweep 0.6s var(--ease-out) 0.55s both; }
-.hero__chat .chat__user { animation: rise 0.5s var(--ease-out) 0.9s both; }
-.hero__chat .moment { transform-origin: 12% 100%; animation: pop 0.6s var(--ease-pop) 1.5s both; }
 .hero__join-card { animation: rise 0.8s var(--ease-out) 0.3s both; }
 
 /* Scroll reveals (components/Motion.tsx sets data-motion, then data-in as things come into view). */

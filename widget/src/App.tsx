@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { applyTheme, connectToHost, extractText, type HostBridge } from "./mcp/client";
 import { DEMO_VIEWS, createMockBridge, demoParam, mockInitialView } from "./mock";
 import { friendArg, parseView, type ViewData } from "./types";
-import MemoryReview from "./components/MemoryReview";
+import MemoryReview, { type PreviewReview } from "./components/MemoryReview";
 import MemoryImport from "./components/MemoryImport";
 import Dashboard, { type DashboardTab } from "./components/Dashboard";
 import VennCard from "./components/VennCard";
@@ -28,6 +28,10 @@ import { Spinner, type Nav } from "./components/common";
 
 const publicPreview = typeof window !== "undefined" && window.location.pathname === "/widget-preview";
 const inHost = typeof window !== "undefined" && window.parent !== window && !publicPreview;
+
+function reportPreviewReview(review: PreviewReview | null) {
+  if (window.parent !== window) window.parent.postMessage({ type: "venn:preview-review", review }, "*");
+}
 
 /** One entry of the in-widget view stack. `key` changes whenever the data is replaced. */
 interface Entry {
@@ -392,7 +396,8 @@ function renderView(
     case "saved_replies":
       return <SavedReplies key={key} data={view} bridge={bridge} nav={nav} />;
     case "memory_review":
-      return <MemoryReview key={key} data={view} bridge={bridge} nav={nav} />;
+      return <MemoryReview key={key} data={view} bridge={bridge} nav={nav}
+        onPreviewReview={publicPreview && bridge.isMock ? reportPreviewReview : undefined} />;
     case "memory_import":
       return <MemoryImport key={key} data={view} bridge={bridge} nav={nav} />;
     case "dashboard":

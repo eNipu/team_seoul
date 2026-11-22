@@ -13,11 +13,12 @@ const STEPS = [
   },
 ];
 
-export default function HowItWorks() {
+export default function HowItWorks({ pageTitle = false }: { pageTitle?: boolean }) {
+  const Heading = pageTitle ? "h1" : "h2";
   return (
     <section className="section section--paper" id="how-it-works" aria-labelledby="steps-title">
       <div className="wrap">
-        <h2 className="h-section" id="steps-title" data-reveal="up">How it works</h2>
+        <Heading className="h-section" id="steps-title">How it works</Heading>
         <ol className="steps" data-reveal="group">
           {STEPS.map(({ title, text }, index) => (
             <li className="step" key={title}>

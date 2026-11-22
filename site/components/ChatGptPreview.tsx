@@ -19,21 +19,29 @@ const SCREENS = [
     key: "preview_review",
     label: "Review data",
     prompt: "I’ve been getting into film photography. Help me remember that.",
-    description: "Try editing the proposal or changing who can see it. Saving here only updates this preview.",
+    description: "Edit the sample memory, change its visibility, or uncheck it to see the record update.",
   },
 ] as const;
 
-const EXAMPLE = {
-  category: "INTEREST",
-  title: "Getting into film photography",
-  description: "Bought a second-hand film camera and shoots a roll every weekend.",
-  tags: ["photography", "hobby"],
-  visibility: "PRIVATE",
-};
+type LiveReview = { phase: "editing" | "saving" | "saved" | "discarded"; records: unknown[] };
+
+function isLiveReview(value: unknown): value is LiveReview {
+  if (!value || typeof value !== "object" || !("phase" in value) || !("records" in value)) return false;
+  return ["editing", "saving", "saved", "discarded"].includes(String(value.phase)) && Array.isArray(value.records);
+}
+
+function reviewStatus(review: LiveReview | null) {
+  if (!review) return "Waiting for the review card";
+  if (review.phase === "discarded") return "Draft discarded";
+  if (review.phase === "saved") return "Saved in this demo";
+  if (review.phase === "saving") return "Saving in this demo";
+  return review.records.length ? "Awaiting approval" : "No memories selected";
+}
 
 export default function ChatGptPreview({ widgetUrl }: { widgetUrl: string }) {
-  const [screen, setScreen] = useState(0);
+  const [screen, setScreen] = useState(1);
   const [height, setHeight] = useState<number>();
+  const [review, setReview] = useState<LiveReview | null>(null);
   const frame = useRef<HTMLIFrameElement>(null);
   const current = SCREENS[screen];
   const source = new URL(widgetUrl);
@@ -41,14 +49,18 @@ export default function ChatGptPreview({ widgetUrl }: { widgetUrl: string }) {
   source.searchParams.set("theme", "light");
 
   useEffect(() => {
-    const receiveHeight = (event: MessageEvent) => {
+    const receivePreview = (event: MessageEvent) => {
       if (event.origin !== "null" || event.source !== frame.current?.contentWindow) return;
       const data = event.data;
-      if (data?.type !== "venn:preview-height" || !Number.isInteger(data.height) || data.height < 1) return;
-      setHeight(Math.min(1800, Math.max(180, data.height)));
+      if (data?.type === "venn:preview-height" && Number.isInteger(data.height) && data.height > 0) {
+        setHeight(Math.min(1800, Math.max(180, data.height)));
+      }
+      if (data?.type === "venn:preview-review" && (data.review === null || isLiveReview(data.review))) {
+        setReview(data.review);
+      }
     };
-    window.addEventListener("message", receiveHeight);
-    return () => window.removeEventListener("message", receiveHeight);
+    window.addEventListener("message", receivePreview);
+    return () => window.removeEventListener("message", receivePreview);
   }, []);
 
   return (
@@ -60,6 +72,7 @@ export default function ChatGptPreview({ widgetUrl }: { widgetUrl: string }) {
             onClick={() => {
               if (index === screen) return;
               setHeight(undefined);
+              setReview(null);
               setScreen(index);
             }}>
             {label}
@@ -78,10 +91,12 @@ export default function ChatGptPreview({ widgetUrl }: { widgetUrl: string }) {
           <p>{current.description}</p>
           {current.key === "preview_review" && (
             <>
-              <h4>Example of an approved memory</h4>
-              <pre><code>{JSON.stringify(EXAMPLE, null, 2)}</code></pre>
+              <h4>Memory record</h4>
+              <p className="chatgpt-preview__status" role="status">{reviewStatus(review)}</p>
+              {review && <pre><code>{JSON.stringify(review.records, null, 2)}</code></pre>}
             </>
           )}
+          <a className="chatgpt-preview__standalone" href={source.href}>Open the widget on its own</a>
         </div>
       </div>
     </>

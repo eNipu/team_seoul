@@ -153,7 +153,7 @@ export default function OnboardingPreview() {
               </p>
             )}
             <div className="demo__actions">
-              <a className="btn btn--primary" href="#waitlist">
+              <a className="btn btn--primary" href="/#waitlist">
                 Build your inner circle
               </a>
               <button type="button" className="btn" onClick={restart}>

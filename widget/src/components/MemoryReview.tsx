@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { HostBridge } from "../mcp/client";
 import {
   CATEGORY_LABELS,
@@ -21,30 +21,28 @@ interface Props {
   data: MemoryReviewViewData;
   bridge: HostBridge;
   nav: Nav;
+  onPreviewReview?: (review: PreviewReview | null) => void;
 }
 
 /** Above this many items the card shows the selection count and Select all / None. */
 const BULK_CONTROLS_ABOVE = 3;
 
-interface Draft {
-  index: number;
-  checked: boolean;
-  title: string;
-  description: string;
-  visibility: Visibility;
-}
-
 type Phase = "editing" | "saving" | "saved" | "discarded";
+type ReviewRecord = Pick<Memory, "category" | "title" | "description" | "tags" | "visibility">;
+type Draft = ReviewRecord & { index: number; checked: boolean };
+export type PreviewReview = { phase: Phase; records: ReviewRecord[] };
 
-export default function MemoryReview({ data, bridge, nav }: Props) {
+export default function MemoryReview({ data, bridge, nav, onPreviewReview }: Props) {
   const action = useAction();
   const fromChatGpt = data.source === "chatgpt_memory";
   const [drafts, setDrafts] = useState<Draft[]>(() =>
     data.proposals.map((p) => ({
       index: p.index,
       checked: !p.already_saved,
+      category: p.category,
       title: p.title,
       description: p.description,
+      tags: p.tags,
       visibility: p.suggested_visibility,
     })),
   );
@@ -52,6 +50,19 @@ export default function MemoryReview({ data, bridge, nav }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<Memory[]>([]);
   const [peopleAdded, setPeopleAdded] = useState<Person[]>([]);
+
+  useEffect(() => {
+    if (!onPreviewReview) return;
+    const records = phase === "saved" ? saved : phase === "discarded" ? [] : drafts.filter((draft) => draft.checked);
+    onPreviewReview({
+      phase,
+      records: records.map(({ category, title, description, tags, visibility }) => ({
+        category, title: title.trim(), description: description.trim(), tags, visibility,
+      })),
+    });
+  }, [drafts, phase, saved, onPreviewReview]);
+
+  useEffect(() => () => onPreviewReview?.(null), [onPreviewReview]);
 
   const update = (index: number, patch: Partial<Draft>) =>
     setDrafts((ds) => ds.map((d) => (d.index === index ? { ...d, ...patch } : d)));
